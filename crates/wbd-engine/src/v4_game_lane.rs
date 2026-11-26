@@ -723,7 +723,7 @@ impl GameAdapter{
     /// report the actual Npcap syscall result by scoped Game logical ID.
     pub fn drain<F>(&mut self,now:MonoNs,mut kernel_copy:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
-        self.drain_dispatch(now,true,|lane,id,pn,wire,_pad|
+        self.drain_dispatch(now,32,true,|lane,id,pn,wire,_pad|
             kernel_copy(lane,id,pn,wire))
     }
     // The real Linux Game M4 raw send callback receives the actual sealed
@@ -732,12 +732,19 @@ impl GameAdapter{
     #[cfg(target_os="linux")]
     pub(crate) fn drain_for_linux_native<F>(&mut self,now:MonoNs,kernel_copy:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8],usize)->bool{
-        self.drain_dispatch(now,true,kernel_copy)
+        self.drain_dispatch(now,32,true,kernel_copy)
     }
     #[cfg(feature="fec2_product_record")]
     pub(crate) fn stage_for_windows_native<F>(&mut self,now:MonoNs,stage:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8],usize)->bool{
-        self.drain_dispatch(now,false,stage)
+        self.drain_dispatch(now,32,false,stage)
+    }
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn stage_for_windows_native_with_credit<F>(&mut self,now:MonoNs,credit:usize,stage:F)->usize
+    where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8],usize)->bool{
+        // Apply credit BEFORE dequeue or PN allocation, not as a callback
+        // failure after the original scheduler has popped an entry.
+        self.drain_dispatch(now,credit,false,stage)
     }
     // Game logical sources carry a 16B envelope. FEC wraps the original
     // IPv4 within a typed source symbol; parity has no business flow key.
@@ -750,7 +757,7 @@ impl GameAdapter{
         wbd_codec::fec_v2::parse_source(&body[1..],inner_mtu-1)
             .ok().map(|source|source.frame)
     }
-    fn drain_dispatch<F>(&mut self,now:MonoNs,
+    fn drain_dispatch<F>(&mut self,now:MonoNs,budget:usize,
         copied_by_native_kernel:bool,mut kernel_copy:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8],usize)->bool{
         if self.stopped{return 0}
@@ -776,7 +783,7 @@ impl GameAdapter{
         };
         #[cfg(feature="fec2_product_record")]
         let fec=&mut self.fec;
-        let processed=self.tx.drain_ready(now,32,|view|{
+        let processed=self.tx.drain_ready(now,budget,|view|{
             let Some(id)=view.logical_id else{return DispatchOutcome::PressureDrop};
             let Some(lane)=lanes.iter_mut().find(|l|l.key==view.lane)
             else{return DispatchOutcome::PressureDrop};
@@ -880,6 +887,25 @@ mod tests{
         p[20..22].copy_from_slice(&40555u16.to_be_bytes());
         p[22..24].copy_from_slice(&443u16.to_be_bytes());
         p[32]=0x50;p[40..45].copy_from_slice(&[22,3,3,0,5]);p
+    }
+    #[cfg(feature="fec2_product_record")]
+    #[test]
+    fn windows_game_dispatch_credit_one_leaves_original_sibling_ready(){
+        let mut game=build(2);
+        let now=MonoNs(100_000_000);
+        game.offer(&game_padding_udp(),now).unwrap();
+        let mut records=Vec::new();
+        assert_eq!(game.stage_for_windows_native_with_credit(now,0,|_,_,_,_,_|panic!("no credit")),0);
+        assert_eq!(game.stage_for_windows_native_with_credit(now,1,|lane,id,pn,_,_|{
+            records.push((lane,id,pn));true
+        }),1);
+        assert_eq!(game.stage_for_windows_native_with_credit(now,1,|lane,id,pn,_,_|{
+            records.push((lane,id,pn));true
+        }),1);
+        assert_eq!(game.stage_for_windows_native_with_credit(now,1,|_,_,_,_,_|panic!("no remaining record")),0);
+        assert_eq!(records[0].1,records[1].1);
+        assert_ne!(records[0].0,records[1].0);
+        game.stop();
     }
     #[test]
     fn game2_original_aead_startup_padding_off_tls_flows_and_mtu(){

@@ -218,7 +218,7 @@ pub(super) fn offer_records_native(
 }
 #[cfg(feature="fec2_product_record")]
 pub(super) fn native_game_offer_batch(
-    group:&mut WinGameGroup,h:u64,frames:&[&[u8]],
+    group:&mut WinGameGroup,h:u64,frames:&[&[u8]],credit:usize,
 )->Result<(Vec<WbdWindowsGameRecordV4>,usize),i32>{
     let cap=game_effective_payload_mtu(group,h)?;
     if !group.staged.is_empty(){return Err(BAD_STAGE)}
@@ -232,7 +232,7 @@ pub(super) fn native_game_offer_batch(
     let now=game_monotonic_now(group);
     let mut out=Vec::with_capacity(32);
     let mut pads=Vec::with_capacity(32);
-    let _=group.adapter.stage_for_windows_native(MonoNs(now.0.saturating_add(1)),|lane,id,pn,wire,pad|{
+    let _=group.adapter.stage_for_windows_native_with_credit(MonoNs(now.0.saturating_add(1)),credit,|lane,id,pn,wire,pad|{
         if let Some(record)=game_record(lane,id,pn,wire){
             out.push(record);pads.push(pad as u16);true
         }else{false}
@@ -390,9 +390,8 @@ pub(super) fn game_fec_poll_group(
     }
     let mut out=Vec::with_capacity(capacity);
     let mut pads=Vec::with_capacity(capacity);
-    let _=game.adapter.stage_for_windows_native(
-        MonoNs(now.0.saturating_add(1)),|lane,id,pn,wire,pad|{
-            if out.len()>=capacity{return false}
+    let _=game.adapter.stage_for_windows_native_with_credit(
+        MonoNs(now.0.saturating_add(1)),capacity,|lane,id,pn,wire,pad|{
             if let Some(record)=game_record(lane,id,pn,wire){
                 out.push(record);pads.push(pad as u16);true
             }else{false}

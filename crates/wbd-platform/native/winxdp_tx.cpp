@@ -31,12 +31,22 @@ struct TxOwner {
     UINT64 published,completed,pokes,credit_limited,completion_waits;
     bool reported;
 };
-void reclaim(TxOwner* o) {
+bool reclaim(TxOwner* o,bool poke=true) {
     UINT32 index;
     UINT32 n=XskRingConsumerReserve(&o->completion,Slots,&index);
     for(UINT32 i=0;i<n;++i)
         o->free_chunks[o->free_count++]=*static_cast<UINT64*>(XskRingGetElement(&o->completion,index+i));
-    if(n){XskRingConsumerRelease(&o->completion,n);o->completed+=n;}
+    if(n){
+        XskRingConsumerRelease(&o->completion,n);o->completed+=n;
+        // The SDK explicitly requires a poke on completion consumption
+        // when NEED_POKE is set, even if no new frame will be published.
+        if(poke&&XskRingProducerNeedPoke(&o->tx)){
+            XSK_NOTIFY_RESULT_FLAGS result{};++o->pokes;
+            HRESULT hr=XskNotifySocket(o->socket,XSK_NOTIFY_FLAG_POKE_TX,0,&result);
+            if(FAILED(hr)){std::fprintf(stderr,"WBD_XDP_TX_COMPLETION_POKE_FAILED hr=0x%08lx\n",(unsigned long)hr);return false;}
+        }
+    }
+    return true;
 }
 void close_owner(TxOwner* o){
     if(o->completion_pending){
@@ -111,7 +121,7 @@ extern "C" void* wbd_xdp_tx_open(const unsigned char* ip,const unsigned char* ma
 // queue, wait or IOCTL in the sufficient-credit case.
 extern "C" int wbd_xdp_tx_credit(void* raw,UINT32 wanted){
     auto* o=static_cast<TxOwner*>(raw);
-    if(o->free_count<wanted)reclaim(o);
+    if(o->free_count<wanted&&!reclaim(o))return -1;
     if(o->free_count<wanted){
         ++o->credit_limited;
         if(XskRingError(&o->tx)||XskRingError(&o->completion))return -1;
@@ -155,7 +165,7 @@ extern "C" uintptr_t wbd_xdp_tx_completion_event(void* raw){
 }
 extern "C" int wbd_xdp_tx_reserve(void* raw,size_t count,unsigned char** frames){
     auto* o=static_cast<TxOwner*>(raw);
-    if(o->free_count<count)reclaim(o);
+    if(o->free_count<count&&!reclaim(o))return 0;
     if(count>Batch||count>o->free_count||
        XskRingProducerReserve(&o->tx,static_cast<UINT32>(count),&o->reserved_index)!=count){
         std::fprintf(stderr,"WBD_XDP_TX_RING_FULL requested=%zu free=%u published=%llu completed=%llu\n",count,o->free_count,o->published,o->completed);
@@ -187,7 +197,7 @@ extern "C" void wbd_xdp_tx_report(void* raw){
     auto* o=static_cast<TxOwner*>(raw);
     if(o->reported)return;
     o->reported=true;
-    reclaim(o);
+    reclaim(o,false);
     XSK_STATISTICS stats{};UINT32 size=sizeof(stats);
     HRESULT hr=XskGetSockopt(o->socket,XSK_SOCKOPT_STATISTICS,&stats,&size);
     std::fprintf(stderr,"WBD_XDP_TX_STOP published=%llu completed_before_close=%llu pokes=%llu invalid=%llu stats_hr=0x%08lx credit_limited=%llu completion_waits=%llu\n",o->published,o->completed,o->pokes,stats.TxInvalidDescriptors,(unsigned long)hr,o->credit_limited,o->completion_waits);
@@ -216,7 +226,7 @@ struct RxQueue {
     XDP_OVERLAPPED ov;
     unsigned char* umem;
     XSK_RING rx,fill;
-    UINT64 received,batches,waits;
+    UINT64 received,batches,waits,received_bytes;
 };
 struct RxOwner {
     HANDLE program,map;
@@ -403,11 +413,13 @@ extern "C" size_t wbd_xdp_rx_borrow(void* raw,RxFrame* frames,size_t max){
         if(n){
             o->batch_queue=id;o->batch_count=n;
             o->next=id+1==o->count?0:id+1;
+            UINT64 bytes=0;
             for(UINT32 i=0;i<n;++i){
                 auto* d=static_cast<XSK_BUFFER_DESCRIPTOR*>(XskRingGetElement(&q->rx,o->batch_index+i));
+                bytes+=d->Length;
                 frames[i]={q->umem+d->Address.BaseAddress+d->Address.Offset,d->Length};
             }
-            q->received+=n;++q->batches;
+            q->received+=n;q->received_bytes+=bytes;++q->batches;
             return n;
         }
         if(++id==o->count)id=0;
@@ -460,19 +472,19 @@ extern "C" int wbd_xdp_rx_cold_read(void* raw,unsigned char* dst,size_t cap){
 }
 extern "C" void wbd_xdp_rx_close(void* raw){
     auto* o=static_cast<RxOwner*>(raw);
-    UINT64 received=0,batches=0,waits=0,dropped=0,truncated=0;
+    UINT64 received=0,batches=0,waits=0,dropped=0,truncated=0,received_bytes=0;
     HRESULT result=S_OK;
     for(UINT32 i=0;i<o->count;++i){
         auto* q=&o->queues[i];
         XSK_STATISTICS s{};UINT32 size=sizeof(s);
         HRESULT hr=XskGetSockopt(q->socket,XSK_SOCKOPT_STATISTICS,&s,&size);
         if(FAILED(hr))result=hr;
-        received+=q->received;batches+=q->batches;waits+=q->waits;
+        received+=q->received;batches+=q->batches;waits+=q->waits;received_bytes+=q->received_bytes;
         dropped+=s.RxDropped;truncated+=s.RxTruncated;
         if(q->received||s.RxDropped||s.RxTruncated)
-            std::fprintf(stderr,"WBD_XDP_RX_QUEUE_STOP queue=%u received=%llu batches=%llu waits=%llu dropped=%llu truncated=%llu\n",i,q->received,q->batches,q->waits,s.RxDropped,s.RxTruncated);
+            std::fprintf(stderr,"WBD_XDP_RX_QUEUE_STOP queue=%u received=%llu batches=%llu waits=%llu dropped=%llu truncated=%llu received_bytes=%llu\n",i,q->received,q->batches,q->waits,s.RxDropped,s.RxTruncated,q->received_bytes);
     }
-    std::fprintf(stderr,"WBD_XDP_RX_STOP received=%llu batches=%llu waits=%llu dropped=%llu truncated=%llu stats_hr=0x%08lx queues=%u\n",received,batches,waits,dropped,truncated,(unsigned long)result,o->count);
+    std::fprintf(stderr,"WBD_XDP_RX_STOP received=%llu batches=%llu waits=%llu dropped=%llu truncated=%llu stats_hr=0x%08lx queues=%u received_bytes=%llu\n",received,batches,waits,dropped,truncated,(unsigned long)result,o->count,received_bytes);
     close_rx(o);
 }
 extern "C" int wbd_xdp_tx_cold_write(void* raw,const unsigned char* bytes,size_t len){

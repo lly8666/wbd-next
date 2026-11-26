@@ -99,3 +99,5 @@ Real user logs 21:35:02 TX 31612 published /30590 reclaimed /2 free /4 requested
 ```feature-impact
 {"kind":"updated","ids":["windows-native-transport"],"reason":"Restore old bulk capture capacity mathematically and make physical asynchronous credit an admission boundary before staging. Current candidate not yet qualified on physical NIC."}
 ```
+
+Refinement: preserve Game dispatch with partial actual credits via existing drain_ready budget (Linux/public wrappers still exactly 32), not callback rejection after PN allocation. Test zero/one/one credits: both genuine sibling records retained, no spurious third record. Reclaim checks NEED_POKE immediately after actual completion release per official SDK, including no-new-TX case; no polling. RX per-queue Stop also records received_bytes, to compute actual packed-frame mean in future rather than guessing small-frame capacity. Full installed package action uses frozen compatible Linux server; shared Game dispatch plumbing retains Linux default 32. No service or protocol change. Physical RX mixture, pinned memory and actual completion-pressure reproduction remain qualification limits.

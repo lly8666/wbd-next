@@ -476,13 +476,13 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             }
         }
         let mut did_work=direct_progress;
-        // Original adapter drains at most 32 dispatches, even when <=16
-        // fresh Wintun sources were offered. Preserve that atomic dispatch
-        // quantum and never stage into an unavailable carrier.
+        // Credit caps the existing 32-ready dispatch BEFORE dequeue.
+        // With a single available descriptor fresh DATA can still proceed.
         #[cfg(feature="winxdp_native_trial")]
-        let source_limit=match npf.credit(32){Ok(32)=>BATCH,Ok(_)=>0,Err(_)=>return BAD_STAGE};
+        let source_credit=match npf.credit(32){Ok(n)=>n,Err(_)=>return BAD_STAGE};
         #[cfg(not(feature="winxdp_native_trial"))]
-        let source_limit=BATCH;
+        let source_credit=32;
+        let source_limit=source_credit.min(BATCH);
         let mut sources=[[0u8;MAX_IPV4];BATCH];
         let mut lengths=[0usize;BATCH];
         let mut count=0usize;
@@ -529,7 +529,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 let j=order[i];&sources[j][..lengths[j]]
             });
             let (rows,accepted)=match group.lock(){
-                Ok(mut g)=>match game::native_game_offer_batch(&mut g,cfg.group,&ready[..count]){
+                Ok(mut g)=>match game::native_game_offer_batch(&mut g,cfg.group,&ready[..count],source_credit){
                     Ok(v)=>v,Err(e)=>return e
                 },
                 Err(_)=>return BAD_STAGE,
@@ -544,11 +544,11 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         // Same Game4 scheduler/FEC parity owner as original Linux.
         // One bounded due pass, no Go per-packet polling.
         #[cfg(feature="winxdp_native_trial")]
-        let due_credit=match npf.credit(32){Ok(n)=>n==32,Err(_)=>return BAD_STAGE};
+        let due_credit=match npf.credit(32){Ok(n)=>n,Err(_)=>return BAD_STAGE};
         #[cfg(not(feature="winxdp_native_trial"))]
-        let due_credit=true;
-        let due=if due_credit{match group.lock(){
-            Ok(mut g)=>game::native_game_due(&mut g,cfg.group,32),
+        let due_credit=32;
+        let due=if due_credit>0{match group.lock(){
+            Ok(mut g)=>game::native_game_due(&mut g,cfg.group,due_credit),
             Err(_)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_lock");return BAD_STAGE},
         }}else{Ok(Vec::new())};
         match due{
@@ -666,8 +666,8 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         if did_work{continue}
         #[cfg(feature="winxdp_native_trial")]
         let (carrier_credit,completion)={
-            let credit=match npf.credit(32){Ok(v)=>v,Err(_)=>return BAD_STAGE};
-            let event=if credit<32{
+            let credit=match npf.credit(1){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+            let event=if credit==0{
                 match npf.completion_event(){Ok(h)=>Some(h),Err(_)=>return BAD_STAGE}
             }else{None};
             (credit,event)
@@ -677,7 +677,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         let timeout={
             let group=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
             let (now,due)=game::native_game_wait_deadline(&group);
-            let game_timeout=if carrier_credit<32{u32::MAX}else{game_wait_timeout_ms(now,due)};
+            let game_timeout=if carrier_credit==0{u32::MAX}else{game_wait_timeout_ms(now,due)};
             let health_wait=if carrier_credit==0{
                 let age=health.last_authenticated_age_ns(now_health)
                     .unwrap_or_else(||health.attached_age_ns(now_health));
