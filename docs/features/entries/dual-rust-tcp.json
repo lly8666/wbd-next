@@ -37,10 +37,10 @@
     },
     {
       "platform": "linux/x86_64",
-      "scope": "Current inner TCP endpoints with real origin socket",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
+      "scope": "Native component: inner TCP endpoints, actual kernel origin socket bidirectional bytes, origin-to-virtual-app FIN (not product TUN)",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "3e709e0c8577b56ca237a24e6d18fccf998e9965",
+      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-ENDPOINT-CORE.json"
     },
     {
       "platform": "linux/x86_64",
@@ -58,10 +58,10 @@
     },
     {
       "platform": "linux/aarch64",
-      "scope": "Current inner TCP endpoints with real origin socket",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
+      "scope": "Native component: inner TCP endpoints, actual kernel origin socket bidirectional bytes, origin-to-virtual-app FIN (not product TUN)",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "3e709e0c8577b56ca237a24e6d18fccf998e9965",
+      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-ENDPOINT-CORE.json"
     },
     {
       "platform": "linux/aarch64",
