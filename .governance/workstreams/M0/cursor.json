@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2461,
-  "checkpoint_sha": "ad8c3f03fabbc11dd7483f6d606045c275055ec9",
-  "progress": "verifying",
+  "sequence": 2462,
+  "checkpoint_sha": "1add497f6299dc7184ead4625c439d4633b821ca",
+  "progress": "partial",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收ACK3 BBRv3 clean旧splice/原Rust同VM ABBA及用户指定ARM三runner 400ms RTT 1%/5%单流ABBA，核真实ACK-only/segment/资源及两跳直连、netem实损、实际Stop；根据结果继续定位本地ACK与分段，不重复dispatch。",
+  "next_action": "先验收精确冻结产物 clean ABBA 45823880796；弱网ACK3候选失败不晋级。对照原BBRv3与ACK3，加入400ms零损并读取现有中间端点cwnd/inflight/pacing/delivery rate/rwnd/SACK/RACK/RTO状态，区分高RTT与丢包影响及ACK触发；不要重复已完成旧splice弱网腿或盲改ACK。",
   "unverified": true,
   "last_tested_source": "8a6439bd0ec7b807957f35c978729cc86986e1f2",
   "evidence_refs": [
-    "docs/evidence/M0/20261126-DUAL-RUST-TCP-ACK3-NATIVE-FUNCTION.json"
+    "docs/evidence/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-LOSS-RESULT.json"
   ],
   "context_refs": [
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
@@ -24,8 +24,9 @@
     "docs/evidence/M0/20261126-DUAL-RUST-TCP-TOOLCHAIN-ABBA.json",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-RESULT.md",
     "docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-NATIVE-RESULT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-NATIVE-RESULT.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-LOSS-RESULT.md"
   ],
   "open_requests": [],
-  "partial_summary": "PR80 WIP HEAD d3403e4d6f548871ab83578263f6c233a5c5cd75；候选8a6439bd0ec7b807957f35c978729cc86986e1f2恢复BBRv3中间、稳态连续ACK3、原40ms/即时SACK等不变，本地OS-facing不变。run45821912474双ISA真实Normal功能PASS，artifact15118208253/15118576950已查，冻结ARM/x86产物已上传。clean ABBA run45821912542；ARM三runner 1%/5% run45822382519/45822382479，等待性能实收，main无产品集成，旧splice保留。"
+  "partial_summary": "PR80 WIP HEAD 8a0f887bb3d6b229ea6749b182bfc1d907773804；ACK3 exact candidate 8a6439b 双ISA功能PASS、330 core PASS，ARM 400ms 1%/5%同三机ABBA旧splice79.90/34.49 vs Rust9.38/0.699Mbps，CPU/GiB显著恶化，FAIL不晋级。所有测量时段路径样本直连，实际丢包核对；seed不支持，裸线低于历史800M绝对资格。未有原Rust弱网和400ms零损对照。clean 45821912542卡构件查找，replacement 45823880796固定ID无重编译；旧run尚不能由connector取消。main无产品集成。"
 }
