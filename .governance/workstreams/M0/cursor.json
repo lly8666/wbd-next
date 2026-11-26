@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2468,
-  "checkpoint_sha": "e7bb7d696d409a375daa58947ba47d39ac6feb35",
+  "sequence": 2469,
+  "checkpoint_sha": "b5cab5b82ef286a8a48275bf72dd363fe6064080",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收649fe3b native45845651269/core45845777911及corrected同ARM三机四ABBA 45845854268，先CUBIC零损再Linux bbr/Rust bbr1 0/1/5%：核真实CC、内核版本、路径/实损、业务Stop、吞吐/CPU/RSS/ACK/重传/cwnd/pacing；BBRv1-style非Linux完全移植，初始夹具45845777964语法失败不计，不重复构建。",
+  "next_action": "验收bounded pacing SOURCE7aafa40 native45849688305/core45849790656/ARM45849790442，同binary CUBIC0/BBR1-0 ABBA核实际中间入队full、local SharedTUN drops、publish burst、TUN回注失败、重传/CPU/RSS/吞吐；若内部丢包持续，定位owner输出优先与入队饥饿，未证实不晋级。",
   "unverified": true,
-  "last_tested_source": "dffe77daa5adaeac89a86e48cd6730c4c67a655f",
+  "last_tested_source": "649fe3bf19a81d579ebae510c78acf2908902ca7",
   "evidence_refs": [
-    "docs/evidence/M0/20261126-DUAL-RUST-TCP-SACK-COMPRESS-RESULT.json"
+    "docs/evidence/M0/20261126-DUAL-RUST-TCP-MATCHED-CC-ARM-RESULT.json"
   ],
   "context_refs": [
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
@@ -31,8 +31,9 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-EXACT-FILL-SNDBUF-RESULT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-BDP-LOSS-PROBE-RESULT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-SACK-COMPRESS-RESULT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-MATCHED-CC-HANDOFF.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-MATCHED-CC-HANDOFF.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-MATCHED-CC-ARM-RESULT.md"
   ],
   "open_requests": [],
-  "partial_summary": "PR80 WIP HEAD 823658213215e897b49f5aa477f1ef254ba5643c；用户要求同CC架构对照。新增独立BBRv1-style 649fe3bf19a81d579ebae510c78acf2908902ca7，保留v3，middle CUBIC/bbr1 cold selector；cap64/ACK3/SACK on。native45845651269 core45845777911 corrected ARM45845854268在途；原夹具45845777964语法错误无效。无main产品集成、旧splice保留、治理未过。"
+  "partial_summary": "PR80 WIP HEAD 045068382cbf8af18b67c532687364c58ed693fa；matched CC 45845854268 16/16 core334/双ISA PASS；CUBIC0 295.71→239.54、BBR0 237.88→185.65、BBR1 72.46→80.02、BBR5 31.61→29.27 Mbps；零损Rust BBR内部SharedTUN full 77931/62627、双端handoff失败、~20%重传。bounded pacing 7aafa40 诊断与队列/发布探针已施工，core/native/ARM在途；不扩大队列、不改CC/外层、不main产品合入。"
 }
