@@ -27,6 +27,20 @@ use wbd_platform::rx_ipv4_tcp::{parse_data_packet_fast,TrustedRx};
 use wbd_platform::rx_ipv4_tcp::parse_data_packet;
 use super::native_runtime::{WbdWinNativeAttachV1,WbdWinNativeStatsV1};
 const FRAME_CAP:usize=2304;
+#[cfg(feature="winxdp_native_trial")]
+use wbd_platform::{windows_xdp_tx::XdpTx,windows_xdp_rx::{XdpRx,RxTurn}};
+#[cfg(feature="winxdp_native_trial")]
+type GameTx=XdpTx;
+#[cfg(not(feature="winxdp_native_trial"))]
+type GameTx=Vec<NpcapTx>;
+#[cfg(feature="winxdp_native_trial")]
+type GameRx=XdpRx;
+#[cfg(not(feature="winxdp_native_trial"))]
+type GameRx=Vec<NpcapRx>;
+#[cfg(feature="winxdp_native_trial")]
+type CaptureFns=[usize;6];
+#[cfg(not(feature="winxdp_native_trial"))]
+type CaptureFns=NpcapFns;
 const NPF_CAP:usize=65535+64;
 const MAX_IPV4:usize=2048;
 const EARLY_CAP:usize=256;
@@ -51,7 +65,7 @@ pub struct WbdWinGameExtraLaneV3 {
     pub peer_port:u16,
     pub rx_capture:usize,
     pub tx_capture:usize,
-    pub npcap:NpcapFns,
+    pub npcap:CaptureFns,
 }
 #[repr(C)]
 #[derive(Clone,Copy)]
@@ -85,7 +99,7 @@ pub struct WbdWinGameNativeAttachV5 {
 struct LaneConfig{
     owner:u64,tx_seq:u32,rx_seq:u32,
     local_port:u16,peer_port:u16,
-    rx_capture:usize,tx_capture:usize,npcap:NpcapFns,
+    rx_capture:usize,tx_capture:usize,npcap:CaptureFns,
 }
 struct GameCounters{
     stop:AtomicBool,err:AtomicI32,tx:AtomicU64,
@@ -153,10 +167,7 @@ fn configs(c:&WbdWinGameNativeAttachV3)->Result<Vec<LaneConfig>,i32>{
         rx_seq:c.first.initial_rx_seq,
         local_port:c.first.local_port,peer_port:c.first.peer_port,
         rx_capture:c.first.rx_capture,tx_capture:c.first.tx_capture,
-        #[cfg(not(feature="winxdp_native_trial"))]
         npcap:c.first.npcap,
-        #[cfg(feature="winxdp_native_trial")]
-        npcap:c.first.npcap_fns().ok_or(INVALID)?,
     });
     for x in c.extra.iter().take(c.lanes as usize-1){
         a.push(LaneConfig{owner:x.owner,tx_seq:x.initial_tx_seq,
@@ -169,10 +180,28 @@ fn configs(c:&WbdWinGameNativeAttachV3)->Result<Vec<LaneConfig>,i32>{
     if a.iter().enumerate().any(|(i,x)|
         a.iter().skip(i+1).any(|y|x.owner==y.owner||x.local_port==y.local_port)
     ){return Err(INVALID)}
+    #[cfg(feature="winxdp_native_trial")]
+    if a.iter().any(|l|l.npcap!=[0;6]||l.rx_capture!=a[0].rx_capture||l.tx_capture!=a[0].tx_capture){return Err(INVALID)}
     Ok(a)
 }
+#[inline]
+fn send_lane(npf:&mut GameTx,_lane:usize,frames:&[&[u8]])->wbd_platform::TxBatchOutcome{
+    #[cfg(not(feature="winxdp_native_trial"))]
+    {npf[_lane].send_batch(frames)}
+    #[cfg(feature="winxdp_native_trial")]
+    {let mut result=npf.send_batch(frames);
+     if npf.failed(){result.error=Some(wbd_platform::TxError::IoFailed)}
+     result}
+}
+#[inline]
+fn retire_tx_carrier(active:&mut [bool],lane:usize){
+    #[cfg(not(feature="winxdp_native_trial"))]
+    {let _=retire_game_tx_lane(active,lane);}
+    #[cfg(feature="winxdp_native_trial")]
+    {let _=lane;active.fill(false);}
+}
 fn wire_frame<'a>(cfg:&WbdWinNativeAttachV1,l:&LaneConfig,
-    seq:u32,ack:u32,wire:&[u8],id:u16,out:&'a mut [u8;FRAME_CAP],
+    seq:u32,ack:u32,wire:&[u8],id:u16,out:&'a mut [u8],
 )->Result<&'a [u8],i32>{
     let packet=build_bytes(Ipv4Tuple{
         src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
@@ -221,7 +250,7 @@ fn game_send_failure(c:&GameCounters,stage:&str,rc:i32,
 fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
     owner:&Arc<Mutex<game::WinGameGroup>>,
     outer:&Arc<Mutex<outer::GameOuter>>,
-    lanes:&[LaneConfig],npf:&mut [NpcapTx],c:&GameCounters,
+    lanes:&[LaneConfig],npf:&mut GameTx,c:&GameCounters,
     records:Vec<game::WbdWindowsGameRecordV4>,ip_id:&mut u16,
     active:&mut [bool],origin:&str,
 )->Result<usize,i32>{
@@ -255,21 +284,36 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
             let mut seq=c.tx_seq[idx].load(Ordering::Acquire);
             let mut seqs=[0u32;BATCH];
             let mut lengths=[0usize;BATCH];
-            let mut frames=[[0u8;FRAME_CAP];BATCH];
-            if active[idx]{
-                for i in 0..count{
-                    let r=selected[i].unwrap();
-                    seqs[i]=seq;
-                    lengths[i]=wire_frame(cfg,&lanes[idx],seq,ack,&r.wire[..r.length as usize],
-                        *ip_id,&mut frames[i])
-                        .map_err(|rc|game_send_failure(c,"wire_frame",rc,r,cfg,origin))?.len();
-                    *ip_id=ip_id.wrapping_add(1);
-                    seq=seq.wrapping_add(r.length);
-                }
-            }
+            #[cfg(not(feature="winxdp_native_trial"))]
+            let outcome={
+                let mut frames=[[0u8;FRAME_CAP];BATCH];
+                if active[idx]{
+                    for i in 0..count{
+                        let r=selected[i].unwrap();seqs[i]=seq;
+                        lengths[i]=wire_frame(cfg,&lanes[idx],seq,ack,&r.wire[..r.length as usize],
+                            *ip_id,&mut frames[i]).map_err(|rc|game_send_failure(c,"wire_frame",rc,r,cfg,origin))?.len();
+                        *ip_id=ip_id.wrapping_add(1);seq=seq.wrapping_add(r.length);
+                    }
+                    let ready:[&[u8];BATCH]=std::array::from_fn(|i|&frames[i][..lengths[i]]);
+                    Some(send_lane(npf,idx,&ready[..count]))
+                }else{None}
+            };
+            #[cfg(feature="winxdp_native_trial")]
             let outcome=if active[idx]{
-                let ready:[&[u8];BATCH]=std::array::from_fn(|i|&frames[i][..lengths[i]]);
-                Some(npf[idx].send_batch(&ready[..count]))
+                let mut result=match npf.reserve(count){
+                    Ok(mut batch)=>{
+                        for i in 0..count{
+                            let r=selected[i].unwrap();seqs[i]=seq;
+                            lengths[i]=wire_frame(cfg,&lanes[idx],seq,ack,&r.wire[..r.length as usize],
+                                *ip_id,batch.frame(i)).map_err(|rc|game_send_failure(c,"wire_frame",rc,r,cfg,origin))?.len();
+                            *ip_id=ip_id.wrapping_add(1);seq=seq.wrapping_add(r.length);
+                        }
+                        batch.submit(&lengths[..count])
+                    },
+                    Err(e)=>wbd_platform::TxBatchOutcome{accepted_prefix:0,uncertain_index:None,error:Some(e)},
+                };
+                if npf.failed(){result.error=Some(wbd_platform::TxError::IoFailed)}
+                Some(result)
             }else{None};
             let copied_prefix=outcome.as_ref().map_or(0,|x|x.accepted_prefix);
             for i in 0..count{
@@ -293,7 +337,7 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
             if let Some(outcome)=outcome{
                 if outcome.error.is_some()||outcome.uncertain_index.is_some(){
                     eprintln!("M0_PLAN026_GAME_NATIVE_TX_LANE_RETIRED lane={} stage=npcap_send_driver accepted_prefix={} uncertain_index={:?} error={:?}",idx+1,outcome.accepted_prefix,outcome.uncertain_index,outcome.error);
-                    let _=retire_game_tx_lane(active,idx);
+                    retire_tx_carrier(active,idx);
                 }
             }
         }
@@ -302,7 +346,7 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
     Ok(total)
 }
 fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
-    npf:&mut [NpcapTx],c:&GameCounters,ip_id:&mut u16,
+    npf:&mut GameTx,c:&GameCounters,ip_id:&mut u16,
     active:&mut [bool],last_ns:&mut [u64;4],future_sent:&mut [u32;4],
 )->Result<(),i32>{
     let now=m2_clock().0;
@@ -333,7 +377,7 @@ fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
             c.tx_seq[i].load(Ordering::Acquire),ack,*ip_id,
             cfg.path_mtu as usize,sacks,&mut scratch)?;
         *ip_id=ip_id.wrapping_add(1);
-        let status=npf[i].send_batch(&[frame]);
+        let status=send_lane(npf,i,&[frame]);
         if status.accepted_prefix==1{
             c.ack_sent[i].store(ack,Ordering::Release);
             future_sent[i]=future;
@@ -341,7 +385,7 @@ fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
         }
         if status.error.is_some()||status.uncertain_index.is_some(){
             eprintln!("M0_PLAN026_GAME_NATIVE_TX_LANE_RETIRED lane={} stage=npcap_ack_send_driver accepted_prefix={} uncertain_index={:?} error={:?}",i+1,status.accepted_prefix,status.uncertain_index,status.error);
-            let _=retire_game_tx_lane(active,i);
+            retire_tx_carrier(active,i);
         }
         if !active.iter().any(|&ok|ok){
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=all_npcap_ack_lanes_retired");
@@ -360,7 +404,7 @@ fn game_client_health_clock(at:u64)->HealthClock{
 fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     group:Arc<Mutex<game::WinGameGroup>>,
     outer:Arc<Mutex<outer::GameOuter>>,
-    mut tun:WintunRx,mut npf:Vec<NpcapTx>,stop:Arc<WakeEvent>,
+    mut tun:WintunRx,mut npf:GameTx,stop:Arc<WakeEvent>,
     wake:Arc<WakeEvent>,c:Arc<GameCounters>,
     mut split:Option<NativeSplitWorker>,
     direct_return:Option<SyncSender<Vec<u8>>>,
@@ -371,7 +415,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     let mut id=1u16;
     // TX and RX capture endpoints have distinct native failure lifetimes.
     // Retiring one local TX handle must never stop another lane's NPF send.
-    let mut active=vec![true;npf.len()];
+    let mut active=vec![true;lanes.len()];
     let mut ack_last_ns=[0u64;4];
     let mut ack_future_sent=[0u32;4];
     let (health_origin,health_evidence)={
@@ -519,7 +563,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 Ok(v)=>v,Err(e)=>return e,
             };
             id=id.wrapping_add(1);
-            let outcome=npf[index].send_batch(&[frame]);
+            let outcome=send_lane(&mut npf,index,&[frame]);
             let copied=outcome.accepted_prefix==1;
             let sent=if copied{1}else if outcome.uncertain_index.is_some(){2}else{0};
             let rc=match outer.lock(){Ok(mut m)=>m.complete(index,pn,sent),Err(_)=>Err(BAD_STAGE)};
@@ -530,7 +574,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             }
             if outcome.error.is_some()||outcome.uncertain_index.is_some(){
                 eprintln!("M0_PLAN027_GAME_NORMAL_OUTER_LANE_RETIRED lane={} npf={:?}",index+1,outcome.error);
-                let _=retire_game_tx_lane(&mut active,index);
+                retire_tx_carrier(&mut active,index);
             }
             if !active.iter().any(|x|*x){return BAD_STAGE}
             did_work=true;
@@ -568,7 +612,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                             &wire[..n],id,&mut scratch){
                             Ok(frame)=>{
                                 id=id.wrapping_add(1);
-                                let result=npf[index].send_batch(&[frame]);
+                                let result=send_lane(&mut npf,index,&[frame]);
                                 let copied=result.accepted_prefix==1;
                                 if copied{
                                     // Health consumes real TCP sequence
@@ -582,7 +626,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                                     c.tx.fetch_add(1,Ordering::Relaxed);
                                 }
                                 if result.error.is_some()||result.uncertain_index.is_some(){
-                                    let _=retire_game_tx_lane(&mut active,index);
+                                    retire_tx_carrier(&mut active,index);
                                 }
                                 copied
                             },
@@ -858,10 +902,66 @@ fn abort_deferred_fec(group:&Arc<Mutex<game::WinGameGroup>>,
     }
     OK
 }
+// Shared original parser, M3, ACK and settlement for both carriers.
+fn receive_game_carrier_frame(cfg:&WbdWinGameNativeAttachV3,lanes:&[LaneConfig],i:usize,ipv4:&[u8],
+    group:&Arc<Mutex<game::WinGameGroup>>,outer:&Arc<Mutex<outer::GameOuter>>,
+    tun:&mut WintunTx,c:&GameCounters,ledgers:&mut [AckLedger],deferred:&mut [Option<DeferredFec>],
+    early:&Arc<Mutex<VecDeque<(usize,u32,Vec<u8>)>>>,tx_wake:&WakeEvent,
+    tunnel_dns:Option<&Arc<Mutex<TunnelDnsMap>>>,now_ms:u64,
+)->Result<bool,i32>{
+                let l=&lanes[i];
+                let trusted=trusted_windows_game_rx(
+                    &cfg.first.peer_ip,&cfg.first.local_ip,
+                    l.peer_port,l.local_port,cfg.first.path_mtu as usize,
+                );
+                // Pure checksum/tuple-checked ACK is only an appearance
+                // hint. It never creates FEC recovery, Health or delivered.
+                if let Ok(hint)=wbd_platform::rx_ipv4_tcp::parse_ack_packet(
+                    ipv4,trusted,true){
+                    let mut sack=[wbd_recovery::outer_ack::SackRange32{
+                        start:0,end:0
+                    };4];
+                    let count=hint.sacks().len().min(4);
+                    for (dst,src) in sack.iter_mut().zip(hint.sacks()){
+                        *dst=wbd_recovery::outer_ack::SackRange32{
+                            start:src.start,end:src.end,
+                        };
+                    }
+                    let changed=match outer.lock(){
+                        Ok(mut m)=>m.on_hint(i,hint.ack32,&sack[..count]),
+                        Err(_)=>return Err(BAD_STAGE),
+                    };
+                    if changed{let _=tx_wake.wake();}
+                    return Ok(false)
+                }
+                let Ok(p)=parse_data_packet_fast(ipv4,trusted)else{return Ok(false)};
+                // Shared rings must keep siblings moving during rare Wintun backpressure.
+                // Reuse the existing bounded early FIFO only for the blocked lane.
+                if deferred[i].is_some(){
+                    let mut q=early.lock().map_err(|_|BAD_STAGE)?;
+                    if q.len()<EARLY_CAP{q.push_back((i,p.seq32,p.ciphertext.to_vec()));}
+                    else{c.rejected.fetch_add(1,Ordering::Relaxed);}
+                    return Ok(false)
+                }
+                match receive_one(cfg,group,tun,c,ledgers,
+                    deferred,i,p.seq32,p.ciphertext,tunnel_dns,now_ms){
+                    Ok(())=>{
+                        let changed=match outer.lock(){
+                            Ok(mut m)=>m.on_hint(i,p.presentation_ack32,&[]),
+                            Err(_)=>return Err(BAD_STAGE),
+                        };
+                        if changed{let _=tx_wake.wake();}
+                        return Ok(true)
+                    },
+                    Err(INVALID)=>{c.rejected.fetch_add(1,Ordering::Relaxed);},
+                    Err(e)=>return Err(e),
+                }
+    Ok(false)
+}
 fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     group:Arc<Mutex<game::WinGameGroup>>,
     outer:Arc<Mutex<outer::GameOuter>>,mut tun:WintunTx,
-    mut npf:Vec<NpcapRx>,stop:Arc<WakeEvent>,wake:Arc<WakeEvent>,
+    mut npf:GameRx,stop:Arc<WakeEvent>,wake:Arc<WakeEvent>,
     tx_wake:Arc<WakeEvent>,early:Arc<Mutex<VecDeque<(usize,u32,Vec<u8>)>>>,
     c:Arc<GameCounters>,direct_returns:Option<Receiver<Vec<u8>>>,
     tunnel_dns:Option<Arc<Mutex<TunnelDnsMap>>>,split_clock:Instant,
@@ -870,8 +970,11 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     let mut deferred:Vec<Option<DeferredFec>>=(0..lanes.len()).map(|_|None).collect();
     // A dead Npcap capture is lane-local. Stop/shared Wintun errors remain
     // group-wide. Rebuild the wait set only upon lane retirement (cold path).
-    let mut active=vec![true;npf.len()];
+    #[cfg(not(feature="winxdp_native_trial"))]
+    let mut active=vec![true;lanes.len()];
+    #[cfg(not(feature="winxdp_native_trial"))]
     let mut events=vec![0usize;npf.len()];
+    #[cfg(not(feature="winxdp_native_trial"))]
     for (i,rx) in npf.iter().enumerate(){
         match rx.event(){
             Ok(e)=>events[i]=e,
@@ -881,9 +984,13 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             },
         }
     }
+    #[cfg(not(feature="winxdp_native_trial"))]
     if !active.iter().any(|&ok|ok){return BAD_STAGE}
+    #[cfg(not(feature="winxdp_native_trial"))]
     let mut handles=vec![stop.handle(),wake.handle()];
+    #[cfg(not(feature="winxdp_native_trial"))]
     for (i,&e) in events.iter().enumerate(){if active[i]&&deferred[i].is_none(){handles.push(e)}};
+    #[cfg(not(feature="winxdp_native_trial"))]
     let mut frame=[0u8;NPF_CAP];
     let mut deferred_direct_tcp:Option<Vec<u8>>=None;
     loop{
@@ -944,14 +1051,19 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         // A successfully retried FEC batch can reopen an NPF RX lane in
         // THIS turn. Rebuild the event set BEFORE an infinite wait; keeping
         // last turn's handles would strand a now-healthy lane forever.
-        handles.truncate(2);
+        #[cfg(not(feature="winxdp_native_trial"))]
+        {        handles.truncate(2);
         for (i,&e) in events.iter().enumerate(){
             if active[i]&&deferred[i].is_none(){handles.push(e)}
+        }
         }
         // Never park indefinitely while a real decoded FEC batch is
         // awaiting Wintun capacity; never poll when there is no backlog.
         let timeout=if deferred.iter().any(Option::is_some)||
             deferred_direct_tcp.is_some(){5}else{u32::MAX};
+        let mut verified=false;
+        #[cfg(not(feature="winxdp_native_trial"))]
+        {
         match io::wait_ready(&handles,timeout){
             Ok(WaitResult::Ready(0))=>{
                 return abort_deferred_fec(&group,&mut deferred)
@@ -966,7 +1078,6 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 return BAD_STAGE
             },
         }
-        let mut verified=false;
         // One RX thread and one shared Wintun, read each lane fairly.
         for (i,rx) in npf.iter_mut().enumerate(){
             if !active[i]||deferred[i].is_some(){continue}
@@ -988,49 +1099,45 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     },
                 };
                 let Some(ipv4)=io::ethernet_ipv4(&frame[..n])else{continue};
-                let l=&lanes[i];
-                let trusted=trusted_windows_game_rx(
-                    &cfg.first.peer_ip,&cfg.first.local_ip,
-                    l.peer_port,l.local_port,cfg.first.path_mtu as usize,
-                );
-                // Pure checksum/tuple-checked ACK is only an appearance
-                // hint. It never creates FEC recovery, Health or delivered.
-                if let Ok(hint)=wbd_platform::rx_ipv4_tcp::parse_ack_packet(
-                    ipv4,trusted,true){
-                    let mut sack=[wbd_recovery::outer_ack::SackRange32{
-                        start:0,end:0
-                    };4];
-                    let count=hint.sacks().len().min(4);
-                    for (dst,src) in sack.iter_mut().zip(hint.sacks()){
-                        *dst=wbd_recovery::outer_ack::SackRange32{
-                            start:src.start,end:src.end,
-                        };
-                    }
-                    let changed=match outer.lock(){
-                        Ok(mut m)=>m.on_hint(i,hint.ack32,&sack[..count]),
-                        Err(_)=>return BAD_STAGE,
-                    };
-                    if changed{let _=tx_wake.wake();}
-                    continue
-                }
-                let Ok(p)=parse_data_packet_fast(ipv4,trusted)else{continue};
-                match receive_one(&cfg,&group,&mut tun,&c,&mut ledgers,
-                    &mut deferred,i,p.seq32,p.ciphertext,tunnel_dns.as_ref(),
+                match receive_game_carrier_frame(&cfg,&lanes,i,ipv4,&group,&outer,&mut tun,&c,
+                    &mut ledgers,&mut deferred,&early,&tx_wake,tunnel_dns.as_ref(),
                     split_clock.elapsed().as_millis() as u64){
-                    Ok(())=>{
-                        verified=true;
-                        let changed=match outer.lock(){
-                            Ok(mut m)=>m.on_hint(i,p.presentation_ack32,&[]),
-                            Err(_)=>return BAD_STAGE,
-                        };
-                        if changed{let _=tx_wake.wake();}
-                    },
-                    Err(INVALID)=>{c.rejected.fetch_add(1,Ordering::Relaxed);},
-                    Err(e)=>return e,
+                    Ok(v)=>verified|=v,Err(e)=>return e,
                 }
             }
         }
+        }
+        #[cfg(feature="winxdp_native_trial")]
+        {
+            if c.err.load(Ordering::Acquire)!=0{return abort_deferred_fec(&group,&mut deferred)}
+            let turn=match npf.next_turn(stop.handle(),wake.handle(),timeout){Ok(t)=>t,Err(_)=>return BAD_STAGE};
+            match turn{
+                RxTurn::Stop=>return abort_deferred_fec(&group,&mut deferred),
+                RxTurn::Idle=>{},
+                RxTurn::Ready(batch)=>{
+                    for j in 0..batch.len(){
+                        if c.stop.load(Ordering::Acquire){return abort_deferred_fec(&group,&mut deferred)}
+                        let Some(ipv4)=io::ethernet_ipv4(batch.frame(j))else{continue};
+                        // Contiguous original Game destination ports index the
+                        // lane directly; original parser still verifies its tuple.
+                        if ipv4.len()<20||ipv4[9]!=6{continue}
+                        let off=usize::from(ipv4[0]&15)*4;
+                        let Some(p)=ipv4.get(off+2..off+4)else{continue};
+                        let port=u16::from_be_bytes([p[0],p[1]]);
+                        let i=usize::from(port.wrapping_sub(lanes[0].local_port));
+                        if i>=lanes.len()||lanes[i].local_port!=port{continue}
+                        match receive_game_carrier_frame(&cfg,&lanes,i,ipv4,&group,&outer,&mut tun,&c,
+                    &mut ledgers,&mut deferred,&early,&tx_wake,tunnel_dns.as_ref(),
+                    split_clock.elapsed().as_millis() as u64){
+                    Ok(v)=>verified|=v,Err(e)=>return e,
+                }
+                    }
+                },
+            }
+        }
         if verified{let _=tx_wake.wake();}
+        #[cfg(not(feature="winxdp_native_trial"))]
+        {
         // All lanes lost is a genuine terminal group failure; a single
         // inactive Npcap RX handle must NOT stop sibling genuine copies.
         if !active.iter().any(|&ok|ok){
@@ -1042,6 +1149,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         handles.truncate(2);
         for (i,&e) in events.iter().enumerate(){
             if active[i]&&deferred[i].is_none(){handles.push(e)}
+        }
         }
     }
 }
@@ -1109,6 +1217,8 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
         cfg.first.wintun_session,cfg.first.wintun_read_event,cfg.first.wintun)}{
         Ok(v)=>v,Err(_)=>return BAD_STAGE,
     };
+    #[cfg(not(feature="winxdp_native_trial"))]
+    let (captures,senders)={
     let mut captures=Vec::with_capacity(lanes.len());
     let mut senders=Vec::with_capacity(lanes.len());
     for l in &lanes{
@@ -1121,6 +1231,14 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
         };
         captures.push(rx);senders.push(tx);
     }
+    (captures,senders)
+    };
+    #[cfg(feature="winxdp_native_trial")]
+    let (captures,senders)={
+        let rx=match unsafe{XdpRx::from_cold(lanes[0].rx_capture)}{Ok(v)=>v,Err(_)=>return BAD_STAGE};
+        let tx=match unsafe{XdpTx::from_cold(lanes[0].tx_capture)}{Ok(v)=>v,Err(_)=>return BAD_STAGE};
+        (rx,tx)
+    };
     let stop=match WakeEvent::new(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
     let tx_wake=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
     let rx_wake=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
