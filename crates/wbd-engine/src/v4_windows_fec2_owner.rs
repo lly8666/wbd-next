@@ -1036,16 +1036,24 @@ mod tests{
         {
             let mut e=r.entries[&h].lock().unwrap();
             m2_arm_entry(&mut e,ep,991,99).unwrap();
-            assert_eq!(e.arena.capacity(),2048);
-            // The previous 128-slot backing fails before a source can
-            // allocate. Hold the equivalent old capacity while staging
-            // a real Fixed source and settling its real accepted prefix.
-            let retained:Vec<_>=(0..128).map(|_|e.arena.allocate().unwrap()).collect();
+            assert_eq!(e.arena.capacity(),3072);
+            // Exercise real original arena-backed shadow ownership, not
+            // just the previous 128-slot allocation test. No extra copy
+            // or sampled shadow policy is substituted.
+            for i in 0..MAX_M2_FIXED_FROZEN {
+                let (n,seq,pn)=v3_seal_entry(
+                    &mut e,ep,991,99,&data((i%250) as u8),&mut [0u8;2048]).unwrap();
+                m2_kernel_firstsend_entry(&mut e,ep,991,99,pn,seq,n,1).unwrap();
+            }
+            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),MAX_M2_FIXED_FROZEN);
+            // Equivalent maximum FEC source charge; actual FixedStream
+            // uses 2048+48 bytes per retained slab plus job overhead.
+            let retained:Vec<_>=(0..1000).map(|_|e.arena.allocate().unwrap()).collect();
             let (used,seq,pn)=stage_fixed_source_entry(
                 &mut e,ep,991,99,&data(9),&mut [0u8;2048]).unwrap();
             m2_kernel_firstsend_entry(&mut e,ep,991,99,pn,seq,used,1).unwrap();
             let a=e.arena.report();
-            assert!(a.free>1024);
+            assert!(a.free>=32+64);
             drop(retained);
         }
         assert_eq!(quiesce_wintun(&mut r,h,ep,991,99),OK);

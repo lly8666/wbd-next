@@ -9,10 +9,12 @@ CASES=[["fixed-base-first","fixed",16384,2048,32,"original",350,5,20,1200],["fix
 def main():
     global CASES
     if os.environ.get("WBD_XDP_UDP_PHASE")=="small-pps":CASES=[["fixed-rx4096-small","fixed",4096,2048,32,"original",350,5,20,288],["fixed-small8192","fixed",8192,2048,32,"original",350,5,20,288],["fixed-small16384","fixed",16384,2048,32,"original",350,5,20,288],["fixed-small16384-150","fixed",16384,2048,32,"original",150,5,20,288],["fixed-small16384-feedback","fixed",16384,2048,32,"feedback",350,5,20,288]]
+    if os.environ.get("WBD_XDP_UDP_PHASE")=="capacity-sweep":CASES=[["fixed-small16384-50","fixed",16384,2048,32,"original",50,5,20,288],["fixed-small16384-100","fixed",16384,2048,32,"original",100,5,20,288],["fixed-small16384-150","fixed",16384,2048,32,"original",150,5,20,288],["fixed-small16384-250","fixed",16384,2048,32,"original",250,5,20,288],["fixed-small16384","fixed",16384,2048,32,"original",350,5,20,288],["fixed-small16384-feedback","fixed",16384,2048,32,"feedback",350,5,20,288],["fixed-small8192","fixed",8192,2048,32,"original",350,5,20,288],["fixed-rx4096-small","fixed",4096,2048,32,"original",350,5,20,288],["fixed-small16384-100-feedback","fixed",16384,2048,32,"feedback",100,5,20,288],["fixed-small16384-100-clean","fixed",16384,2048,32,"original",100,0,20,288],["normal-small-150","normal",16384,2048,32,"original",150,0,20,288],["auto-small-150","auto",16384,2048,32,"original",150,5,20,288],["game2-small-100","game2-fec",16384,2048,32,"original",100,5,20,288],["game4-small-100","game4-fec",16384,2048,32,"original",100,5,20,288]]
     rows=[]
     order=list(range(len(CASES)))
     if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
-    if os.environ["H2478_REPLICA"]=="S":order=[0,2,3] if os.environ.get("WBD_XDP_UDP_PHASE")=="small-pps" else [0,8,9,10]
+    if os.environ["H2478_REPLICA"]=="S":
+        order=[0,2,4,10,11,12,13] if os.environ.get("WBD_XDP_UDP_PHASE")=="capacity-sweep" else [0,2,3] if os.environ.get("WBD_XDP_UDP_PHASE")=="small-pps" else [0,8,9,10]
     for i in order:
         name,mode,rx,tx,q,policy,rate,loss,delay,size=CASES[i]
         case=E/name;case.mkdir(exist_ok=False)
