@@ -1,0 +1,5 @@
+# M0 BDP/BBRv3 model diagnosis and Linux-inspired SACK compression
+
+docs/evidence/M0/20261126-DUAL-RUST-TCP-BDP-LOSS-PROBE-RESULT.json
+
+Run45834669282 12/12 measured with joined Stop, dual ISA native pass; three ZIP digests verified, 1751 direct path samples, bare644.126Mbps, zero injected drops for all 0% legs. Means 16→64MiB 201.47→229.67Mbps (noisy, higher RSS); threshold2→10 at 1% 22.16→24.68, at5%0.652→21.216 Mbps. No production defaults promoted. Zero-loss cap64 still retransmits; RACK/timestamp/physical loss diagnosis open. User asks Linux ACK/SACK/GRO reuse: Linux comp_sack mechanism first three duplicate ACKs immediate, 1ms/44 limit, 5% RTT older kernels. Independent Rust implementation dffe77d uses retained OOO range, duplicate/FIN/ECN/window critical feedback unchanged, existing delayed ACK deadline. No new worker or DATA batching; no GRO implementation. Native45842035087/core45842115480/ARM45842115562 in flight; same binary compression only within matched blocks. Existing governance failures remain, no product merge.

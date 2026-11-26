@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source": "66215fee89068f4a1dad5c2b6658642f22614dfc",
+  "harness": "12bfe3d8445651e4e89f7101d2a3f4914696c6ac",
+  "run": 45834669282,
+  "native_run": 45834585337,
+  "artifact_sha256": {
+    "15126481015": "08dbf9bd596cce6f120bd9dbad3b3b19d3b1c7edecb0f74a7e9591312f78b649",
+    "15126711140": "07dd984043e8925f41fd8da6695ff5d7bdf860372daca9c17317fb33109a02f5",
+    "15125182995": "14835fae6cb82504f5120790a37415a30fcd778b0b8e2733fdabdf825f45f4b5"
+  },
+  "scope": "Three native ARM64 VMs, same triple all 12 legs, 400ms added RTT, 45s one reverse TCP, MTU1160, ACK3, FEC off repair on. All measured and Stop/probe receipts. Three ZIP digests matched; 1751 in-window path samples direct, not continuous proof; bare644.126Mbps below historical absolute qualification. Per-block one changed variable, do not compare across B profiles as one configuration.",
+  "conditions": [
+    {
+      "loss": 0,
+      "A": "16MiB",
+      "B": "64MiB",
+      "mbps_abba": [
+        189.857802775,
+        263.305731685,
+        196.035130846,
+        213.091861324
+      ],
+      "mean_A": 201.47483205,
+      "mean_B": 229.67043127,
+      "client_cpu_s_per_gib": [
+        24.035183,
+        22.939087
+      ],
+      "server_cpu_s_per_gib": [
+        21.523892,
+        24.287132
+      ],
+      "server_hwm_kib": [
+        97780,
+        161664,
+        159828,
+        81552
+      ],
+      "client_hwm_kib": [
+        115960,
+        223844,
+        287320,
+        67892
+      ],
+      "actual_loss_abba": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "loss": 1,
+      "A": "BBRv3 loss threshold2%",
+      "B": "threshold10%",
+      "mbps_abba": [
+        17.49948708,
+        27.05305159,
+        22.29966324,
+        26.81962825
+      ],
+      "mean_A": 22.15955767,
+      "mean_B": 24.67635742,
+      "client_cpu_s_per_gib": [
+        53.831727,
+        51.587333
+      ],
+      "server_cpu_s_per_gib": [
+        58.093997,
+        54.884624
+      ],
+      "actual_loss_abba": [
+        [
+          0.998,
+          1.056
+        ],
+        [
+          1.019,
+          1.056
+        ],
+        [
+          0.978,
+          0.957
+        ],
+        [
+          1.008,
+          0.986
+        ]
+      ]
+    },
+    {
+      "loss": 5,
+      "A": "BBRv3 loss threshold2%",
+      "B": "threshold10%",
+      "mbps_abba": [
+        0.605830044,
+        16.24100106,
+        26.19088122,
+        0.699049719
+      ],
+      "mean_A": 0.652439882,
+      "mean_B": 21.21594114,
+      "client_cpu_s_per_gib": [
+        190.516513,
+        44.646321
+      ],
+      "server_cpu_s_per_gib": [
+        216.352821,
+        50.402422
+      ],
+      "actual_loss_abba": [
+        [
+          5.451,
+          4.893
+        ],
+        [
+          5.043,
+          5.043
+        ],
+        [
+          4.998,
+          4.929
+        ],
+        [
+          4.765,
+          5.04
+        ]
+      ]
+    }
+  ],
+  "decision": "64MiB actually applied, modest noisy gain and higher RSS; zero-injection-loss is not zero TCP retransmission (server probe case1 at ~20s bytes_retrans24,049,899, dsack1813, RTO1). BBR threshold strongly explains 5% collapse but not whole gap with Linux BBR splice; 1% improvement mixed. No promotion. Linux fixture tcp_rmem/wmem max64MiB; payload vs kernel memory accounting differs. Next Linux-inspired SACK compression independent of threshold/ceiling, preserve first three gap ACKs and current SACK semantics; reuse existing delayed ACK deadline; GRO not implemented.",
+  "next": {
+    "source": "dffe77daa5adaeac89a86e48cd6730c4c67a655f",
+    "harness": "be216b6ee2e04e4b02adfc6b0026b5f6d8010910",
+    "native_run": 45842035087,
+    "core_run": 45842115480,
+    "arm_run": 45842115562,
+    "scope": "A compression off vs B on same binary; both cap64 at 0%, both loss10 at 1/5%; 400ms ARM triple ABBA; no default change; native default-path function, enabled unit and ARM receipts pending."
+  }
+}
