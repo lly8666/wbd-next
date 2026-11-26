@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2419,
-  "checkpoint_sha": "57e7d124585d5524930a39090d56c1e032ac6200",
+  "sequence": 2420,
+  "checkpoint_sha": "7d4f65bf6d366250a0acb6e575e09794ebe985d2",
   "progress": "partial",
   "task_id": "M0-ROUTEROS-SERVER",
   "current_task": "RouterOS真实BBR TCP端点：原WBD数据面不变，独立TCP分段参考实现接入；最终Rust性能设计待证。",
   "why_now": "用户授权独立RouterOS服务器分支并检查红色Actions。",
   "done_when": "真实客户端经原WBD与RouterOS DNAT，BBR隧道侧TCP真实窗口与交付速率、完整TCP/UDP业务、Stop；后续独立性能资格。",
-  "next_action": "实际WBD BBR clean/loss、同栈CUBIC loss、原NAT loss；验收实际CC和九条收据、UDP、Stop。",
+  "next_action": "待用户选择下一步：独立性能资格与低CPU原生化；先保留已验收参考路径，不提升默认。",
   "unverified": true,
-  "last_tested_source": "57e7d124585d5524930a39090d56c1e032ac6200",
+  "last_tested_source": "7d4f65bf6d366250a0acb6e575e09794ebe985d2",
   "evidence_refs": [
-    "docs/evidence/M0/20261126-ROUTEROS-BBR-REFERENCE-PARTIAL.json"
+    "docs/evidence/M0/20261126-ROUTEROS-WBD-BBR-SCOPED.json"
   ],
   "context_refs": [
     "docs/decisions/M0-ROUTEROS-SERVER-20261126.md",
     "docs/decisions/M0-ROUTEROS-BBR-20261126.md"
   ],
   "open_requests": [],
-  "partial_summary": "b90f681六DNAT模式与REDIRECT通过；legacy TPROXY失败。57e7d12 BBRv3独立真实TCP弱网通过，CUBIC独立对照慢，零损ARP前失败；内核BTF不可用。真实WBD BBR尚未验收。"
+  "partial_summary": "7d4f65b：实际WBD Normal+DNAT+BBRv3 clean/loss与同栈CUBIC loss三组九TCP、UDP、Stop完整通过；NAT loss两连接reset无完整收据。已独立核验原产品/sidecar二进制及场景原始证据；无吞吐/CPU与Rust原生BBR资格。"
 }
