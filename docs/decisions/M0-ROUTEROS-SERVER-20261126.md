@@ -11,3 +11,7 @@ Use quickchr 0.7.0 (https://github.com/tikoci/quickchr), Bun 1.4.4, CHR x86 7.24
 - Success requires real authenticated client READY, existing H2429 finite bidirectional TCP/half-close + eight concurrent streams + UDP echo, owned client/server Stop, and actual splice target/Stop in splice scene. Archive source manifest, checksums, RouterOS readback/filter/NAT counters, container/client logs, bounded wire header sample and application receipt. NOT_RUN until Actions evidence. No physical router deployment, no throughput claims.
 
 Main registry/cursor intentionally not overwritten while prior M0 work is active. Use this decision and branch commits as side-experiment handoff.
+
+## Fixture correction before first results
+
+CHR free is limited to 1 Mbps upload per interface (MikroTik CHR licensing manual). The first dispatched 5c6006b workflow uses original H2429 2/3 MiB and eight parallel 1 MiB downloads; its 35 s worker join may exceed license capacity. Keep that original run as evidence, not an unconditional functionality rejection. The corrected branch uses the same application logic at 1/16 payload (128/192 KiB, eight 16/64 KiB flows, unchanged UDP), records license, and retains exact bytes/hash, half-close and Stop requirements. No runtime or protocol change. This is a new source-locked functional fixture, not a throughput benchmark.

@@ -15,6 +15,7 @@ ros() { quickchr exec "$name" -- "$1"; }
 snapshot() {
   ros '/system/resource/print' >"$out/ros-resource.txt" 2>&1 || true
   ros '/system/package/print' >"$out/ros-packages.txt" 2>&1 || true
+  ros '/system/license/print' >"$out/ros-license.txt" 2>&1 || true
   ros '/system/device-mode/print' >"$out/ros-device-mode.txt" 2>&1 || true
   ros '/interface/print detail' >"$out/ros-interfaces.txt" 2>&1 || true
   ros '/ip/address/print detail' >"$out/ros-addresses.txt" 2>&1 || true
@@ -71,6 +72,7 @@ sudo ip route add 10.248.82.0/24 via 198.18.77.1 dev wbd-ros-origin
 quickchr start --name "$name" --version 7.24.7 --arch x86 --cpu 2 --mem 2048 --boot-size 4G --add-network user --add-network tap:wbd-ros-wan --add-network tap:wbd-ros-origin --add-package container --device-mode-enable container --secure-login --timeout-extra 120
 chr_started=1
 ros '/system/package/print' | tee "$out/ros-packages.txt"
+ros '/system/license/print' | tee "$out/ros-license.txt"
 ros '/system/device-mode/print' | tee "$out/ros-device-mode.txt"
 ros '/interface/ethernet/print detail' | tee "$out/ros-ethernet.txt"
 ros '/ip/address/add address=10.248.81.2/24 interface=ether2'
@@ -123,7 +125,7 @@ for i in $(seq 1 90); do
 done
 grep -q 'V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443' "$out/ros-container-log.txt"
 if [ -n "$cc" ]; then grep -q 'WBD_TCP_SPLICE_READY tun=wbds0 port=46180 cc=cubic' "$out/ros-container-log.txt"; fi
-# Verify the actual application with the existing finite duplex+half-close,
+# Verify the actual application with the H2429 finite duplex+half-close, scaled for CHR free,
 # eight concurrent streams and UDP echo fixture, not just client READY.
 sudo tcpdump -nn -l -c 80 -i wbd-ros-wan 'tcp port 443' >"$out/wire-headers.txt" 2>&1 &
 capture_pid=$!
@@ -137,14 +139,14 @@ done
 grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client' "$out/client.log"
 ns ip route replace 198.18.77.2/32 dev wbdc0
 ns ip route get 198.18.77.2 >"$out/client-route.txt"
-python3 -u tools/m0_h2429_splice_app.py origin 5300 >"$out/origin.log" 2>&1 &
+python3 -u tools/routeros-server/app.py origin 5300 >"$out/origin.log" 2>&1 &
 origin_pid=$!
 for i in $(seq 1 20); do
   if ss -ltn | grep -q '198.18.77.2:5300'; then break; fi
   sleep 1
 done
 ss -ltn | grep '198.18.77.2:5300'
-ns timeout 180 python3 -u tools/m0_h2429_splice_app.py client 5300 >"$out/application.json"
+ns timeout 180 python3 -u tools/routeros-server/app.py client 5300 >"$out/application.json"
 wait "$origin_pid"
 origin_pid=
 sudo kill -TERM "$client_pid"

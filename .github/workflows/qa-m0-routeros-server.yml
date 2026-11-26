@@ -23,7 +23,9 @@ jobs:
       - name: Exact-source existing x86 product
         run: |
           set -euo pipefail
-          bash -n tools/routeros-server/chr-lab.sh tools/routeros-server/entry.sh
+          bash -n tools/routeros-server/chr-lab.sh
+          sh -n tools/routeros-server/entry.sh
+          python3 -m py_compile tools/routeros-server/app.py
           bash tools/m0_plan029_linux_dual_native_build.sh >ros-build.log 2>&1 || { tail -n 150 ros-build.log; exit 2; }
           cd linux-plan029-public-bundle
           sha256sum -c SHA256SUMS
