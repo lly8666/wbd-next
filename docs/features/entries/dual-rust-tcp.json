@@ -35,7 +35,9 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-TX-TURN-INTENT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-INTENT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-RESULT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-RESULT.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-INTENT.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-INTENT.md"
   ],
   "verification": [
     {
@@ -121,6 +123,20 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "ACK3 paired BBRv3 middle, actual Normal product TCP duplex/8 concurrent/half-close/UDP/owned Stop; performance unverified",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "8a6439bd0ec7b807957f35c978729cc86986e1f2",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45821912474"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "ACK3 paired BBRv3 middle, actual Normal product TCP duplex/8 concurrent/half-close/UDP/owned Stop; performance unverified",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "8a6439bd0ec7b807957f35c978729cc86986e1f2",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45821912474"
     }
   ],
   "limitations": [
@@ -128,7 +144,8 @@
     "Normal scoped product PASS; server-local/source-policy parity, multi-lease, generation handoff and performance unverified.",
     "Old splice retained for same-host comparison; Windows unchanged",
     "Clean x86 ABBA measured capped goodput parity, but client CPU +29.1%; full performance qualification NOT_RUN. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json",
-    "Matched CUBIC ABBA measured capped goodput parity, client CPU +47.45%, host +15.19%; mixed BBR same VM similar gap. CUBIC trial not selected for product; restore BBRv3 in next substantive candidate. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
+    "Matched CUBIC ABBA measured capped goodput parity, client CPU +47.45%, host +15.19%; mixed BBR same VM similar gap. CUBIC trial not selected for product; restore BBRv3 in next substantive candidate. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json",
+    "ACK3 BBRv3 middle candidate 8a6439b exact scoped functional dual ISA PASS; same-VM old splice/original Rust ABBA run45821912542 and ARM three-runner loss1/5 run45822382519/45822382479 in flight. No performance or default promotion."
   ],
   "promotion": null
 }
