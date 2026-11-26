@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Pinned pktkit TCP core for native dual-ended TCP; first WIP core only.",
+  "summary": "Pinned pktkit TCP core with inner IPv4/TCP codec, dual client endpoints and native nonblocking Linux origin socket; original product owner integration pending.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -11,37 +11,69 @@
   ],
   "defaults": {},
   "usage": {
-    "cli": "Not exposed; core only",
+    "cli": "Not exposed; experimental endpoint code only",
     "config": "No new configuration",
     "gui": "Not exposed"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_rust_tcp/mod.rs",
-    "crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs"
+    "crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs",
+    "crates/wbd-engine/src/v4_rust_tcp/ipv4.rs",
+    "crates/wbd-engine/src/v4_rust_tcp/flow.rs",
+    "crates/wbd-engine/src/v4_rust_tcp/linux_socket.rs"
   ],
   "doc_refs": [
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-WIP.md",
-    "crates/wbd-engine/src/v4_rust_tcp/pktkit/UPSTREAM.md"
+    "crates/wbd-engine/src/v4_rust_tcp/pktkit/UPSTREAM.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-WIP.md"
   ],
   "verification": [
     {
       "platform": "linux/x86_64",
-      "scope": "Native core build and unit tests; product path NOT_RUN",
+      "scope": "Initial pinned TCP core (327 native unit tests)",
+      "status": "BUILD_PASS",
+      "source_sha": "105da799ad82b9423d778fd1850bf2503d9909a6",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45803683868"
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "Current inner TCP endpoints with real origin socket",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "Original product TUN-to-origin TCP, UDP, Stop and same-host performance",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     },
     {
       "platform": "linux/aarch64",
-      "scope": "Native core build and unit tests; product path NOT_RUN",
+      "scope": "Initial pinned TCP core (327 native unit tests)",
+      "status": "BUILD_PASS",
+      "source_sha": "105da799ad82b9423d778fd1850bf2503d9909a6",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45803683868"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "Current inner TCP endpoints with real origin socket",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "Original product TUN-to-origin TCP, UDP, Stop and same-host performance",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     }
   ],
   "limitations": [
-    "No native owner or origin socket route connected yet",
-    "No product TCP/UDP/Stop or performance qualification",
+    "Endpoint code is not yet connected to the original product TUN or authenticated owner",
+    "Origin test uses real native TCP socket with virtual packet peer; not a full product or performance test",
     "Old splice remains unchanged"
   ],
   "promotion": null

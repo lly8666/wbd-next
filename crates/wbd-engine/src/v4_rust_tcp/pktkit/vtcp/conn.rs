@@ -823,6 +823,7 @@ pub struct Conn {
     // Lifecycle flags.
     established_signaled: bool,
     fin_recvd_signaled: bool,
+    graceful_close: bool,
 
     // Output queue drained by callers via [`take_outgoing`] / returned from methods.
     outgoing: Vec<Vec<u8>>,
@@ -991,6 +992,7 @@ impl Conn {
             last_recv: now,
             established_signaled: false,
             fin_recvd_signaled: false,
+            graceful_close: false,
             outgoing: Vec::new(),
             outgoing_ecn: Vec::new(),
             last_marks: Vec::new(),
@@ -1027,6 +1029,12 @@ impl Conn {
     #[inline]
     pub fn is_closed(&self) -> bool {
         self.closed
+    }
+
+    /// The blocking API wakes readers/writers on any teardown, including RST.
+    /// Relays must distinguish that wakeup from an actual orderly EOF.
+    pub(crate) fn abnormal_end(&self) -> bool {
+        self.closed && !self.graceful_close
     }
 
     /// True once the connection has reached ESTABLISHED at least once.
@@ -2914,6 +2922,7 @@ impl Conn {
             self.note_alive();
         }
         if self.fin_acked() {
+            self.graceful_close = true;
             self.tear_down(State::Closed);
         }
         self.take_outgoing()
@@ -4754,6 +4763,7 @@ impl Conn {
             self.time_wait_deadline = None;
             self.state = State::Closed;
             self.closed = true;
+            self.graceful_close = true;
             self.release_buffers();
         }
         // FIN-WAIT-2: the peer has gone quiet without closing, and nothing
@@ -5160,6 +5170,30 @@ impl Conn {
             return 0;
         };
         let n = rb.read(buf);
+        self.after_read(n);
+        n
+    }
+
+    /// A nonblocking next-layer write may accept fewer bytes or WouldBlock.
+    /// Only accepted bytes leave the receive ring; window advancement is
+    /// identical to ordinary read(). No intermediary stream queue.
+    pub(crate) fn read_to(
+        &mut self, limit: usize,
+        consume: impl FnOnce(&[u8]) -> std::io::Result<usize>,
+    ) -> std::io::Result<usize> {
+        self.clock();
+        let Some(rb) = self.recv_buf.as_mut() else { return Ok(0) };
+        let bytes = rb.front();
+        let offered = bytes.len().min(limit);
+        if offered == 0 { return Ok(0) }
+        let n = consume(&bytes[..offered])?;
+        assert!(n <= offered);
+        rb.consume(n);
+        self.after_read(n);
+        Ok(n)
+    }
+
+    fn after_read(&mut self, n: usize) {
         if n > 0 {
             self.settle_recv_limit();
         }
@@ -5199,7 +5233,6 @@ impl Conn {
         {
             self.queue_ack();
         }
-        n
     }
 
     /// Non-blocking write: appends as much data as the send buffer can take

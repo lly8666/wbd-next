@@ -1,6 +1,10 @@
 //! M0 dual native TCP: first shared core increment, not yet an owner route.
 #![allow(dead_code)]
 mod pktkit;
+mod ipv4;
+mod flow;
+#[cfg(target_os="linux")]
+mod linux_socket;
 
 use pktkit::vtcp::Conn;
 use pktkit::vtcp::ecn::IpEcn;
@@ -18,24 +22,22 @@ impl Segments {
 }
 
 /// Transfer only bytes the destination TCP send buffer actually accepts.
-/// The caller owns the reusable scratch buffer and delivers both outputs.
+/// The caller delivers both outputs; the receiving ring is consumed directly.
 /// No extra per-flow relay queue, thread or tunnel retransmission layer.
 pub(crate) fn transfer(
     from: &mut Conn,
     to: &mut Conn,
-    scratch: &mut [u8],
+    limit: usize,
 ) -> (usize, Segments, Segments) {
-    let limit = scratch.len().min(from.readable()).min(to.send_available());
-    if limit == 0 {
-        let empty = || Segments { packets: Vec::new(), ecn: Vec::new() };
-        return (0, empty(), empty());
-    }
-    let n = from.read(&mut scratch[..limit]);
+    let limit = limit.min(to.send_available());
+    let mut to_packets = Vec::new();
+    let n = from.read_to(limit, |bytes| {
+        let (n, packets) = to.write(bytes);
+        to_packets = packets;
+        Ok(n)
+    }).expect("TCP buffer write is infallible");
     let from_packets = from.take_outgoing();
-    let from_out = Segments::from_conn(from, from_packets);
-    let (accepted, to_packets) = to.write(&scratch[..n]);
-    debug_assert_eq!(accepted, n);
-    (accepted, from_out, Segments::from_conn(to, to_packets))
+    (n, Segments::from_conn(from, from_packets), Segments::from_conn(to, to_packets))
 }
 
 #[cfg(test)]
@@ -78,11 +80,10 @@ mod tests {
         }
         assert_eq!(ingress.readable(), payload.len());
         let mut blocked = endpoint(40001, 80);
-        let mut scratch = [0; 128];
-        assert_eq!(transfer(&mut ingress, &mut blocked, &mut scratch).0, 0);
+        assert_eq!(transfer(&mut ingress, &mut blocked, 128).0, 0);
         assert_eq!(ingress.readable(), payload.len());
         let (mut egress, mut sink) = linked();
-        let (n, up, down) = transfer(&mut ingress, &mut egress, &mut scratch);
+        let (n, up, down) = transfer(&mut ingress, &mut egress, 128);
         assert_eq!(n, payload.len());
         assert_eq!(up.packets.len(), up.ecn.len());
         assert_eq!(down.packets.len(), down.ecn.len());

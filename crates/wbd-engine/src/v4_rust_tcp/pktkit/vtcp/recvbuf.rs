@@ -410,6 +410,19 @@ impl RecvBuf {
         n
     }
 
+    /// The first contiguous range, kept owned until the next layer accepts it.
+    pub(crate) fn front(&self) -> &[u8] {
+        self.buf.as_slices().0
+    }
+
+    /// Retire exactly the bytes accepted by the next layer.
+    pub(crate) fn consume(&mut self, n: usize) {
+        self.buf.drain(..n);
+        if self.buf.is_empty() && self.buf.capacity() > KEEP_IDLE_CAPACITY {
+            self.buf = VecDeque::new();
+        }
+    }
+
     /// Free what the connection no longer needs once no more data can
     /// arrive (TIME-WAIT, CLOSED): the out-of-order ranges, and the
     /// in-order data too unless it is still to be read (`keep_unread`).

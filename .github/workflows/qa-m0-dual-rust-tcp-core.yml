@@ -18,9 +18,19 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Native core on exact source (not product or performance)
+      - name: Native core and origin socket on exact source (not product or performance)
+        shell: bash
         run: |
-          git rev-parse HEAD
-          uname -m
+          set -euo pipefail
+          mkdir -p out
+          git rev-parse HEAD | tee out/source.txt
+          uname -m | tee out/arch.txt
           rustup toolchain install 1.85.1 --profile minimal
-          cargo +1.85.1 test --locked -p wbd-engine --lib v4_rust_tcp
+          rustc +1.85.1 -Vv | tee out/rustc.txt
+          cargo +1.85.1 test --locked -p wbd-engine --lib v4_rust_tcp 2>&1 | tee out/test.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: dual-rust-tcp-core-${{ matrix.runner }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/
+          if-no-files-found: error
