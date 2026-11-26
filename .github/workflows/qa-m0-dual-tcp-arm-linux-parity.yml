@@ -2,7 +2,7 @@ name: M0 ARM Linux parity candidate CUBIC and BBRv1-style ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
-    paths: ['.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml']
+    paths: ['.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml', 'tools/m0_dual_tcp_arm_linux_parity.py']
 permissions:
   contents: read
   actions: read
@@ -121,7 +121,7 @@ jobs:
           echo $! >"$RUNNER_TEMP/dual-watch.pid"
       - name: Keep ARM forwarding and netem alive through ARM client measurements
         shell: bash
-        timeout-minutes: 35
+        timeout-minutes: 50
         run: |
           set -euo pipefail
           bash tools/m0_h2228_three_runner_case.sh relay-wait

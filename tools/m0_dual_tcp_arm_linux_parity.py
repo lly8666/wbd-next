@@ -100,7 +100,7 @@ def snapshot(role):
             "kernel_version":os.uname().version,
             "kernel_package":h.cmd("dpkg-query","-W","-f=${Package} ${Version} ${source:Package} ${source:Version}\\n","linux-image-"+os.uname().release,allow_fail=True).stdout,
             "kernel_config_sha256":h.cmd("sha256sum","/boot/config-"+os.uname().release,allow_fail=True).stdout,
-            "tcp_sysctl":h.ns(N,"sysctl","-a",allow_fail=True).stdout.splitlines(),
+            "tcp_sysctl":[x for x in h.ns(N,"sysctl","-a",allow_fail=True).stdout.splitlines() if x.startswith(("net.ipv4.tcp_","net.core.rmem_","net.core.wmem_","net.core.default_qdisc"))],
             "bbr_module":h.cmd("modinfo","tcp_bbr",allow_fail=True).stdout,
             "qdisc":h.ns(N,"tc","-s","-j","qdisc","show").stdout,
             "offload":h.ns(N,"ethtool","-k","wan0").stdout}

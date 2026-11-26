@@ -3243,8 +3243,9 @@ impl Conn {
         {
             return;
         }
-        let factor = if self.cfg.linux_parity && self.cc.as_bbr1().is_some() { 3 } else { 2 };
-        let want = autotune::sndbuf_target_with_factor(cwnd, self.mss as u32, factor).min(self.cfg.send_max());
+        let want = if self.cfg.linux_parity && self.cc.as_bbr1().is_some() {
+            autotune::sndbuf_target_with_factor(cwnd, self.mss as u32, 3)
+        } else { autotune::sndbuf_target(cwnd, self.mss as u32) }.min(self.cfg.send_max());
         let cur = sb.capacity();
         if want <= cur {
             return;
@@ -6953,6 +6954,7 @@ mod tests {
             client.mss as u32,
             client.cfg.pacing,
             client.now,
+            client.cfg.linux_parity,
         );
 
         let (_, segs) = client.write(&[4; 10_000]);
