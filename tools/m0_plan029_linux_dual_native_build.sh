@@ -6,6 +6,7 @@
 # x86 production build; a second stale hand-written list is not a release.
 # BUILD ONLY: real application delivery, Stop and physical remain NOT_RUN.
 set -euo pipefail
+export WBD_RUST_TOOLCHAIN="${WBD_RUST_TOOLCHAIN:-1.85.1}"
 case "${WBD_LINUX_GLIBC_BUILD_BASELINE:-2.31}" in
   2.31) exec bash tools/m0_linux_glibc231_build.sh ;;
   2.31-inner) test "$(getconf GNU_LIBC_VERSION)" = "glibc 2.31" ;;
@@ -97,13 +98,14 @@ test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
 nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" > "$WBD_ISAL_PREFIX/isal-symbols.txt"
 grep -E ' [TW] ec_encode_data$' "$WBD_ISAL_PREFIX/isal-symbols.txt"
 echo "PLAN029_NATIVE_ISAL_ARCHIVE_SYMBOL_PASS"
-rustup toolchain install 1.85.1 --profile minimal
+rustup toolchain install "$WBD_RUST_TOOLCHAIN" --profile minimal
+rustc +"$WBD_RUST_TOOLCHAIN" -vV
 features=m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
-cargo +1.85.1 build --release --locked -p wbd-engine --features "$features"
-cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_game_lane::tests
-cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_fec2_live_rx::tests
+cargo +"$WBD_RUST_TOOLCHAIN" build --release --locked -p wbd-engine --features "$features"
+cargo +"$WBD_RUST_TOOLCHAIN" test --locked -p wbd-engine --features "$features" --lib v4_game_lane::tests
+cargo +"$WBD_RUST_TOOLCHAIN" test --locked -p wbd-engine --features "$features" --lib v4_fec2_live_rx::tests
 # Shared Linux protocol/core and bounded source policy, no Windows GUI/Direct claim.
-cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_client_startup_padding::tests
+cargo +"$WBD_RUST_TOOLCHAIN" test --locked -p wbd-engine --features "$features" --lib v4_client_startup_padding::tests
 test -s target/release/libwbd_engine.so
 mkdir -p linux-plan029-public-bundle
 export CGO_ENABLED=1 GOOS=linux GOARCH="$GO_ARCH" GOTOOLCHAIN=local
@@ -127,7 +129,7 @@ else
 fi
 export WBD_BUILD_GLIBC="$(getconf GNU_LIBC_VERSION)"
 python3 - <<'PY'
-import hashlib,json,os,pathlib,platform
+import hashlib,json,os,pathlib,platform,subprocess
 p=pathlib.Path("linux-plan029-public-bundle")
 names=("wbd-v4-client","wbd-v4-server","libwbd_engine.so")
 hashes={n:hashlib.sha256((p/n).read_bytes()).hexdigest() for n in names}
@@ -137,7 +139,7 @@ assert platform.machine()==os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
 d={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],
    "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
    "isa_l_source":"c387163fcbca62701d646149564c550c78a4f985",
-   "rust":"1.85.1","go":"1.23.12",
+   "rust":os.environ["WBD_RUST_TOOLCHAIN"],"rustc_vV":subprocess.check_output(["rustc","+"+os.environ["WBD_RUST_TOOLCHAIN"],"-vV"],text=True),"go":"1.23.12",
    "build_glibc":os.environ["WBD_BUILD_GLIBC"],
    "elf_version_needs":json.loads((p/"glibc-abi.json").read_text()),
    "architecture":platform.machine(),"sha256":hashes,

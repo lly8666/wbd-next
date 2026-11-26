@@ -4,9 +4,15 @@ import hashlib,json,os,pathlib,re,signal,subprocess,sys,time,statistics
 O=pathlib.Path("dual-tcp-perf-out").resolve(); O.mkdir(exist_ok=True)
 ROOTS={k:pathlib.Path("bundles",k).resolve() for k in ("A","B")}
 SOURCES={"A":"26b11e2da236e909b73f461964c52d5a86d42dca","B":"86e3ec30010a59cbb60539b902cb96dc21e04d6a"}
+COMPARE=os.environ.get("DUAL_TCP_COMPARE","splice")
+ARCH=os.environ.get("DUAL_TCP_ARCH","x86_64")
+if COMPARE=="toolchain":
+    SOURCES={k:os.environ["GITHUB_SHA"] for k in ROOTS}
+elif COMPARE=="profile":
+    ROOTS={"B":ROOTS["B"]}; SOURCES={"B":SOURCES["B"]}
 C,R,S,T="h21client","h21router","h21server","h21origin"
 N=(C,R,S,T)
-ORDER="ABBA"
+ORDER="B" if COMPARE=="profile" else "ABBA"
 LOSS=0
 DELAY=0
 RATE=0
@@ -77,18 +83,20 @@ def snap(p):
 def manifest(k):
     root=ROOTS[k]
     m=json.loads((root/"manifest.json").read_text())
-    assert m["source_sha"]==SOURCES[k] and m["architecture"]=="x86_64"
+    assert m["source_sha"]==SOURCES[k] and m["architecture"]==ARCH
+    if COMPARE=="toolchain":assert m["rust"]=={"A":"1.85.1","B":"1.100.0"}[k]
     for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
         assert hashlib.sha256((root/name).read_bytes()).hexdigest()==m["sha256"][name]
     return {"manifest":m,"manifest_sha256":hashlib.sha256((root/"manifest.json").read_bytes()).hexdigest()}
 
 def leg(i,k):
     d=O/f"{i}-{k}";d.mkdir()
-    root=ROOTS[k];port=5300+i;server=client=app=None
+    root=ROOTS[k];port=5300+i;server=client=app=profile=None
+    splice=(k=="A" and COMPARE=="splice")
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1460"]
-    server_flags=["--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"] if k=="A" else ["--dual-rust-tcp"]
-    client_flags=[] if k=="A" else ["--dual-rust-tcp"]
+    server_flags=["--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"] if splice else ["--dual-rust-tcp"]
+    client_flags=[] if splice else ["--dual-rust-tcp"]
     begin=time.monotonic_ns()
     try:
         server=spawn(S,d/"server.log","env","LD_LIBRARY_PATH="+str(root),root/"wbd-v4-server",
@@ -101,7 +109,7 @@ def leg(i,k):
             "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
             "--username","bench","--password","DUAL-TCP-PERF","--auto-ip","--installation-id-file",d/"install",*common,*client_flags)
         until(client,lambda:"V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client" in (d/"client.log").read_text())
-        if k=="A":
+        if splice:
             assert "WBD_TCP_SPLICE_READY tun=wbds0 port=46180 cc=bbr" in (d/"server.log").read_text()
         else:
             until(server,lambda:"WBD_DUAL_RUST_TCP_OWNER_START" in (d/"server.log").read_text())
@@ -113,10 +121,20 @@ def leg(i,k):
         snap(d/"before-netem.json")
         app=spawn(T,d/"origin.log","iperf3","-s","-1","-B","198.18.77.2","-p",str(port))
         until(app,lambda:f":{port} " in ns(T,"ss","-ltn"))
+        if COMPARE=="profile":
+            with (d/"perf-record.log").open("w") as log:
+                profile=subprocess.Popen([os.environ["DUAL_TCP_PERF_BIN"],"record","-e","cpu-clock","-F","99","--call-graph","dwarf,8192","-p",str(client.pid),"-o",str(d/"perf.data")],stdout=log,stderr=subprocess.STDOUT)
+            time.sleep(.25)
         pre=[stats(server),stats(client)];h0=host();tick=os.sysconf("SC_CLK_TCK");t=time.monotonic_ns()
         with (d/"iperf.json").open("w") as out,(d/"iperf.err").open("w") as err:
             p=subprocess.run(["ip","netns","exec",C,"iperf3","-J","-c","198.18.77.2","-p",str(port),"-C","bbr","-P","1","-R","-t","25"],stdout=out,stderr=err,timeout=90)
         end=time.monotonic_ns();h1=host();post=[stats(server),stats(client)]
+        if profile:
+            if profile.poll() is None:profile.send_signal(signal.SIGINT)
+            profile.wait(15)
+            with (d/"perf-report.txt").open("w") as log:
+                report=subprocess.run([os.environ["DUAL_TCP_PERF_BIN"],"report","--stdio","--no-children","--sort","comm,dso,symbol","--percent-limit","0.3","-i",str(d/"perf.data")],stdout=log,stderr=subprocess.STDOUT)
+            save(d/"profile-status.json",{"record_rc":profile.returncode,"report_rc":report.returncode,"scope":"DIAGNOSTIC_ONLY"})
         data=json.loads((d/"iperf.json").read_text());assert p.returncode==0 and not data.get("error"),data.get("error")
         received=data["end"]["sum_received"];sent=data["end"]["sum_sent"]
         assert received["bytes"]>0 and received["seconds"]>=24
@@ -130,7 +148,7 @@ def leg(i,k):
             assert "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log
         assert "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in sl
         assert server.returncode==0 and client.returncode==0
-        if k=="A":
+        if splice:
             assert "WBD_TCP_SPLICE_STOP error=<nil>" in sl
             assert f"target=198.18.77.2:{port} cc=bbr" in sl
             copies=[int(x) for x in re.findall(r"WBD_TCP_SPLICE_DONE .*?down=(\d+)",sl)]
@@ -144,6 +162,8 @@ def leg(i,k):
         save(d/"result.json",row);print(json.dumps(row),flush=True)
         return row
     finally:
+        if profile and profile.poll() is None:
+            profile.send_signal(signal.SIGINT);profile.wait(15)
         for p in (app,client,server):
             if p and p.poll() is None:stop(p)
         (d/"install").unlink(missing_ok=True)
@@ -164,7 +184,7 @@ try:
     assert all(a["end_monotonic_ns"]<=b["start_monotonic_ns"] for a,b in zip(rows,rows[1:]))
     fields=("mbps","server_cpu_s_per_gib","client_cpu_s_per_gib","host_cpu_s_per_gib")
     means={k:{f:statistics.mean(r[f] for r in rows if r["leg"]==k) for f in fields} for k in ROOTS}
-    save(O/"summary.json",{"status":"MEASURED_NOT_PROMOTED","scenario":"clean-1stream-download-25s","order":ORDER,"loss_pct":0,"added_rtt_ms":0,"outer_mtu":1460,"outer_repair":"on","seed":0,"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"rows":rows,"means":means,"builds":MANIFESTS})
+    save(O/"summary.json",{"status":"DIAGNOSTIC_ONLY" if COMPARE=="profile" else "MEASURED_NOT_PROMOTED","comparison":COMPARE,"scenario":"clean-1stream-download-25s","order":ORDER,"loss_pct":0,"added_rtt_ms":0,"outer_mtu":1460,"outer_repair":"on","seed":0,"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"rows":rows,"means":means,"builds":MANIFESTS})
 finally:
     for name in ("route-key.hex","users.json","key.pem","cert.pem"):(O/name).unlink(missing_ok=True)
     for n in reversed(N):subprocess.run(["ip","netns","del",n],check=False)

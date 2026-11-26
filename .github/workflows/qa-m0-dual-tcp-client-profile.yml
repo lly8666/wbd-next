@@ -1,0 +1,45 @@
+name: M0 dual Rust TCP client CPU profile
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths: ['.github/workflows/qa-m0-dual-tcp-client-profile.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  profile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Consume exact previously measured B binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p bundles/B
+          gh run download 45810506381 -R "$GITHUB_REPOSITORY" -n dual-tcp-build-B -D bundles/B
+          tar -C bundles/B -xf bundles/B/bundle.tar
+          (cd bundles/B && sha256sum -c SHA256SUMS)
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iperf3 openssl linux-tools-generic
+          python3 -m py_compile tools/m0_dual_tcp_perf.py
+      - name: Client process sample profile (not paired throughput qualification)
+        run: |
+          set -euo pipefail
+          PERF_BIN="$(find /usr/lib/linux-tools -name perf -type f | sort | tail -1)"
+          test -x "$PERF_BIN"
+          sudo env DUAL_TCP_COMPARE=profile DUAL_TCP_PERF_BIN="$PERF_BIN" GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" GITHUB_JOB="$GITHUB_JOB" RUNNER_NAME="$RUNNER_NAME" python3 -u tools/m0_dual_tcp_perf.py
+      - name: Preserve diagnostic evidence
+        if: always()
+        run: |
+          if test -d dual-tcp-perf-out; then
+            sudo find dual-tcp-perf-out -type f \( -name install -o -name route-key.hex -o -name users.json -o -name key.pem -o -name cert.pem \) -delete
+            sudo chown -R "$(id -u):$(id -g)" dual-tcp-perf-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: dual-tcp-client-profile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dual-tcp-perf-out/
+          if-no-files-found: error

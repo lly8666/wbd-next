@@ -31,7 +31,8 @@
     "crates/wbd-engine/src/v4_rust_tcp/pktkit/UPSTREAM.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-WIP.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-WIP.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md"
   ],
   "verification": [
     {
@@ -108,7 +109,8 @@
   "limitations": [
     "Paired Linux Normal/off only; FEC and Game modes not integrated, not interoperable with old TCP peer",
     "Normal scoped product PASS; server-local/source-policy parity, multi-lease, generation handoff and performance unverified.",
-    "Old splice retained for same-host comparison; Windows unchanged"
+    "Old splice retained for same-host comparison; Windows unchanged",
+    "Clean x86 ABBA measured capped goodput parity, but client CPU +29.1%; full performance qualification NOT_RUN. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json"
   ],
   "promotion": null
 }

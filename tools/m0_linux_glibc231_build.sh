@@ -9,7 +9,7 @@ image="wbd-linux-glibc231:local"
 docker build -t "$image" -f tools/linux-glibc231.Dockerfile tools
 rc=0
 docker run --rm \
-  -e GITHUB_SHA -e GITHUB_WORKSPACE -e RUNNER_TEMP \
+  -e GITHUB_SHA -e GITHUB_WORKSPACE -e RUNNER_TEMP -e WBD_RUST_TOOLCHAIN \
   -e WBD_PLAN029_LINUX_EXPECTED_ARCH -e CGO_ENABLED=1 -e GOTOOLCHAIN=local \
   -e WBD_LINUX_GLIBC_BUILD_BASELINE=2.31-inner \
   -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -v "$RUNNER_TEMP:$RUNNER_TEMP" \

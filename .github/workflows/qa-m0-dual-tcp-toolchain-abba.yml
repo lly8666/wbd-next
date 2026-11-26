@@ -1,0 +1,82 @@
+name: M0 dual Rust TCP compiler 1.85.1 versus 1.100.0 ABBA
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths:
+      - '.github/workflows/qa-m0-dual-tcp-toolchain-abba.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {leg: A, rust: '1.85.1'}
+          - {leg: B, rust: '1.100.0'}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+      - name: Build pinned product once
+        env:
+          PRODUCT_SOURCE: ${{ github.sha }}
+          WBD_RUST_TOOLCHAIN: ${{ matrix.rust }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_SOURCE"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iputils-ping autoconf automake libtool make gcc g++ nasm openssl
+          GITHUB_SHA="$PRODUCT_SOURCE" bash tools/m0_plan029_linux_dual_native_build.sh >build.log 2>&1 || { tail -n 180 build.log; exit 2; }
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          tar -C linux-plan029-public-bundle -cf bundle.tar .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dual-tcp-build-${{ matrix.leg }}
+          path: |
+            bundle.tar
+            build.log
+          if-no-files-found: error
+  measure:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Consume exact builds without recompiling
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for leg in A B; do
+            mkdir -p "bundles/$leg"
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n "dual-tcp-build-$leg" -D "bundles/$leg"
+            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
+            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
+          done
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iperf3 openssl
+          python3 -m py_compile tools/m0_dual_tcp_perf.py
+      - name: One VM sequential A B B A
+        run: |
+          sudo env DUAL_TCP_COMPARE=toolchain GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" GITHUB_JOB="$GITHUB_JOB" RUNNER_NAME="$RUNNER_NAME" python3 -u tools/m0_dual_tcp_perf.py
+      - name: Preserve measurement evidence
+        if: always()
+        run: |
+          if test -d dual-tcp-perf-out; then
+            sudo find dual-tcp-perf-out -type f \( -name install -o -name route-key.hex -o -name users.json -o -name key.pem -o -name cert.pem \) -delete
+            sudo chown -R "$(id -u):$(id -g)" dual-tcp-perf-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: dual-tcp-toolchain-abba-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dual-tcp-perf-out/
+          if-no-files-found: error
