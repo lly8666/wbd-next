@@ -1,0 +1,5 @@
+# M0 exact-fill causal repair result and BDP/loss diagnosis
+
+docs/evidence/M0/20261126-DUAL-RUST-TCP-EXACT-FILL-SNDBUF-RESULT.json
+
+All 12 ARM measurements + Stop receipts, both native ISAs and 331 core tests pass. 0/1/5% throughput A→B 16.60→225.25, 8.32→21.88, 0.687→0.548 Mbps. 0% sender and peer window now hit16MiB; zero netem loss, 1733 in-window path samples direct. 5% server still full pending 1MiB, cwnd 28–36KiB median, RTO0, BBR longterm cap falls to20–40KiB. Exact-fill fix is causal, not full weak-network pass. New source66215fee same instrumented binary, 0% cap64 vs16MiB and 1/5% threshold10 vs2 separately, no change short-term loss response, initial allocation/global budget or production defaults. Native45834585337 ARM45834669282 started. No main product merge, no old splice retirement. Existing governance failure unresolved. Bare660.21 below absolute capacity qualification. See BBR maintainer discussion in record; need distinguish algorithm/version from implementation defect.

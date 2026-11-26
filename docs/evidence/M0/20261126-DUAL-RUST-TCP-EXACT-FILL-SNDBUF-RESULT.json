@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "baseline_source": "82e6acf2f781f76576021df219279c98af557ae1",
+  "candidate_source": "850e8fffdcaf0b22d2e31e8420a84fb1f0395872",
+  "harness": "79b7780b510023b70cf316444ff8df25f4a9e581",
+  "run": 45828175937,
+  "native_run": 45828082595,
+  "core": {
+    "run": 45828175933,
+    "passed": 331,
+    "failed": 0,
+    "exact_fill_regression": "ok"
+  },
+  "artifact_sha256": {
+    "15122930138": "eab531a2f0720590d30427ab50d3392c394b7a6e1f0ca3fe14aa4c3d2c4504a6",
+    "15121137905": "c4850f02cdbaf0242f779ea3eacb7188a51236f8df1ea5e617c1163ed0f9225d",
+    "15121682642": "c89c85ce15432e32a9ffa9ab0b7925dbb3253de875eec0fba71348fdcb72b1f4"
+  },
+  "scope": "Real same ARM triple 400ms RTT 0/1/5% loss ABBA, 45s one reverse TCP, MTU1160, ACK3 both, same diagnostic probes, FEC off repair on. All12 measured/Stop/probe receipts, 1733 in-window peer samples all direct, not continuous proof. Bare660.21Mbps below absolute qualification. Zero-loss netem drops0; actual loss verified. Native dual ISA functionality and 331 core tests passed. Governance checks failed, no integration.",
+  "conditions": [
+    {
+      "loss": 0,
+      "mbps_abba": [
+        16.6370136,
+        227.9569676,
+        222.5527985,
+        16.5671168
+      ],
+      "mean_A": 16.6020652,
+      "mean_B": 225.2548831,
+      "actual_loss_abba": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "client_cpu_s_per_gib_A": 56.801,
+      "server_cpu_s_per_gib_A": 50.13,
+      "server_cpu_s_per_gib_B": 20.757,
+      "server_B_medians": [
+        {
+          "send_buf": 16777216,
+          "unacked": 16776076,
+          "cwnd": 16799790,
+          "inflight": 16744550,
+          "snd_wnd": 16776192
+        },
+        {
+          "send_buf": 16777216,
+          "unacked": 16773170,
+          "cwnd": 16774411,
+          "inflight": 16716551,
+          "snd_wnd": 16776192
+        }
+      ],
+      "client_B_hwm_KiB": [
+        88764,
+        89700
+      ],
+      "server_B_hwm_KiB": [
+        97264,
+        97560
+      ],
+      "client_cpu_s_per_gib_B": 24.403
+    },
+    {
+      "loss": 1,
+      "mbps_abba": [
+        8.10896,
+        20.691435,
+        23.068206,
+        8.528222
+      ],
+      "mean_A": 8.318591,
+      "mean_B": 21.87982,
+      "actual_loss_abba": [
+        [
+          1.025,
+          0.906
+        ],
+        [
+          1.059,
+          1.023
+        ],
+        [
+          0.936,
+          1.016
+        ],
+        [
+          0.991,
+          1.009
+        ]
+      ],
+      "client_cpu_s_per_gib_A": 68.84,
+      "client_cpu_s_per_gib_B": 56.66,
+      "server_cpu_s_per_gib_A": 65.03,
+      "server_cpu_s_per_gib_B": 57.33,
+      "server_B_medians": [
+        {
+          "send_buf": 16777216,
+          "send_queued": 13983538,
+          "cwnd": 820630,
+          "inflight": 809897
+        },
+        {
+          "send_buf": 16777216,
+          "send_queued": 12710102,
+          "cwnd": 1164551,
+          "inflight": 1123071
+        }
+      ]
+    },
+    {
+      "loss": 5,
+      "mbps_abba": [
+        0.7456363,
+        0.60583,
+        0.4893249,
+        0.6291407
+      ],
+      "mean_A": 0.6873885,
+      "mean_B": 0.5475775,
+      "actual_loss_abba": [
+        [
+          5.304,
+          5.165
+        ],
+        [
+          5.133,
+          5.418
+        ],
+        [
+          5.013,
+          5.576
+        ],
+        [
+          4.849,
+          5.381
+        ]
+      ],
+      "client_cpu_s_per_gib_A": 230.73,
+      "client_cpu_s_per_gib_B": 260.99,
+      "server_cpu_s_per_gib_A": 196.6,
+      "server_cpu_s_per_gib_B": 227.68,
+      "server_B_medians": [
+        {
+          "send_buf": 1048576,
+          "send_queued": 993615,
+          "cwnd": 36245,
+          "inflight": 35776,
+          "inflight_longterm": 39406
+        },
+        {
+          "send_buf": 1048576,
+          "send_queued": 1005540,
+          "cwnd": 28528,
+          "inflight": 28517,
+          "inflight_longterm": 35575
+        }
+      ],
+      "server_B_end": [
+        {
+          "cwnd": 23800,
+          "max_bw": 77424,
+          "inflight_longterm": 27999,
+          "timeouts": 0
+        },
+        {
+          "cwnd": 16592,
+          "max_bw": 50111,
+          "inflight_longterm": 20740,
+          "timeouts": 0
+        }
+      ]
+    }
+  ],
+  "decision": "Exact-fill fix accepted as scoped causal repair: 13.57x zero loss, 2.63x 1% loss; 5% still failed, candidate lower in this ABBA, no promotion. 16MiB max caps 0% now; 5% longterm BBR limit falls with ongoing random loss despite available data and no RTO. BBR maintainer confirms persistent 5% loss can collapse BBRv2/v3 (2025-06-19 https://groups.google.com/g/bbr-dev/c/UKnPihkFjHo); old kernel BBR version not established by this run. Next use same binary diagnostic only, cap64 at 0% and threshold10 at 1/5% independently; short-term loss response untouched. Not a production threshold recommendation.",
+  "next": {
+    "source": "66215fee89068f4a1dad5c2b6658642f22614dfc",
+    "harness": "12bfe3d8445651e4e89f7101d2a3f4914696c6ac",
+    "native": 45834585337,
+    "arm": 45834669282,
+    "status": "in flight"
+  }
+}
