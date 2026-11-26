@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "old_source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+  "candidate_source": "649fe3bf19a81d579ebae510c78acf2908902ca7",
+  "harness": "823658213215e897b49f5aa477f1ef254ba5643c",
+  "run": 45845854268,
+  "native": 45845651269,
+  "core": {
+    "run": 45845777911,
+    "passed": 334,
+    "failed": 0
+  },
+  "artifact_sha256": {
+    "15132865902": "009d5153c47ae099e3ec255886d7ce9cab0976883131a8ca5327692c334aea0e",
+    "15133085590": "50de665a0da22d85bfaf6693894e37b8926f68ad87a28281935991cab530127f",
+    "15130889905": "9d58876265d8c58b04ea8c39c4f82744748a6f4b3ed6dd29bf731bf12262a603"
+  },
+  "scope": "Same 3 actual ARM64 VMs, four ABBA blocks, 400ms added RTT, 45s reverse single stream, MTU1160, FEC off repair on; Rust cap64/ACK3/SACK compression, local CUBIC. Kernel socket CC verified actual live ss, server splice accepts and iperf CC. Kernel 7.0.0-1020-azure tcp_bbr srcversion5B6C12777290291DF28F230, live Startup gain2.88672 and steady gain cycle consistent v1, not exact module source parity. All 16 business and joined Stop; three ZIP hashes match; in-window direct path snapshots client771/server765/relay767 all direct, not continuous proof. Bare reference CUBIC 289.565Mbps (not BBR absolute path capacity qualification); prior malformed harness45845777964 failed before measurement. Native default path function and core tests pass; enabled v1 measured ARM, not all modes.",
+  "conditions": [
+    {
+      "cc": "cubic",
+      "loss": 0,
+      "mbps_abba": [
+        285.256143899,
+        230.238641258,
+        248.833034603,
+        306.157236835
+      ],
+      "means": [
+        295.706690367,
+        239.535837931
+      ],
+      "client_cpu_s_per_gib": [
+        16.869080933,
+        18.195510276
+      ],
+      "server_cpu_s_per_gib": [
+        17.419751083,
+        18.331276317
+      ],
+      "endpoint_host_cpu_s_per_gib": [
+        112.58497923,
+        100.26557244
+      ],
+      "actual_loss": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "hwm_client_kib": [
+        35648,
+        218224,
+        227164,
+        38252
+      ],
+      "hwm_server_kib": [
+        65720,
+        167304,
+        170832,
+        65592
+      ]
+    },
+    {
+      "cc": "bbr",
+      "loss": 0,
+      "mbps_abba": [
+        234.412067885,
+        183.310158135,
+        187.99366868,
+        241.357102105
+      ],
+      "means": [
+        237.884584995,
+        185.651913407
+      ],
+      "client_cpu_s_per_gib": [
+        13.411889486,
+        18.262438867
+      ],
+      "server_cpu_s_per_gib": [
+        14.788993084,
+        23.870415353
+      ],
+      "endpoint_host_cpu_s_per_gib": [
+        93.948105023,
+        106.326745142
+      ],
+      "actual_loss": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "hwm_client_kib": [
+        30584,
+        322652,
+        244196,
+        31184
+      ],
+      "hwm_server_kib": [
+        66088,
+        177940,
+        181156,
+        65864
+      ]
+    },
+    {
+      "cc": "bbr",
+      "loss": 1,
+      "mbps_abba": [
+        68.272376663,
+        55.830375121,
+        104.204041201,
+        76.638009814
+      ],
+      "means": [
+        72.455193238,
+        80.017208161
+      ],
+      "client_cpu_s_per_gib": [
+        16.789091615,
+        24.250185849
+      ],
+      "server_cpu_s_per_gib": [
+        21.261365607,
+        22.492901407
+      ],
+      "endpoint_host_cpu_s_per_gib": [
+        139.73408853,
+        145.310912343
+      ],
+      "actual_loss": [
+        [
+          1.006,
+          0.904
+        ],
+        [
+          1.004,
+          1.077
+        ],
+        [
+          1.001,
+          0.987
+        ],
+        [
+          0.976,
+          1.049
+        ]
+      ],
+      "hwm_client_kib": [
+        22940,
+        181304,
+        231296,
+        22668
+      ],
+      "hwm_server_kib": [
+        51784,
+        150596,
+        152028,
+        48276
+      ]
+    },
+    {
+      "cc": "bbr",
+      "loss": 5,
+      "mbps_abba": [
+        19.08387455,
+        25.561365936,
+        32.971365899,
+        44.132604369
+      ],
+      "means": [
+        31.608239459,
+        29.266365918
+      ],
+      "client_cpu_s_per_gib": [
+        35.938129818,
+        43.134428712
+      ],
+      "server_cpu_s_per_gib": [
+        52.804285547,
+        44.656059114
+      ],
+      "endpoint_host_cpu_s_per_gib": [
+        317.077015393,
+        290.216517467
+      ],
+      "actual_loss": [
+        [
+          5.005,
+          5.095
+        ],
+        [
+          5.158,
+          5.175
+        ],
+        [
+          5.006,
+          4.983
+        ],
+        [
+          5.024,
+          4.882
+        ]
+      ],
+      "hwm_client_kib": [
+        21108,
+        66060,
+        59688,
+        23492
+      ],
+      "hwm_server_kib": [
+        28664,
+        46120,
+        51820,
+        48468
+      ]
+    }
+  ],
+  "internal_bottleneck": {
+    "case1": {
+      "client_shared_queue_full": 53790,
+      "client_tun_failed": 37835,
+      "server_tun_failed": 4314,
+      "server_retrans_pct_last_central": 8.93
+    },
+    "case5": {
+      "client_shared_queue_full": 77931,
+      "client_tun_failed": 29919,
+      "server_tun_failed": 17931,
+      "server_retrans_pct_last_central": 20.11,
+      "server_median_cwnd": 59603988,
+      "server_median_flight": 15022139,
+      "server_median_sacked": 47181954,
+      "server_median_unacked": 67108864,
+      "client_local_pending_max": 14532111
+    },
+    "case6": {
+      "client_shared_queue_full": 62627,
+      "client_tun_failed": 22600,
+      "server_tun_failed": 31457,
+      "server_retrans_pct_last_central": 20.347,
+      "server_median_cwnd": 57906748,
+      "server_median_flight": 17349734,
+      "server_median_sacked": 45514780,
+      "server_median_unacked": 67108864,
+      "client_local_pending_max": 6985569
+    },
+    "old": "case0 and old BBR0 logs report zero SharedTUN full and tun_failed; actual kernel data retrans at live24 ~0.49–0.61%, compared with Rust end-central ~20%. Different sample intervals; do not claim precise comparative ratio.",
+    "interpretation": "SharedTUN full explicitly proves local ACK ingress loss. Middle tun_failed corresponds to failed admission at native handoff in this path; split full/disconnected receipt needed. Same queue consumed by TX owner, generated TCP output drained before input. Pacing late credit up to RTT and unbounded quantum can amplify burst; causal hypothesis only. Local pending peak demonstrates local leg may contribute under high throughput, unlike earlier low-rate diagnosis. High Rust RSS remains problem."
+  },
+  "decision": "BBRv1-style near old weak loss means in same triple; large between-leg variability means no equivalence superiority or promotion claim. CUBIC0/BBR0 remain 19%/22% below. Do not tune CC before admission pressure diagnosis; preserve old splice.",
+  "next": {
+    "source": "7aafa40a0acd1ae18709c5c41d72befd9f1707c2",
+    "harness": "045068382cbf8af18b67c532687364c58ed693fa",
+    "native": 45849688305,
+    "core": 45849790656,
+    "arm": 45849790442,
+    "scope": "Same instrumented binary A old pacing B native capped32MSS quantum/2 quantum credit, no late catch-up, CUBIC0 and BBR1-0 ABBA; no queue enlargement or rate model change. Count actual middle offered/full/disconnected, publish local/middle peaks, pending peak and local write failed. No production defaults change."
+  }
+}
