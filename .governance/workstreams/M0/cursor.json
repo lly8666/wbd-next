@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2450,
-  "checkpoint_sha": "cb0be4a34caa0eef6ab0e9b3dc85f3d209ab9cf0",
+  "sequence": 2451,
+  "checkpoint_sha": "205fce9cc582c7711691dd604ce1ead2c197afab",
   "progress": "partial",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "在唯一分支实现Linux Normal原有owner中的每generation流表、事件/期限及实际TUN→Rust TCP→认证传输→对端Rust TCP→origin，保留source/lease/MTU/UDP/Stop；双ISA真应用bytes/hash/首到及同机splice性能对照。先收45807286675，不重复组件测试。",
+  "next_action": "先收精确86e3ec30010a59cbb60539b902cb96dc21e04d6a run45809301919双ISA完整产品构建/真实TCP/UDP/Stop及产物；按实际失败修复，Normal真业务通过后继续同机splice性能及受影响模式/换代。不要重复dispatch。",
   "unverified": true,
   "last_tested_source": "3e709e0c8577b56ca237a24e6d18fccf998e9965",
   "evidence_refs": [
@@ -21,8 +21,9 @@
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-REGISTRATION.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-HANDOFF.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-HANDOFF.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-HANDOFF.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "分支 7b15225ee208c1478a9475c779e7eb0f0c08724b / Draft PR80；精确源码 3e709e0c8577b56ca237a24e6d18fccf998e9965 run45806924064 双原生ISA各329测试PASS，真实内核origin socket组件双向bytes/回程FIN及校验，两个artifact下载哈希及source/arch/rustc/test.log复核。原产品TUN/认证owner尚未接通，真实应用/UDP/Stop/性能NOT_RUN，旧splice不动。历史分支治理cursor问题保留，功能声明已修，后续治理45807286675。未合产品源码。"
+  "partial_summary": "分支86e3ec30010a59cbb60539b902cb96dc21e04d6a / PR80已接原Normal TX flow owner、post-AEAD LINK到原队列、epoll/deadline、冷CLI/assembly与真实四netns双ISA功能夹具。run45809301919 in_progress，完整产品/性能NOT_RUN或未收；上轮组件329各PASS证据保持。分支历史治理FAIL不修改旧证据；main产品源码未合入。"
 }
