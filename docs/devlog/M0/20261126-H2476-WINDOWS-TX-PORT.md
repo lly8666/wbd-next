@@ -8,3 +8,5 @@ Action https://github.com/lly8666/wbd-next/actions/runs/45769403397 started, out
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Internal Windows native TX scratch reuse, ready batching and OFF loan only; existing feature behavior and wire protocol unchanged. No new feature or performance promotion."}
 ```
+
+First run 45769403397: build SUCCESS (94 Windows owner and 8 native IO tests PASS; both release DLLs, artifact 15093800512). All 9 CPU gates SKIPPED_CPU: six EPYC 9V74, two EPYC 7763, one Xeon 8573C. 10/10 successful jobs, zero business legs, no performance evidence. One bounded replacement allocation run 45769909397 on test commit 359267005dc11646650668f48a06104a9cc5da4c, exact same optimized product and matrix, in progress. No further automatic allocation retries. Governance declaration supplemented; pre-existing verified-cursor evidence regression remains, unrelated to the performance job.
