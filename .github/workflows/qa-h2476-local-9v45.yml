@@ -369,3 +369,5 @@ jobs:
           retention-days: 14
 
 # Recheck default qdisc state and owned resource cleanup after real preflight.
+
+# One bounded replacement allocation batch: run 45769403397 built successfully but all nine CPU gates skipped (0/9 9V45). Product and test matrix unchanged.
