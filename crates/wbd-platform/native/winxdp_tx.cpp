@@ -417,4 +417,14 @@ extern "C" int wbd_xdp_tx_cold_write(void* raw,const unsigned char* bytes,size_t
     std::memcpy(dst,bytes,len);
     return wbd_xdp_tx_publish(raw,&len);
 }
+// Cold-only actual v1.4 driver API readback; no interface bind.
+extern "C" int wbd_xdp_driver_status(){
+    HANDLE xsk=nullptr,map=nullptr;
+    HRESULT hr=XskCreate(&xsk);
+    if(FAILED(hr))return hr;
+    hr=XdpMapCreate(&map,XDP_MAP_TYPE_XSKMAP);
+    if(map)CloseHandle(map);
+    CloseHandle(xsk);
+    return hr;
+}
 #endif // WBD_XDP_NATIVE_TRIAL

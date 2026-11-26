@@ -2523,3 +2523,7 @@ pub unsafe extern "C" fn wbd_m0_win_xdp_open_ports(index:u32,ports:*const u16,co
         Err(_)=>BAD_STAGE,
     }
 }
+
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_win_xdp_driver_status()->i32{wbd_platform::windows_xdp_rx::driver_status()}

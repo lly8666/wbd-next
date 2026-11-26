@@ -21,7 +21,7 @@ $info='namespace Wbd.Gui {{ static class SourceInfo {{ public const string SHA =
 [IO.File]::WriteAllText($gen,$info,[Text.UTF8Encoding]::new($false))
 $refs=@('mscorlib','System','System.Core','System.Drawing','System.Windows.Forms','System.Web.Extensions','System.ServiceProcess')|ForEach-Object {'/reference:'+(Join-Path $fx ($_.ToString()+'.dll'))}
 $source=@('Portable.cs','MainForm.cs','GuiTests.cs')|ForEach-Object {Join-Path $root ('windows/gui/'+$_)}
-$driverSetup=Join-Path $PSScriptRoot 'm0_h2204_win_driver_setup.cs'
+$driverSetup=Join-Path $PSScriptRoot 'm0_winxdp_driver_setup.cs'
 if(-not(Test-Path $driverSetup)){throw 'H2204 driver source missing; no stub'}
 $source+= $driverSetup
 foreach($f in $source){if(-not(Test-Path $f)){throw "GUI source missing $f"}}
@@ -48,7 +48,18 @@ if(([regex]::Matches($portableText,$legacyPadGuard)).Count -ne 1){
 }
 $portableText=[regex]::Replace($portableText,$legacyPadGuard,
  '                // H2202 strict TLS v2: the authenticated session owns padding mode.')
-$portableDerived=Join-Path $out 'Portable-h2204-control-v2.cs'
+# Replace driver detection; no obsolete NPF DLL or service readback.
+$portableText=$portableText.Replace('public bool Npcap, Wintun, Admin, ClientBusy;', 'public bool WinXdp, Wintun, Admin, ClientBusy;').Replace('public string NpcapVersion;', 'public string WinXdpVersion;').Replace('"Npcap：" + (Npcap ? NpcapVersion : "未安装或不可加载")','"WinXDP：" + (WinXdp ? WinXdpVersion : "未安装或 API 不可用")')
+$portableText=[regex]::Replace($portableText,'(?m)^\s*\[UnmanagedFunctionPointer\(CallingConvention.Cdecl\)\] delegate IntPtr PcapVersion\(\);\r?\n\s*public const string Download = "https://npcap.com/#download";\r?\n','')
+$portableText=[regex]::Replace($portableText,'(?s)            string dll = Path.Combine\(Environment.GetFolderPath\(Environment.SpecialFolder.System\), "Npcap", "wpcap.dll"\);.*?            return d;',@'
+            int status=DriverSetup.WinXdpStatus(store.Root);
+            d.WinXdp=status==0;
+            d.WinXdpVersion="1.4 API 就绪";
+            return d;
+'@)
+$portableText=[regex]::Replace($portableText,'(?m)^\s*public static void OpenDownload\(\) \{.*?\}\s*$','')
+$portableText=[regex]::Replace($portableText,'(?m)^\s*\[DllImport\("kernel32.dll"[^\r\n]*\)\] static extern (?:IntPtr LoadLibraryEx|bool FreeLibrary|IntPtr GetProcAddress)\([^\r\n]*\);\r?\n','')
+$portableDerived=Join-Path $out 'Portable-winxdp.cs'
 [IO.File]::WriteAllText($portableDerived,$portableText,[Text.UTF8Encoding]::new($false))
 $source[0]=$portableDerived
 # H2204 GUI: the immutable donor predates encrypted V4 control v2.
@@ -70,8 +81,7 @@ if(([regex]::Matches($sourceText,[regex]::Escape($driverBarAnchor))).Count -ne 1
  throw 'H2204 driver toolbar source drift'
 }
 $driverButtons=@'
-driverBar.Controls.Add(Button("Npcap 官方下载", () => Try(Dependencies.OpenDownload)));
-            driverBar.Controls.Add(Button("Npcap 安装（本地官方包）", async () => await RunAsync(InstallNpcapOfficialAsync)));
+driverBar.Controls.Add(Button("WinXDP 驱动安装", async () => await RunAsync(InstallWinXdpAsync)));
             driverBar.Controls.Add(Button("Wintun 驱动安装", async () => await RunAsync(InstallWintunOwnedAsync)));
 '@
 $sourceText=$sourceText.Replace($driverBarAnchor,$driverButtons.Trim())
@@ -80,28 +90,11 @@ if(([regex]::Matches($sourceText,[regex]::Escape($methodAnchor))).Count -ne 1){
  throw 'H2204 driver action methods source drift'
 }
 $driverMethods=@'
-        // Only the user who clicked the driver button starts this action.
-        // Npcap Free is never embedded, proxied, mirrored or silently installed.
-        async Task InstallNpcapOfficialAsync() {
-            var d = detect();
-            DriverSetup.RequireIdleAdmin(d.Admin, session.Active, d.ClientBusy);
-            string path;
-            using (var picker = new OpenFileDialog {
-                Title = "选择刚从 npcap.com 官网下载的 Npcap 安装包",
-                Filter = "Npcap 官方签名安装程序 (npcap-*.exe)|npcap-*.exe",
-                CheckFileExists = true, Multiselect = false
-            }) {
-                if (picker.ShowDialog(this) != DialogResult.OK) return;
-                path = picker.FileName;
-            }
-            await Task.Run(() => DriverSetup.VerifyOfficialNpcapInstaller(path));
-            if (MessageBox.Show(this,
-                "已通过 Npcap Windows 数字签名和官方发布者检查。现在打开官方图形安装向导吗？\n"+
-                "安装程序由你从 npcap.com 下载，不包含在 WBD 分发包中；不会进行静默安装。"+
-                "安装完成可能需要重启 Windows。",
-                "Npcap 官方驱动安装", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
-                return;
-            string message = await Task.Run(() => DriverSetup.RunInteractiveNpcapInstaller(path));
+        async Task InstallWinXdpAsync() {
+            var d=detect();
+            DriverSetup.RequireIdleAdmin(d.Admin,session.Active,d.ClientBusy);
+            if(MessageBox.Show(this,"安装随包微软 WinXDP 1.4 驱动；安装后重新检测原生 API。","WinXDP 驱动安装",MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)return;
+            string message=await Task.Run(()=>DriverSetup.InstallWinXdp(store.Root));
             RefreshDependencies();
             Enqueue(message);
         }
@@ -127,11 +120,27 @@ $driverMethods=@'
 '@
 $sourceText=$sourceText.Replace($methodAnchor,$driverMethods+$methodAnchor)
 $oldDriverNote='Npcap 需用户从官网安装，免费版不能随包分发或静默安装。'
-$newDriverNote='Npcap：点击官方下载，再点击本页安装并选择已下载的官方签名安装包（不支持静默安装）。'
+$newDriverNote='WinXDP 1.4：随包提供微软原版驱动；首次使用点击本页安装，随后重新检测。无需另行下载抓包驱动。'
 if(([regex]::Matches($sourceText,[regex]::Escape($oldDriverNote))).Count -ne 1){
  throw 'H2204 original driver help note drift'
 }
 $sourceText=$sourceText.Replace($oldDriverNote,$newDriverNote)
+$sourceText=$sourceText.Replace('安装 Npcap → 重新检测','安装 WinXDP 与 Wintun → 重新检测').Replace('无需安装无线监听支持；','').Replace('if (!d.Npcap) throw new InvalidOperationException("Npcap 未就绪。请到“便携与驱动”页打开官网下载并安装，再点击重新检测。");','if (!d.WinXdp) throw new InvalidOperationException("WinXDP 未就绪。请到“便携与驱动”页安装随包驱动，再点击重新检测。");')
+$entryAnchor='                if (args.Length > 0 && args[0] == "--self-test") return GuiTests.Run(root);'
+$entry=@'
+                if(args.Length==1&&args[0]=="--install-drivers"){
+                    try{
+                        string message=DriverSetup.InstallAll(root);
+                        File.WriteAllText(Path.Combine(root,"driver-install-result.txt"),message);
+                        return 0;
+                    }catch(Exception e){
+                        File.WriteAllText(Path.Combine(root,"driver-install-result.txt"),e.ToString());
+                        return 1;
+                    }
+                }
+'@
+$sourceText=$sourceText.Replace($entryAnchor,$entry+$entryAnchor)
+
 
 
 
@@ -180,6 +189,7 @@ $sourceText=$sourceText.Replace($qualityStatusAnchor,$qualityStatusReplace)
 # with the 029B/H2202 additions: stale test fixture must not be mistaken for
 # a native product failure or be silently skipped.
 $tests=[IO.File]::ReadAllText($source[2],[Text.Encoding]::UTF8)
+$tests=$tests.Replace("NpcapVersion","WinXdpVersion").Replace("Npcap","WinXdp")
 $mutator='{"diagnostic-interval","2s"}'
 if(([regex]::Matches($tests,[regex]::Escape($mutator))).Count -ne 1){throw 'H2204 GUI test mutator donor drift'}
 # The assembled H2204 donor already has FEC2, outer-repair and TLS CA
@@ -285,8 +295,7 @@ $tests=$tests.Replace($oldExpect,'Convert.ToString(p.Values["startup-padding"])=
 $testStart='                var store = new PortableStore(root);'
 if(([regex]::Matches($tests,[regex]::Escape($testStart))).Count -ne 1){throw 'H2204 driver test setup drift'}
 $driverNegatives=@'
-                Assert(DriverSetup.NpcapDownloadURL=="https://npcap.com/#download",
-                       "GUI Npcap downloads from official HTTPS origin only");
+                Assert(DriverSetup.XdpVersion=="1.4.0","WinXDP release driver version");
                 foreach (var state in new[] {
                     new [] {false,false,false}, new [] {true,true,false}, new [] {true,false,true}
                 }) {
@@ -296,10 +305,7 @@ $driverNegatives=@'
                     Assert(rejected, "driver install denies non-admin or active native owner");
                 }
                 DriverSetup.RequireIdleAdmin(true,false,false);
-                bool unsignedDenied=false;
-                try {DriverSetup.VerifyOfficialNpcapInstaller(Path.Combine(root,"npcap-1.0.exe"));}
-                catch(Exception){unsignedDenied=true;}
-                Assert(unsignedDenied,"Npcap installer missing/unsigned rejects before execution");
+                Assert(DriverSetup.WinXdpStatus(Path.Combine(root,"missing-driver-root"))!=0,"missing XDP DLL is not ready");
                 bool forgedWintunDenied=false;
                 try {DriverSetup.VerifyPinnedWintunDll(Path.Combine(root,"wintun-forged.dll"));}
                 catch(Exception){forgedWintunDenied=true;}
@@ -318,8 +324,8 @@ $testButtons=@'
                         foreach(Control child in c.Controls)inspectDriverButtons(child);
                     };
                     inspectDriverButtons(driverPage);
-                    Assert(driverButtonNames.Contains("Npcap 官方下载"),"visible native Npcap official download button");
-                    Assert(driverButtonNames.Contains("Npcap 安装（本地官方包）"),"visible native signed Npcap interactive install button");
+                    Assert(driverButtonNames.Contains("WinXDP 驱动安装"),"visible bundled WinXDP install");
+                    Assert(!driverButtonNames.Any(x=>x.Contains("Npcap")),"obsolete Npcap controls absent");
                     Assert(driverButtonNames.Contains("Wintun 驱动安装"),"visible native owned Wintun PnP bootstrap button");
                     Assert(driverButtonNames.Contains("重新检测"),"visible native driver readback button");
 '@

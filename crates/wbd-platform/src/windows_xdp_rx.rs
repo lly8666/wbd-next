@@ -8,6 +8,7 @@ const BATCH:usize=32;
 #[derive(Clone,Copy)]
 struct Frame{data:*const u8,len:usize}
 extern "C"{
+    fn wbd_xdp_driver_status()->i32;
     fn wbd_xdp_open_carrier(index:u32,ports:*const u16,count:u32,udp:i32,handles:*mut *mut c_void)->i32;
     fn wbd_xdp_rx_cold_read(raw:*mut c_void,dst:*mut u8,cap:usize)->i32;
     fn wbd_xdp_tx_cold_write(raw:*mut c_void,bytes:*const u8,len:usize)->i32;
@@ -90,3 +91,5 @@ impl Drop for RxBatch<'_>{
         }
     }
 }
+
+pub fn driver_status()->i32{unsafe{wbd_xdp_driver_status()}}
