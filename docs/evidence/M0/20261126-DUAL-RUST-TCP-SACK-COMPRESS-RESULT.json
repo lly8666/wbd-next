@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source": "dffe77daa5adaeac89a86e48cd6730c4c67a655f",
+  "harness": "be216b6ee2e04e4b02adfc6b0026b5f6d8010910",
+  "run": 45842115562,
+  "native_run": 45842035087,
+  "core_run": 45842115480,
+  "core_passed": 332,
+  "artifact_sha256": {
+    "15131610423": "f51a44fb850b7a3b48e06f9f136ad4138fbfc181877436395a412ea5ed13ad7a",
+    "15130012276": "fbc71ff2ad8dc4bce654a7a1a8553396544a71ddb3e3fc0b0ce29aa0cae6de55",
+    "15131590389": "167b7adda222a322d40d40744a0295c1f92f94487b0e2cde1d2e7f4ab24e3897"
+  },
+  "scope": "Same real ARM triple, 400ms added RTT, single reverse TCP stream 45s, MTU1160, ACK3, FEC off repair on; A off B on same binary, both cap64 for 0%, both loss10 for 1/5%. 12/12 measured with matching probe and joined Stop. Native default-path both ISAs success; enabled compression core regression and ARM actual stream, not all modes enabled qualification. All three raw ZIP digests matched. 1727 in-window direct path samples (all direct, not continuous proof), clean bare782.797Mbps below historical absolute threshold800. Zero injected loss not zero TCP retransmission.",
+  "conditions": [
+    {
+      "loss": 0,
+      "mbps_abba": [
+        259.55442671959344,
+        351.759,
+        280.109,
+        252.70396886861744
+      ],
+      "mean_A": 256.12919779410544,
+      "mean_B": 315.9339305916407,
+      "client_cpu_s_per_gib": [
+        21.278430650436697,
+        15.09295005071279
+      ],
+      "server_cpu_s_per_gib": [
+        25.270997393554627,
+        15.561967955124636
+      ],
+      "three_hosts_cpu_s_per_gib": [
+        202.794,
+        131.537
+      ],
+      "middle_ack_only_abba": [
+        1076760,
+        187116,
+        206205,
+        957280
+      ],
+      "middle_data_in_abba": [
+        1493668,
+        1986985,
+        1571602,
+        1414010
+      ],
+      "deferred_probe_max_abba": [
+        0,
+        1603304,
+        1218838,
+        0
+      ],
+      "actual_loss_abba": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "loss": 1,
+      "mbps_abba": [
+        56.25,
+        63.379,
+        59.255,
+        65.267
+      ],
+      "mean_A": 60.758270736640604,
+      "mean_B": 61.317118452166056,
+      "client_cpu_s_per_gib": [
+        37.091451833837304,
+        22.23234845365594
+      ],
+      "server_cpu_s_per_gib": [
+        40.747307208012764,
+        22.214530128842732
+      ],
+      "three_hosts_cpu_s_per_gib": [
+        400.365,
+        224.7285
+      ],
+      "middle_ack_only_abba": [
+        327116,
+        22885,
+        24096,
+        355802
+      ],
+      "middle_data_in_abba": [
+        327617,
+        357339,
+        339211,
+        357390
+      ],
+      "deferred_probe_max_abba": [
+        0,
+        340502,
+        330821,
+        0
+      ],
+      "actual_loss_abba": [
+        [
+          0.993,
+          0.971
+        ],
+        [
+          1.011,
+          1.034
+        ],
+        [
+          0.982,
+          1.063
+        ],
+        [
+          1.01,
+          0.969
+        ]
+      ]
+    },
+    {
+      "loss": 5,
+      "mbps_abba": [
+        23.278,
+        16.008,
+        14.167,
+        10.159
+      ],
+      "mean_A": 16.718612763854473,
+      "mean_B": 15.087542766905402,
+      "client_cpu_s_per_gib": [
+        64.09246383998678,
+        55.23759442273806
+      ],
+      "server_cpu_s_per_gib": [
+        74.50079363767438,
+        56.999960162414766
+      ],
+      "three_hosts_cpu_s_per_gib": [
+        751.206,
+        615.595
+      ],
+      "middle_ack_only_abba": [
+        130689,
+        20969,
+        24274,
+        56398
+      ],
+      "middle_data_in_abba": [
+        130908,
+        91064,
+        81201,
+        56471
+      ],
+      "deferred_probe_max_abba": [
+        0,
+        85858,
+        75546,
+        0
+      ],
+      "actual_loss_abba": [
+        [
+          5.048,
+          5.076
+        ],
+        [
+          5.026,
+          4.923
+        ],
+        [
+          5.028,
+          5.004
+        ],
+        [
+          5.078,
+          5.023
+        ]
+      ]
+    }
+  ],
+  "decision": "SACK compression mechanism actual effect established; ACK/DATA 69.95→11.05%,99.70→6.74%,99.84→26.26%; endpoint and all-host CPU/GiB improved in each block. 0% +23.35%, 1% +0.92%, 5% -9.76% with widely separated A legs. No production promotion: 5% throughput not proven noninferior, zero-injection retransmissions persist, diagnostic CC profile differs by loss block. Preserve candidate for investigation, assess retransmission/feedback sample and recovery before tuning or GRO; no whole-project performance PASS."
+}
