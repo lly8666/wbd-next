@@ -1,0 +1,184 @@
+{
+  "schema": "m0-machine-rate-database-v1",
+  "scope": "Historical H2469 seed, no microprobe data, no production rate mapping",
+  "observations": [
+    {
+      "run_id": "45740927416",
+      "source_sha": "acc22fff38dc73a60b10d640f6eff5ced81a93b5",
+      "windows_cpu": "AMD EPYC 7763 64-Core Processor",
+      "cores": 2,
+      "logical": 4,
+      "relay_cpu": "Neoverse-N2",
+      "server_cpu": "Neoverse-N2",
+      "client_artifact": 15080689568,
+      "relay_artifact": 15082166219,
+      "server_artifact": 15081927002,
+      "rows": [
+        {
+          "ordinal": 0,
+          "cap_mbps": 250,
+          "goodput_mbps": 234.320206,
+          "qualified": true,
+          "kind": "bare"
+        },
+        {
+          "ordinal": 1,
+          "cap_mbps": 100,
+          "goodput_mbps": 91.782372,
+          "qualified": true,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 2,
+          "cap_mbps": 150,
+          "goodput_mbps": 25.971002,
+          "qualified": false,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 3,
+          "cap_mbps": 200,
+          "goodput_mbps": 65.920838,
+          "qualified": false,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 4,
+          "cap_mbps": 150,
+          "goodput_mbps": 117.523992,
+          "qualified": true,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 5,
+          "cap_mbps": 250,
+          "goodput_mbps": 234.867726,
+          "qualified": true,
+          "kind": "bare"
+        }
+      ],
+      "classification": "UNCLASSIFIED",
+      "probe": null,
+      "measurement_seconds": 60
+    },
+    {
+      "run_id": "45740927459",
+      "source_sha": "acc22fff38dc73a60b10d640f6eff5ced81a93b5",
+      "windows_cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "cores": 2,
+      "logical": 4,
+      "relay_cpu": "Neoverse-N2",
+      "server_cpu": "Neoverse-N2",
+      "client_artifact": 15081856887,
+      "relay_artifact": 15082001854,
+      "server_artifact": 15081802249,
+      "rows": [
+        {
+          "ordinal": 0,
+          "cap_mbps": 250,
+          "goodput_mbps": 234.176263,
+          "qualified": true,
+          "kind": "bare"
+        },
+        {
+          "ordinal": 1,
+          "cap_mbps": 100,
+          "goodput_mbps": 93.48315,
+          "qualified": true,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 2,
+          "cap_mbps": 150,
+          "goodput_mbps": 124.679012,
+          "qualified": true,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 3,
+          "cap_mbps": 200,
+          "goodput_mbps": 93.792777,
+          "qualified": true,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 4,
+          "cap_mbps": 150,
+          "goodput_mbps": 125.398486,
+          "qualified": true,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 5,
+          "cap_mbps": 250,
+          "goodput_mbps": 239.597227,
+          "qualified": true,
+          "kind": "bare"
+        }
+      ],
+      "classification": "UNCLASSIFIED",
+      "probe": null,
+      "measurement_seconds": 60
+    },
+    {
+      "run_id": "45740927430",
+      "source_sha": "acc22fff38dc73a60b10d640f6eff5ced81a93b5",
+      "windows_cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "cores": 2,
+      "logical": 4,
+      "relay_cpu": "Neoverse-N2",
+      "server_cpu": "Neoverse-N2",
+      "client_artifact": 15081672833,
+      "relay_artifact": 15081558303,
+      "server_artifact": 15081004635,
+      "rows": [
+        {
+          "ordinal": 0,
+          "cap_mbps": 250,
+          "goodput_mbps": 239.06208,
+          "qualified": true,
+          "kind": "bare"
+        },
+        {
+          "ordinal": 1,
+          "cap_mbps": 100,
+          "goodput_mbps": 90.839297,
+          "qualified": true,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 2,
+          "cap_mbps": 150,
+          "goodput_mbps": 130.869137,
+          "qualified": true,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 3,
+          "cap_mbps": 200,
+          "goodput_mbps": 116.334377,
+          "qualified": true,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 4,
+          "cap_mbps": 150,
+          "goodput_mbps": 130.491311,
+          "qualified": true,
+          "kind": "wbd"
+        },
+        {
+          "ordinal": 5,
+          "cap_mbps": 250,
+          "goodput_mbps": 236.413568,
+          "qualified": true,
+          "kind": "bare"
+        }
+      ],
+      "classification": "UNCLASSIFIED",
+      "probe": null,
+      "measurement_seconds": 60
+    }
+  ],
+  "rate_profiles": []
+}
