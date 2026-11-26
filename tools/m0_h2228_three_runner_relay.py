@@ -39,7 +39,7 @@ VXID={"client":"2281","server":"2282"}
 # Reuse the already-proven H2227 tailnet CI ACL control port.
 CONTROL_PORT=18727
 LOSSES=(0.0,1.0,2.0,5.0,10.0,15.0,30.0) if os.environ.get('WBD_H2417_SPLICE')=='1' else (0.0,1.0,5.0,10.0,20.0)
-ROLES={"client":"x86_64","server":("aarch64" if os.environ.get("WBD_H2442_ARM_SERVER")=="1" else "x86_64"),"relay":"aarch64"}
+ROLES={"client":("aarch64" if os.environ.get("WBD_DUAL_TCP_ARM")=="1" else "x86_64"),"server":("aarch64" if os.environ.get("WBD_H2442_ARM_SERVER")=="1" else "x86_64"),"relay":"aarch64"}
 TAILNET=ipaddress.ip_network("100.64.0.0/10")
 
 def guard(expr,message):
@@ -147,6 +147,8 @@ def install_endpoint(role,peer):
         ns(NODE,"ip","addr","add",LAN[role]+"/24","dev","wan0")
         ns(NODE,"ip","link","set","wan0","mtu","1200")
         ns(NODE,"ip","link","set","wan0","up")
+        if os.environ.get("WBD_DUAL_TCP_ARM")=="1":
+            ns(NODE,"ethtool","-K","wan0","gro","off","gso","off","tso","off")
         other="server" if role=="client" else "client"
         ns(NODE,"ip","route","replace",CIDR[other],"via",GW[role],"dev","wan0")
         ns(NODE,"sysctl","-q","-w","net.ipv4.conf.all.rp_filter=0")
@@ -191,6 +193,8 @@ def install_relay(client,server):
             ns(ROUTER,"ip","addr","add",GW[role]+"/24","dev",RDEV[role])
             ns(ROUTER,"ip","link","set",RDEV[role],"mtu","1200")
             ns(ROUTER,"ip","link","set",RDEV[role],"up")
+            if os.environ.get("WBD_DUAL_TCP_ARM")=="1":
+                ns(ROUTER,"ethtool","-K",RDEV[role],"gro","off","gso","off","tso","off")
             ns(ROUTER,"sysctl","-q","-w","net.ipv4.conf."+RDEV[role]+".rp_filter=0")
         ns(ROUTER,"sysctl","-q","-w","net.ipv4.conf.all.rp_filter=0")
         ns(ROUTER,"sysctl","-q","-w","net.ipv4.ip_forward=1")
@@ -247,17 +251,25 @@ def impair(loss,delay,model):
     if delay and os.environ.get("WBD_H2418_DIAG")=="1":
         delay_terms=["delay","200ms"] # isolate IID loss from jitter-induced reordering
     receipts={}
+    seeds={}
     for role in ("client","server"):
         device=RDEV[role]
-        ns(ROUTER,"tc","qdisc","replace","dev",device,"root","netem",
-           *delay_terms,*extras,"limit","65536")
+        args=("tc","qdisc","replace","dev",device,"root","netem",*delay_terms,*extras,"limit","65536")
+        if os.environ.get("WBD_DUAL_TCP_ARM")=="1" and delay:
+            seed=20261126+(role=="server")
+            p=ns(ROUTER,*args,"seed",str(seed),allow_fail=True)
+            if p.returncode:
+                seeds[role]={"seed":None,"reason":p.stderr[-300:]}
+                ns(ROUTER,*args)
+            else:seeds[role]={"seed":seed}
+        else:ns(ROUTER,*args)
         q=json.loads(ns(ROUTER,"tc","-s","-j","qdisc","show","dev",device).stdout)
         guard(any(x.get("kind")=="netem" for x in q),
               "QDISC_READBACK_NOT_NETEM_"+device)
         receipts[device]=q
     return {"loss_target_pct":loss,"one_way_added_delay_ms":delay,
         "jitter_ms":15 if delay and os.environ.get("WBD_H2418_DIAG")!="1" else 0,"jitter_correlation_pct":25 if delay and os.environ.get("WBD_H2418_DIAG")!="1" else 0,
-        "loss_model":model,"gilbert":ge,"qdisc_packet_limit":65536,
+        "loss_model":model,"gilbert":ge,"qdisc_packet_limit":65536,"seed_readback":seeds,
         "bandwidth_rate_cap":"NONE","apply_to":"RELAY_ROUTER_ONLY_EGRESS_BOTH_DIRECTIONS",
         "qdiscs":receipts,"no_tailscale_or_endpoint_qdisc_changed":True}
 
@@ -279,6 +291,12 @@ def local_relay_snapshot(tag):
     if os.environ.get("WBD_H2455_SEGMENTS"):
         from m0_h2455_segments import linux_snapshot
         d["host_segments"]=linux_snapshot()
+    if os.environ.get("WBD_DUAL_TCP_ARM")=="1":
+        d["host_stat"]=pathlib.Path("/proc/stat").read_text()
+        d["wall_ns"]=time.time_ns()
+        p=cmd("pidof","tailscaled",allow_fail=True).stdout.strip().split()
+        if p:d["tailscaled_stat"]=pathlib.Path("/proc",p[0],"stat").read_text()
+        d["offload"]={role:ns(ROUTER,"ethtool","-k",dev).stdout for role,dev in RDEV.items()}
     d["tag"]=tag
     return d
 
