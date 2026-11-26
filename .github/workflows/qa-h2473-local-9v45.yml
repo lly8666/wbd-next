@@ -56,32 +56,75 @@ jobs:
           if($m.source_sha -ne 'db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141' -or !$m.native_fec_acceleration){throw 'source/FEC mismatch'}
           if((Get-FileHash result/wl-public/wbd-client-embedded.exe).Hash.ToLowerInvariant() -ne $m.sha256.exe -or (Get-FileHash result/wl-public/wbd_engine.dll).Hash.ToLowerInvariant() -ne $m.sha256.dll){throw 'Windows binary hash mismatch'}
           Copy-Item result/wl-public/windows-binary-manifest.json h2442-out/
-      - name: Boot one independently networked real Ubuntu WSL2 guest
+      - name: WSL stage 1 - bounded distro inventory
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        id: wsl_inventory
         shell: pwsh
-        timeout-minutes: 9
+        timeout-minutes: 2
         run: |
           $ErrorActionPreference='Stop'
           New-Item -ItemType Directory -Force result,h2442-out | Out-Null
+          Write-Output 'H2473_WSL_INVENTORY_START'
           $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
-          if($LASTEXITCODE -ne 0){throw 'real WSL2 distro query unavailable'}
-          if($known -notmatch 'Ubuntu'){
-            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
-            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
-            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
-            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'Ubuntu real image checksum mismatch'}
-            New-Item -ItemType Directory -Force $vm | Out-Null
-            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 | Tee-Object result/h1706-ubuntu-import.log
-            if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 import failed'}
-          }
+          $rc=$LASTEXITCODE
+          $known | Set-Content result/h2473-distro-list.txt
+          if($rc -ne 0){throw 'real WSL2 distro query unavailable'}
+          $need=($known -notmatch '(?im)^\s*Ubuntu\s*$')
+          "needs_import=$($need.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Output "H2473_WSL_INVENTORY_DONE needs_import=$need"
+      - name: WSL stage 2 - official pinned image download
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' && steps.wsl_inventory.outputs.needs_import == 'true' }}
+        shell: pwsh
+        timeout-minutes: 4
+        run: |
+          $ErrorActionPreference='Stop'
+          $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+          Write-Output 'H2473_WSL_DOWNLOAD_START'
+          & python tools/m0_wl_windows_bounded_cmd.py 190 curl.exe --fail --location --connect-timeout 20 --max-time 180 --output $img 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl'
+          if($LASTEXITCODE -ne 0){throw 'Ubuntu pinned download failed'}
+          if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'Ubuntu real image checksum mismatch'}
+          Write-Output 'H2473_WSL_DOWNLOAD_HASH_PASS'
+      - name: WSL stage 3 - bounded import
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' && steps.wsl_inventory.outputs.needs_import == 'true' }}
+        shell: pwsh
+        timeout-minutes: 4
+        run: |
+          $ErrorActionPreference='Stop'
+          $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+          $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+          New-Item -ItemType Directory -Force $vm | Out-Null
+          Write-Output 'H2473_WSL_IMPORT_START'
+          & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 | Tee-Object result/h1706-ubuntu-import.log
+          if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 import failed'}
+          Write-Output 'H2473_WSL_IMPORT_DONE'
+      - name: WSL stage 4 - bounded guest network startup
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        shell: pwsh
+        timeout-minutes: 2
+        run: |
+          $ErrorActionPreference='Stop'
+          Write-Output 'H2473_WSL_BOOT_START'
           $lines=(& python tools/m0_wl_windows_bounded_cmd.py 35 wsl.exe -d Ubuntu -u root --exec ip -4 -o addr show dev eth0 2>&1 | Out-String)
-          if($LASTEXITCODE -ne 0){throw 'real independent Linux eth0 unavailable'}
+          $rc=$LASTEXITCODE
+          $lines | Set-Content result/h2473-guest-network.txt
+          if($rc -ne 0){throw 'real independent Linux eth0 unavailable'}
           $m=[regex]::Match($lines,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
           if(-not $m.Success){throw 'real Linux guest does not have its own IPv4'}
           $ip=$m.Groups[1].Value
           if($ip -match '^(127\.|0\.)'){throw 'guest source is not a networked Linux kernel'}
           $ip | Set-Content -Encoding ascii result/h1706-ubuntu-guest-ip.txt
-          Write-Output "PLAN029_H1706_INDEPENDENT_GUEST_READY ip=$ip topology=WSL2_vEthernet_not_off_host_internet"
+          Write-Output "H2473_WSL_BOOT_DONE ip=$ip"
+      - name: Prepare actual WSL Linux kernel and read BBR capability
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          & python tools/m0_wl_windows_bounded_cmd.py 210 wsl.exe -d Ubuntu -u root --exec sh -c 'command -v iptables && command -v openssl && command -v python3 && command -v tc && command -v modprobe && command -v sudo || (apt-get update -qq && apt-get install -y -qq iproute2 iptables openssl python3 kmod sudo)'
+          if($LASTEXITCODE -ne 0){throw 'WSL prerequisites unavailable'}
+          $cc=(& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu -u root --exec sh -c 'modprobe tcp_bbr 2>/dev/null || true; sysctl -n net.ipv4.tcp_available_congestion_control; uname -a' | Out-String)
+          $cc | Tee-Object result/h2473-kernel-cc.txt
+          if($cc -notmatch '\bbbr\b'){throw 'WSL kernel has no registered BBR; no fallback'}
+          if($LASTEXITCODE -ne 0){throw 'WSL congestion control inventory unavailable'}
       - name: Full public-run signed original Npcap and Wintun driver install
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
         shell: pwsh
@@ -140,14 +183,6 @@ jobs:
           WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
         run: |
           bash tools/m0_h2439_fetch_frozen.sh
-      - name: Prepare actual WSL Linux kernel and read BBR capability
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
-        shell: pwsh
-        run: |
-          & wsl.exe -d Ubuntu -u root --exec sh -c 'command -v iptables && command -v openssl && command -v python3 && command -v tc && command -v modprobe && command -v sudo || (apt-get update -qq && apt-get install -y -qq iproute2 iptables openssl python3 kmod sudo)'
-          if($LASTEXITCODE -ne 0){throw 'WSL prerequisites unavailable'}
-          & wsl.exe -d Ubuntu -u root --exec sh -c 'modprobe tcp_bbr 2>/dev/null || true; sysctl -n net.ipv4.tcp_available_congestion_control; uname -a'
-          if($LASTEXITCODE -ne 0){throw 'WSL congestion control inventory unavailable'}
       - name: 'Same-runner old vEthernet fixture: 0ms/400ms bare and 400ms single TCP WBD'
         shell: pwsh
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
@@ -223,5 +258,7 @@ jobs:
             h2442-out/windows-binary-manifest.json
             h2439-out/build-identity.json
             h2473-out/
+            result/h2473-*.txt
+            result/h1706-ubuntu-*
           if-no-files-found: warn
           retention-days: 14
