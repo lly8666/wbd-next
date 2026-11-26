@@ -154,7 +154,7 @@ def case(i):
     except Exception as e:result["error"]=repr(e)
     finally:
         try:
-            save(d/"local-path-before-clear.json",{"links":json.loads(wsl("ip","-s","-j","link","show")),"qdisc":json.loads(wsl("tc","-s","-j","qdisc","show")),"ss":wsl("ss","-tinm")})
+            save(d/"local-path-before-clear.json",{"links":json.loads(wsl("ip","-s","-j","link","show")),"qdisc":json.loads(wsl("tc","-s","-j","qdisc","show")),"ss":wsl("ss","-tinm","( sport = :5400 or dport = :5400 or sport = :5202 or dport = :5202 )")})
         except Exception as e:result["local_snapshot_error"]=repr(e)
         # Clean link before owned Stop, never kill as success.
         try:
@@ -294,6 +294,8 @@ def ack_sample(i):
     drops=re.search(r"(\d+) packets dropped by kernel",raw)
     return dict(counts,advance_bytes_hist=advance_bytes,span_s=None if first_ts is None else end_ts-first_ts,kernel_drops=int(drops.group(1)) if drops else None,interface=dev,scope="server-observed reverse inner TCP only; no raw capture persisted")
 
+from m0_winxdp_fixture import start_observers,concise,functional
+
 def main():
     rows=[]
     current_case=None
@@ -308,38 +310,20 @@ def main():
         clock["sink_before"]=snapshot()
         start=time.monotonic()
         stop=threading.Event()
-        def active():
-            base=time.monotonic()
-            for target,key in ((10,"steady_before"),(25,"active"),(55,"steady_after")):
-                if stop.wait(max(0,base+target-time.monotonic())):return
-                try:
-                    if key=="active":
-                        clock["active_ss"]=wsl("ss","-tinm",timeout=10)
-                        clock["active_origin_ss"]=wsl("ip","netns","exec","h2442origin","ss","-tinm",timeout=10)
-                        try:clock["ack_sample"]=ack_sample(current_case)
-                        except Exception as e:clock["ack_sample"]={"unavailable":repr(e)}
-                        try:clock["forward_sample"]=forward_sample(current_case)
-                        except Exception as e:clock["forward_sample"]={"unavailable":repr(e)}
-                        clock["offload_active"]=offload_state()
-                        clock["rsc_active"]=rsc_state()
-                    else:
-                        clock[key]=snapshot()
-                        clock[key+"_ss"]=wsl("ss","-tinm",timeout=10)
-                except Exception as e:clock[key+"_error"]=repr(e)
-        thread=None
+        observers=[]
         prior=kw.get("connected")
         def connected():
-            nonlocal thread
             clock["connect_elapsed_s"]=time.monotonic()-start
             clock["business_start_mono"]=time.monotonic()
             if prior:prior()
-            thread=threading.Thread(target=active,daemon=True);thread.start()
+            observers.extend(start_observers(clock,stop,clock["business_start_mono"],current_case,snapshot,wsl))
         kw["connected"]=connected
         try:return original_sink(*args,**kw)
         finally:
             clock["business_end_mono"]=time.monotonic()
             stop.set()
-            if thread:thread.join(25)
+            for observer in observers:observer.join(25)
+            if any(observer.is_alive() for observer in observers):raise RuntimeError("measurement observer did not join")
             clock["sink_after"]=snapshot()
             clock["rsc_after"]=rsc_state()
             clock["offload_after"]=offload_state()
@@ -378,7 +362,7 @@ def main():
     manifest=read(builds/"manifest.json")
     original=read(ROOT/"h2442-out/windows-binary-manifest.json")
     def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
-    if digest(dll)!=original["sha256"]["dll"] or manifest["source_sha"]!=os.environ["GITHUB_SHA"] or digest(BIN/"wbd-client-embedded.exe")!=manifest["exe"]:raise RuntimeError("source/DLL identity mismatch")
+    if digest(dll)!=original["sha256"]["dll"] or manifest["source_sha"]!="e5c3cc4ecc2d13c59e9ea1d930202bfd49e09017" or digest(BIN/"wbd-client-embedded.exe")!=manifest["exe"]:raise RuntimeError("source/DLL identity mismatch")
     for arm in ("A","B"):
         if digest(builds/(arm+".dll"))!=manifest[arm]:raise RuntimeError("candidate hash mismatch "+arm)
     shutil.copyfile(dll,frozen)
@@ -406,8 +390,11 @@ def main():
         row["xdp_rx_ready"]=rxready
         row["xdp_rx_stop_raw"]=rxstop
         row["xdp_rx_stop"]={k:int(v) for k,v in re.findall(r"(received|batches|waits|dropped|truncated)=(\d+)",rxstop[-1])} if rxstop else {}
-        row["same_cold_handoff"]="WBD_XDP_COLD_HANDOFF same_rx_tx_umem=1" in text
-        row["mode_ok"]=row["mode_ok"] and ((len(rxready)==1 and len(rxstop)==1 and row["same_cold_handoff"] and row["xdp_rx_stop"].get("received",0)>0 and row["xdp_rx_stop"].get("waits",0)>0 and row["xdp_rx_stop"].get("truncated")==0) if mode_for(i)=="B" else not rxready and not rxstop)
+        handoffs=text.count("WBD_XDP_COLD_HANDOFF same_rx_tx_umem=1")
+        row["same_cold_handoff"]=handoffs==1
+        row["cold_attempts"]=len(rxready)
+        row["cold_first_try"]=len(rxready)==1 if mode_for(i)=="B" else None
+        row["mode_ok"]=((len(ready)==len(stop)==len(rxready)==len(rxstop)>0 and handoffs==1 and q.get("published",0)>0 and q.get("completed_before_close",0)>0 and q.get("invalid")==0 and row["xdp_rx_stop"].get("received",0)>0 and row["xdp_rx_stop"].get("waits",0)>0 and row["xdp_rx_stop"].get("truncated")==0 and "WBD_XDP_TX_RING_FULL" not in text and "WBD_XDP_TX_POKE_FAILED" not in text) if mode_for(i)=="B" else not ready and not stop and not rxready and not rxstop)
         row["native_stop_receipts"]=[l for l in text.splitlines() if "WBD_WINDOWS_NATIVE_OUTER_REPAIR " in l or "WBD_WINDOWS_RUST_NATIVE_RX" in l]
     def paired(rows):
         out=[]
@@ -439,6 +426,7 @@ def main():
         for i in ((1,0) if smoke else SCHEDULE):
             current_case=i
             mode,dll_sha=select(i)
+            print("WINXDP_CASE_BEGIN "+json.dumps({"case":i,"mode":mode,"rate":CASES[i]["rate"]}),flush=True)
             clock.clear()
             before=json.loads(wsl("ip","-s","-j","link","show","dev","eth0"))[0]
             r=case(i)
@@ -465,11 +453,13 @@ def main():
             if (OUT/("case-"+str(i))/"wl-n0-netem-after.json").is_file():
                 n=read(OUT/("case-"+str(i))/"wl-n0-netem-after.json")
                 r["netem_drops"]={dev:sum(q["drops"] for q in n[dev] if q.get("kind")=="netem") for dev in ("eth0","ifb")}
+            r["functional"]=functional(r)
             r["comparable"]=comparable(r) and (i<0 or r.get("mode_ok") is True)
             r["clean_candidate"]=clean(r) if i>=0 else False
             rows.append(r)
             save(OUT/"summary.json",{"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"same_windows_runner":True,"server_os":"WSL2 Linux x86_64","native_windows_server":False,"streams":1,"direction":"Linux_to_Windows_bulk_Windows_TX_ACK","scope":"FUNCTIONAL_FULL_CARRIER_SMOKE_ANY_CPU" if smoke else "9V45_ABBA_BAAB","build_source_sha":manifest["source_sha"],"rows":rows,"paired":paired(rows)})
-            print("WINXDP_FULL_AB_CASE "+json.dumps(r),flush=True)
+            save(OUT/("case-"+str(i))/"measurement.json",r)
+            print("WINXDP_FULL_AB_CASE "+json.dumps(concise(r)),flush=True)
             print("WINXDP_FULL_AB_PAIR "+json.dumps(paired(rows)),flush=True)
             if r.get("shape_clear_error") or (i>=0 and not r.get("client_stop")):raise RuntimeError("owned Stop or netem cleanup failed; no next case")
             if "sink_before" not in r or "sink_after" not in r:raise RuntimeError("business boundary missing; stop infrastructure failure")
@@ -480,7 +470,8 @@ def main():
         if p.wait(30)!=0:raise RuntimeError("local control exit")
         save(OUT/"h2476-windows-post-probe.json",probe.run("windows"))
         if smoke:
-            if len(rows)!=2 or not all(r.get("comparable") for r in rows):raise SystemExit(2)
+            if len(rows)!=2 or not all(r.get("functional") for r in rows):raise SystemExit(2)
+            if any(r.get("cold_first_try") is False for r in rows):raise RuntimeError("full carrier real business delivered, but cold first-attempt qualification failed")
         elif len(paired(rows))!=2:raise SystemExit(2)
     finally:
         if offload_changed:save(OUT/"h2480-offload-restored-finally.json",set_segmentation(original_offload,False))

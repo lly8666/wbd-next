@@ -3,7 +3,7 @@ run-name: "M0 WinXDP TX 9V45 same-host ABBA BAAB | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
-    paths: ['.github/workflows/qa-m0-winxdp-tx-9v45.yml', 'tools/m0_winxdp_ab_*.py']
+    paths: ['.github/workflows/qa-m0-winxdp-tx-9v45.yml', 'tools/m0_winxdp_ab_*.py', 'tools/m0_winxdp_fixture.py']
 permissions: {contents: read, actions: read}
 concurrency:
   group: winxdp-tx-9v45-${{ github.ref }}
@@ -42,17 +42,19 @@ jobs:
       - name: Verify experiment scripts parse
         shell: pwsh
         run: |
-          python -m py_compile tools/m0_winxdp_ab_client.py tools/m0_winxdp_ab_server.py tools/m0_h2479_tcp.py tools/m0_winxdp_ab_profile.py tools/m0_h2476_gate.py tools/m0_h2475_fixture.py tools/m0_h2478_profile.py tools/m0_h2470_probe.py tools/m0_h2476_import_wsl.py
+          python -m py_compile tools/m0_winxdp_fixture.py tools/m0_winxdp_ab_client.py tools/m0_winxdp_ab_server.py tools/m0_h2479_tcp.py tools/m0_winxdp_ab_profile.py tools/m0_h2476_gate.py tools/m0_h2475_fixture.py tools/m0_h2478_profile.py tools/m0_h2470_probe.py tools/m0_h2476_import_wsl.py
           if($LASTEXITCODE -ne 0){throw 'syntax check'}
           python -c "import re; assert re.findall(r'published=(\d+)', 'published=123') == ['123']"
           if($LASTEXITCODE -ne 0){throw 'receipt regex test'}
+          python tools/m0_winxdp_fixture.py
+          if($LASTEXITCODE -ne 0){throw 'compact receipt check'}
           python tools/test_m0_h2478_profile.py
           if($LASTEXITCODE -ne 0){throw 'profile roundtrip test'}
       - name: Reuse exact completed ISA-L A/B build (15110473153)
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S' }}
         shell: pwsh
         run: |
-          git diff --exit-code cb6775c143e5853edcfc01e4e71adba119a4bb37 HEAD -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py
+          git diff --exit-code e5c3cc4ecc2d13c59e9ea1d930202bfd49e09017 HEAD -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py
           if($LASTEXITCODE -ne 0){throw 'A/B product changed'}
           gh run download 45808553851 -R $env:GITHUB_REPOSITORY -n winxdp-tx-native-ab -D xdp-build
           if($LASTEXITCODE -ne 0){throw 'completed A/B archive unavailable'}
@@ -65,7 +67,7 @@ jobs:
           # All product differences from the verified H2480 base are the
           # already-built Windows-only TX candidate. Check exact build identity
           # above, then use the original frozen-server verifier at its base SHA.
-          git diff --exit-code 26b11e2da236e909b73f461964c52d5a86d42dca "$GITHUB_SHA" -- crates r0 Cargo.toml Cargo.lock tools/m0_plan029_linux_dual_native_build.sh tools/m0_linux_glibc231_build.sh ':!crates/wbd-engine/src/v4_windows_native_runtime.rs' ':!crates/wbd-engine/Cargo.toml' ':!crates/wbd-platform/Cargo.toml' ':!crates/wbd-platform/src/lib.rs' ':!crates/wbd-platform/build.rs' ':!crates/wbd-platform/native/winxdp_tx.cpp' ':!crates/wbd-platform/src/windows_xdp_tx.rs'
+          git diff --exit-code 26b11e2da236e909b73f461964c52d5a86d42dca "$GITHUB_SHA" -- crates r0 Cargo.toml Cargo.lock tools/m0_plan029_linux_dual_native_build.sh tools/m0_linux_glibc231_build.sh ':!crates/wbd-engine/src/v4_windows_native_runtime.rs' ':!crates/wbd-engine/Cargo.toml' ':!crates/wbd-platform/Cargo.toml' ':!crates/wbd-platform/src/lib.rs' ':!crates/wbd-platform/build.rs' ':!crates/wbd-platform/native/winxdp_tx.cpp' ':!crates/wbd-platform/src/windows_xdp_tx.rs' ':!crates/wbd-platform/src/windows_xdp_rx.rs' ':!crates/wbd-engine/src/v4_windows_game_native_runtime.rs' ':!r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go' ':!r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go' ':!r0/go_overlay/internal/faketcp/xdp_native_windows.go' ':!r0/go_overlay/assembly/manifest-plan020-m0.json'
           GITHUB_SHA=26b11e2da236e909b73f461964c52d5a86d42dca bash tools/m0_h2476_fetch_frozen_linux.sh
       - name: WSL stage 1 - bounded distro inventory
         if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') }}
@@ -145,7 +147,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          git diff --exit-code 26b11e2da236e909b73f461964c52d5a86d42dca HEAD -- r0 Cargo.lock tools/prepare_windows_wiring.py
+          git diff --exit-code e5c3cc4ecc2d13c59e9ea1d930202bfd49e09017 HEAD -- r0 Cargo.lock tools/prepare_windows_wiring.py
           if($LASTEXITCODE -ne 0){throw 'product changed'}
           New-Item -ItemType Directory -Force result/wl-public,result,h2442-out | Out-Null
           gh run download 45603546655 -R $env:GITHUB_REPOSITORY -n m0-wl-windows-product-binaries-db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141 -D result/wl-public
