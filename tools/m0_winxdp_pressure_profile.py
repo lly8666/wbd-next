@@ -48,3 +48,16 @@ if os.environ.get("WBD_XDP_STRESS_PHASE")=="upload":
       ("eight-streams-clean",8,4194304,20,0),
       ("default-sendbuf-last",2,0,80,5),
     )]
+
+if os.environ.get("WBD_XDP_STRESS_PHASE")=="carrier-abba":
+    assert PATH_MODE=="nat"
+    base=dict(CASES[0],sndbuf=4194304)
+    workloads=[
+        dict(name="clean-down",direction="down",rate=650,streams=2,loss=0,delay=20,profile=-1,mtu=1400),
+        dict(name="lossy-duplex",direction="duplex",rate=400,streams=4,loss=5,delay=80,profile=6,mtu=1400),
+        dict(name="lossy-up",direction="up",rate=400,streams=8,loss=5,delay=20,profile=6,mtu=1400),
+        dict(name="lossy-short-burst",direction="duplex",rate=300,streams=4,loss=10,correlation=25,delay=20,profile=6,mtu=1400),
+    ]
+    CASES=[dict(base,**c,arm=arm,group=c["name"]) for c in workloads for arm in "ABBA"]
+    if os.environ.get("H2478_REPLICA") in tuple("BDFHJL"):
+        CASES=[dict(c,arm="B" if c["arm"]=="A" else "A") for c in CASES]

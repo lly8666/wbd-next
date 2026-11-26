@@ -227,7 +227,7 @@ def main():
     global CURRENT
     rows=[]
     log=(OUT/"server-control.log").open("w")
-    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"WBD_XDP_STRESS_PHASE="+os.environ.get("WBD_XDP_STRESS_PHASE",""),"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
+    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"WBD_XDP_STRESS_PHASE="+os.environ.get("WBD_XDP_STRESS_PHASE",""),"H2478_REPLICA="+os.environ["H2478_REPLICA"],"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
     try:
         deadline=time.monotonic()+60
         while "H2442_SERVER_CONTROL_READY" not in (OUT/"server-control.log").read_text(errors="replace"):
@@ -236,8 +236,25 @@ def main():
         order=list(range(len(CASES)))
         if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
         if os.environ["H2478_REPLICA"]=="S":order=[0,1,4] if os.environ.get("WBD_XDP_STRESS_PHASE")=="upload" else [0,5] if os.environ.get("WBD_XDP_PRESSURE_LAB")=="1" else [0,2]
+        abba=os.environ.get("WBD_XDP_STRESS_PHASE")=="carrier-abba"
+        if abba:
+            order=list(range(len(CASES)))
+            if os.environ["H2478_REPLICA"] in "BDFHJL":
+                order=[i for g in reversed(range(len(CASES)//4)) for i in range(4*g,4*g+4)]
+            if os.environ["H2478_REPLICA"]=="S":order=list(range(4,8))
         for i in order:
             CURRENT=i
+            if abba:
+                import shutil
+                arm=CASES[i]["arm"]
+                base=ROOT/"carrier-ab"/arm
+                m=read(base/"identity.json")
+                for filename,key in (("wbd-client-embedded.exe","exe"),("wbd_engine.dll","dll")):
+                    src=base/filename
+                    assert hashlib.sha256(src.read_bytes()).hexdigest()==m[key]
+                    shutil.copyfile(src,BIN/filename)
+                    assert hashlib.sha256((BIN/filename).read_bytes()).hexdigest()==m[key]
+                print("WINXDP_ABBA_IDENTITY "+json.dumps(dict(m,arm=arm,case=i)),flush=True)
             if os.environ.get("WBD_XDP_PRESSURE_LAB")=="1":
                 c=CASES[i]
                 for key,value in (("RX",c["rx_slots"]),("TX",c["tx_slots"]),("QUANTUM",c["quantum"]),("POLICY",c["policy"])):
@@ -279,9 +296,32 @@ def main():
             r["fatal"]=[l[:300] for l in s.splitlines() if "WBD_XDP_TX_RING_FULL" in l or "worker rc=" in l or "WBD_XDP_TX_COMPLETION_NOTIFY_FAILED" in l]
             r["exact_hash"]=exact_flows(r,r.get("server",{}).get("source") or {})
             r["pressure_valid"]=r["status"]=="MEASURED_EXACT" and r["exact_hash"] and all(v>0 for v in r.get("netem_packets",{}).values()) and len(r.get("netem_packets",{}))==2 and r["tx"].get("invalid")==0 and r["rx"].get("truncated")==0 and not r["fatal"] and r["fec_ok"] and r["traffic_ok"] and r["lab_ok"] and (r["loss"]==0 or r["loss_observed"]>0)
+            if abba:
+                r["binary_identity"]=m
+                if r["arm"]=="A":
+                    r["carrier_ok"]=not any(marker in s for marker in ("WBD_XDP_TX_READY","WBD_XDP_RX_READY","WBD_XDP_TX_STOP","WBD_XDP_RX_STOP"))
+                    r["pressure_valid"]=r["status"]=="MEASURED_EXACT" and r["exact_hash"] and r["carrier_ok"] and r["fec_ok"] and r["traffic_ok"] and len(r.get("netem_packets",{}))==2 and all(v>0 for v in r.get("netem_packets",{}).values()) and (r["loss"]==0 or r["loss_observed"]>0) and not r["fatal"]
+                else:
+                    r["carrier_ok"]="WBD_XDP_TX_READY" in s and "WBD_XDP_RX_READY" in s and r["tx"].get("published",0)>0 and r["tx"].get("published")==r["tx"].get("completed_before_close") and r["rx"].get("received",0)>0
+                    r["pressure_valid"]=r["pressure_valid"] and r["carrier_ok"]
+                goodput=(r.get("rx_mbps") or 0)+(r.get("server_rx_mbps") or 0)
+                r["cpu_s_per_gib"]=r["steady_process_cpu_cores"]*8589.934592/goodput if goodput>0 and r["steady_process_cpu_cores"] is not None else None
             rows.append(r);save(d/"measurement.json",r)
+            if abba:
+                import statistics
+                group=[v for v in rows if v["group"]==r["group"]]
+                if len(group)==4:
+                    pair={"group":r["group"],"sequence":"".join(v["arm"] for v in group),"valid":all(v["pressure_valid"] for v in group)}
+                    for k in ("rx_mbps","server_rx_mbps","cpu_s_per_gib"):
+                        for a in ("A","B"):
+                            v=[x.get(k) for x in group if x["arm"]==a]
+                            pair[a+"_"+k]=statistics.mean(v) if len(v)==2 and all(x is not None for x in v) else None
+                        av,bv=pair["A_"+k],pair["B_"+k]
+                        pair[k+"_delta_pct"]=100*(bv/av-1) if av and bv is not None else None
+                    print("WINXDP_CARRIER_ABBA_PAIR "+json.dumps(pair),flush=True)
+                    save(OUT/("pair-"+r["group"]+".json"),pair)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
-            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
+            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
             if r.get("shape_clear_error") or not r.get("client_stop") or not r.get("server_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):
                 for pth in (SERVER/("case-"+str(i))/"server.log",SERVER/("case-"+str(i))/"source.log",d/"client.log"):
                     if pth.exists():
