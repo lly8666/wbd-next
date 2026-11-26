@@ -1,0 +1,113 @@
+name: M0 RouterOS CHR server native connectivity
+run-name: "M0 RouterOS CHR | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-routeros-server']
+    paths:
+      - '.github/workflows/qa-m0-routeros-server.yml'
+      - 'tools/routeros-server/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Exact-source existing x86 product
+        run: |
+          set -euo pipefail
+          bash -n tools/routeros-server/chr-lab.sh
+          sh -n tools/routeros-server/entry.sh
+          python3 -m py_compile tools/routeros-server/app.py
+          bash tools/m0_plan029_linux_dual_native_build.sh >ros-build.log 2>&1 || { tail -n 150 ros-build.log; exit 2; }
+          cd linux-plan029-public-bundle
+          sha256sum -c SHA256SUMS
+          tar -czf ../ros-product.tgz wbd-v4-client wbd-v4-server libwbd_engine.so SHA256SUMS manifest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ros-product-${{ github.sha }}
+          path: ros-product.tgz
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ros-build-log
+          path: ros-build.log
+  bbr-proxy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Build pinned reference BBRv3 transparent TCP endpoint
+        run: |
+          set -euo pipefail
+          mkdir -p bbr-proxy
+          git init "$RUNNER_TEMP/gvisor"
+          git -C "$RUNNER_TEMP/gvisor" fetch --depth=1 https://github.com/adios-404/gvisor.git 9b14a44348f259003600d98cdb4dbd57a8302ca7
+          git -C "$RUNNER_TEMP/gvisor" checkout --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/gvisor" rev-parse HEAD)" = 9b14a44348f259003600d98cdb4dbd57a8302ca7
+          mkdir -p "$RUNNER_TEMP/gvisor/wbd-bbr-proxy"
+          cp tools/routeros-server/bbr-proxy.go "$RUNNER_TEMP/gvisor/wbd-bbr-proxy/main.go"
+          cp tools/routeros-server/BUILD.bbr-proxy "$RUNNER_TEMP/gvisor/wbd-bbr-proxy/BUILD"
+          dest="$PWD/bbr-proxy"
+          cd "$RUNNER_TEMP/gvisor"
+          make copy TARGETS=//wbd-bbr-proxy:wbd-bbr-proxy DESTINATION="$dest"
+          test -x "$dest/wbd-bbr-proxy"
+          sha256sum "$dest/wbd-bbr-proxy"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bbr-proxy-${{ github.sha }}
+          path: bbr-proxy/
+          if-no-files-found: error
+  chr:
+    needs: [build, bbr-proxy]
+    name: CHR 7.24.7 ${{ matrix.scene }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        scene: [dnat-bbr-clean, dnat-bbr-loss, dnat-userspace-cubic-loss, dnat-native-loss]
+    env:
+      ROS_SCENE: ${{ matrix.scene }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ros-product-${{ github.sha }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: bbr-proxy-${{ github.sha }}
+          path: bbr-proxy
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: '1.4.4'
+      - name: Install CHR tooling and unpack same-source product
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils iproute2 iptables tcpdump socat openssl gcc
+          if test -e /dev/kvm; then sudo chmod a+rw /dev/kvm; fi
+          bun install -g @tikoci/quickchr@0.7.0
+          echo "$HOME/.bun/bin" >>"$GITHUB_PATH"
+          mkdir -p linux-plan029-public-bundle
+          tar -xzf ros-product.tgz -C linux-plan029-public-bundle
+      - name: Real CHR container and client application
+        run: bash tools/routeros-server/chr-lab.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ros-${{ matrix.scene }}-${{ github.sha }}
+          path: ros-evidence/
+          if-no-files-found: warn
+          retention-days: 14

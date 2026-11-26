@@ -1,0 +1,31 @@
+# M0 RouterOS server experiment — 2026-11-26
+
+User authorized read/write and a separate RouterOS server branch based on experiment/m0-linux-tcp-splice. Branch experiment/m0-routeros-server, exact parent fbce0649b5557d48199b5c0206424afd2677c232 (H2477). Keep main, parent branch, its active H2477 and role cursor untouched; this is a side experiment, not a replacement for the active M0 work. No production code change in the initial step.
+
+Use quickchr 0.7.0 (https://github.com/tikoci/quickchr), Bun 1.4.4, CHR x86 7.24.7 long-term; QEMU KVM if available, TCG otherwise. Build original x86 product once via existing glibc2.31 assembler, same manifest across three isolated VM jobs. Local image archive transfer, real RouterOS container, host native Linux client and independent origin L2 segment. No SLIRP data-plane proxy. CHR free license is not a throughput qualification.
+
+- Routed: client 10.248.81.3 -> CHR ether2 10.248.81.2 -> br-wbd 10.248.82.1 -> container 10.248.82.2:443. Origin is 198.18.77.2 via ether3 198.18.77.1. Exact forward rules for both directions; no additional RouterOS source NAT needed in this isolated routed lab.
+- DNAT: same topology, client instead connects to CHR ether2 address:443, normal RouterOS dstnat to container:443. Separate VM, same product and origin, no other transport change. Determine whether the original carrier survives translation.
+- Splice: same routed topology, explicit cubic kernel CC; test existing transparent TCP path, not new TCP implementation. BBR availability recorded but not assumed.
+- Container entry probes actual TUN, forwarding, iptables MASQUERADE, TPROXY, fq. If fq unavailable use existing explicit 0, label it; no claim of matching default performance. Scoped RST suppression matches existing Linux lab. No new steady state safety framework, no changes to TLS/auth/wire/recovery.
+- Success requires real authenticated client READY, existing H2429 finite bidirectional TCP/half-close + eight concurrent streams + UDP echo, owned client/server Stop, and actual splice target/Stop in splice scene. Archive source manifest, checksums, RouterOS readback/filter/NAT counters, container/client logs, bounded wire header sample and application receipt. NOT_RUN until Actions evidence. No physical router deployment, no throughput claims.
+
+Main registry/cursor intentionally not overwritten while prior M0 work is active. Use this decision and branch commits as side-experiment handoff.
+
+## Fixture correction before first results
+
+CHR free is limited to 1 Mbps upload per interface (MikroTik CHR licensing manual). The first dispatched 5c6006b workflow uses original H2429 2/3 MiB and eight parallel 1 MiB downloads; its 35 s worker join may exceed license capacity. Keep that original run as evidence, not an unconditional functionality rejection. The corrected branch uses the same application logic at 1/16 payload (128/192 KiB, eight 16/64 KiB flows, unchanged UDP), records license, and retains exact bytes/hash, half-close and Stop requirements. No runtime or protocol change. This is a new source-locked functional fixture, not a throughput benchmark.
+
+## 2026-11-26 — first two runs: common preflight failure, no client test
+
+Both x86 builds passed. Runs 45775498139 (5c6006bf) and 45775773891 (1612c6c) all six CHR jobs actually booted, installed container 7.24.7, enabled container mode, set up all three NICs, fetched and extracted the WBD archive and entered entry.sh. All six stopped at the diagnostic `cat /proc/sys/net/ipv4/tcp_available_congestion_control` (ENOENT, set -e); kernel 5.6.3-64. No WBD server READY/client/auth/business/Stop test was reached. Artifacts: 15095829170/15096242454/15096343130 and 15095269676/15096870309/15096746536. Do not call this a NAT, splice or kernel-support failure.
+
+Repair the cold fixture: optional proc readback, direct socket option probe (AF_PACKET, AF_INET RAW, IP_TRANSPARENT, cubic, bbr), actual TUN and exact netfilter operations, strip @ifNN from ip -o interface name, report early process exit immediately. Keep non-privileged container and existing product semantics; do not silently bypass required NAT/RST rules. Actual forwarding remains unverified if proc sysctl is hidden. No production changes.
+
+Governance red predates RouterOS: H2416 historical evidence has result FUNCTIONAL_PASS, no artifact_verified=true, whereas validate_repo requires PASS and artifact_verified=true for a verified cursor. Do not rewrite historic evidence or change governance gates. Branch-local M0 cursor now explicitly partial/unverified with exact failed run references; main and parent untouched. The separate first maintenance pip failure was a package hash mismatch, not a product error; latest maintenance instead failed historical cursor validation.
+
+## Scoped acceptance and next batch
+
+SOURCE 1762401, Action 45777676652: normal routed and DNAT real application and Stop passed, including nine TCP streams, exact bytes/hashes and UDP. DNAT hit once, both forward directions counted. Source-qualified result: docs/evidence/M0/20261126-ROUTEROS-CHR-NORMAL-SCOPED.json. Native TPROXY failed before client; BBR/fq unavailable. Governance and maintenance passed. No physical or performance claim.
+
+Next: same-source x86 build, six public-mode DNAT scenarios (Normal, Fixed1, Auto, Game2, Game4, Game4 fixed1), plus explicit CUBIC REDIRECT and one legacy TPROXY control. REDIRECT is an opt-in cold NAT PREROUTING rule scoped to forwarded TUN TCP, listener bound to TUN address, SO_ORIGINAL_DST once per accepted socket, same original Rust pipe/epoll and Stop; existing TPROXY stays default. No protocol, per-packet userspace rewrite, extra worker or default change. The REDIRECT netfilter path and conntrack availability are hypotheses until real receipt; legacy control tests alternate backend rather than assuming kernel absence from nft only. CHR free license precludes throughput claims.

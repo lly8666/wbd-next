@@ -132,6 +132,7 @@ type config struct{
     leaseMustStay bool
     tcpProxyCC string // empty keeps original NAT
     tcpProxyPort int
+    tcpProxyRedirect bool
     tunFqMaxrateMbps int
     tunTxQLenPackets int
 }
@@ -232,10 +233,13 @@ func parse(role string,args []string)(config,error){
     rotateJitter:=flags.Duration("rotation-jitter",0,"client: bounded random ±jitter for each rotation (e.g. 3s with --rotation-interval 18s); 0 preserves exact interval")
     proxyCC:=flags.String("tcp-proxy-cc","","server-only transparent TCP splice; kernel CC name, empty keeps NAT")
     proxyPort:=flags.Int("tcp-proxy-port",46180,"server-only transparent listener port")
+    proxyIngress:=flags.String("tcp-proxy-ingress","tproxy","server-only TCP splice ingress: tproxy (default) or redirect (NAT original destination)")
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
     tunTxQLen:=flags.Int("tun-txqlen-packets",2048,"owned original Linux TUN TX queue: 2048 bounded default, 500 explicit rollback")
     if err:=flags.Parse(args);err!=nil{return c,err}
-    if *proxyCC!="" {if role!="server"||*proxyPort<1024||*proxyPort>65535||len(*proxyCC)>15{return c,fmt.Errorf("invalid server TCP proxy configuration")}; c.tcpProxyCC=*proxyCC; c.tcpProxyPort=*proxyPort}
+    if *proxyIngress!="tproxy"&&*proxyIngress!="redirect"{return c,fmt.Errorf("tcp-proxy-ingress must be tproxy or redirect")}
+    if *proxyIngress=="redirect"&&(role!="server"||*proxyCC==""){return c,fmt.Errorf("redirect ingress requires server TCP proxy")}
+    if *proxyCC!="" {if role!="server"||*proxyPort<1024||*proxyPort>65535||len(*proxyCC)>15{return c,fmt.Errorf("invalid server TCP proxy configuration")}; c.tcpProxyCC=*proxyCC; c.tcpProxyPort=*proxyPort; c.tcpProxyRedirect=*proxyIngress=="redirect"}
     modeGiven,autoGiven:=false,false
     flags.Visit(func(f *flag.Flag){if f.Name=="mode"{modeGiven=true};if f.Name=="auto-ip"{autoGiven=true}})
     if role=="server"&&*manualLease!=""&&!modeGiven{*mode="normal"}

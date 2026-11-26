@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "source_sha": "7d4f65bf6d366250a0acb6e575e09794ebe985d2",
+  "result": "FUNCTIONAL_PASS_SCOPED",
+  "artifact_verified": true,
+  "run_id": 45783511983,
+  "scope": "Normal, CHR 7.24.7 x86 free license, DNAT, reference sidecar BBRv3 and CUBIC, short finite TCP/UDP only; no throughput, CPU, physical or native Rust BBR qualification",
+  "build": {
+    "job": 139784467531,
+    "artifact": 15098769299,
+    "independent_sha256": {
+      "wbd-v4-client": "d14166509945a2c99ddc98d56e0e542e650ce4df187ca04d321bec6ead0a9e11",
+      "wbd-v4-server": "0336fcc87c0eac66ea39a05d63d166353cc07891784ffc7c4a1937cb464fe567",
+      "libwbd_engine.so": "edb86a9c23cc6c36782dac0b419d848a577a7afff57ee2d71c0f8da9f538f4d5"
+    },
+    "reference": {
+      "job": 139784468040,
+      "artifact": 15098764405,
+      "sha256": "16b0a8922d85d300f913d2a39c450abdf9bad89c48068695584bc3f61b3189ae",
+      "external_source": "adios-404/gvisor@9b14a44348f259003600d98cdb4dbd57a8302ca7"
+    }
+  },
+  "governance": [
+    45783511967,
+    45783512105
+  ],
+  "cases": [
+    {
+      "scene": "dnat-bbr-clean",
+      "job": 139786282002,
+      "artifact": 15099443222,
+      "result": "FUNCTIONAL_PASS",
+      "actual_cc": "bbr",
+      "zip_sha256": "6e6e278e1aa68b30495d300f7444ab0c7a978e480e26b23c7e932744bb6731d2",
+      "netem": "none; TCP retrans still observed; not guaranteed loss-free"
+    },
+    {
+      "scene": "dnat-bbr-loss",
+      "job": 139786282003,
+      "artifact": 15099088757,
+      "result": "FUNCTIONAL_PASS",
+      "actual_cc": "bbr",
+      "zip_sha256": "e3984d295f36883fc5c6e3247009179276989bb83628dfb71151350575c05012",
+      "netem": {
+        "added_rtt_ms": 400,
+        "loss_each_percent": 5,
+        "client_sent": 1019,
+        "client_drops": 51,
+        "return_sent": 1038,
+        "return_drops": 55
+      }
+    },
+    {
+      "scene": "dnat-userspace-cubic-loss",
+      "job": 139786282154,
+      "artifact": 15099583051,
+      "result": "FUNCTIONAL_PASS",
+      "actual_cc": "cubic",
+      "zip_sha256": "2bd54fdd544beedf52c4719ccd4bebceaa8d3510cdf8c76472986e6df41556fe",
+      "netem": {
+        "added_rtt_ms": 400,
+        "loss_each_percent": 5,
+        "client_sent": 927,
+        "client_drops": 33,
+        "return_sent": 1005,
+        "return_drops": 60
+      }
+    },
+    {
+      "scene": "dnat-native-loss",
+      "job": 139786282007,
+      "artifact": 15099278092,
+      "result": "FAIL",
+      "zip_sha256": "5ee7d691ea643bb63eeb651a0418ce5e8a9a65454aa34b3c78bf1d6e9eebcaef",
+      "netem": {
+        "added_rtt_ms": 400,
+        "loss_each_percent": 5,
+        "client_sent": 778,
+        "client_drops": 36,
+        "return_sent": 784,
+        "return_drops": 44
+      },
+      "reason": "Two concurrent application TCP ConnectionResetError; empty application and origin receipts; client Stop seen, server owned Stop not evidenced; root cause not isolated"
+    }
+  ],
+  "successful_each": {
+    "tcp_connections": 9,
+    "up_bytes": 262144,
+    "down_bytes": 720896,
+    "proxy_accepts": 9,
+    "proxy_done_ok": 9,
+    "origin_sha256": "98789a79944015f0e20e978bf8ddf6bd9a8e6f3f69af5c4baf13eddd9ed2870b",
+    "client_sha256": "175ec275cb01684888e69547bee0ecbf42cac2aeb1849b883c146064a67258d9",
+    "half_close": true,
+    "udp_echo": true,
+    "proxy_stop": true,
+    "client_stop": true,
+    "rust_tun_reader_joined": true,
+    "owned_masquerade_deleted": true
+  },
+  "limitations": [
+    "All four scenario manifests and three reference sidecar hashes match independently downloaded build binaries",
+    "Netem independent draws and runners; no paired samples",
+    "BBR snapshots taken after application write/half-close, not full ACK delivery; no cwnd or delivery-rate superiority established by this integrated test",
+    "User-space reference sidecar has distinct TUN and Go copies; no zero-copy or Rust BBR integration",
+    "BBR only Normal tested; other modes passed ordinary DNAT, not BBR"
+  ]
+}

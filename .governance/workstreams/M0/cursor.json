@@ -4,26 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2416,
-  "checkpoint_sha": "e8e344782e89f5c96201869a549e1c546bf34748",
-  "progress": "paused",
-  "task_id": "M0-MIXED-MODE-ROUTE-HANDOFF",
-  "current_task": "用户授权修复断开Normal后Game2/4回注0及反向切换，experiment/m0-mixed-mode-route-handoff；docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md。现有Health接管，按认证/32跨模式寻找owner；不增协议状态/热路径/心跳，不动Health90和Game4单lane热换。",
-  "why_now": "用户实机Normal断开后切Game2/4可连但回注0，90s后重连恢复",
-  "done_when": "原生双ISA真实同一服务端同一虚拟IP跨模式切换<90s双向TCP/UDP、异租约独立、原退役/Health90/单lane热换边界，精确SOURCE Linux glibc2.31完整包及Win GUI完整包；限域记录。",
-  "next_action": "本任务已限域验收并合main PR77；用户下载同SOURCE Windows GUI与Linux双ISA glibc2.31成品，实际物理WAN/旧内核及性能A/B未测，勿扩张PASS。原H2413兼容基线及H2409未决实机边界保留；等待用户新授权。",
-  "unverified": false,
-  "last_tested_source": "a4c5c97591e9b9ed6fa16221e6666c531d1909cc",
+  "sequence": 2421,
+  "checkpoint_sha": "3ace4400ad63817b6ef7f313a955f21e711ed5dd",
+  "progress": "partial",
+  "task_id": "M0-ROUTEROS-SERVER",
+  "current_task": "RouterOS真实BBR TCP端点：原WBD数据面不变，独立TCP分段参考实现接入；最终Rust性能设计待证。",
+  "why_now": "用户授权独立RouterOS服务器分支并检查红色Actions。",
+  "done_when": "真实客户端经原WBD与RouterOS DNAT，BBR隧道侧TCP真实窗口与交付速率、完整TCP/UDP业务、Stop；后续独立性能资格。",
+  "next_action": "已记录 pktkit 源码/CI及双端TCP研究；待明确下一步施工，优先单侧Rust候选真实同环境对照，不改wire/default。",
+  "unverified": true,
+  "last_tested_source": "7d4f65bf6d366250a0acb6e575e09794ebe985d2",
   "evidence_refs": [
-    "docs/evidence/M0/20261124-H2416-MIXED-MODE-ROUTE-HANDOFF-PASS.json"
+    "docs/evidence/M0/20261126-ROUTEROS-WBD-BBR-SCOPED.json"
   ],
   "context_refs": [
-    "docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md",
-    "docs/evidence/M0/20261124-LINUX-GLIBC231-DUAL-ISA-SCOPED-PASS.json",
-    "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
-    "docs/devlog/M0/20261124-H2415-MIXED-MODE-ROUTE-WIP.md",
-    "docs/devlog/M0/20261124-MIXED-MODE-ROUTE-HANDOFF.md"
+    "docs/decisions/M0-ROUTEROS-SERVER-20261126.md",
+    "docs/decisions/M0-ROUTEROS-BBR-20261126.md",
+    "docs/decisions/M0-DUAL-END-TCP-RESEARCH-20261126.md"
   ],
   "open_requests": [],
-  "partial_summary": "跨模式/32 owner交接冷路径修复及Windows Game已有Health ready接线；双ISA同租约8次切换+Game4热lane+旧退役+独立Health90真实业务PASS，签名Windows→同WSL共享服务器四次切换PASS，三完整包哈希独立核验；PR77已合main。"
+  "partial_summary": "7d4f65b：实际WBD Normal+DNAT+BBRv3 clean/loss与同栈CUBIC loss三组九TCP、UDP、Stop完整通过；NAT loss两连接reset无完整收据。已独立核验原产品/sidecar二进制及场景原始证据；无吞吐/CPU与Rust原生BBR资格。 已记录pktkit 0.1.12 vtcp源码/CI、Rust MSRV/复制缺口与双端split/内层流传输候选，未施工或性能验收。"
 }

@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "source_sha": "1762401af91c0e9650e9a5ba92c988e638c93773",
+  "owner": "M0",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "scope": "CHR 7.24.7 x86 free license, Normal only, TUN fq explicitly 0; no physical or throughput qualification",
+  "run_id": 45777676652,
+  "build_job_id": 139765204113,
+  "build_artifact_id": 15097380629,
+  "governance": [
+    45777676622,
+    45777676830
+  ],
+  "cases": [
+    {
+      "scene": "routed",
+      "result": "FUNCTIONAL_PASS",
+      "job": 139766269714,
+      "artifact": 15096733683
+    },
+    {
+      "scene": "dnat",
+      "result": "FUNCTIONAL_PASS",
+      "job": 139766269677,
+      "artifact": 15097207085,
+      "nat_packets": 1,
+      "forward_in_packets": 867,
+      "forward_return_packets": 873
+    },
+    {
+      "scene": "splice",
+      "result": "FAIL",
+      "job": 139766269757,
+      "artifact": 15096304492,
+      "reason": "iptables-nft TPROXY ENOENT; no client run"
+    }
+  ],
+  "application_each": {
+    "upload": 131072,
+    "download": 196608,
+    "concurrent_connections": 8,
+    "concurrent_upload": 131072,
+    "concurrent_download": 524288,
+    "upload_sha256": "98789a79944015f0e20e978bf8ddf6bd9a8e6f3f69af5c4baf13eddd9ed2870b",
+    "download_sha256": "175ec275cb01684888e69547bee0ecbf42cac2aeb1849b883c146064a67258d9",
+    "udp_echo": true,
+    "halfclose": true,
+    "server_reader_joined": true,
+    "owned_nat_removed": true
+  },
+  "capabilities": {
+    "AF_PACKET": "PASS",
+    "AF_INET_RAW_TCP": "PASS",
+    "TUN": "PASS",
+    "IP_TRANSPARENT": "PASS",
+    "cubic": "PASS",
+    "bbr": "ENOENT",
+    "fq": "not found",
+    "MASQUERADE": "PASS",
+    "TPROXY_nft": "ENOENT",
+    "ip_forward": 1
+  }
+}
