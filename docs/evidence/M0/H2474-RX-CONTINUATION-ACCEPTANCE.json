@@ -1,0 +1,3327 @@
+{
+  "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+  "observations": [
+    {
+      "schema": "m0-machine-rate-observation-v1",
+      "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+      "run_id": "45757634961",
+      "fixture": "wsl2-tailscale-vxlan-gro-tun500",
+      "product_source": "db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141",
+      "probe_only": true,
+      "classification": "9V45_OBSERVED",
+      "machine": {
+        "windows": {
+          "hardware": {
+            "Name": "AMD EPYC 9V45 96-Core Processor                ",
+            "Manufacturer": "AuthenticAMD",
+            "NumberOfCores": 2,
+            "NumberOfLogicalProcessors": 4,
+            "MaxClockSpeed": 2596,
+            "CurrentClockSpeed": 2596
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "windows",
+            "run_id": "45757634961",
+            "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+            "machine": "AMD64",
+            "system": "Windows",
+            "processor": "AMD64 Family 26 Model 2 Stepping 1, AuthenticAMD",
+            "python": "3.12.10",
+            "openssl": "OpenSSL 3.0.16 11 Feb 2025",
+            "zlib": "1.3.1",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 8926976,
+                    "wall_s": 0.6500040999999896,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 13733722.602673033,
+                    "ops_per_cpu_s": 13603011.047619049,
+                    "cpu_wall_ratio": 1.0096090163123748
+                  },
+                  {
+                    "operations": 8592896,
+                    "wall_s": 0.6500139000000331,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 13219557.304850807,
+                    "ops_per_cpu_s": 13413301.07317073,
+                    "cpu_wall_ratio": 0.9855558473441374
+                  },
+                  {
+                    "operations": 8699648,
+                    "wall_s": 0.6500045999999884,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 13383979.128763327,
+                    "ops_per_cpu_s": 13256606.476190476,
+                    "cpu_wall_ratio": 1.0096082396955526
+                  }
+                ],
+                "median_ops_per_wall_s": 13383979.128763327,
+                "median_ops_per_cpu_s": 13413301.07317073,
+                "median_cpu_wall_ratio": 1.0096082396955526
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 753664,
+                    "wall_s": 0.6501982999999996,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 1159129.4532760244,
+                    "ops_per_cpu_s": 1148440.380952381,
+                    "cpu_wall_ratio": 1.0093074681985488
+                  },
+                  {
+                    "operations": 758016,
+                    "wall_s": 0.6500484999999685,
+                    "thread_cpu_s": 0.625,
+                    "ops_per_wall_s": 1166091.4531762425,
+                    "ops_per_cpu_s": 1212825.6,
+                    "cpu_wall_ratio": 0.9614667213293012
+                  },
+                  {
+                    "operations": 760832,
+                    "wall_s": 0.6500507000000084,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 1170419.4765115862,
+                    "ops_per_cpu_s": 1159363.0476190476,
+                    "cpu_wall_ratio": 1.0095366407573925
+                  }
+                ],
+                "median_ops_per_wall_s": 1166091.4531762425,
+                "median_ops_per_cpu_s": 1159363.0476190476,
+                "median_cpu_wall_ratio": 1.0093074681985488
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 13385216,
+                    "wall_s": 0.6500122999999576,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 20592250.331264306,
+                    "ops_per_cpu_s": 20396519.61904762,
+                    "cpu_wall_ratio": 1.0095962799473839
+                  },
+                  {
+                    "operations": 13234688,
+                    "wall_s": 0.6500023999999485,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 20360983.28252488,
+                    "ops_per_cpu_s": 20659025.17073171,
+                    "cpu_wall_ratio": 0.9855732840371833
+                  },
+                  {
+                    "operations": 13412608,
+                    "wall_s": 0.650002499999971,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 20634702.17422333,
+                    "ops_per_cpu_s": 20438259.80952381,
+                    "cpu_wall_ratio": 1.0096115014942701
+                  }
+                ],
+                "median_ops_per_wall_s": 20592250.331264306,
+                "median_ops_per_cpu_s": 20438259.80952381,
+                "median_cpu_wall_ratio": 1.0095962799473839
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "wsl": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"x86_64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Address sizes:\",\n         \"data\": \"48 bits physical, 48 bits virtual\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"AuthenticAMD\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"AMD EPYC 9V45 96-Core Processor\"\n      },{\n         \"field\": \"CPU family:\",\n         \"data\": \"26\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"5192.19\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl xtopology cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\"\n      },{\n         \"field\": \"Virtualization:\",\n         \"data\": \"AMD-V\"\n      },{\n         \"field\": \"Hypervisor vendor:\",\n         \"data\": \"Microsoft\"\n      },{\n         \"field\": \"Virtualization type:\",\n         \"data\": \"full\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"96 KiB (2 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"64 KiB (2 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"2 MiB (2 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"32 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Vulnerable: Safe RET, no microcode\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Vulnerable\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; usercopy/swapgs barriers and __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmbpeip 6.18.58.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct 27 00:24:11 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "wsl",
+            "run_id": "45757634961",
+            "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+            "machine": "x86_64",
+            "system": "Linux",
+            "processor": "x86_64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 5242880,
+                    "wall_s": 0.6500126260000059,
+                    "thread_cpu_s": 0.6499037000000001,
+                    "ops_per_wall_s": 8065812.555462504,
+                    "ops_per_cpu_s": 8067164.412204453,
+                    "cpu_wall_ratio": 0.9998324247935366
+                  },
+                  {
+                    "operations": 5310976,
+                    "wall_s": 0.6500245290000066,
+                    "thread_cpu_s": 0.6500355000000001,
+                    "ops_per_wall_s": 8170423.981030947,
+                    "ops_per_cpu_s": 8170286.084375391,
+                    "cpu_wall_ratio": 1.0000168778246112
+                  },
+                  {
+                    "operations": 5300480,
+                    "wall_s": 0.6500130979999881,
+                    "thread_cpu_s": 0.6499451999999999,
+                    "ops_per_wall_s": 8154420.297543138,
+                    "ops_per_cpu_s": 8155272.167561205,
+                    "cpu_wall_ratio": 0.9998955436433556
+                  }
+                ],
+                "median_ops_per_wall_s": 8154420.297543138,
+                "median_ops_per_cpu_s": 8155272.167561205,
+                "median_cpu_wall_ratio": 0.9998955436433556
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 881408,
+                    "wall_s": 0.6500522119999914,
+                    "thread_cpu_s": 0.6499804999999999,
+                    "ops_per_wall_s": 1355903.3931877639,
+                    "ops_per_cpu_s": 1356052.9892819864,
+                    "cpu_wall_ratio": 0.9998896827075306
+                  },
+                  {
+                    "operations": 892928,
+                    "wall_s": 0.6501026889999935,
+                    "thread_cpu_s": 0.6500584000000003,
+                    "ops_per_wall_s": 1373518.391953627,
+                    "ops_per_cpu_s": 1373611.970862925,
+                    "cpu_wall_ratio": 0.9999318738397139
+                  },
+                  {
+                    "operations": 888832,
+                    "wall_s": 0.6500180510000177,
+                    "thread_cpu_s": 0.6499567000000002,
+                    "ops_per_wall_s": 1367395.872518586,
+                    "ops_per_cpu_s": 1367524.9443539851,
+                    "cpu_wall_ratio": 0.9999056164672301
+                  }
+                ],
+                "median_ops_per_wall_s": 1367395.872518586,
+                "median_ops_per_cpu_s": 1367524.9443539851,
+                "median_cpu_wall_ratio": 0.9999056164672301
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 14866688,
+                    "wall_s": 0.650005047999997,
+                    "thread_cpu_s": 0.6499608000000001,
+                    "ops_per_wall_s": 22871650.067554656,
+                    "ops_per_cpu_s": 22873207.12264493,
+                    "cpu_wall_ratio": 0.9999319266825187
+                  },
+                  {
+                    "operations": 14830848,
+                    "wall_s": 0.6500088909999988,
+                    "thread_cpu_s": 0.6498927999999999,
+                    "ops_per_wall_s": 22816377.137832146,
+                    "ops_per_cpu_s": 22820452.850070044,
+                    "cpu_wall_ratio": 0.999821400904501
+                  },
+                  {
+                    "operations": 14605568,
+                    "wall_s": 0.6500177659999906,
+                    "thread_cpu_s": 0.6499022999999999,
+                    "ops_per_wall_s": 22469490.47235766,
+                    "ops_per_cpu_s": 22473482.552685227,
+                    "cpu_wall_ratio": 0.9998223648551927
+                  }
+                ],
+                "median_ops_per_wall_s": 22816377.137832146,
+                "median_ops_per_cpu_s": 22820452.850070044,
+                "median_cpu_wall_ratio": 0.9998223648551927
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "relay": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"aarch64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"ARM\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"Neoverse-N2\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"0\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"r0p0\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"2000.00\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"4 MiB (4 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"128 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Mitigation; Speculative Store Bypass disabled via prctl\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; CSV2, BHB\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmu7lcj 7.0.0-1020-azure #21~24.04.2-Ubuntu SMP PREEMPT Tue Nov 10 01:19:17 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "relay",
+            "run_id": "45757634961",
+            "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+            "machine": "aarch64",
+            "system": "Linux",
+            "processor": "aarch64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 3868672,
+                    "wall_s": 0.650002005999994,
+                    "thread_cpu_s": 0.649986472,
+                    "ops_per_wall_s": 5951784.708799861,
+                    "ops_per_cpu_s": 5951926.950258127,
+                    "cpu_wall_ratio": 0.9999761016122249
+                  },
+                  {
+                    "operations": 3896320,
+                    "wall_s": 0.6500203889999909,
+                    "thread_cpu_s": 0.6500399680000001,
+                    "ops_per_wall_s": 5994150.438871932,
+                    "ops_per_cpu_s": 5993969.896940244,
+                    "cpu_wall_ratio": 1.0000301205936621
+                  },
+                  {
+                    "operations": 3898368,
+                    "wall_s": 0.6500232040000071,
+                    "thread_cpu_s": 0.6500478879999998,
+                    "ops_per_wall_s": 5997275.137273341,
+                    "ops_per_cpu_s": 5997047.4052213235,
+                    "cpu_wall_ratio": 1.0000379740289898
+                  }
+                ],
+                "median_ops_per_wall_s": 5994150.438871932,
+                "median_ops_per_cpu_s": 5993969.896940244,
+                "median_cpu_wall_ratio": 1.0000301205936621
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 709120,
+                    "wall_s": 0.650185282999999,
+                    "thread_cpu_s": 0.6501977760000002,
+                    "ops_per_wall_s": 1090642.957539845,
+                    "ops_per_cpu_s": 1090622.0017584309,
+                    "cpu_wall_ratio": 1.0000192145228872
+                  },
+                  {
+                    "operations": 709120,
+                    "wall_s": 0.6501418969999975,
+                    "thread_cpu_s": 0.6501712639999999,
+                    "ops_per_wall_s": 1090715.7395518578,
+                    "ops_per_cpu_s": 1090666.473995381,
+                    "cpu_wall_ratio": 1.0000451701392234
+                  },
+                  {
+                    "operations": 708864,
+                    "wall_s": 0.6500340099999988,
+                    "thread_cpu_s": 0.65004996,
+                    "ops_per_wall_s": 1090502.9415307075,
+                    "ops_per_cpu_s": 1090476.1843228173,
+                    "cpu_wall_ratio": 1.0000245371776797
+                  }
+                ],
+                "median_ops_per_wall_s": 1090642.957539845,
+                "median_ops_per_cpu_s": 1090622.0017584309,
+                "median_cpu_wall_ratio": 1.0000245371776797
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 7387136,
+                    "wall_s": 0.6500137709999905,
+                    "thread_cpu_s": 0.6500307599999999,
+                    "ops_per_wall_s": 11364583.843563074,
+                    "ops_per_cpu_s": 11364286.822365146,
+                    "cpu_wall_ratio": 1.0000261363693623
+                  },
+                  {
+                    "operations": 7384576,
+                    "wall_s": 0.6500033720000005,
+                    "thread_cpu_s": 0.64995972,
+                    "ops_per_wall_s": 11360827.21737018,
+                    "ops_per_cpu_s": 11361590.222852578,
+                    "cpu_wall_ratio": 0.9999328434253101
+                  },
+                  {
+                    "operations": 7382272,
+                    "wall_s": 0.6500118839999942,
+                    "thread_cpu_s": 0.6499524079999999,
+                    "ops_per_wall_s": 11357133.895109009,
+                    "ops_per_cpu_s": 11358173.166426674,
+                    "cpu_wall_ratio": 0.9999085001344462
+                  }
+                ],
+                "median_ops_per_wall_s": 11360827.21737018,
+                "median_ops_per_cpu_s": 11361590.222852578,
+                "median_cpu_wall_ratio": 0.9999328434253101
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "server": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"aarch64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"ARM\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"Neoverse-N2\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"0\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"r0p0\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"2000.00\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"4 MiB (4 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"128 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Mitigation; Speculative Store Bypass disabled via prctl\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; CSV2, BHB\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmu7lcj 7.0.0-1020-azure #21~24.04.2-Ubuntu SMP PREEMPT Tue Nov 10 01:19:17 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "server",
+            "run_id": "45757634961",
+            "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+            "machine": "aarch64",
+            "system": "Linux",
+            "processor": "aarch64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 3867648,
+                    "wall_s": 0.650042945999985,
+                    "thread_cpu_s": 0.650042104,
+                    "ops_per_wall_s": 5949834.582160191,
+                    "ops_per_cpu_s": 5949842.288985023,
+                    "cpu_wall_ratio": 0.999998704700989
+                  },
+                  {
+                    "operations": 3894016,
+                    "wall_s": 0.6500122040000065,
+                    "thread_cpu_s": 0.6500085279999999,
+                    "ops_per_wall_s": 5990681.368806979,
+                    "ops_per_cpu_s": 5990715.247969794,
+                    "cpu_wall_ratio": 0.9999943447215545
+                  },
+                  {
+                    "operations": 3896576,
+                    "wall_s": 0.6500102679999884,
+                    "thread_cpu_s": 0.6500127279999999,
+                    "ops_per_wall_s": 5994637.610863202,
+                    "ops_per_cpu_s": 5994614.923909614,
+                    "cpu_wall_ratio": 1.000003784555618
+                  }
+                ],
+                "median_ops_per_wall_s": 5990681.368806979,
+                "median_ops_per_cpu_s": 5990715.247969794,
+                "median_cpu_wall_ratio": 0.999998704700989
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 711680,
+                    "wall_s": 0.6501553779999938,
+                    "thread_cpu_s": 0.6501729680000001,
+                    "ops_per_wall_s": 1094630.6438151263,
+                    "ops_per_cpu_s": 1094601.0293064043,
+                    "cpu_wall_ratio": 1.0000270550711439
+                  },
+                  {
+                    "operations": 712448,
+                    "wall_s": 0.6500636560000146,
+                    "thread_cpu_s": 0.6500612720000003,
+                    "ops_per_wall_s": 1095966.515623793,
+                    "ops_per_cpu_s": 1095970.5349128991,
+                    "cpu_wall_ratio": 0.9999963326668208
+                  },
+                  {
+                    "operations": 712704,
+                    "wall_s": 0.6501573059999828,
+                    "thread_cpu_s": 0.6500861040000001,
+                    "ops_per_wall_s": 1096202.4012078377,
+                    "ops_per_cpu_s": 1096322.4650007284,
+                    "cpu_wall_ratio": 0.9998904849652145
+                  }
+                ],
+                "median_ops_per_wall_s": 1095966.515623793,
+                "median_ops_per_cpu_s": 1095970.5349128991,
+                "median_cpu_wall_ratio": 0.9999963326668208
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 7378688,
+                    "wall_s": 0.6500082200000179,
+                    "thread_cpu_s": 0.649917072,
+                    "ops_per_wall_s": 11351684.137163369,
+                    "ops_per_cpu_s": 11353276.160746858,
+                    "cpu_wall_ratio": 0.9998597740809834
+                  },
+                  {
+                    "operations": 7377152,
+                    "wall_s": 0.6500016690000052,
+                    "thread_cpu_s": 0.6500047440000003,
+                    "ops_per_wall_s": 11349435.473526362,
+                    "ops_per_cpu_s": 11349381.782358186,
+                    "cpu_wall_ratio": 1.000004730757076
+                  },
+                  {
+                    "operations": 7380480,
+                    "wall_s": 0.650001565999986,
+                    "thread_cpu_s": 0.6499820239999998,
+                    "ops_per_wall_s": 11354557.259636138,
+                    "ops_per_cpu_s": 11354898.639473762,
+                    "cpu_wall_ratio": 0.999969935457069
+                  }
+                ],
+                "median_ops_per_wall_s": 11351684.137163369,
+                "median_ops_per_cpu_s": 11353276.160746858,
+                "median_cpu_wall_ratio": 0.999969935457069
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        }
+      },
+      "rows": [
+        {
+          "case": -10,
+          "label": "bare250-before",
+          "rx_mbps": 234.8070968888889,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 58.02272963523865,
+            "samples": 30,
+            "tx_packets": 201440,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": true,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 250,
+          "wsl_phase_drops": {
+            "setup": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "business": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "teardown": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "whole_case": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "consistent": true
+          },
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": 0.9392283875555556,
+          "rx_mode": "frozen",
+          "dll_sha256": "83da40d0636cee00f8de580cd3601d1306ce9c5c38c43e256463a0e26aa1b0e7",
+          "rx_mode_ok": null,
+          "rx_turns": null,
+          "steady_cpu": null,
+          "candidate_changed": false,
+          "kind": "bare",
+          "path": {
+            "client": {
+              "samples": 36,
+              "direct": true
+            },
+            "relay": {
+              "samples": 36,
+              "direct": false
+            },
+            "server": {
+              "samples": 36,
+              "direct": false
+            }
+          },
+          "qualified": false
+        },
+        {
+          "case": 0,
+          "label": "frozen125",
+          "rx_mbps": 116.72861724444445,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 58.064122676849365,
+            "samples": 30,
+            "tx_packets": 563101,
+            "tx_dropped": 600
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 10,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 600,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 31
+          },
+          "rate_mbps": 125,
+          "wsl_phase_drops": {
+            "setup": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 10,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "business": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 600,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 31
+            },
+            "teardown": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "whole_case": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 10,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 600,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 31
+            },
+            "consistent": true
+          },
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": 0.9338289379555555,
+          "rx_mode": "frozen",
+          "dll_sha256": "83da40d0636cee00f8de580cd3601d1306ce9c5c38c43e256463a0e26aa1b0e7",
+          "rx_mode_ok": true,
+          "rx_turns": null,
+          "steady_cpu": {
+            "samples": 44,
+            "seconds": 44.06299999999999,
+            "cpu_s": 15.796875,
+            "core_equiv": 0.3585065701382113,
+            "estimated_cpu_s_per_gib": 26.382116579352033
+          },
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 36,
+              "direct": false
+            },
+            "relay": {
+              "samples": 36,
+              "direct": true
+            },
+            "server": {
+              "samples": 36,
+              "direct": true
+            }
+          },
+          "qualified": false
+        },
+        {
+          "case": 1,
+          "label": "old125",
+          "rx_mbps": 116.9393496888889,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 60.022616147994995,
+            "samples": 31,
+            "tx_packets": 544334,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 9,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 125,
+          "wsl_phase_drops": {
+            "setup": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 9,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "business": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "teardown": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "whole_case": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 9,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "consistent": true
+          },
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": 0.9355147975111112,
+          "rx_mode": "old",
+          "dll_sha256": "3bca152af88dc0928e3eeef8a4c16d38addcda47e4676d8bdb2cc3b99388c28f",
+          "rx_mode_ok": true,
+          "rx_turns": {
+            "continuation": 0,
+            "waits": 157844,
+            "timeouts": 0,
+            "turns": 157843,
+            "full": 114,
+            "bypass": 0,
+            "bypass_empty": 0
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "seconds": 44.25,
+            "cpu_s": 16.1875,
+            "core_equiv": 0.365819209039548,
+            "estimated_cpu_s_per_gib": 26.87173382190843
+          },
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 37,
+              "direct": true
+            },
+            "relay": {
+              "samples": 37,
+              "direct": true
+            },
+            "server": {
+              "samples": 37,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 2,
+          "label": "continue125",
+          "rx_mbps": null,
+          "receipt": "SKIPPED_UNCLEAN_BASELINE",
+          "tun_delta": null,
+          "length_ok": false,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": false,
+            "zero": false
+          },
+          "rate_mbps": 125,
+          "wsl_phase_drops": {},
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": null,
+          "rx_mode": null,
+          "dll_sha256": null,
+          "rx_mode_ok": null,
+          "rx_turns": null,
+          "steady_cpu": null,
+          "candidate_changed": null,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 0,
+              "direct": false
+            },
+            "relay": {
+              "samples": 0,
+              "direct": false
+            },
+            "server": {
+              "samples": 0,
+              "direct": false
+            }
+          },
+          "qualified": false
+        },
+        {
+          "case": 3,
+          "label": "old125-restored",
+          "rx_mbps": null,
+          "receipt": "SKIPPED_UNCLEAN_BASELINE",
+          "tun_delta": null,
+          "length_ok": false,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": false,
+            "zero": false
+          },
+          "rate_mbps": 125,
+          "wsl_phase_drops": {},
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": null,
+          "rx_mode": null,
+          "dll_sha256": null,
+          "rx_mode_ok": null,
+          "rx_turns": null,
+          "steady_cpu": null,
+          "candidate_changed": null,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 0,
+              "direct": false
+            },
+            "relay": {
+              "samples": 0,
+              "direct": false
+            },
+            "server": {
+              "samples": 0,
+              "direct": false
+            }
+          },
+          "qualified": false
+        },
+        {
+          "case": -11,
+          "label": "bare250-after",
+          "rx_mbps": 239.83087644444444,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 56.02229070663452,
+            "samples": 29,
+            "tx_packets": 193268,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": true,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 250,
+          "wsl_phase_drops": {
+            "setup": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "business": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "teardown": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "whole_case": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "consistent": true
+          },
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": 0.9593235057777778,
+          "rx_mode": "frozen",
+          "dll_sha256": "83da40d0636cee00f8de580cd3601d1306ce9c5c38c43e256463a0e26aa1b0e7",
+          "rx_mode_ok": null,
+          "rx_turns": null,
+          "steady_cpu": null,
+          "candidate_changed": false,
+          "kind": "bare",
+          "path": {
+            "client": {
+              "samples": 35,
+              "direct": true
+            },
+            "relay": {
+              "samples": 35,
+              "direct": true
+            },
+            "server": {
+              "samples": 35,
+              "direct": true
+            }
+          },
+          "qualified": true
+        }
+      ],
+      "cpu_gate": {
+        "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+        "run_id": "45757634961",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "bare250_drift": null,
+      "stable_bare_controls": false,
+      "comparison_ready": false,
+      "same_experimental_dll": false,
+      "screen_status": "NOT_COMPARABLE",
+      "all_cases_qualified": false,
+      "qualification_job_id": 139702934551
+    },
+    {
+      "schema": "m0-machine-rate-observation-v1",
+      "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+      "run_id": "45757635084",
+      "fixture": "wsl2-tailscale-vxlan-gro-tun500",
+      "product_source": "db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141",
+      "probe_only": true,
+      "classification": "9V45_OBSERVED",
+      "machine": {
+        "windows": {
+          "hardware": {
+            "Name": "AMD EPYC 9V45 96-Core Processor                ",
+            "Manufacturer": "AuthenticAMD",
+            "NumberOfCores": 2,
+            "NumberOfLogicalProcessors": 4,
+            "MaxClockSpeed": 2596,
+            "CurrentClockSpeed": 2596
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "windows",
+            "run_id": "45757635084",
+            "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+            "machine": "AMD64",
+            "system": "Windows",
+            "processor": "AMD64 Family 26 Model 2 Stepping 1, AuthenticAMD",
+            "python": "3.12.10",
+            "openssl": "OpenSSL 3.0.16 11 Feb 2025",
+            "zlib": "1.3.1",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 7746560,
+                    "wall_s": 0.6500100999999745,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 11917599.434224643,
+                    "ops_per_cpu_s": 12092191.219512194,
+                    "cpu_wall_ratio": 0.985561608965807
+                  },
+                  {
+                    "operations": 7704064,
+                    "wall_s": 0.6500047000000109,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 11852320.452451915,
+                    "ops_per_cpu_s": 11739526.095238095,
+                    "cpu_wall_ratio": 1.009608084372296
+                  },
+                  {
+                    "operations": 7862528,
+                    "wall_s": 0.650004699999954,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 12096109.45890169,
+                    "ops_per_cpu_s": 12273214.43902439,
+                    "cpu_wall_ratio": 0.9855697966492324
+                  }
+                ],
+                "median_ops_per_wall_s": 11917599.434224643,
+                "median_ops_per_cpu_s": 12092191.219512194,
+                "median_cpu_wall_ratio": 0.9855697966492324
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 608256,
+                    "wall_s": 0.6501463999999828,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 935567.7428960863,
+                    "ops_per_cpu_s": 949472.7804878049,
+                    "cpu_wall_ratio": 0.9853549908144026
+                  },
+                  {
+                    "operations": 590848,
+                    "wall_s": 0.6502893999999628,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 908592.3897883523,
+                    "ops_per_cpu_s": 922299.3170731707,
+                    "cpu_wall_ratio": 0.9851383091897802
+                  },
+                  {
+                    "operations": 536064,
+                    "wall_s": 0.6500360999999657,
+                    "thread_cpu_s": 0.578125,
+                    "ops_per_wall_s": 824668.0453593705,
+                    "ops_per_cpu_s": 927245.8378378379,
+                    "cpu_wall_ratio": 0.8893736824770663
+                  }
+                ],
+                "median_ops_per_wall_s": 908592.3897883523,
+                "median_ops_per_cpu_s": 927245.8378378379,
+                "median_cpu_wall_ratio": 0.9851383091897802
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 8291840,
+                    "wall_s": 0.6500087000000008,
+                    "thread_cpu_s": 0.59375,
+                    "ops_per_wall_s": 12756506.182148008,
+                    "ops_per_cpu_s": 13965204.210526315,
+                    "cpu_wall_ratio": 0.913449312293819
+                  },
+                  {
+                    "operations": 9940736,
+                    "wall_s": 0.650002900000004,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 15293371.768033555,
+                    "ops_per_cpu_s": 15517246.43902439,
+                    "cpu_wall_ratio": 0.985572525907186
+                  },
+                  {
+                    "operations": 9908480,
+                    "wall_s": 0.6500057000000083,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 15243681.709252508,
+                    "ops_per_cpu_s": 15098636.19047619,
+                    "cpu_wall_ratio": 1.009606531142714
+                  }
+                ],
+                "median_ops_per_wall_s": 15243681.709252508,
+                "median_ops_per_cpu_s": 15098636.19047619,
+                "median_cpu_wall_ratio": 0.985572525907186
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "wsl": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"x86_64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Address sizes:\",\n         \"data\": \"48 bits physical, 48 bits virtual\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"AuthenticAMD\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"AMD EPYC 9V45 96-Core Processor\"\n      },{\n         \"field\": \"CPU family:\",\n         \"data\": \"26\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"5192.24\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl xtopology cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\"\n      },{\n         \"field\": \"Virtualization:\",\n         \"data\": \"AMD-V\"\n      },{\n         \"field\": \"Hypervisor vendor:\",\n         \"data\": \"Microsoft\"\n      },{\n         \"field\": \"Virtualization type:\",\n         \"data\": \"full\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"96 KiB (2 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"64 KiB (2 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"2 MiB (2 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"32 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Vulnerable: Safe RET, no microcode\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Vulnerable\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; usercopy/swapgs barriers and __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmbpeip 6.18.58.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct 27 00:24:11 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "wsl",
+            "run_id": "45757635084",
+            "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+            "machine": "x86_64",
+            "system": "Linux",
+            "processor": "x86_64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 4882432,
+                    "wall_s": 0.6500065240000055,
+                    "thread_cpu_s": 0.6500719,
+                    "ops_per_wall_s": 7511358.455226765,
+                    "ops_per_cpu_s": 7510603.057907902,
+                    "cpu_wall_ratio": 1.000100577452042
+                  },
+                  {
+                    "operations": 4933632,
+                    "wall_s": 0.6500092039999998,
+                    "thread_cpu_s": 0.6498885999999999,
+                    "ops_per_wall_s": 7590095.601169366,
+                    "ops_per_cpu_s": 7591504.143940978,
+                    "cpu_wall_ratio": 0.9998144580118901
+                  },
+                  {
+                    "operations": 5022976,
+                    "wall_s": 0.650021602999999,
+                    "thread_cpu_s": 0.6499071000000001,
+                    "ops_per_wall_s": 7727398.561552127,
+                    "ops_per_cpu_s": 7728760.002775781,
+                    "cpu_wall_ratio": 0.9998238473929628
+                  }
+                ],
+                "median_ops_per_wall_s": 7590095.601169366,
+                "median_ops_per_cpu_s": 7591504.143940978,
+                "median_cpu_wall_ratio": 0.9998238473929628
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 823296,
+                    "wall_s": 0.6500287360000101,
+                    "thread_cpu_s": 0.6498869000000003,
+                    "ops_per_wall_s": 1266553.2374248563,
+                    "ops_per_cpu_s": 1266829.6591299188,
+                    "cpu_wall_ratio": 0.9997818004156515
+                  },
+                  {
+                    "operations": 814336,
+                    "wall_s": 0.650091419000006,
+                    "thread_cpu_s": 0.6500255999999998,
+                    "ops_per_wall_s": 1252648.437126952,
+                    "ops_per_cpu_s": 1252775.2753122344,
+                    "cpu_wall_ratio": 0.9998987542396615
+                  },
+                  {
+                    "operations": 824576,
+                    "wall_s": 0.6500132210000089,
+                    "thread_cpu_s": 0.6498874999999997,
+                    "ops_per_wall_s": 1268552.6591773564,
+                    "ops_per_cpu_s": 1268798.061202901,
+                    "cpu_wall_ratio": 0.9998065870109292
+                  }
+                ],
+                "median_ops_per_wall_s": 1266553.2374248563,
+                "median_ops_per_cpu_s": 1266829.6591299188,
+                "median_cpu_wall_ratio": 0.9998065870109292
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 13633024,
+                    "wall_s": 0.6500066659999959,
+                    "thread_cpu_s": 0.6499419,
+                    "ops_per_wall_s": 20973667.983891238,
+                    "ops_per_cpu_s": 20975757.986983147,
+                    "cpu_wall_ratio": 0.9999003610218423
+                  },
+                  {
+                    "operations": 13672960,
+                    "wall_s": 0.6500022629999904,
+                    "thread_cpu_s": 0.6499353000000001,
+                    "ops_per_wall_s": 21035249.841892015,
+                    "ops_per_cpu_s": 21037417.109056853,
+                    "cpu_wall_ratio": 0.9998969803586817
+                  },
+                  {
+                    "operations": 13241856,
+                    "wall_s": 0.6500119789999985,
+                    "thread_cpu_s": 0.6498655000000007,
+                    "ops_per_wall_s": 20371710.718888197,
+                    "ops_per_cpu_s": 20376302.48105183,
+                    "cpu_wall_ratio": 0.9997746518453041
+                  }
+                ],
+                "median_ops_per_wall_s": 20973667.983891238,
+                "median_ops_per_cpu_s": 20975757.986983147,
+                "median_cpu_wall_ratio": 0.9998969803586817
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "relay": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"aarch64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"ARM\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"Neoverse-N2\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"0\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"r0p0\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"2000.00\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"4 MiB (4 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"128 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Mitigation; Speculative Store Bypass disabled via prctl\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; CSV2, BHB\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmnfvap 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 19:06:39 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "relay",
+            "run_id": "45757635084",
+            "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+            "machine": "aarch64",
+            "system": "Linux",
+            "processor": "aarch64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 3868928,
+                    "wall_s": 0.6500231300000223,
+                    "thread_cpu_s": 0.650045744,
+                    "ops_per_wall_s": 5951985.123975307,
+                    "ops_per_cpu_s": 5951778.064406495,
+                    "cpu_wall_ratio": 1.0000347895312245
+                  },
+                  {
+                    "operations": 3894272,
+                    "wall_s": 0.6500113479999925,
+                    "thread_cpu_s": 0.6500403600000001,
+                    "ops_per_wall_s": 5991083.097213935,
+                    "ops_per_cpu_s": 5990815.708735377,
+                    "cpu_wall_ratio": 1.0000446330669408
+                  },
+                  {
+                    "operations": 3897344,
+                    "wall_s": 0.6500342820000071,
+                    "thread_cpu_s": 0.650054616,
+                    "ops_per_wall_s": 5995597.629110825,
+                    "ops_per_cpu_s": 5995410.084127454,
+                    "cpu_wall_ratio": 1.0000312814270815
+                  }
+                ],
+                "median_ops_per_wall_s": 5991083.097213935,
+                "median_ops_per_cpu_s": 5990815.708735377,
+                "median_cpu_wall_ratio": 1.0000347895312245
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 712192,
+                    "wall_s": 0.6500108520000083,
+                    "thread_cpu_s": 0.6500299280000001,
+                    "ops_per_wall_s": 1095661.7075063707,
+                    "ops_per_cpu_s": 1095629.553844173,
+                    "cpu_wall_ratio": 1.0000293472023323
+                  },
+                  {
+                    "operations": 712192,
+                    "wall_s": 0.6500343300000111,
+                    "thread_cpu_s": 0.6500618400000002,
+                    "ops_per_wall_s": 1095622.1342955653,
+                    "ops_per_cpu_s": 1095575.7686068756,
+                    "cpu_wall_ratio": 1.0000423208417148
+                  },
+                  {
+                    "operations": 712192,
+                    "wall_s": 0.6501008210000236,
+                    "thread_cpu_s": 0.65011412,
+                    "ops_per_wall_s": 1095510.0762747293,
+                    "ops_per_cpu_s": 1095487.6660731502,
+                    "cpu_wall_ratio": 1.0000204568269209
+                  }
+                ],
+                "median_ops_per_wall_s": 1095622.1342955653,
+                "median_ops_per_cpu_s": 1095575.7686068756,
+                "median_cpu_wall_ratio": 1.0000293472023323
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 7302144,
+                    "wall_s": 0.6500069100000019,
+                    "thread_cpu_s": 0.6500276960000004,
+                    "ops_per_wall_s": 11233948.266796086,
+                    "ops_per_cpu_s": 11233589.03772001,
+                    "cpu_wall_ratio": 1.0000319781215843
+                  },
+                  {
+                    "operations": 7301376,
+                    "wall_s": 0.6500157650000062,
+                    "thread_cpu_s": 0.6500462799999998,
+                    "ops_per_wall_s": 11232613.71976098,
+                    "ops_per_cpu_s": 11232086.429292392,
+                    "cpu_wall_ratio": 1.000046945015239
+                  },
+                  {
+                    "operations": 7300352,
+                    "wall_s": 0.6500064459999919,
+                    "thread_cpu_s": 0.6500321360000001,
+                    "ops_per_wall_s": 11231199.390290493,
+                    "ops_per_cpu_s": 11230755.520677825,
+                    "cpu_wall_ratio": 1.0000395226849923
+                  }
+                ],
+                "median_ops_per_wall_s": 11232613.71976098,
+                "median_ops_per_cpu_s": 11232086.429292392,
+                "median_cpu_wall_ratio": 1.0000395226849923
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "server": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"aarch64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"ARM\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"Neoverse-N2\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"0\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"r0p0\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"2000.00\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"4 MiB (4 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"128 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Mitigation; Speculative Store Bypass disabled via prctl\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; CSV2, BHB\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmu7lcj 7.0.0-1020-azure #21~24.04.2-Ubuntu SMP PREEMPT Tue Nov 10 01:19:17 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "server",
+            "run_id": "45757635084",
+            "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+            "machine": "aarch64",
+            "system": "Linux",
+            "processor": "aarch64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 3868672,
+                    "wall_s": 0.6500248390000252,
+                    "thread_cpu_s": 0.6500139199999999,
+                    "ops_per_wall_s": 5951575.644326801,
+                    "ops_per_cpu_s": 5951675.61950058,
+                    "cpu_wall_ratio": 0.999983202180332
+                  },
+                  {
+                    "operations": 3894784,
+                    "wall_s": 0.6500022569999828,
+                    "thread_cpu_s": 0.65002712,
+                    "ops_per_wall_s": 5991954.578705567,
+                    "ops_per_cpu_s": 5991725.391395978,
+                    "cpu_wall_ratio": 1.0000382506364391
+                  },
+                  {
+                    "operations": 3884800,
+                    "wall_s": 0.6500195040000563,
+                    "thread_cpu_s": 0.650040312,
+                    "ops_per_wall_s": 5976436.054755157,
+                    "ops_per_cpu_s": 5976244.747110391,
+                    "cpu_wall_ratio": 1.0000320113470684
+                  }
+                ],
+                "median_ops_per_wall_s": 5976436.054755157,
+                "median_ops_per_cpu_s": 5976244.747110391,
+                "median_cpu_wall_ratio": 1.0000320113470684
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 712960,
+                    "wall_s": 0.6500290389999464,
+                    "thread_cpu_s": 0.6500522639999999,
+                    "ops_per_wall_s": 1096812.5379396456,
+                    "ops_per_cpu_s": 1096773.3511347328,
+                    "cpu_wall_ratio": 1.0000357291730986
+                  },
+                  {
+                    "operations": 713472,
+                    "wall_s": 0.6501477040000054,
+                    "thread_cpu_s": 0.6501401600000003,
+                    "ops_per_wall_s": 1097399.8610014226,
+                    "ops_per_cpu_s": 1097412.5948472398,
+                    "cpu_wall_ratio": 0.9999883964828935
+                  },
+                  {
+                    "operations": 713216,
+                    "wall_s": 0.6500794580000502,
+                    "thread_cpu_s": 0.6500977920000004,
+                    "ops_per_wall_s": 1097121.269135603,
+                    "ops_per_cpu_s": 1097090.3282194189,
+                    "cpu_wall_ratio": 1.000028202706184
+                  }
+                ],
+                "median_ops_per_wall_s": 1097121.269135603,
+                "median_ops_per_cpu_s": 1097090.3282194189,
+                "median_cpu_wall_ratio": 1.000028202706184
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 7382016,
+                    "wall_s": 0.6500146009999526,
+                    "thread_cpu_s": 0.6500475680000002,
+                    "ops_per_wall_s": 11356692.586049369,
+                    "ops_per_cpu_s": 11356116.634221448,
+                    "cpu_wall_ratio": 1.0000507173223445
+                  },
+                  {
+                    "operations": 7382528,
+                    "wall_s": 0.6500160570000162,
+                    "thread_cpu_s": 0.6500375440000008,
+                    "ops_per_wall_s": 11357454.820535019,
+                    "ops_per_cpu_s": 11357079.399709243,
+                    "cpu_wall_ratio": 1.0000330561064656
+                  },
+                  {
+                    "operations": 7382016,
+                    "wall_s": 0.6500060570000414,
+                    "thread_cpu_s": 0.6500300640000001,
+                    "ops_per_wall_s": 11356841.86401286,
+                    "ops_per_cpu_s": 11356422.431563102,
+                    "cpu_wall_ratio": 1.0000369335019268
+                  }
+                ],
+                "median_ops_per_wall_s": 11356841.86401286,
+                "median_ops_per_cpu_s": 11356422.431563102,
+                "median_cpu_wall_ratio": 1.0000369335019268
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        }
+      },
+      "rows": [
+        {
+          "case": -10,
+          "label": "bare250-before",
+          "rx_mbps": 234.3727928888889,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 56.02673316001892,
+            "samples": 29,
+            "tx_packets": 238622,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": true,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 250,
+          "wsl_phase_drops": {
+            "setup": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "business": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "teardown": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "whole_case": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "consistent": true
+          },
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": 0.9374911715555556,
+          "rx_mode": "frozen",
+          "dll_sha256": "83da40d0636cee00f8de580cd3601d1306ce9c5c38c43e256463a0e26aa1b0e7",
+          "rx_mode_ok": null,
+          "rx_turns": null,
+          "steady_cpu": null,
+          "candidate_changed": false,
+          "kind": "bare",
+          "path": {
+            "client": {
+              "samples": 35,
+              "direct": true
+            },
+            "relay": {
+              "samples": 35,
+              "direct": true
+            },
+            "server": {
+              "samples": 36,
+              "direct": false
+            }
+          },
+          "qualified": false
+        },
+        {
+          "case": 0,
+          "label": "frozen125",
+          "rx_mbps": 117.05944853333334,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 60.03251242637634,
+            "samples": 31,
+            "tx_packets": 603886,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 16,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 125,
+          "wsl_phase_drops": {
+            "setup": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 16,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "business": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "teardown": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 1
+            },
+            "whole_case": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 16,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 1
+            },
+            "consistent": true
+          },
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": 0.9364755882666667,
+          "rx_mode": "frozen",
+          "dll_sha256": "83da40d0636cee00f8de580cd3601d1306ce9c5c38c43e256463a0e26aa1b0e7",
+          "rx_mode_ok": true,
+          "rx_turns": null,
+          "steady_cpu": {
+            "samples": 44,
+            "seconds": 44.04699999999997,
+            "cpu_s": 15.375,
+            "core_equiv": 0.34905895974754264,
+            "estimated_cpu_s_per_gib": 25.61428120968076
+          },
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 37,
+              "direct": true
+            },
+            "relay": {
+              "samples": 37,
+              "direct": true
+            },
+            "server": {
+              "samples": 37,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 1,
+          "label": "old125",
+          "rx_mbps": 113.43690186666666,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 60.028308629989624,
+            "samples": 31,
+            "tx_packets": 580139,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 6,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 125,
+          "wsl_phase_drops": {
+            "setup": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 6,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "business": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 1
+            },
+            "teardown": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "whole_case": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 6,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 1
+            },
+            "consistent": true
+          },
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": 0.9074952149333333,
+          "rx_mode": "old",
+          "dll_sha256": "3bca152af88dc0928e3eeef8a4c16d38addcda47e4676d8bdb2cc3b99388c28f",
+          "rx_mode_ok": true,
+          "rx_turns": {
+            "continuation": 0,
+            "waits": 113366,
+            "timeouts": 0,
+            "turns": 113365,
+            "full": 263,
+            "bypass": 0,
+            "bypass_empty": 0
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "seconds": 44.10900000000004,
+            "cpu_s": 15.046875,
+            "core_equiv": 0.34112936135482524,
+            "estimated_cpu_s_per_gib": 25.83179594320128
+          },
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 37,
+              "direct": true
+            },
+            "relay": {
+              "samples": 37,
+              "direct": true
+            },
+            "server": {
+              "samples": 37,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 2,
+          "label": "continue125",
+          "rx_mbps": 113.19427982222221,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 60.850576877593994,
+            "samples": 31,
+            "tx_packets": 580852,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 22,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 15
+          },
+          "rate_mbps": 125,
+          "wsl_phase_drops": {
+            "setup": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 22,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "business": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 15
+            },
+            "teardown": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "whole_case": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 22,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 15
+            },
+            "consistent": true
+          },
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": 0.9055542385777777,
+          "rx_mode": "continue",
+          "dll_sha256": "3bca152af88dc0928e3eeef8a4c16d38addcda47e4676d8bdb2cc3b99388c28f",
+          "rx_mode_ok": true,
+          "rx_turns": {
+            "continuation": 1,
+            "waits": 105470,
+            "timeouts": 0,
+            "turns": 106232,
+            "full": 763,
+            "bypass": 763,
+            "bypass_empty": 577
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "seconds": 44.21899999999994,
+            "cpu_s": 15.953125,
+            "core_equiv": 0.3607753454397436,
+            "estimated_cpu_s_per_gib": 27.378032040142035
+          },
+          "candidate_changed": true,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 37,
+              "direct": true
+            },
+            "relay": {
+              "samples": 37,
+              "direct": true
+            },
+            "server": {
+              "samples": 37,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 3,
+          "label": "old125-restored",
+          "rx_mbps": 114.21866328888889,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 60.03355884552002,
+            "samples": 31,
+            "tx_packets": 552732,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 12,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 9
+          },
+          "rate_mbps": 125,
+          "wsl_phase_drops": {
+            "setup": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 12,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "business": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 9
+            },
+            "teardown": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "whole_case": {
+              "available": true,
+              "zero": false,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 12,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 9
+            },
+            "consistent": true
+          },
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": 0.9137493063111112,
+          "rx_mode": "old",
+          "dll_sha256": "3bca152af88dc0928e3eeef8a4c16d38addcda47e4676d8bdb2cc3b99388c28f",
+          "rx_mode_ok": true,
+          "rx_turns": {
+            "continuation": 0,
+            "waits": 112443,
+            "timeouts": 0,
+            "turns": 112442,
+            "full": 359,
+            "bypass": 0,
+            "bypass_empty": 0
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "seconds": 44.172000000000025,
+            "cpu_s": 16.796875,
+            "core_equiv": 0.3802606855021278,
+            "estimated_cpu_s_per_gib": 28.597904425748215
+          },
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 37,
+              "direct": true
+            },
+            "relay": {
+              "samples": 37,
+              "direct": true
+            },
+            "server": {
+              "samples": 37,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": -11,
+          "label": "bare250-after",
+          "rx_mbps": 235.03785955555554,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 56.031414270401,
+            "samples": 29,
+            "tx_packets": 143847,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": true,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 250,
+          "wsl_phase_drops": {
+            "setup": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "business": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "teardown": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "whole_case": {
+              "available": true,
+              "zero": true,
+              "deltas": {
+                "eth0.rx.dropped": 0,
+                "eth0.rx.errors": 0,
+                "eth0.tx.dropped": 0,
+                "eth0.tx.errors": 0,
+                "tailscale0.rx.dropped": 0,
+                "tailscale0.rx.errors": 0,
+                "tailscale0.tx.dropped": 0,
+                "tailscale0.tx.errors": 0,
+                "h228vc.rx.dropped": 0,
+                "h228vc.rx.errors": 0,
+                "h228vc.tx.dropped": 0,
+                "h228vc.tx.errors": 0,
+                "h228bc.rx.dropped": 0,
+                "h228bc.rx.errors": 0,
+                "h228bc.tx.dropped": 0,
+                "h228bc.tx.errors": 0,
+                "qdisc.eth0|mq|0:||True": 0,
+                "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+                "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+                "qdisc.tailscale0|fq_codel|0:||True": 0,
+                "qdisc.h228bc|noqueue|0:||True": 0,
+                "qdisc.h228vc|noqueue|0:||True": 0,
+                "guest_softnet_drop": 0
+              },
+              "softnet_time_squeeze_delta": 0
+            },
+            "consistent": true
+          },
+          "duration_s": 60,
+          "steady_window_s": [
+            10,
+            55
+          ],
+          "goodput_to_cap": 0.9401514382222221,
+          "rx_mode": "frozen",
+          "dll_sha256": "83da40d0636cee00f8de580cd3601d1306ce9c5c38c43e256463a0e26aa1b0e7",
+          "rx_mode_ok": null,
+          "rx_turns": null,
+          "steady_cpu": null,
+          "candidate_changed": false,
+          "kind": "bare",
+          "path": {
+            "client": {
+              "samples": 35,
+              "direct": true
+            },
+            "relay": {
+              "samples": 35,
+              "direct": true
+            },
+            "server": {
+              "samples": 35,
+              "direct": true
+            }
+          },
+          "qualified": true
+        }
+      ],
+      "cpu_gate": {
+        "source_sha": "590b138b9c5c713538da4fe517104d84331d40a7",
+        "run_id": "45757635084",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "bare250_drift": null,
+      "stable_bare_controls": false,
+      "comparison_ready": false,
+      "same_experimental_dll": true,
+      "screen_status": "NOT_COMPARABLE",
+      "all_cases_qualified": false,
+      "qualification_job_id": 139704253148
+    }
+  ],
+  "derived_g": {
+    "goodput_change_pct": -0.5565449323610472,
+    "estimated_cpu_per_gib_change_pct": 0.5996059304429924,
+    "full_turn_pct": [
+      0.2319940016760023,
+      0.7182393252503954,
+      0.3192757154799808
+    ],
+    "partial_or_empty_continuation_pct": 75.62254259501965
+  }
+}

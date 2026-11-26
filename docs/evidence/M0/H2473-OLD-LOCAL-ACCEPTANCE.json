@@ -1,0 +1,649 @@
+{
+  "source_sha": "8966c4d67696f64ac885c83e8ab9391381496bf4",
+  "observations": [
+    {
+      "job_id": 139699020646,
+      "run_id": "45757361813",
+      "replica": "D",
+      "rows": [
+        {
+          "case": -10,
+          "status": "MEASURED_EXACT",
+          "bytes": 4479034576,
+          "end": "eof",
+          "rx_mbps": 596.6128426666667,
+          "elapsed": 60.03099999999998,
+          "local": "172.31.112.1",
+          "requested_rcvbuf": 67108864,
+          "socket_rcvbuf_at_connect": 67108864,
+          "socket_rcvbuf_end": 67108864,
+          "local_snapshot_error": "RuntimeError('<3>WSL (1159 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "server": {
+            "case": -10,
+            "rc": {
+              "source": 0
+            },
+            "source": {
+              "bytes": 4479034576,
+              "end": "deadline",
+              "actual_cc": "bbr",
+              "pacing_bytes_per_s": 75000000
+            }
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 89284
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 90217
+            }
+          },
+          "rate_mbps": 600,
+          "added_rtt_ms": 0,
+          "kind": "bare",
+          "netem_drops": null
+        },
+        {
+          "case": -11,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1217 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1221 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "server": {
+            "case": -11,
+            "rc": {
+              "source": -15
+            },
+            "source": null
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 0
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 1
+            }
+          },
+          "rate_mbps": 600,
+          "added_rtt_ms": 400,
+          "kind": "bare",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": 0,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1337 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1341 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "client_stop": true,
+          "client_ready": true,
+          "client_panic": false,
+          "server": {
+            "case": 0,
+            "rc": {
+              "server": 0,
+              "probe": 0,
+              "source": -15
+            },
+            "source": null,
+            "proxy_accept": false,
+            "proxy_pacing": false,
+            "stop": true,
+            "panic": false,
+            "inbox1024": true
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 442
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 290
+            }
+          },
+          "rate_mbps": 125,
+          "added_rtt_ms": 400,
+          "kind": "wbd",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": 1,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1463 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1467 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "client_stop": true,
+          "client_ready": true,
+          "client_panic": false,
+          "server": {
+            "case": 1,
+            "rc": {
+              "server": 0,
+              "probe": 0,
+              "source": -15
+            },
+            "source": null,
+            "proxy_accept": false,
+            "proxy_pacing": false,
+            "stop": true,
+            "panic": false,
+            "inbox1024": true
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 447
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 293
+            }
+          },
+          "rate_mbps": 200,
+          "added_rtt_ms": 400,
+          "kind": "wbd",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": 2,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1589 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1593 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "client_stop": true,
+          "client_ready": true,
+          "client_panic": false,
+          "server": {
+            "case": 2,
+            "rc": {
+              "server": 0,
+              "probe": 0,
+              "source": -15
+            },
+            "source": null,
+            "proxy_accept": false,
+            "proxy_pacing": true,
+            "stop": true,
+            "panic": false,
+            "inbox1024": true
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 1488
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 1544
+            }
+          },
+          "rate_mbps": 400,
+          "added_rtt_ms": 400,
+          "kind": "wbd",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": 3,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1716 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1720 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "client_stop": true,
+          "client_ready": true,
+          "client_panic": false,
+          "server": {
+            "case": 3,
+            "rc": {
+              "server": 0,
+              "probe": 0,
+              "source": -15
+            },
+            "source": null,
+            "proxy_accept": false,
+            "proxy_pacing": false,
+            "stop": true,
+            "panic": false,
+            "inbox1024": true
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 506
+            },
+            "tx": {
+              "dropped": 1,
+              "errors": 0,
+              "packets": 2055
+            }
+          },
+          "rate_mbps": 600,
+          "added_rtt_ms": 400,
+          "kind": "wbd",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": 4,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1843 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1847 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "client_stop": true,
+          "client_ready": true,
+          "client_panic": false,
+          "server": {
+            "case": 4,
+            "rc": {
+              "server": 0,
+              "probe": 0,
+              "source": -15
+            },
+            "source": null,
+            "proxy_accept": false,
+            "proxy_pacing": false,
+            "stop": true,
+            "panic": false,
+            "inbox1024": true
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 447
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 533
+            }
+          },
+          "rate_mbps": 125,
+          "added_rtt_ms": 400,
+          "kind": "wbd",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": -12,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1930 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1934 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "server": {
+            "case": -12,
+            "rc": {
+              "source": -15
+            },
+            "source": null
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 0
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 0
+            }
+          },
+          "rate_mbps": 600,
+          "added_rtt_ms": 400,
+          "kind": "bare",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        }
+      ]
+    },
+    {
+      "job_id": 139699020503,
+      "run_id": "45757361813",
+      "replica": "I",
+      "rows": [
+        {
+          "case": -10,
+          "status": "MEASURED_EXACT",
+          "bytes": 4477986000,
+          "end": "eof",
+          "rx_mbps": 595.6483342222222,
+          "elapsed": 60.03199999999998,
+          "local": "172.26.0.1",
+          "requested_rcvbuf": 67108864,
+          "socket_rcvbuf_at_connect": 67108864,
+          "socket_rcvbuf_end": 67108864,
+          "local_snapshot_error": "RuntimeError('<3>WSL (1157 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "server": {
+            "case": -10,
+            "rc": {
+              "source": 0
+            },
+            "source": {
+              "bytes": 4477986000,
+              "end": "deadline",
+              "actual_cc": "bbr",
+              "pacing_bytes_per_s": 75000000
+            }
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 88934
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 89975
+            }
+          },
+          "rate_mbps": 600,
+          "added_rtt_ms": 0,
+          "kind": "bare",
+          "netem_drops": null
+        },
+        {
+          "case": -11,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1215 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1219 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "server": {
+            "case": -11,
+            "rc": {
+              "source": -15
+            },
+            "source": null
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 0
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 1
+            }
+          },
+          "rate_mbps": 600,
+          "added_rtt_ms": 400,
+          "kind": "bare",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": 0,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1338 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1342 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "client_stop": true,
+          "client_ready": true,
+          "client_panic": false,
+          "server": {
+            "case": 0,
+            "rc": {
+              "server": 0,
+              "probe": 0,
+              "source": -15
+            },
+            "source": null,
+            "proxy_accept": false,
+            "proxy_pacing": false,
+            "stop": true,
+            "panic": false,
+            "inbox1024": true
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 446
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 292
+            }
+          },
+          "rate_mbps": 125,
+          "added_rtt_ms": 400,
+          "kind": "wbd",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": 1,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1463 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1467 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "client_stop": true,
+          "client_ready": true,
+          "client_panic": false,
+          "server": {
+            "case": 1,
+            "rc": {
+              "server": 0,
+              "probe": 0,
+              "source": -15
+            },
+            "source": null,
+            "proxy_accept": false,
+            "proxy_pacing": false,
+            "stop": true,
+            "panic": false,
+            "inbox1024": true
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 445
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 292
+            }
+          },
+          "rate_mbps": 200,
+          "added_rtt_ms": 400,
+          "kind": "wbd",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": 2,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1590 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1594 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "client_stop": true,
+          "client_ready": true,
+          "client_panic": false,
+          "server": {
+            "case": 2,
+            "rc": {
+              "server": 0,
+              "probe": 0,
+              "source": -15
+            },
+            "source": null,
+            "proxy_accept": false,
+            "proxy_pacing": false,
+            "stop": true,
+            "panic": false,
+            "inbox1024": true
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 447
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 292
+            }
+          },
+          "rate_mbps": 400,
+          "added_rtt_ms": 400,
+          "kind": "wbd",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": 3,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1718 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1724 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "client_stop": true,
+          "client_ready": true,
+          "client_panic": false,
+          "server": {
+            "case": 3,
+            "rc": {
+              "server": 0,
+              "probe": 0,
+              "source": -15
+            },
+            "source": null,
+            "proxy_accept": false,
+            "proxy_pacing": false,
+            "stop": true,
+            "panic": false,
+            "inbox1024": true
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 442
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 290
+            }
+          },
+          "rate_mbps": 600,
+          "added_rtt_ms": 400,
+          "kind": "wbd",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": 4,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1844 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1848 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "client_stop": true,
+          "client_ready": true,
+          "client_panic": false,
+          "server": {
+            "case": 4,
+            "rc": {
+              "server": 0,
+              "probe": 0,
+              "source": -15
+            },
+            "source": null,
+            "proxy_accept": false,
+            "proxy_pacing": false,
+            "stop": true,
+            "panic": false,
+            "inbox1024": true
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 458
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 304
+            }
+          },
+          "rate_mbps": 125,
+          "added_rtt_ms": 400,
+          "kind": "wbd",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        },
+        {
+          "case": -12,
+          "status": "INCOMPLETE",
+          "error": "RuntimeError('<3>WSL (1933 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "local_snapshot_error": "RuntimeError('<3>WSL (1937 - Relay) ERROR: CreateProcessCommon:881: execvpe(tc) failed: No such file or directory\\n')",
+          "server": {
+            "case": -12,
+            "rc": {
+              "source": -15
+            },
+            "source": null
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 0
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 1
+            }
+          },
+          "rate_mbps": 600,
+          "added_rtt_ms": 400,
+          "kind": "bare",
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          }
+        }
+      ]
+    }
+  ]
+}
