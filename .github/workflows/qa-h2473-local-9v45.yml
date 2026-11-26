@@ -144,10 +144,10 @@ jobs:
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
         shell: pwsh
         run: |
-          & wsl.exe -d Ubuntu -u root --exec sh -c 'command -v iptables && command -v openssl && command -v python3 && command -v tc || (apt-get update -qq && apt-get install -y -qq iproute2 iptables openssl python3)'
+          & wsl.exe -d Ubuntu -u root --exec sh -c 'command -v iptables && command -v openssl && command -v python3 && command -v tc && command -v modprobe && command -v sudo || (apt-get update -qq && apt-get install -y -qq iproute2 iptables openssl python3 kmod sudo)'
           if($LASTEXITCODE -ne 0){throw 'WSL prerequisites unavailable'}
-          & wsl.exe -d Ubuntu -u root --exec modprobe tcp_bbr
-          & wsl.exe -d Ubuntu -u root --exec sysctl -n net.ipv4.tcp_available_congestion_control
+          & wsl.exe -d Ubuntu -u root --exec sh -c 'modprobe tcp_bbr 2>/dev/null || true; sysctl -n net.ipv4.tcp_available_congestion_control; uname -a'
+          if($LASTEXITCODE -ne 0){throw 'WSL congestion control inventory unavailable'}
       - name: 'Same-runner old vEthernet fixture: 0ms/400ms bare and 400ms single TCP WBD'
         shell: pwsh
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
