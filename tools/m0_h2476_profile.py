@@ -1,7 +1,7 @@
 """H2475 local same-runner ceiling screening, shared deterministic case definitions."""
 import json,pathlib
-RATES=(400,250,250,250,400,400,400)
-MODES=('frozen','copy','borrow','copy','copy','borrow','copy')
+RATES=(400,250,250,250,400,400,400,400)
+MODES=('optimized','copy','borrow','copy','copy','borrow','copy','frozen')
 DIRECT={-11:(200,67108864),-12:(200,67108864)}
 DIRECT_RATES={i:800 for i in DIRECT}
 SECONDS=DIRECT_SECONDS=60

@@ -241,14 +241,15 @@ def main():
     dll=BIN/"wbd_engine.dll"
     frozen=OUT/"frozen.dll"
     experiment=ROOT/"h2476-build/wbd_engine.dll"
+    optimized=ROOT/"h2476-build/optimized.dll"
     manifest=read(ROOT/"h2476-build/manifest.json")
     original=read(ROOT/"h2442-out/windows-binary-manifest.json")
     def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
-    if digest(dll)!=original["sha256"]["dll"] or digest(experiment)!=manifest["dll_sha256"]:raise RuntimeError("DLL identity mismatch")
+    if digest(dll)!=original["sha256"]["dll"] or digest(experiment)!=manifest["dll_sha256"] or digest(optimized)!=manifest["optimized_dll_sha256"]:raise RuntimeError("DLL identity mismatch")
     shutil.copyfile(dll,frozen)
     def select(i):
         mode=MODES[i] if i>=0 else "frozen"
-        selected=frozen if mode=="frozen" else experiment
+        selected=frozen if mode=="frozen" else optimized if mode=="optimized" else experiment
         shutil.copyfile(selected,dll)
         if digest(dll)!=digest(selected):raise RuntimeError("DLL copy identity")
         os.environ["WBD_H2476_RX_BORROW"]="1" if mode=="borrow" else "0"
@@ -259,7 +260,7 @@ def main():
         lines=[l for l in text.splitlines() if "H2476_RX_COST " in l]
         mode=MODES[i]
         row["rx_profile"]=None
-        row["mode_ok"]=not lines if mode=="frozen" else len(lines)==1
+        row["mode_ok"]=not lines if mode in ("frozen","optimized") else len(lines)==1
         if len(lines)==1:
             row["rx_profile"]={k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",lines[0])}
             row["mode_ok"]=row["rx_profile"].get("borrowed")==int(mode=="borrow")
@@ -277,7 +278,7 @@ def main():
         while "H2442_SERVER_CONTROL_READY" not in (OUT/"server-control.log").read_text(errors="replace"):
             if p.poll() is not None or time.monotonic()>deadline:raise RuntimeError("local WSL server control not ready")
             time.sleep(.2)
-        schedule=[-11,0,1,2,3,4,5,6,-12]
+        schedule=[-11,7,0,1,2,3,4,5,6,-12]
         for i in schedule:
             mode,dll_sha=select(i)
             clock.clear()

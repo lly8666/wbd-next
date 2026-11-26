@@ -34,7 +34,7 @@ CHANGES=[
   [
     "crates/wbd-engine/src/v4_windows_native_runtime.rs",
     "     let mut boundary_rx=BoundaryQpcTrace::new(\"RX_WINTUN_SEND\");",
-    "     let mut boundary_rx=BoundaryQpcTrace::new(\"RX_WINTUN_SEND\");\n     let borrowed=std::env::var(\"WBD_H2476_RX_BORROW\").ok().as_deref()==Some(\"1\");\n     eprintln!(\"H2476_RX_MODE borrowed={}\",u8::from(borrowed));\n     let mut costs=H2476RxCost{borrowed,..Default::default()};"
+    "     let mut boundary_rx=BoundaryQpcTrace::new(\"RX_WINTUN_SEND\");\n     let borrowed=std::env::var(\"WBD_H2476_RX_BORROW\").ok().as_deref()==Some(\"1\");\n     eprintln!(\"H2476_RX_MODE borrowed={}\",u8::from(borrowed));\n     let mut costs=H2476RxCost::default();costs.borrowed=borrowed;"
   ],
   [
     "crates/wbd-engine/src/v4_windows_native_runtime.rs",
@@ -70,4 +70,4 @@ def apply():
     return records
 if __name__=="__main__":
     out=pathlib.Path(sys.argv[1]);out.parent.mkdir(parents=True,exist_ok=True)
-    out.write_text(json.dumps({"base_source":"db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141","files":apply(),"patch_sha256":sha(pathlib.Path(__file__).read_bytes())},indent=2)+"\n")
+    out.write_text(json.dumps({"base_source":"f18f907e1a1ce47f53bc5b27eb7fa2796754e01c","files":apply(),"patch_sha256":sha(pathlib.Path(__file__).read_bytes())},indent=2)+"\n")

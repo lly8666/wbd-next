@@ -2,8 +2,8 @@ import unittest
 import m0_h2476_profile as p
 class Test(unittest.TestCase):
     def test_matrix(self):
-        self.assertEqual(p.RATES,(400,250,250,250,400,400,400))
-        self.assertEqual(p.MODES,('frozen','copy','borrow','copy','copy','borrow','copy'))
+        self.assertEqual(p.RATES,(400,250,250,250,400,400,400,400))
+        self.assertEqual(p.MODES,('optimized','copy','borrow','copy','copy','borrow','copy','frozen'))
     def test_phase(self):
         a={"counters":{"x":3},"netem_packets":{"eth0":1,"ifbwlm0":1}}
         b={"counters":{"x":4},"netem_packets":{"eth0":2,"ifbwlm0":2}}
