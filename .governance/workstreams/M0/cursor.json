@@ -4,21 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2448,
-  "checkpoint_sha": "c9b8d31b85e79d6fb6ff22fb260ae72d04eea6b2",
-  "progress": "planned",
+  "sequence": 2449,
+  "checkpoint_sha": "53e996812cfe33b3d138e47d4e5b17c5978cfbf5",
+  "progress": "partial",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "在登记分支核实际HEAD与最新相关源码/Actions，复用固定pktkit vtcp，接完整Linux Normal双端原生TUN到origin真实业务路径；x86_64/ARM64原生功能、UDP及Stop，保留旧splice作性能对照。首实质WIP推送后开同一Draft PR。",
+  "next_action": "先收精确105da799ad82b9423d778fd1850bf2503d9909a6的Actions 45803683868/45803683724/45803683656结果，按实际失败修复；接Linux Normal原生TUN到origin完整双端TCP、UDP/Stop，再双ISA同机splice对照。",
   "unverified": true,
   "last_tested_source": null,
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-REGISTRATION.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-REGISTRATION.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "新任务已在main登记并从精确26b11e2创建experiment/m0-dual-rust-tcp。旧main H2447记录滞后，原分支H2480无有效TSO/GSO干预；历史原样保留。新任务仅规划与分支，未修改产品、未运行新功能或性能测试。"
+  "partial_summary": "唯一施工分支首实质WIP 105da799ad82b9423d778fd1850bf2503d9909a6已推送，Draft PR80，固定pktkit核心移植及容量约束的双段transfer；核心验证在途，真实Linux链路尚未接通，性能NOT_RUN，不合并历史祖先；旧splice保留。"
 }
