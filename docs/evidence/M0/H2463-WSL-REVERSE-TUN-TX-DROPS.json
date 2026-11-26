@@ -1,0 +1,145 @@
+{
+  "scope": "H2463 raw client artifact independent extraction; sample +2 to +30 seconds; interface counters not per-flow loss rates",
+  "source_commit": "c7ae09e6ef9184760c88c5dcc0f94c27bfccbc39",
+  "replicas": [
+    {
+      "name": "A",
+      "run": 45720881249,
+      "client_artifact": 15073191014,
+      "rows": [
+        {
+          "case": -13,
+          "tun_tx_packets": 58883,
+          "tun_tx_dropped": 0,
+          "vxlan_tx_packets": 58781,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": 0,
+          "tun_tx_packets": 417904,
+          "tun_tx_dropped": 35142,
+          "vxlan_tx_packets": 453187,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": 1,
+          "tun_tx_packets": 501355,
+          "tun_tx_dropped": 48899,
+          "vxlan_tx_packets": 550238,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": 2,
+          "tun_tx_packets": 421461,
+          "tun_tx_dropped": 23697,
+          "vxlan_tx_packets": 445117,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": -14,
+          "tun_tx_packets": 61047,
+          "tun_tx_dropped": 0,
+          "vxlan_tx_packets": 60937,
+          "tun_fq_codel_drops_delta": 0
+        }
+      ]
+    },
+    {
+      "name": "B",
+      "run": 45720881273,
+      "client_artifact": 15073096401,
+      "rows": [
+        {
+          "case": -13,
+          "tun_tx_packets": 46548,
+          "tun_tx_dropped": 0,
+          "vxlan_tx_packets": 46441,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": 0,
+          "tun_tx_packets": 305687,
+          "tun_tx_dropped": 90521,
+          "vxlan_tx_packets": 396372,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": 1,
+          "tun_tx_packets": 277779,
+          "tun_tx_dropped": 128482,
+          "vxlan_tx_packets": 406153,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": 2,
+          "tun_tx_packets": 281757,
+          "tun_tx_dropped": 74037,
+          "vxlan_tx_packets": 355734,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": -14,
+          "tun_tx_packets": 45228,
+          "tun_tx_dropped": 0,
+          "vxlan_tx_packets": 45151,
+          "tun_fq_codel_drops_delta": 0
+        }
+      ]
+    },
+    {
+      "name": "C",
+      "run": 45720881211,
+      "client_artifact": 15072847787,
+      "rows": [
+        {
+          "case": -13,
+          "tun_tx_packets": 79510,
+          "tun_tx_dropped": 0,
+          "vxlan_tx_packets": 79380,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": 0,
+          "tun_tx_packets": 405937,
+          "tun_tx_dropped": 23513,
+          "vxlan_tx_packets": 429336,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": 1,
+          "tun_tx_packets": 330562,
+          "tun_tx_dropped": 76318,
+          "vxlan_tx_packets": 406748,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": 2,
+          "tun_tx_packets": 410763,
+          "tun_tx_dropped": 19436,
+          "vxlan_tx_packets": 430313,
+          "tun_fq_codel_drops_delta": 0
+        },
+        {
+          "case": -14,
+          "tun_tx_packets": 71421,
+          "tun_tx_dropped": 0,
+          "vxlan_tx_packets": 71355,
+          "tun_fq_codel_drops_delta": 0
+        }
+      ]
+    }
+  ],
+  "fixture": {
+    "wsl_kernel": "6.18.58.1-microsoft-standard-WSL2",
+    "tailscale_version": "1.104.7",
+    "tun_mtu": 1280,
+    "tun_txqueuelen": 500
+  },
+  "interpretation": [
+    "All nine WBD legs show TUN TX dropped increments; all six paired bare 250M legs zero. VXLAN TX closely matches TUN TX plus drops, subject to collection skew and skb/offload accounting.",
+    "B WBD250: RTT 763.577/976.292/1603.05ms at +12/+30/+45s; cwnd 4 at +12; snd_wnd 67108864. No injected loss, relay netem drops zero; Npcap and Shared-TUN local queue counters zero.",
+    "Linux tun_net_xmit may drop at full ptr_ring; other causes also exist. Actual WSL kernel drop reason not traced. No proof of exact ACK/feedback share or causal sufficiency.",
+    "Full-route WBD fixture includes runner background connection attempts despite one benchmark TCP source/sink. H2450 isolation did not show consistent gain (187.033 full, isolate cold failure, 181.950 isolate+16MiB, 154.198 isolate default, 182.126 full repeat)."
+  ],
+  "next": "H2464 architecture already in progress at 9e93f65a. Next highest-value product/fixture test: preserve frozen 200M or 250M workload; WSL TUN tx drop reason if tracepoint available, 500 baseline -> one bounded 2000-entry test -> 500 restore; compare actual drop/RTT/throughput and actual readback, do not increase further or adopt if merely raises queueing. Verify GSO/GRO, Tailscale service CPU and reverse packet categories; no product change until boundary is isolated."
+}
