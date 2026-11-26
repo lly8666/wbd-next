@@ -1,10 +1,14 @@
-//! M0 dual native TCP: first shared core increment, not yet an owner route.
+//! M0 dual native TCP: shared endpoints and native owner integration.
 #![allow(dead_code)]
 mod pktkit;
 mod ipv4;
 mod flow;
 #[cfg(target_os="linux")]
 mod linux_socket;
+#[cfg(target_os="linux")]
+pub(crate) mod linux_owner;
+#[cfg(target_os="linux")]
+pub(crate) use flow::ClientOutput;
 
 use pktkit::vtcp::Conn;
 use pktkit::vtcp::ecn::IpEcn;

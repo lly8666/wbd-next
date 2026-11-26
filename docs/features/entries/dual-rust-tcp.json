@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Pinned pktkit TCP core with inner IPv4/TCP codec, dual client endpoints and native nonblocking Linux origin socket; original product owner integration pending.",
+  "summary": "Pinned pktkit TCP with paired original Linux Normal native owner integration; functional qualification pending.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -11,8 +11,8 @@
   ],
   "defaults": {},
   "usage": {
-    "cli": "Not exposed; experimental endpoint code only",
-    "config": "No new configuration",
+    "cli": "Experimental: both Linux endpoints --dual-rust-tcp --mode normal, client --auto-ip, server --lease-pool; mutually exclusive with old --tcp-proxy-cc.",
+    "config": "Cold paired selection only; no private TLS exchange or auto-detection; old path remains default for comparison.",
     "gui": "Not exposed"
   },
   "code_refs": [
@@ -20,12 +20,17 @@
     "crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs",
     "crates/wbd-engine/src/v4_rust_tcp/ipv4.rs",
     "crates/wbd-engine/src/v4_rust_tcp/flow.rs",
-    "crates/wbd-engine/src/v4_rust_tcp/linux_socket.rs"
+    "crates/wbd-engine/src/v4_rust_tcp/linux_socket.rs",
+    "crates/wbd-engine/src/v4_rust_tcp/linux_owner.rs",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "r0/go_overlay/internal/v4productcli/linux.go"
   ],
   "doc_refs": [
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-WIP.md",
     "crates/wbd-engine/src/v4_rust_tcp/pktkit/UPSTREAM.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-WIP.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-WIP.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-WIP.md"
   ],
   "verification": [
     {
@@ -72,9 +77,9 @@
     }
   ],
   "limitations": [
-    "Endpoint code is not yet connected to the original product TUN or authenticated owner",
-    "Origin test uses real native TCP socket with virtual packet peer; not a full product or performance test",
-    "Old splice remains unchanged"
+    "Paired Linux Normal/off only; FEC and Game modes not integrated, not interoperable with old TCP peer",
+    "Actual product, multi-lease, generation handoff and performance unverified on this SOURCE",
+    "Old splice retained for same-host comparison; Windows unchanged"
   ],
   "promotion": null
 }

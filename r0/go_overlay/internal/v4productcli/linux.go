@@ -130,6 +130,7 @@ type config struct{
     // Transient generation safety: a pending new-path TLS session cannot
     // mutate an active generation's authenticated inner IPv4 address.
     leaseMustStay bool
+    dualRustTCP bool // paired Normal-only comparison, no wire negotiation
     tcpProxyCC string // empty keeps original NAT
     tcpProxyPort int
     tunFqMaxrateMbps int
@@ -230,6 +231,7 @@ func parse(role string,args []string)(config,error){
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
     rotateInterval:=flags.Duration("rotation-interval",0,"client: cold authenticated lane/group rotation on unchanged physical network (e.g. 5m); 0 disables")
     rotateJitter:=flags.Duration("rotation-jitter",0,"client: bounded random ±jitter for each rotation (e.g. 3s with --rotation-interval 18s); 0 preserves exact interval")
+    dualTCP:=flags.Bool("dual-rust-tcp",false,"experimental paired Normal Rust TCP; both endpoints must enable; authenticated auto-/32 only")
     proxyCC:=flags.String("tcp-proxy-cc","","server-only transparent TCP splice; kernel CC name, empty keeps NAT")
     proxyPort:=flags.Int("tcp-proxy-port",46180,"server-only transparent listener port")
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
@@ -509,6 +511,12 @@ func parse(role string,args []string)(config,error){
            c.leasePool.Contains(tunPrefix.Addr()){
             return c,fmt.Errorf("server tun-ipv4 must route the whole client pool but reserve its own IP outside the pool")
         }
+    }
+    if *dualTCP {
+        if *mode!="normal"||c.tcpProxyCC!=""||(role=="client"&&!c.autoIP)||(role=="server"&&!c.leasePool.IsValid()) {
+            return c,fmt.Errorf("dual-rust-tcp requires paired Normal, client auto-IP/server lease-pool, and no old TCP splice")
+        }
+        c.dualRustTCP=true
     }
     return c,nil
 }
@@ -886,6 +894,13 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
  cfg,err:=parse(role,args)
     if err!=nil{return err}
     cfg.management=management
+    // One process-scoped cold comparison choice; no per-packet Go calls.
+    if cfg.dualRustTCP {
+        if err=os.Setenv("WBD_M0_DUAL_RUST_TCP","1");err!=nil{return err}
+        log.Printf("WBD_DUAL_RUST_TCP_SELECTED role=%s paired_normal=1",role)
+    } else {
+        if err=os.Unsetenv("WBD_M0_DUAL_RUST_TCP");err!=nil{return err}
+    }
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
     if role=="server"&&cfg.localIP.IsUnspecified(){

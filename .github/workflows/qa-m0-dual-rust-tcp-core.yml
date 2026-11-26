@@ -1,36 +1,60 @@
-name: M0 dual Rust TCP native core
+name: M0 dual Rust TCP Normal native product
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
     paths:
       - 'crates/wbd-engine/src/v4_rust_tcp/**'
-      - 'crates/wbd-engine/src/lib.rs'
+      - 'crates/wbd-engine/src/v4_embedded_go.rs'
+      - 'crates/wbd-engine/src/v4_owner_crypto.rs'
+      - 'r0/go_overlay/internal/v4productcli/linux.go'
+      - 'tools/m0_dual_rust_tcp_*.py'
       - '.github/workflows/qa-m0-dual-rust-tcp-core.yml'
 permissions:
   contents: read
 jobs:
-  core:
+  native:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        include:
+          - {runner: ubuntu-24.04, arch: x86_64}
+          - {runner: ubuntu-24.04-arm, arch: aarch64}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Native core and origin socket on exact source (not product or performance)
+      - name: Build original product on exact native ISA
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p out
-          git rev-parse HEAD | tee out/source.txt
-          uname -m | tee out/arch.txt
-          rustup toolchain install 1.85.1 --profile minimal
-          rustc +1.85.1 -Vv | tee out/rustc.txt
-          cargo +1.85.1 test --locked -p wbd-engine --lib v4_rust_tcp 2>&1 | tee out/test.log
+          mkdir -p dual-tcp-out
+          git rev-parse HEAD | tee dual-tcp-out/source.txt
+          uname -m | tee dual-tcp-out/arch.txt
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iputils-ping autoconf automake libtool make gcc g++ nasm openssl
+          python3 -m py_compile tools/m0_dual_rust_tcp_local.py tools/m0_dual_rust_tcp_app.py
+          bash tools/m0_plan029_linux_dual_native_build.sh >dual-tcp-build.log 2>&1 || { tail -n 180 dual-tcp-build.log; exit 2; }
+          cp linux-plan029-public-bundle/{manifest.json,SHA256SUMS} dual-tcp-out/
+      - name: Original TUN to native origin, exact duplex bytes, concurrent flows, UDP and joined Stop
+        shell: bash
+        run: |
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out python3 -u tools/m0_dual_rust_tcp_local.py
+      - name: Preserve owned evidence
+        if: always()
+        run: |
+          if test -d dual-tcp-out;then
+            sudo find dual-tcp-out -type f \( -name install -o -name route-key.hex -o -name users.json -o -name key.pem -o -name cert.pem \) -delete
+            sudo chown -R "$(id -u):$(id -g)" dual-tcp-out
+          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: dual-rust-tcp-core-${{ matrix.runner }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: out/
+          name: dual-rust-tcp-normal-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            dual-tcp-out/
+            dual-tcp-build.log
           if-no-files-found: error

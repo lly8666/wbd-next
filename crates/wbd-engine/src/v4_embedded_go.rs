@@ -10,6 +10,8 @@ use std::collections::{BTreeMap,VecDeque};
 #[cfg(target_os="linux")]
 use std::collections::HashMap;
 #[cfg(target_os="linux")]
+use crate::v4_rust_tcp::{linux_owner::{Owner as NativeTcpOwner,Wake as NativeTcpWake},ClientOutput as NativeTcpOutput};
+#[cfg(target_os="linux")]
 use std::sync::mpsc::{self,Receiver,SyncSender,TrySendError};
 use std::sync::{Mutex,OnceLock,Arc,atomic::{AtomicBool,AtomicU32,AtomicU64,Ordering}};
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3418,7 +3420,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_bind(
     g.shared_tun=Some(SharedTunSession{
         router:router_handle,generation,ip,
         alive:Arc::new(AtomicBool::new(true)),sender,
-        receiver:Some(receiver),publish_pending:false,
+        receiver:Some(receiver),tcp_wake:None,publish_pending:false,
     });
     OK
 }
@@ -3613,7 +3615,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
             let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
             if router.stop.load(Ordering::Acquire){return BAD_STAGE}
             let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
-            let candidate=SharedTunRoute{flow_fair:true,
+            let candidate=SharedTunRoute{tcp_wake:None,flow_fair:true,
                 generation:shared.generation,alive:Arc::clone(&shared.alive),
                 send:shared.sender.clone(),
             };
@@ -3671,7 +3673,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(grou
             r.alive.load(Ordering::Acquire)
         ){OK}else{BAD_STAGE}
     }
-    let candidate=SharedTunRoute{flow_fair:true,
+    let candidate=SharedTunRoute{tcp_wake:None,flow_fair:true,
         generation:shared.generation,alive:Arc::clone(&shared.alive),
         send:shared.sender.clone(),
     };
@@ -3710,7 +3712,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_server_promote_after_client_heal
             r.alive.load(Ordering::Acquire)
         ){OK}else{BAD_STAGE}
     }
-    let candidate=SharedTunRoute{flow_fair:true,
+    let candidate=SharedTunRoute{tcp_wake:None,flow_fair:true,
         generation:shared.generation,alive:Arc::clone(&shared.alive),
         send:shared.sender.clone(),
     };
@@ -4477,6 +4479,8 @@ pub(crate) enum OriginalTunIngress{
     // TX converts this owned packet into ITS original per-generation M1 loan
     // before the original Normal/FEC seals it, never a second crypto path.
     Shared(SharedTunPacket),
+    // Already authenticated and lease-admitted middle TCP, to the sole TX owner.
+    MiddleTcp(Vec<u8>),
 }
 // PLAN028 real Linux process TUN ingress: exactly ONE kernel reader in this
 // process, independent of every session's duplicated Rust TUN *writer*.
@@ -4488,6 +4492,14 @@ pub(crate) enum OriginalTunIngress{
 struct SharedTunRoute{
     generation:u32,alive:Arc<AtomicBool>,send:SyncSender<OriginalTunIngress>,
     flow_fair:bool,
+    tcp_wake:Option<Arc<NativeTcpWake>>,
+}
+impl SharedTunRoute{
+    fn try_send(&self,p:OriginalTunIngress)->Result<(),TrySendError<OriginalTunIngress>>{
+        self.send.try_send(p)?;
+        if let Some(w)=&self.tcp_wake{w.signal()}
+        Ok(())
+    }
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct SharedTunReader{
@@ -4507,6 +4519,7 @@ struct SharedTunSession{
     alive:Arc<AtomicBool>,
     sender:SyncSender<OriginalTunIngress>,
     receiver:Option<Receiver<OriginalTunIngress>>,
+    tcp_wake:Option<Arc<NativeTcpWake>>,
     // Replacement B on EITHER side keeps authenticated A's per-IP route
     // until B's genuine remote M4 readiness proof. Initial generations
     // publish directly; only exact owner Stop revokes an alive generation.
@@ -4672,7 +4685,7 @@ fn enqueue_shared_tun_flow<F:FnOnce()->OriginalTunIngress>(
                 d.expired+=1;
                 continue
             }
-            match q.route.send.try_send(old.packet){
+            match q.route.try_send(old.packet){
                 Ok(())=>d.delivered+=1,
                 Err(TrySendError::Full(packet))=>{
                     q.queued_bytes+=old.bytes;
@@ -4694,7 +4707,7 @@ fn enqueue_shared_tun_flow<F:FnOnce()->OriginalTunIngress>(
         // older item has left it. Do not needlessly occupy one of the
         // eight pending slots when the original M1 receiver is writable.
         if q.packets.is_empty(){
-            match q.route.send.try_send(make()){
+            match q.route.try_send(make()){
                 Ok(())=>{d.delivered+=1;return d},
                 Err(TrySendError::Full(packet))=>{
                     d.backpressure+=1;
@@ -4734,7 +4747,7 @@ fn enqueue_shared_tun_flow<F:FnOnce()->OriginalTunIngress>(
         });
         return d
     }
-    match route.send.try_send(make()){
+    match route.try_send(make()){
         Ok(())=>d.delivered+=1,
         Err(TrySendError::Full(packet))=>{
             d.backpressure+=1;
@@ -4777,7 +4790,7 @@ fn flush_shared_tun(pending:&mut HashMap<[u8;4],PendingSharedTunRoute>)
             let Some(old)=q.packets.pop_front()else{break};
             attempts_left-=1;
             q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
-            match q.route.send.try_send(old.packet){
+            match q.route.try_send(old.packet){
                 Ok(())=>d.delivered+=1,
                 Err(TrySendError::Full(packet))=>{
                     q.queued_bytes+=old.bytes;
@@ -4822,7 +4835,7 @@ fn m0_plan028_game_server_b_preserves_a_until_authenticated_client_cold_m4(){
     let alive_b=Arc::new(AtomicBool::new(true));
     let ip=[10,66,0,194];
     let mut routes=HashMap::new();
-    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:17,alive:Arc::clone(&alive_a),send:atx,
     }));
     // Group B local TLS/native M4 starts; neither its own first TX
@@ -4832,7 +4845,7 @@ fn m0_plan028_game_server_b_preserves_a_until_authenticated_client_cold_m4(){
     client.record_batch(100,0,None);
     assert!(!client.has_verified_peer_health());
     assert!(!shared_route_promote_authenticated_client(&mut routes,ip,
-        SharedTunRoute{flow_fair:false,generation:18,alive:Arc::clone(&alive_b),send:btx.clone()},
+        SharedTunRoute{tcp_wake:None,flow_fair:false,generation:18,alive:Arc::clone(&alive_b),send:btx.clone()},
         u64::from(client.has_verified_peer_health())));
     assert_eq!(routes[&ip].generation,17);
     assert!(alive_a.load(Ordering::Acquire));
@@ -4841,7 +4854,7 @@ fn m0_plan028_game_server_b_preserves_a_until_authenticated_client_cold_m4(){
     client.record_batch(120,0,Some((120,0)));
     assert!(client.has_verified_peer_health());
     assert!(shared_route_promote_authenticated_client(&mut routes,ip,
-        SharedTunRoute{flow_fair:false,generation:18,alive:Arc::clone(&alive_b),send:btx},
+        SharedTunRoute{tcp_wake:None,flow_fair:false,generation:18,alive:Arc::clone(&alive_b),send:btx},
         u64::from(client.has_verified_peer_health())));
     assert_eq!(routes[&ip].generation,18);
     assert!(alive_a.load(Ordering::Acquire));
@@ -4861,13 +4874,13 @@ fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
     let next_live=Arc::new(AtomicBool::new(true));
     let ip=[0u8;4];
     let mut routes=HashMap::new();
-    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:24,alive:Arc::clone(&old_live),send:old_tx.clone(),
     }));
     assert!(shared_route_defer_live_replacement(&routes,ip,25));
     assert!(!shared_route_defer_live_replacement(&routes,ip,24));
     assert!(!shared_route_promote_authenticated_client(
-        &mut routes,ip,SharedTunRoute{flow_fair:false,
+        &mut routes,ip,SharedTunRoute{tcp_wake:None,flow_fair:false,
             generation:25,alive:Arc::clone(&next_live),send:new_tx.clone(),
         },0
     ));
@@ -4887,7 +4900,7 @@ fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
     assert!(verified.has_verified_peer_health());
     let confirmed=Arc::new(AtomicBool::new(true));
     assert!(shared_route_promote_authenticated_client(
-        &mut routes,ip,SharedTunRoute{flow_fair:false,
+        &mut routes,ip,SharedTunRoute{tcp_wake:None,flow_fair:false,
             generation:26,alive:Arc::clone(&confirmed),send:new_tx,
         },u64::from(verified.has_verified_peer_health())
     ));
@@ -4908,12 +4921,12 @@ fn m0_plan028_server_b_waits_real_client_cold_health_before_replacing_a(){
     let old_live=Arc::new(AtomicBool::new(true));
     let new_live=Arc::new(AtomicBool::new(true));
     let mut routes=HashMap::new();
-    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:7,alive:Arc::clone(&old_live),send:old_tx,
     }));
     assert!(shared_route_defer_live_replacement(&routes,ip,8));
     let evidence=crate::v4_native_health::AuthenticatedActivity::default();
-    let b=SharedTunRoute{flow_fair:false,
+    let b=SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:8,alive:Arc::clone(&new_live),send:new_tx,
     };
     // B's local TLS/RAW Start without client B's M4 response cannot
@@ -4949,12 +4962,12 @@ fn m0_plan028_old_exact_m4_stop_after_route_promotion_preserves_one_tun_owner(){
     let old_live=Arc::new(AtomicBool::new(true));
     let new_live=Arc::new(AtomicBool::new(true));
     let mut routes=HashMap::new();
-    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:41,alive:Arc::clone(&old_live),send:old_tx,
     }));
     // This is already owned by the old original M4 prior to handoff.
     assert!(routes[&ip].send.try_send(make(41)).is_ok());
-    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:42,alive:Arc::clone(&new_live),send:new_tx,
     }));
     assert_eq!(routes.len(),1);
@@ -4979,7 +4992,7 @@ fn m0_plan028_old_exact_m4_stop_after_route_promotion_preserves_one_tun_owner(){
     assert!(new_live.load(Ordering::Acquire));
     let (late,_late_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     let stale=Arc::new(AtomicBool::new(true));
-    assert!(!shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
+    assert!(!shared_route_publish(&mut routes,ip,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:41,alive:Arc::clone(&stale),send:late,
     }));
     assert!(!stale.load(Ordering::Acquire));
@@ -5000,8 +5013,8 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
     assert!(a_tx.try_send(packet(0)).is_ok());
     let a=Arc::new(AtomicBool::new(true));
     let b=Arc::new(AtomicBool::new(true));
-    let ra=SharedTunRoute{flow_fair:false,generation:10,alive:Arc::clone(&a),send:a_tx};
-    let rb=SharedTunRoute{flow_fair:false,generation:20,alive:Arc::clone(&b),send:b_tx};
+    let ra=SharedTunRoute{tcp_wake:None,flow_fair:false,generation:10,alive:Arc::clone(&a),send:a_tx};
+    let rb=SharedTunRoute{tcp_wake:None,flow_fair:false,generation:20,alive:Arc::clone(&b),send:b_tx};
     let ka=[10,66,0,1];let kb=[10,66,0,2];
     let mut pending=HashMap::new();
     assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||packet(1)).backpressure,1);
@@ -5026,7 +5039,7 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
     assert_eq!(flush_shared_tun(&mut pending).retired,(SHARED_TUN_PENDING_PER_ROUTE-1) as u64);
     assert!(pending.is_empty());
     let (new_tx,new_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
-    let newer=SharedTunRoute{flow_fair:false,
+    let newer=SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:11,alive:Arc::new(AtomicBool::new(true)),send:new_tx,
     };
     assert_eq!(enqueue_shared_tun(&mut pending,ka,newer,1,||packet(101)).delivered,1);
@@ -5044,7 +5057,7 @@ fn m0_plan028_shared_tun_partial_backlog_eager_oldest_fifo_before_full(){
     });
     let (tx,rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     tx.try_send(packet(0)).unwrap();
-    let route=SharedTunRoute{flow_fair:false,generation:101,
+    let route=SharedTunRoute{tcp_wake:None,flow_fair:false,generation:101,
         alive:Arc::new(AtomicBool::new(true)),send:tx};
     let key=[10,66,0,101];let mut pending=HashMap::new();
     let first=enqueue_shared_tun(&mut pending,key,route.clone(),1,||packet(1));
@@ -5088,7 +5101,7 @@ fn m0_plan028_full_lease_opportunistic_oldest_drain_before_drop(){
     });
     let (tx,rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     tx.try_send(packet(0)).unwrap();
-    let route=SharedTunRoute{flow_fair:false,
+    let route=SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:20,alive:Arc::new(AtomicBool::new(true)),send:tx,
     };
     let key=[10,66,0,42];let mut pending=HashMap::new();
@@ -5136,10 +5149,10 @@ fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
     let (b_tx,b_rx)=mpsc::sync_channel::<OriginalTunIngress>(8);
     for n in 0..8{a_tx.try_send(packet(n)).unwrap();}
     let ka=[10,66,0,1];let kb=[10,66,0,2];
-    let ra=SharedTunRoute{flow_fair:false,
+    let ra=SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:10,alive:Arc::new(AtomicBool::new(true)),send:a_tx,
     };
-    let rb=SharedTunRoute{flow_fair:false,
+    let rb=SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:20,alive:Arc::new(AtomicBool::new(true)),send:b_tx,
     };
     let mut pending=HashMap::new();
@@ -5217,8 +5230,8 @@ fn m0_plan028_h1461_peak75_urgent_fifo_drain_without_larger_queue(){
     for i in 0..8{a_tx.try_send(packet(i)).unwrap();}
     let (ka,kb)=([10,66,0,2],[10,66,0,3]);
     let (ra,rb)=(
-        SharedTunRoute{flow_fair:false,generation:10,alive:a_live,send:a_tx},
-        SharedTunRoute{flow_fair:false,generation:20,alive:b_live,send:b_tx},
+        SharedTunRoute{tcp_wake:None,flow_fair:false,generation:10,alive:a_live,send:a_tx},
+        SharedTunRoute{tcp_wake:None,flow_fair:false,generation:20,alive:b_live,send:b_tx},
     );
     let mut pending=HashMap::new();
     for i in 8..16{
@@ -5275,8 +5288,8 @@ fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
     let (a_send,_a_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     let (b_send,b_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     assert!(a_send.try_send(packet(0,1)).is_ok());
-    let ra=SharedTunRoute{flow_fair:false,generation:10,alive:Arc::new(AtomicBool::new(true)),send:a_send};
-    let rb=SharedTunRoute{flow_fair:false,generation:20,alive:Arc::new(AtomicBool::new(true)),send:b_send};
+    let ra=SharedTunRoute{tcp_wake:None,flow_fair:false,generation:10,alive:Arc::new(AtomicBool::new(true)),send:a_send};
+    let rb=SharedTunRoute{tcp_wake:None,flow_fair:false,generation:20,alive:Arc::new(AtomicBool::new(true)),send:b_send};
     let ka=[10,66,0,1];let kb=[10,66,0,2];
     let mut pending=HashMap::new();
     let made=std::cell::Cell::new(0u64);
@@ -5313,7 +5326,7 @@ fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
     let (large_send,_large_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     assert!(large_send.try_send(packet(0,1)).is_ok());
     let large=[10,66,0,3];
-    let largeroute=SharedTunRoute{flow_fair:false,
+    let largeroute=SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:30,alive:Arc::new(AtomicBool::new(true)),send:large_send,
     };
     assert_eq!(enqueue_shared_tun(&mut pending,large,largeroute.clone(),40*1024,
@@ -5337,10 +5350,10 @@ fn m0_plan028_shared_tun_real_generation_scope_and_sibling_fence(){
     let ip_a=[10,66,0,154];
     let ip_b=[10,66,0,155];
     let mut routes=HashMap::<[u8;4],SharedTunRoute>::new();
-    shared_route_publish(&mut routes,ip_a,SharedTunRoute{flow_fair:false,
+    shared_route_publish(&mut routes,ip_a,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:10,alive:Arc::clone(&a),send:a_send,
     });
-    shared_route_publish(&mut routes,ip_b,SharedTunRoute{flow_fair:false,
+    shared_route_publish(&mut routes,ip_b,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:20,alive:Arc::clone(&b),send:b_send,
     });
     assert_eq!(routes.len(),2);
@@ -5348,7 +5361,7 @@ fn m0_plan028_shared_tun_real_generation_scope_and_sibling_fence(){
     // share one ingress channel or Rust generation.
     assert_eq!(routes[&ip_a].generation,10);
     assert_eq!(routes[&ip_b].generation,20);
-    shared_route_publish(&mut routes,ip_a,SharedTunRoute{flow_fair:false,
+    shared_route_publish(&mut routes,ip_a,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:11,alive:Arc::clone(&new),send:new_send,
     });
     assert!(a.load(Ordering::Acquire));
@@ -5372,7 +5385,7 @@ fn m0_plan028_client_shared_tun_default_generation_fence(){
     let a=Arc::new(AtomicBool::new(true));
     let b=Arc::new(AtomicBool::new(true));
     let default=[0u8;4];
-    shared_route_publish(&mut routes,default,SharedTunRoute{flow_fair:false,
+    shared_route_publish(&mut routes,default,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:1,alive:Arc::clone(&a),send:a_send,
     });
     for destination in [[10,66,0,1],[8,8,8,8],[192,168,1,200]]{
@@ -5380,7 +5393,7 @@ fn m0_plan028_client_shared_tun_default_generation_fence(){
             .expect("verified client default route");
         assert_eq!(selected.generation,1);
     }
-    shared_route_publish(&mut routes,default,SharedTunRoute{flow_fair:false,
+    shared_route_publish(&mut routes,default,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:2,alive:Arc::clone(&b),send:b_send,
     });
     assert!(a.load(Ordering::Acquire));
@@ -5406,14 +5419,14 @@ fn m0_plan028_game_groups_share_one_tun_lease_routes_and_exact_stop(){
     let a1=Arc::new(AtomicBool::new(true));
     let b1=Arc::new(AtomicBool::new(true));
     let a2=Arc::new(AtomicBool::new(true));
-    shared_route_publish(&mut routes,a,SharedTunRoute{flow_fair:false,
+    shared_route_publish(&mut routes,a,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:10,alive:Arc::clone(&a1),send:a1tx,
     });
-    shared_route_publish(&mut routes,b,SharedTunRoute{flow_fair:false,
+    shared_route_publish(&mut routes,b,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:20,alive:Arc::clone(&b1),send:btx,
     });
     assert_eq!(routes.len(),2);
-    shared_route_publish(&mut routes,a,SharedTunRoute{flow_fair:false,
+    shared_route_publish(&mut routes,a,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:30,alive:Arc::clone(&a2),send:a2tx,
     });
     assert!(a1.load(Ordering::Acquire));
@@ -5426,7 +5439,7 @@ fn m0_plan028_game_groups_share_one_tun_lease_routes_and_exact_stop(){
     // A late old group cannot overtake the protected newer lease owner.
     let (late_tx,_late_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     let late=Arc::new(AtomicBool::new(true));
-    assert!(!shared_route_publish(&mut routes,a,SharedTunRoute{flow_fair:false,
+    assert!(!shared_route_publish(&mut routes,a,SharedTunRoute{tcp_wake:None,flow_fair:false,
         generation:10,alive:Arc::clone(&late),send:late_tx,
     }));
     assert!(!late.load(Ordering::Acquire));
@@ -5443,6 +5456,7 @@ fn retire_shared_tun_session(session:&SharedTunSession){
     // Revoke source before any owner/driver joining. A late old generation
     // cannot remove the replacement mapping (exact generation + Arc fence).
     session.alive.store(false,Ordering::Release);
+    if let Some(w)=&session.tcp_wake{w.signal()}
     if let Ok(router)=shared_tun_reader(session.router){
         if let Ok(mut routes)=router.routes.lock(){
             shared_route_retire(&mut routes,session.ip,
@@ -5470,7 +5484,7 @@ fn h2372_shared_tun_flow_fair_full_only_preserves_fifo_and_equal_share(){
     }
     let (send,_recv)=mpsc::sync_channel::<OriginalTunIngress>(0);
     let (recycle,_buffers)=mpsc::sync_channel::<Vec<u8>>(16);
-    let route=SharedTunRoute{flow_fair:false,generation:1,alive:Arc::new(AtomicBool::new(true)),send};
+    let route=SharedTunRoute{tcp_wake:None,flow_fair:false,generation:1,alive:Arc::new(AtomicBool::new(true)),send};
     let key=[10,0,0,2];let mut pending=HashMap::new();
     for i in 0..8{
         let ip=datagram(1000+u16::from(i/2),6,i);
@@ -5702,7 +5716,7 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     e.shared_tun=Some(SharedTunSession{
         router:router_handle,generation:e.generation,ip,
         alive:Arc::new(AtomicBool::new(true)),
-        sender,receiver:Some(receiver),publish_pending:false,
+        sender,receiver:Some(receiver),tcp_wake:None,publish_pending:false,
     });
     // Cold bind itself is not active authority. The exact native loop's
     // successful startup publishes this mapping atomically. Server uses
@@ -6027,6 +6041,7 @@ fn background_raw_once(
     authenticated_client_ip:Option<[u8;4]>,
     raw:&ScopedRawIpv4Rx,tun:&ScopedTunSink,stop:&AtomicBool,
     rx_pending:&mut Vec<crate::memory::UniqueBuffer>,
+    mut native_tcp:Option<&mut dyn FnMut(&[u8])->bool>,
     mature:&Arc<Mutex<NormalFirstSendM2>>,
     #[cfg(feature="fec2_product_record")]
     fec_stats:&LoopCounts,
@@ -6154,7 +6169,8 @@ fn background_raw_once(
         // Exactly one actual M3 opener and unique replay PN bitmap.
         let when=loop_now();
         let receipt=owner.consume_original(
-            slab,len,tun,when,authenticated_client_ip);
+            slab,len,tun,when,authenticated_client_ip,
+            native_tcp.as_mut().map(|f| &mut **f as &mut dyn FnMut(&[u8])->bool));
         // Do not let a replay-unique, AEAD-valid but retired WBC4
         // Receipt share a frame with Health/Quality and then update
         // authenticated activity, window grades or outer ACK shadows.
@@ -6218,7 +6234,7 @@ fn background_raw_once(
                 peer_retire_at=peer_retire_at.max(when.0);
             }
         }
-        pending_valid |=receipt.pending>0;
+        pending_valid |=receipt.pending>0 || receipt.native_tcp_admitted>0;
         invalid_seen |=receipt.invalid>0 || receipt.failed>0;
         // The one unique authenticated M3 opener is the ONLY input to
         // first-delivery M2 feedback. Raw tuple/seq, FEC parity guess or
@@ -8017,6 +8033,21 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         e.raw_tx=Some(Arc::new(tx));
     }
     if e.raw_tx_lease_mtu==0{return BAD_STAGE}
+    // Explicit paired Normal/off research entry, with the existing shared TUN.
+    let dual_tcp=std::env::var("WBD_M0_DUAL_RUST_TCP").ok().as_deref()==Some("1");
+    let (mut native_tcp_owner,native_tcp_rx)=if dual_tcp{
+        #[cfg(feature="fec2_product_record")]
+        if e.fixed_pending.is_some()||e.fixed_applied.is_some()||e.auto_low_rate_mode{return BAD_STAGE}
+        let destination=Ipv4Addr::from(if e.server_side{e.flow.client_ip}else{e.flow.server_ip});
+        let Ok(budget)=e.owner.observe_linux_normal_off_route_budget(&ifname,ifindex,destination)else{return INVALID};
+        let Ok(mtu)=u16::try_from(budget.frame.single_business_payload_mtu)else{return INVALID};
+        let Ok(wake)=NativeTcpWake::new()else{return INVALID};
+        let Ok(owner)=NativeTcpOwner::new(e.server_side,mtu,mtu,Arc::clone(&wake))else{return INVALID};
+        eprintln!("WBD_DUAL_RUST_TCP_OWNER_START generation={} server={} mtu={}",e.generation,e.server_side,mtu);
+        let Some(sh)=e.shared_tun.as_mut()else{return BAD_STAGE};
+        sh.tcp_wake=Some(Arc::clone(&wake));
+        (Some(owner),Some((sh.sender.clone(),wake)))
+    }else{(None,None)};
     // Build the independent RX arena and move the exact protected opener
     // only after both original raw/TUN devices have been installed. Never
     // allocate a second crypto instance or credential authority.
@@ -8204,6 +8235,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             #[cfg(feature="fec2_product_record")]
             let mut rx_prev_loop_start=Instant::now();
             let mut rx_pending=Vec::<crate::memory::UniqueBuffer>::with_capacity(32);
+            let mut native_tcp_input=|bytes:&[u8]|->bool{
+                let Some((sender,wake))=&native_tcp_rx else{return false};
+                if sender.try_send(OriginalTunIngress::MiddleTcp(bytes.to_vec())).is_ok(){wake.signal();true}else{false}
+            };
             #[cfg(feature="fec2_product_record")]
             let mut rx_presentation_ack=OriginalPresentationAck::new(rx_anchor);
             #[cfg(feature="fec2_product_record")]
@@ -8265,7 +8300,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     &mut original_rx,&mut rx_arena,&mut rx_anchor,
                     rx_flow,generation,rx_server_side,rx_peer_persona,
                     rx_assigned_ip,&raw_for_rx,&tun_for_rx,
-                    &stop_rx,&mut rx_pending,&mature,
+                    &stop_rx,&mut rx_pending,
+                    if native_tcp_rx.is_some(){Some(&mut native_tcp_input)}else{None},&mature,
                     #[cfg(feature="fec2_product_record")]
                     &stats_rx,
                     #[cfg(feature="fec2_product_record")]
@@ -8410,6 +8446,15 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut active_jumbo=None::<PendingOriginalJumbo>;
             let mut deferred_shared=None::<SharedTunPacket>;
             let mut wakeup_shared=None::<OriginalTunIngress>;
+            let mut tcp_out=VecDeque::<Vec<u8>>::new();
+            // Actual local TCP replies use the existing generation TUN writer;
+            // middle segments use the original M1 slab / M3 / RAW sender.
+            let mut publish_tcp=|out:NativeTcpOutput,pending:&mut VecDeque<Vec<u8>>|{
+                for frame in out.local{
+                    if tun.write_authenticated_ipv4(generation,&frame).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                }
+                pending.extend(out.tunnel);
+            };
             while !stop_tx.load(Ordering::Acquire){
                 #[cfg(feature="fec2_product_record")]
                 if egress_diag && last_egress_diag.elapsed()>=Duration::from_millis(500){
@@ -8445,21 +8490,56 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             reasons,next_due,diag_turn_err,chain);
                     }
                 }
+                if let Some(owner)=native_tcp_owner.as_mut(){
+                    if tcp_out.is_empty(){
+                        match owner.service(Duration::ZERO){
+                            Ok(out)=>publish_tcp(out,&mut tcp_out),
+                            Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break}
+                        }
+                    }
+                }
+                let mut tcp_input_exhausted=false;
                 if split_ingress {
                     // The per-client TX remains the SOLE consumer of its
                     // source ingress; shared packets take original M1 loans.
-                    for _ in 0..32 {
+                    for turn in 0..32 {
                         if tx_pending.len()+jumbo_queue.len()>=32 ||
                             jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
+                        if let Some(frame)=tcp_out.front(){
+                            let loan={let Ok(mut e)=tx_cell.lock()else{break};
+                                if e.phase!=PH_ACTIVE{break}
+                                #[cfg(feature="fec2_product_record")]
+                                let floor=if e.rx_feedback.is_some() && e.fixed_pending.is_none()&&e.fixed_applied.is_none(){M0_NORMAL_FEEDBACK_SLAB_RESERVE}else{0};
+                                #[cfg(not(feature="fec2_product_record"))]
+                                let floor=0;
+                                e.arena.allocate_preserving(floor)};
+                            let Ok(mut slab)=loan else{break};
+                            let n=frame.len();
+                            if n>M0_SMALL_ARENA_PAYLOAD{jumbo_queue.push_back(tcp_out.pop_front().unwrap());continue}
+                            slab.writable()[14..14+n].copy_from_slice(frame);
+                            tcp_out.pop_front();tx_pending.push((slab,n));continue
+                        }
                         let next=if let Some(buf)=deferred_shared.take(){
                             Ok(OriginalTunIngress::Shared(buf))
                         }else if let Some(packet)=wakeup_shared.take(){
                             Ok(packet)
                         }else{ingress_recv.try_recv()};
+                        if turn==31&&next.is_ok()&&native_tcp_owner.is_some(){tcp_input_exhausted=true;}
                         match next{
                             Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n)),
                             Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),
+                            Ok(OriginalTunIngress::MiddleTcp(frame))=>{
+                                let Some(owner)=native_tcp_owner.as_mut()else{continue};
+                                match owner.middle(&frame){Ok(out)=>publish_tcp(out,&mut tcp_out),Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
+                            },
                             Ok(OriginalTunIngress::Shared(buf))=>{
+                                if let Some(owner)=native_tcp_owner.as_mut(){
+                                    match owner.local(buf.as_slice()){
+                                        Ok(Some(out))=>{publish_tcp(out,&mut tcp_out);continue},
+                                        Ok(None)=>{},
+                                        Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);continue}
+                                    }
+                                }
                                 if buf.len()>M0_SMALL_ARENA_PAYLOAD{
                                     jumbo_queue.push_back(buf.into_vec());
                                 }else{
@@ -8615,7 +8695,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     // Split-ingress mode must NOT poll the same owned fd:
                     // allow the separate reader to make progress without
                     // spinning on an empty bounded queue and starving CPU.
-                    if split_ingress{
+                    if let Some(owner)=native_tcp_owner.as_mut(){
+                        // A full actual input turn may leave queued items after
+                        // the coalesced eventfd was consumed. Drain them before sleep.
+                        if tcp_input_exhausted{continue}
+                        if !tcp_out.is_empty()||deferred_shared.is_some(){thread::sleep(Duration::from_millis(1));continue}
+                        let wait=wait_ns.clamp(1,10_000_000);
+                        match owner.service(Duration::from_nanos(wait)){
+                            Ok(out)=>publish_tcp(out,&mut tcp_out),
+                            Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break}
+                        }
+                    }else if split_ingress{
                         if deferred_shared.is_some(){
                             thread::sleep(Duration::from_millis(1));
                         }else{
@@ -8738,6 +8828,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             }
             active_jumbo.take();
             jumbo_queue.clear();
+            if native_tcp_owner.take().is_some(){eprintln!("WBD_DUAL_RUST_TCP_OWNER_STOP generation={} flows_and_sockets_dropped=1",generation);}
             #[cfg(feature="fec2_product_record")]
             if raw_socket_diag_enabled{
                 let final_buffer=raw_socket_diag.diagnostic_tx_socket()
@@ -8848,7 +8939,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
             if router.stop.load(Ordering::Acquire){return BAD_STAGE}
             let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
-            let new=SharedTunRoute{flow_fair,
+            let new=SharedTunRoute{tcp_wake:sh.tcp_wake.clone(),flow_fair,
                 generation:sh.generation,alive:Arc::clone(&sh.alive),
                 send:sh.sender.clone(),
             };
@@ -8923,7 +9014,7 @@ pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u
             r.alive.load(Ordering::Acquire)
         ){OK}else{BAD_STAGE}
     }
-    let candidate=SharedTunRoute{flow_fair,
+    let candidate=SharedTunRoute{tcp_wake:sh.tcp_wake.clone(),flow_fair,
         generation:sh.generation,alive:Arc::clone(&sh.alive),
         send:sh.sender.clone(),
     };
@@ -8963,7 +9054,7 @@ pub extern "C" fn wbd_m0_embedded_go_server_shared_tun_promote_after_rx(handle:u
             r.alive.load(Ordering::Acquire)
         ){OK}else{BAD_STAGE}
     }
-    let next=SharedTunRoute{flow_fair:true,
+    let next=SharedTunRoute{tcp_wake:sh.tcp_wake.clone(),flow_fair:true,
         generation:sh.generation,alive:Arc::clone(&sh.alive),
         send:sh.sender.clone(),
     };
