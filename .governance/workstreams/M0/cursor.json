@@ -4,25 +4,21 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2447,
-  "checkpoint_sha": "d0a2ae156df64048f6a12081eb8c30d99df2f6a4",
-  "progress": "partial",
-  "task_id": "M0-LINUX-TCP-SPLICE",
-  "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
-  "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
-  "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "核H2447 run45626186830 NAT/BBR首包capture和Apply前后路由，及旧main45626207572/当前45626212250原夹具。确定版本回归或拓扑问题，再最小修复，真实应用/Stop通过前不验收。",
+  "sequence": 2448,
+  "checkpoint_sha": "c9b8d31b85e79d6fb6ff22fb260ae72d04eea6b2",
+  "progress": "planned",
+  "task_id": "M0-DUAL-RUST-TCP",
+  "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
+  "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
+  "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
+  "next_action": "在登记分支核实际HEAD与最新相关源码/Actions，复用固定pktkit vtcp，接完整Linux Normal双端原生TUN到origin真实业务路径；x86_64/ARM64原生功能、UDP及Stop，保留旧splice作性能对照。首实质WIP推送后开同一Draft PR。",
   "unverified": true,
-  "last_tested_source": "9a93bdcdfabeff2fd3c123063774a24cc51926b7",
-  "evidence_refs": [
-    "docs/evidence/M0/20261125-H2446-WINDOWS-NATIVE-FIRST-PACKET-REVIEW.json",
-    "docs/evidence/M0/20261125-H2445-WINDOWS-NATIVE-SMOKE-BLOCKED.json",
-    "docs/evidence/M0/20261125-H2444-DIRECT-TCP-ROUTE-OWNERSHIP.json"
-  ],
+  "last_tested_source": null,
+  "evidence_refs": [],
   "context_refs": [
-    "docs/requests/M0/h2447-windows-native-regression.md",
-    "docs/decisions/M0-TCP-SPLICE-INTEGRATION-H2438.md"
+    "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-REGISTRATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2445最终Win TX958/RX0，server WAN总delta39包5583B；H2399真实PASS；main产品与施工前一致，源码差异集中。H2447三runner NAT/BBR与原夹具新旧对照均已启动，无修复结论。"
+  "partial_summary": "新任务已在main登记并从精确26b11e2创建experiment/m0-dual-rust-tcp。旧main H2447记录滞后，原分支H2480无有效TSO/GSO干预；历史原样保留。新任务仅规划与分支，未修改产品、未运行新功能或性能测试。"
 }
