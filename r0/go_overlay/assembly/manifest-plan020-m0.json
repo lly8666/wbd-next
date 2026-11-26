@@ -1444,7 +1444,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "f296543ed86bb85175e6ce71896d2b553102a0be"
+      "result_blob": "1576942f32d07ddf9d59ab7cdbdd854acbc66043"
     },
     {
       "kind": "create",
@@ -1624,7 +1624,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
-      "result_blob": "01a6dec4b1697fe2a440b5e382931c62c4f7c539"
+      "result_blob": "66f731379627eb9ecdf18c8cc0c910c0366abc7b"
     },
     {
       "kind": "create",
@@ -2132,6 +2132,12 @@
           "replace": "wintunRingCapacity = 0x800000"
         }
       ]
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/xdp_native_windows.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/xdp_native_windows.go",
+      "result_blob": "c01b406a6a50e7aec59b269ef46927f7f22e1bb3"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

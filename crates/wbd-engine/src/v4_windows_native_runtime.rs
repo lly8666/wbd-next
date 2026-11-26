@@ -1838,6 +1838,9 @@ fn stage_sources(
      };
      #[cfg(not(feature="winxdp_native_trial"))]
      if capture.event().is_err(){return BAD_STAGE}
+     // Distinguish opaque XDP handles from the old pcap_t ABI before borrowing.
+     #[cfg(feature="winxdp_native_trial")]
+     if config.npcap != [0;6]{return INVALID}
      #[cfg(feature="winxdp_native_trial")]
      let capture=match unsafe{NativeRx::from_cold(config.rx_capture)}{
          Ok(v)=>v,Err(_)=>return INVALID

@@ -775,8 +775,21 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   o.SourcePort=coldSourcePort
   return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,selected.ifindex,open,planForGame,pathChanged,applied)
  }
- endpoint,err:=faketcp.OpenNpcapEndpoint(ncfg)
- if err!=nil{return err}
+ // Select once by the exact native DLL's cold capability; no live fallback.
+ goSteadyAB:=o.Mode==m0WinModeNormal&&os.Getenv("GITHUB_ACTIONS")=="true"&&
+  os.Getenv("WBD_WL_PERF_AB_GO_STEADY")=="1"
+ var endpoint m0NormalColdEndpoint
+ var legacyEndpoint *faketcp.NpcapEndpoint
+ if !goSteadyAB{
+  xdp,available,openErr:=faketcp.OpenXdpEndpoint(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),underlay.InterfaceIndex,ncfg)
+  if openErr!=nil{return openErr}
+  if available{endpoint=xdp}
+ }
+ if endpoint==nil{
+  legacyEndpoint,err=faketcp.OpenNpcapEndpoint(ncfg)
+  if err!=nil{return err}
+  endpoint=legacyEndpoint
+ }
  defer endpoint.Close()
  flow:=faketcp.ClientFlow{
   LocalIP:underlay.Source4.As4(),PeerIP:o.ServerIP.As4(),
@@ -1048,10 +1061,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  var tcpSynthetic netip.Addr
  var tcpDNSOnly bool
  // Only explicit CI measurement chooses the retained original Go packet pump.
- // The product default remains the Rust-only Wintun/Npcap NativeOwner; the
- // override does not change original credential TLS, OS WAL or session scope.
- goSteadyAB:=o.Mode==m0WinModeNormal&&os.Getenv("GITHUB_ACTIONS")=="true"&&
-  os.Getenv("WBD_WL_PERF_AB_GO_STEADY")=="1"
+ // The steady product remains the same Rust owner in both carrier builds.
  if goSteadyAB{fmt.Println("WL_PERF_V2_AB_PATH_GO_STEADY_SOURCE_LOCKED")}
  if !goSteadyAB{
   initial:=realityfront.FecV2Maximum
@@ -1094,7 +1104,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  }else{
   // Explicit source-locked A/B only. Never a product Fixed/Auto fallback.
   legacy,legacyErr:=newM0NativeV4PeerForMode(
-   owner,endpoint,flow,nativeFrames,m0WinModeNormal)
+   owner,legacyEndpoint,flow,nativeFrames,m0WinModeNormal)
   if legacyErr!=nil{return legacyErr}
   transport=legacy
  }
