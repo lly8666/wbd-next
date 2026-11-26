@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "8a6439bd0ec7b807957f35c978729cc86986e1f2",
+  "result": "PASS",
+  "scope": "Scoped Normal/off native product functionality on Linux x86_64 and aarch64; no performance promotion.",
+  "run_id": 45821912474,
+  "attempt": 1,
+  "artifact_verified": "Downloaded both functional ZIPs; independently calculated digests and inspected actual summary and client/server TCP wire tallies. Frozen binaries SHA256 verified in producing job; performance consumers recheck manifests and binary hashes.",
+  "jobs": [
+    {
+      "isa": "aarch64",
+      "job_id": 139916050131,
+      "artifact_id": 15118208253,
+      "sha256": "bdf1a970c3d24cb629b4d356430bbc3fc0730b2078b1f8cf26c141434410b441",
+      "build_artifact_id": 15118681030,
+      "client_local_ack_only": 2153,
+      "client_middle_ack_only": 3084,
+      "client_middle_data_in": 8727
+    },
+    {
+      "isa": "x86_64",
+      "job_id": 139916050589,
+      "artifact_id": 15118576950,
+      "sha256": "4bbd3e7bccd64b33ff29c4d0d6720c0ef2caa05a620a6da692e169b964fceeaa",
+      "build_artifact_id": 15118632036,
+      "client_local_ack_only": 4103,
+      "client_middle_ack_only": 3066,
+      "client_middle_data_in": 8730
+    }
+  ],
+  "each": {
+    "upload_bytes": 4194304,
+    "download_bytes": 11534336,
+    "concurrent_connections": 8,
+    "halfclose": true,
+    "udp": true,
+    "server_exit": 0,
+    "client_exit": 0
+  },
+  "qualification": "Exact application bytes/hash and joined Stop. Mixed duplex/concurrent functional fixture wire counts are not single-flow performance comparison; local vs middle count differences not attributed across runners.",
+  "in_flight": {
+    "clean_abba": 45821912542,
+    "old_arm_build_artifact_id": 15117998615,
+    "arm_1pct": 45822382519,
+    "arm_5pct": 45822382479,
+    "harness_source": "d3403e4d6f548871ab83578263f6c233a5c5cd75"
+  },
+  "decision": "ACK3 restores middle BBRv3, only steady cumulative ACK threshold changes, local OS-facing CUBIC/default unchanged. No performance PASS until same-VM clean and same-triple loss receipts and direct paths reviewed."
+}
