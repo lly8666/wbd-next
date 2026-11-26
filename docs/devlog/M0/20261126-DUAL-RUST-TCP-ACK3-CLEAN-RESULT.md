@@ -1,0 +1,5 @@
+# ACK3 clean ABBA accepted as scoped improvement; weak-network diagnostic in flight
+
+docs/evidence/M0/20261126-DUAL-RUST-TCP-ACK3-CLEAN-RESULT.json
+
+Original Rust BBRv3 -> ACK3: 570.51 -> 570.04 Mbps, client 16.52 -> 15.28 CPU-s/GiB, server 14.29 -> 13.09, host 34.84 -> 32.32. Old splice -> ACK3: 570.45 -> 569.95, client 12.91 -> 15.64, host 31.63 -> 33.50. Raw ZIP digest verified; four candidate client wire tallies ~0.8M local ACK, ~0.5M middle ACK, all local DATA PSH. No production promotion because previous ARM weak network failed. User requested probes: 82e6acf2f781f76576021df219279c98af557ae1 adds one-second owner-turn sampling of TcpInfo, BBR model, OOO storage, six ACK cause counts, deadlines, origin readiness. Same binary cold experiment-only ACK2/ACK3 selection, no additional wake. 08106fea43f706ac98e9ad4014153600b7f73391 fixture reuses one ARM triple for 400ms 0/1/5% loss ABBA, MTU1160 and all other original conditions, live socket/relay snapshots. Native run45824808606 and ARM run45825056378 started, diagnostic result unverified. Keep old splice. No duplicate old weak-network tests.

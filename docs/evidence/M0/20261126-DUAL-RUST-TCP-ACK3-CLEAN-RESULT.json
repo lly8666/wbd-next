@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "run_id": 45823880796,
+  "artifact_id": 15118504991,
+  "artifact_sha256": "5e2f57af863635b03bb951e933220ab7bc46fe5b7cbb1c8ce167142b93453bea",
+  "artifact_review": "Downloaded ZIP, computed sha256, read both summaries and four candidate client wire receipts.",
+  "candidate_source": "8a6439bd0ec7b807957f35c978729cc86986e1f2",
+  "harness_source": "8a0f887bb3d6b229ea6749b182bfc1d907773804",
+  "scope": "Same VM two separate ABBA blocks, x86_64, 25s single-stream clean reverse, 1460 outer MTU, capped ~570Mbps; actual bytes and joined Stop, no physical or weak network qualification.",
+  "blocks": [
+    {
+      "comparison": "old Linux kernel splice vs ACK3",
+      "baseline_source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+      "mbps_abba": [
+        570.405699,
+        567.300977,
+        572.589731,
+        570.49191
+      ],
+      "mean": {
+        "A": {
+          "mbps": 570.448805,
+          "client_cpu_s_per_gib": 12.90745,
+          "server_cpu_s_per_gib": 14.681273,
+          "host_cpu_s_per_gib": 31.633252
+        },
+        "B": {
+          "mbps": 569.945354,
+          "client_cpu_s_per_gib": 15.640405,
+          "server_cpu_s_per_gib": 13.485497,
+          "host_cpu_s_per_gib": 33.50068
+        }
+      },
+      "candidate_client_wire": [
+        {
+          "local_ack": 811006,
+          "middle_ack": 503676,
+          "middle_data_in": 1386594,
+          "local_data_out": 1386543,
+          "local_psh": 1386543
+        },
+        {
+          "local_ack": 799210,
+          "middle_ack": 508428,
+          "middle_data_in": 1398053,
+          "local_data_out": 1398032,
+          "local_psh": 1398032
+        }
+      ]
+    },
+    {
+      "comparison": "original Rust BBRv3 vs ACK3",
+      "baseline_source": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
+      "mbps_abba": [
+        570.535312,
+        569.49344,
+        570.590081,
+        570.486981
+      ],
+      "mean": {
+        "A": {
+          "mbps": 570.511147,
+          "client_cpu_s_per_gib": 16.522512,
+          "server_cpu_s_per_gib": 14.288196,
+          "host_cpu_s_per_gib": 34.839701
+        },
+        "B": {
+          "mbps": 570.04176,
+          "client_cpu_s_per_gib": 15.276825,
+          "server_cpu_s_per_gib": 13.094885,
+          "host_cpu_s_per_gib": 32.31675
+        }
+      },
+      "candidate_client_wire": [
+        {
+          "local_ack": 820871,
+          "middle_ack": 507667,
+          "middle_data_in": 1396626,
+          "local_data_out": 1396577,
+          "local_psh": 1396577
+        },
+        {
+          "local_ack": 811950,
+          "middle_ack": 495989,
+          "middle_data_in": 1386652,
+          "local_data_out": 1386604,
+          "local_psh": 1386604
+        }
+      ]
+    }
+  ],
+  "decision": "Clean capped throughput parity; original Rust vs candidate CPU/GiB falls 7.24% host, 7.54% client, 8.35% server. Old splice still lower client and host CPU/GiB. Weak-network failure remains dominant; no promotion. Candidate all local data PSH and ~0.8M local pure ACK, middle ~0.5M pure ACK; no old baseline exact ACK-only classification. No attribution of weak collapse to ACK3 until matched policy comparison.",
+  "next": {
+    "diagnostic_source": "82e6acf2f781f76576021df219279c98af557ae1",
+    "harness_source": "08106fea43f706ac98e9ad4014153600b7f73391",
+    "native_function_run": 45824808606,
+    "arm_diagnostic_run": 45825056378,
+    "scope": "One ARM triple 0/1/5% loss each ABBA same instrumented BBRv3 binary, ACK2 vs ACK3 cold fixture selection. One-second existing owner turns and live endpoint/relay snapshots. No new wake. Diagnostic ACK2 reconstruction not old frozen binary; probe overhead not production CPU claim."
+  }
+}
