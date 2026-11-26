@@ -1,0 +1,1390 @@
+{
+  "run": 45787098527,
+  "source": "793c7e1454903b49ce26df04f5f7f2b985f6ce37",
+  "qualification": "FUNCTIONAL_PASS 14/14; RSC switch intervention verified but effect negative; all clean_candidate false; actual RSC counters unavailable; not product performance PASS",
+  "cpu_gate": {
+    "matched": [
+      "H",
+      "I"
+    ],
+    "skipped": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G"
+    ]
+  },
+  "groups": [
+    {
+      "replica": "H",
+      "job": 139796525485,
+      "rows": [
+        {
+          "case": -11,
+          "rate": 250,
+          "rx_mbps": 236.5101368888889,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1714926920,
+          "sink_bytes": 1714926920,
+          "mss": 1460,
+          "steady_ss_before": {
+            "mss": 1460,
+            "segs_in": 7732,
+            "segs_out": 133705,
+            "bytes_retrans": 0,
+            "cwnd": 17260,
+            "bytes_acked": 182710240,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1460,
+            "segs_in": 53297,
+            "segs_out": 1045037,
+            "bytes_retrans": 0,
+            "cwnd": 17256,
+            "bytes_acked": 1513225760,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.04999824432808241,
+          "active_business_ss": {
+            "mss": 1460,
+            "segs_in": 22809,
+            "segs_out": 435269,
+            "bytes_retrans": 0,
+            "cwnd": 17274,
+            "bytes_acked": 622993680,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 3087,
+            "advance": 3086,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 2.8834149837493896,
+            "kernel_drops": 0,
+            "interface": "eth0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true
+        },
+        {
+          "case": -12,
+          "rate": 250,
+          "rx_mbps": 236.5152792888889,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1709146679,
+          "sink_bytes": 1709146679,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 7537,
+            "segs_out": 180926,
+            "bytes_retrans": 0,
+            "cwnd": 24026,
+            "bytes_acked": 177256873,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 51373,
+            "segs_out": 1448745,
+            "bytes_retrans": 0,
+            "cwnd": 23990,
+            "bytes_acked": 1507229425,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.03457591343874796,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 22027,
+            "segs_out": 600324,
+            "bytes_retrans": 0,
+            "cwnd": 24010,
+            "bytes_acked": 617205375,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 2557,
+            "advance": 2556,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 2.4877169132232666,
+            "kernel_drops": 0,
+            "interface": "eth0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true
+        },
+        {
+          "case": -13,
+          "rate": 250,
+          "rx_mbps": 236.50446293333334,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1708884535,
+          "sink_bytes": 1708884535,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 7558,
+            "segs_out": 180851,
+            "bytes_retrans": 0,
+            "cwnd": 24012,
+            "bytes_acked": 177208619,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 51427,
+            "segs_out": 1449598,
+            "bytes_retrans": 0,
+            "cwnd": 24050,
+            "bytes_acked": 1508124222,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.03457663348169493,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 22088,
+            "segs_out": 600478,
+            "bytes_retrans": 0,
+            "cwnd": 24020,
+            "bytes_acked": 617427763,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 2174,
+            "advance": 2173,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 2.8816940784454346,
+            "kernel_drops": 0,
+            "interface": "eth0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Disabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": false
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 5,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true
+        },
+        {
+          "case": -14,
+          "rate": 250,
+          "rx_mbps": 236.70736284444445,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1709146679,
+          "sink_bytes": 1709146679,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 7510,
+            "segs_out": 180616,
+            "bytes_retrans": 0,
+            "cwnd": 24012,
+            "bytes_acked": 176962104,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 51413,
+            "segs_out": 1449987,
+            "bytes_retrans": 0,
+            "cwnd": 24008,
+            "bytes_acked": 1508532283,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.03458642114874217,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 22034,
+            "segs_out": 600521,
+            "bytes_retrans": 0,
+            "cwnd": 24018,
+            "bytes_acked": 617442449,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 2962,
+            "advance": 2961,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 2.8824141025543213,
+            "kernel_drops": 0,
+            "interface": "eth0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true
+        },
+        {
+          "case": 0,
+          "rate": 250,
+          "rx_mbps": 237.33937368888888,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1734967344,
+          "sink_bytes": 1734967344,
+          "client_stop": true,
+          "server_stop": true,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 84697,
+            "segs_out": 180973,
+            "bytes_retrans": 0,
+            "cwnd": 24590,
+            "bytes_acked": 177672174,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 721078,
+            "segs_out": 1454052,
+            "bytes_retrans": 0,
+            "cwnd": 24364,
+            "bytes_acked": 1512796365,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.4998754986925399,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 293716,
+            "segs_out": 599389,
+            "bytes_retrans": 0,
+            "cwnd": 24332,
+            "bytes_acked": 616194036,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 6000,
+            "advance": 5999,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 0.39302897453308105,
+            "kernel_drops": 0,
+            "interface": "wbds0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8002:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true,
+          "worker_cpu": {
+            "tx": {
+              "coverage": 44,
+              "core_equiv": 0.245819293292655,
+              "kernel_core": 0.1953036063931514
+            },
+            "rx": {
+              "coverage": 44,
+              "core_equiv": 0.13340410272756242,
+              "kernel_core": 0.06296673648740946
+            }
+          }
+        },
+        {
+          "case": 1,
+          "rate": 650,
+          "rx_mbps": 243.97934968888887,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1876641056,
+          "sink_bytes": 1876641056,
+          "client_stop": true,
+          "server_stop": true,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 172038,
+            "segs_out": 282426,
+            "bytes_retrans": 37939183,
+            "cwnd": 51436,
+            "bytes_acked": 233976200,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 1200685,
+            "segs_out": 1732235,
+            "bytes_retrans": 171815710,
+            "cwnd": 26827,
+            "bytes_acked": 1611058513,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.709505183096532,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 651016,
+            "segs_out": 859764,
+            "bytes_retrans": 111561150,
+            "cwnd": 47252,
+            "bytes_acked": 728868653,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 6000,
+            "advance": 0,
+            "equal": 5999,
+            "older": 0,
+            "sack": 6000,
+            "payload_nonzero": 0,
+            "span_s": 0.198760986328125,
+            "kernel_drops": 0,
+            "interface": "wbds0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 1,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8003:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true,
+          "worker_cpu": {
+            "tx": {
+              "coverage": 44,
+              "core_equiv": 0.32860035391002557,
+              "kernel_core": 0.2694026633998052
+            },
+            "rx": {
+              "coverage": 44,
+              "core_equiv": 0.1378916263980582,
+              "kernel_core": 0.06451484834047967
+            }
+          }
+        },
+        {
+          "case": -15,
+          "rate": 650,
+          "rx_mbps": 603.2119247999999,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 4261118519,
+          "sink_bytes": 4261118519,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 8828,
+            "segs_out": 426877,
+            "bytes_retrans": 0,
+            "cwnd": 62376,
+            "bytes_acked": 415300149,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 63739,
+            "segs_out": 3666524,
+            "bytes_retrans": 0,
+            "cwnd": 62350,
+            "bytes_acked": 3813813634,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.01694968618494546,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 27326,
+            "segs_out": 1518440,
+            "bytes_retrans": 0,
+            "cwnd": 62364,
+            "bytes_acked": 1560349736,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 3606,
+            "advance": 3605,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 2.7481231689453125,
+            "kernel_drops": 0,
+            "interface": "eth0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true
+        }
+      ]
+    },
+    {
+      "replica": "I",
+      "job": 139796525466,
+      "rows": [
+        {
+          "case": -11,
+          "rate": 250,
+          "rx_mbps": 240.8644408888889,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1739568456,
+          "sink_bytes": 1739568456,
+          "mss": 1460,
+          "steady_ss_before": {
+            "mss": 1460,
+            "segs_in": 7719,
+            "segs_out": 133455,
+            "bytes_retrans": 0,
+            "cwnd": 17256,
+            "bytes_acked": 182345240,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1460,
+            "segs_in": 54144,
+            "segs_out": 1061943,
+            "bytes_retrans": 0,
+            "cwnd": 17262,
+            "bytes_acked": 1537937720,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.05000064621190581,
+          "active_business_ss": {
+            "mss": 1460,
+            "segs_in": 22804,
+            "segs_out": 435159,
+            "bytes_retrans": 0,
+            "cwnd": 17240,
+            "bytes_acked": 622803880,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 3074,
+            "advance": 3073,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 2.8711259365081787,
+            "kernel_drops": 0,
+            "interface": "eth0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true
+        },
+        {
+          "case": -12,
+          "rate": 250,
+          "rx_mbps": 241.29629493333334,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1734050359,
+          "sink_bytes": 1734050359,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 7523,
+            "segs_out": 180020,
+            "bytes_retrans": 0,
+            "cwnd": 24006,
+            "bytes_acked": 176336900,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 52227,
+            "segs_out": 1473998,
+            "bytes_retrans": 0,
+            "cwnd": 24026,
+            "bytes_acked": 1533719822,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.03454772801392296,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 22077,
+            "segs_out": 600008,
+            "bytes_retrans": 0,
+            "cwnd": 24000,
+            "bytes_acked": 616904312,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 2153,
+            "advance": 2152,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 2.882829189300537,
+            "kernel_drops": 0,
+            "interface": "eth0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true
+        },
+        {
+          "case": -13,
+          "rate": 250,
+          "rx_mbps": 236.4930871111111,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1693680183,
+          "sink_bytes": 1693680183,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 7570,
+            "segs_out": 179794,
+            "bytes_retrans": 0,
+            "cwnd": 23994,
+            "bytes_acked": 176099826,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 51447,
+            "segs_out": 1447929,
+            "bytes_retrans": 0,
+            "cwnd": 24010,
+            "bytes_acked": 1506373441,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.03459962858843893,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 22070,
+            "segs_out": 599847,
+            "bytes_retrans": 0,
+            "cwnd": 24012,
+            "bytes_acked": 616735423,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 2960,
+            "advance": 2959,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 2.881787061691284,
+            "kernel_drops": 0,
+            "interface": "eth0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Disabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": false
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 5,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true
+        },
+        {
+          "case": -14,
+          "rate": 250,
+          "rx_mbps": 241.06150542222224,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1709408823,
+          "sink_bytes": 1709408823,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 7504,
+            "segs_out": 180245,
+            "bytes_retrans": 0,
+            "cwnd": 24022,
+            "bytes_acked": 176572925,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 52132,
+            "segs_out": 1473167,
+            "bytes_retrans": 0,
+            "cwnd": 23988,
+            "bytes_acked": 1532848103,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.03451716344837508,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 22018,
+            "segs_out": 600703,
+            "bytes_retrans": 0,
+            "cwnd": 23964,
+            "bytes_acked": 617633367,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 2943,
+            "advance": 2942,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 2.863503932952881,
+            "kernel_drops": 0,
+            "interface": "eth0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true
+        },
+        {
+          "case": 0,
+          "rate": 250,
+          "rx_mbps": 225.9749272888889,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 1715306544,
+          "sink_bytes": 1715306544,
+          "client_stop": true,
+          "server_stop": true,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 84335,
+            "segs_out": 180424,
+            "bytes_retrans": 0,
+            "cwnd": 24710,
+            "bytes_acked": 176928433,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 698689,
+            "segs_out": 1392870,
+            "bytes_retrans": 442678,
+            "cwnd": 27022,
+            "bytes_acked": 1449487117,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.5067062780527958,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 293644,
+            "segs_out": 599313,
+            "bytes_retrans": 0,
+            "cwnd": 24122,
+            "bytes_acked": 616058715,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 6000,
+            "advance": 5999,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 0.40261006355285645,
+            "kernel_drops": 0,
+            "interface": "wbds0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8002:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true,
+          "worker_cpu": {
+            "tx": {
+              "coverage": 44,
+              "core_equiv": 0.2111581920903955,
+              "kernel_core": 0.17372881355932204
+            },
+            "rx": {
+              "coverage": 42,
+              "core_equiv": 0.11299435028248588,
+              "kernel_core": 0.04943502824858757
+            }
+          }
+        },
+        {
+          "case": 1,
+          "rate": 650,
+          "rx_mbps": 317.5325973333333,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 2370782496,
+          "sink_bytes": 2370782496,
+          "client_stop": true,
+          "server_stop": true,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 193883,
+            "segs_out": 290554,
+            "bytes_retrans": 34113480,
+            "cwnd": 26466,
+            "bytes_acked": 238618071,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 1592404,
+            "segs_out": 2132938,
+            "bytes_retrans": 184801281,
+            "cwnd": 56252,
+            "bytes_acked": 2028997871,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.759082254296607,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 719058,
+            "segs_out": 955938,
+            "bytes_retrans": 126024762,
+            "cwnd": 11196,
+            "bytes_acked": 850754269,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 6000,
+            "advance": 5999,
+            "equal": 0,
+            "older": 0,
+            "sack": 6000,
+            "payload_nonzero": 0,
+            "span_s": 0.3633458614349365,
+            "kernel_drops": 0,
+            "interface": "wbds0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8003:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true,
+          "worker_cpu": {
+            "rx": {
+              "coverage": 44,
+              "core_equiv": 0.1429083339021228,
+              "kernel_core": 0.05403499192319071
+            },
+            "tx": {
+              "coverage": 44,
+              "core_equiv": 0.41201681341432916,
+              "kernel_core": 0.3554933679157284
+            }
+          }
+        },
+        {
+          "case": -15,
+          "rate": 650,
+          "rx_mbps": 615.6663987555555,
+          "status": "MEASURED_EXACT",
+          "source_bytes": 4329013815,
+          "sink_bytes": 4329013815,
+          "mss": 1049,
+          "steady_ss_before": {
+            "mss": 1049,
+            "segs_in": 8766,
+            "segs_out": 423344,
+            "bytes_retrans": 0,
+            "cwnd": 62440,
+            "bytes_acked": 411594032,
+            "data_segs_in": 1
+          },
+          "steady_ss_after": {
+            "mss": 1049,
+            "segs_in": 64740,
+            "segs_out": 3725822,
+            "bytes_retrans": 0,
+            "cwnd": 62380,
+            "bytes_acked": 3875955345,
+            "data_segs_in": 1
+          },
+          "steady_ack_segment_ratio": 0.016949090955337174,
+          "active_business_ss": {
+            "mss": 1049,
+            "segs_in": 27278,
+            "segs_out": 1515497,
+            "bytes_retrans": 0,
+            "cwnd": 62354,
+            "bytes_acked": 1557262529,
+            "data_segs_in": 1
+          },
+          "ack_sample": {
+            "ack": 3783,
+            "advance": 3782,
+            "equal": 0,
+            "older": 0,
+            "sack": 0,
+            "payload_nonzero": 0,
+            "span_s": 2.8819079399108887,
+            "kernel_drops": 0,
+            "interface": "eth0",
+            "scope": "server-observed reverse inner TCP only; no raw capture persisted"
+          },
+          "rsc_global": "Enabled",
+          "rsc_switch": {
+            "Name": "WSL (Hyper-V firewall)",
+            "SoftwareRscEnabled": true
+          },
+          "rsc_adapter": {
+            "Name": "vEthernet (WSL (Hyper-V firewall))",
+            "IPv4Enabled": true,
+            "IPv4Operational": null,
+            "IPv4FailureReason": 0,
+            "IPv6Enabled": true,
+            "IPv6Operational": null
+          },
+          "rsc_stats": {
+            "unavailable": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+          },
+          "applied_setting": 0,
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "clean_candidate": false,
+          "comparable": true
+        }
+      ]
+    }
+  ],
+  "interpretation": [
+    "At matched MSS1049, bare 250M steady ratio ~3.45% unchanged with Windows global and WSL vSwitch RSC disabled and restored. WBD 250M ~50%, all 6000 sampled ACKs advance except initial unclassified, zero SACK. WBD650M ~71–76%; both samples all SACK, H equal ACK, I advancing ACK. Bare650M ~1.695%.",
+    "Bare matched MSS mean acknowledged segment spacing ~29 segments at250 and59 at650, ~30KiB and~61KiB per ACK. Hypothesis sender-side GSO/TSO/netvsc large packet path or other aggregation, not proven. Test guest ethtool TSO/GSO A/B/A and packet length histograms at boundary; do not replace driver before discriminating.",
+    "Wintun v0.14.1 driver/wintun.c lines 515–563 indicates one NBL per packet; no NDIS_OFFLOAD/RSC OID implementation in inspected driver file. WireGuardNT configuration API not generic raw-IP transport. sing-box v1.14.4 uses sing-tun 040db71fcd33; testing as of Nov26 references 1a13df1ac21f which still uses Wintun. New sing-tun TCP stack is not interchangeable with raw IP adapter. No implementation authorization inferred from architecture question."
+  ],
+  "source_limit": "Raw Actions job log extraction; archive not independently unpacked; RSC statistic query JSON failed, guest ethtool inventory artifact not independently read."
+}
