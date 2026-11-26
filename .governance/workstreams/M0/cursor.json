@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2467,
-  "checkpoint_sha": "d3119d188ab6b3eaf84bc5c41e3d56d1024eacb7",
-  "progress": "partial",
+  "sequence": 2468,
+  "checkpoint_sha": "e7bb7d696d409a375daa58947ba47d39ac6feb35",
+  "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "SACK compression actual ACK/CPU benefit recorded, 5% throughput unresolved; inspect zero-injection retransmits and BBR/RACK feedback, qualify further candidate changes before promotion; GRO separate, keep splice.",
+  "next_action": "验收649fe3b native45845651269/core45845777911及corrected同ARM三机四ABBA 45845854268，先CUBIC零损再Linux bbr/Rust bbr1 0/1/5%：核真实CC、内核版本、路径/实损、业务Stop、吞吐/CPU/RSS/ACK/重传/cwnd/pacing；BBRv1-style非Linux完全移植，初始夹具45845777964语法失败不计，不重复构建。",
   "unverified": true,
   "last_tested_source": "dffe77daa5adaeac89a86e48cd6730c4c67a655f",
   "evidence_refs": [
@@ -30,8 +30,9 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK-LOSS-DIAG-RESULT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-EXACT-FILL-SNDBUF-RESULT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-BDP-LOSS-PROBE-RESULT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-SACK-COMPRESS-RESULT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-SACK-COMPRESS-RESULT.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-MATCHED-CC-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "PR80 WIP HEAD be216b6ee2e04e4b02adfc6b0026b5f6d8010910；SACK dffe77d native双ISA/332 core/ARM 12/12完成，0/1/5% 256.13→315.93、60.76→61.32、16.72→15.09 Mbps，ACK/DATA 69.95→11.05%、99.70→6.74%、99.84→26.26%，CPU/GiB改善；5%吞吐未过非劣性，未晋级，无产品main合入。"
+  "partial_summary": "PR80 WIP HEAD 823658213215e897b49f5aa477f1ef254ba5643c；用户要求同CC架构对照。新增独立BBRv1-style 649fe3bf19a81d579ebae510c78acf2908902ca7，保留v3，middle CUBIC/bbr1 cold selector；cap64/ACK3/SACK on。native45845651269 core45845777911 corrected ARM45845854268在途；原夹具45845777964语法错误无效。无main产品集成、旧splice保留、治理未过。"
 }
