@@ -9,14 +9,20 @@ extern "C"{
     fn wbd_xdp_tx_reserve(owner:*mut c_void,count:usize,frames:*mut *mut u8)->i32;
     fn wbd_xdp_tx_publish(owner:*mut c_void,lengths:*const usize)->i32;
     fn wbd_xdp_tx_close(owner:*mut c_void);
+    fn wbd_xdp_tx_report(owner:*mut c_void);
 }
-pub struct XdpTx{owner:NonNull<c_void>,failed:bool}
+pub struct XdpTx{owner:NonNull<c_void>,failed:bool,owned:bool}
 unsafe impl Send for XdpTx{}
 impl XdpTx{
     pub fn open(ip:[u8;4],mac:[u8;6])->Result<Self,TxError>{
         let owner=NonNull::new(unsafe{wbd_xdp_tx_open(ip.as_ptr(),mac.as_ptr())})
             .ok_or(TxError::IoFailed)?;
-        Ok(Self{owner,failed:false})
+        Ok(Self{owner,failed:false,owned:true})
+    }
+    /// The original cold endpoint retains the socket and UMEM through join.
+    pub unsafe fn from_cold(raw:usize)->Result<Self,TxError>{
+        let owner=NonNull::new(raw as *mut c_void).ok_or(TxError::IoFailed)?;
+        Ok(Self{owner,failed:false,owned:false})
     }
     pub fn reserve(&mut self,count:usize)->Result<XdpBatch<'_>,TxError>{
         if self.failed{return Err(TxError::IoFailed)}
@@ -40,7 +46,7 @@ impl XdpTx{
     pub fn failed(&self)->bool{self.failed}
 }
 impl Drop for XdpTx{
-    fn drop(&mut self){unsafe{wbd_xdp_tx_close(self.owner.as_ptr())}}
+    fn drop(&mut self){unsafe{if self.owned{wbd_xdp_tx_close(self.owner.as_ptr())}else{wbd_xdp_tx_report(self.owner.as_ptr())}}}
 }
 /// Exclusive, unpublished chunk loan. No ring index or free chunk changes
 /// until submit; a failed staging turn simply drops the unpublished borrow.

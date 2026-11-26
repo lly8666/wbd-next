@@ -22,7 +22,7 @@ jobs:
           $env:WBD_XDP_SDK_INCLUDE=(Get-ChildItem xdp-packages -Recurse -Filter xdpapi.h | Where-Object {$_.Directory.Name -eq 'include'} | Select-Object -First 1).Directory.FullName
           $vs=& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
           New-Item -ItemType Directory -Force xdp-build | Out-Null
-          $cmd='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo build --locked -p wbd-engine --release --features m0_v4_embedded_go,fec2_product_record && copy /Y target\release\wbd_engine.dll xdp-build\A.dll && cargo build --locked -p wbd-engine --release --features m0_v4_embedded_go,fec2_product_record,winxdp_tx_trial && copy /Y target\release\wbd_engine.dll xdp-build\B.dll'
+          $cmd='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo build --locked -p wbd-engine --release --features m0_v4_embedded_go,fec2_product_record && copy /Y target\release\wbd_engine.dll xdp-build\A.dll && cargo build --locked -p wbd-engine --release --features m0_v4_embedded_go,fec2_product_record,winxdp_tx_trial && copy /Y target\release\wbd_engine.dll xdp-build\B.dll && cargo build --locked -p wbd-engine --release --features m0_v4_embedded_go,m0_v4_probe,fec2_product_record,winxdp_native_trial && copy /Y target\release\wbd_engine.dll xdp-build\C.dll'
           cmd.exe /d /s /c $cmd
           if($LASTEXITCODE -ne 0){throw 'A/B build failed'}
           [ordered]@{source_sha=$env:GITHUB_SHA;scope='TX-only compile, portable FEC';A=(Get-FileHash xdp-build/A.dll).Hash;B=(Get-FileHash xdp-build/B.dll).Hash} | ConvertTo-Json | Set-Content xdp-build/manifest.json

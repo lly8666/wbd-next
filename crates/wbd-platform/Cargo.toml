@@ -14,3 +14,5 @@ h2291_windows_tx_service = []
 
 # Isolated Windows TX carrier experiment; requires official SDK at build time.
 winxdp_tx_trial = []
+
+winxdp_native_trial = ["winxdp_tx_trial"]

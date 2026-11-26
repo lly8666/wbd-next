@@ -22,6 +22,10 @@
 use wbd_platform::windows_native_io::NpcapTx as NativeTx;
 #[cfg(feature="winxdp_tx_trial")]
 use wbd_platform::windows_xdp_tx::XdpTx as NativeTx;
+#[cfg(not(feature="winxdp_native_trial"))]
+use wbd_platform::windows_native_io::NpcapRx as NativeRx;
+#[cfg(feature="winxdp_native_trial")]
+use wbd_platform::windows_xdp_rx::XdpRx as NativeRx;
 use wbd_platform::ipv4_tcp::{
      build_bytes, finish_bytes_in_place, BASE_OVERHEAD, build_presentation_ack, build_presentation_ack_sack,
      SackRange32 as WireSack, Ipv4Tuple, PacketPersona, Presentation,
@@ -222,8 +226,21 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      pub tx_capture:usize,
      pub wintun_session:usize,
      pub wintun_read_event:usize,
+     #[cfg(not(feature="winxdp_native_trial"))]
      pub npcap:NpcapFns,
+     // Layout stays the original 6 pointer words. Raw representation permits
+     // XDP cold attach with no Npcap function addresses; Game still uses NPF.
+     #[cfg(feature="winxdp_native_trial")]
+     pub npcap:[usize;6],
      pub wintun:WintunFns,
+ }
+ #[cfg(feature="winxdp_native_trial")]
+ impl WbdWinNativeAttachV1{
+     pub(super) fn npcap_fns(&self)->Option<NpcapFns>{
+         if self.npcap[..3].contains(&0){return None}
+         // Same original validated same-process libpcap function table.
+         Some(unsafe{std::mem::transmute(self.npcap)})
+     }
  }
  #[repr(C)]
  #[derive(Clone, Copy, Default)]
@@ -510,12 +527,16 @@ fn native_tx_failed(_tx:&NativeTx)->bool{
     #[cfg(not(feature="winxdp_tx_trial"))]
     { false }
 }
+#[cfg(not(feature="winxdp_tx_trial"))]
+type SourceFrames=[[u8;MAX_LINK];BATCH];
+#[cfg(feature="winxdp_tx_trial")]
+type SourceFrames=();
 fn stage_sources(
      cfg:&WbdWinNativeAttachV1,
      lane:&Arc<Mutex<Entry>>,tun:&mut WintunRx,npf:&mut NativeTx,
      counters:&Counters,ip_id:&mut u16,fixed:bool,
      split:&mut Option<NativeSplitWorker>,now_ms:u64,
-     sources:&mut [[u8;MAX_IPV4];BATCH],frames:&mut [[u8;MAX_LINK];BATCH],
+     sources:&mut [[u8;MAX_IPV4];BATCH],frames:&mut SourceFrames,
  )->Result<StageWork,i32>{
      // One bounded Wintun drain, ONE Entry lock to seal ALL ready sources,
      // ONE NPF ready-only queue and ONE lock to settle real driver receipts.
@@ -1004,7 +1025,10 @@ fn stage_sources(
      // Reuse ready-only source and final frame slabs for the TX owner.
      // Only the written prefix reaches the driver.
      let mut sources=[[0u8;MAX_IPV4];BATCH];
+     #[cfg(not(feature="winxdp_tx_trial"))]
      let mut frames=[[0u8;MAX_LINK];BATCH];
+     #[cfg(feature="winxdp_tx_trial")]
+     let mut frames=();
      // Signed-only original normal small TCP: no product-default change.
      let same_turn_direct=cfg!(feature="m0_v4_probe") &&
          std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
@@ -1455,12 +1479,13 @@ fn stage_sources(
      let _=tx_notify.wake();
  }
  fn rx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
-     mut tun:WintunTx,mut npf:NpcapRx,stop:Arc<WakeEvent>,
+     mut tun:WintunTx,mut npf:NativeRx,stop:Arc<WakeEvent>,
      tx_notify:Arc<WakeEvent>,early_notify:Arc<WakeEvent>,
      early:Arc<Mutex<VecDeque<(u32,Vec<u8>)>>>,
      counters:Arc<Counters>,fixed:bool,sack_negotiated:bool,
      direct_returns:Option<Receiver<Vec<u8>>>,
      tunnel_dns:Option<Arc<Mutex<TunnelDnsMap>>>)->i32{
+     #[cfg(not(feature="winxdp_native_trial"))]
      let event=match npf.event(){Ok(e)=>e,Err(_)=>return BAD_STAGE};
      let trusted=TrustedRx{
          tuple:Ipv4Tuple{src_ip:&cfg.peer_ip,dst_ip:&cfg.local_ip,
@@ -1468,6 +1493,7 @@ fn stage_sources(
          persona:PacketPersona::Legacy,mtu:cfg.path_mtu as usize,
          authenticated_options:None,
      };
+     #[cfg(not(feature="winxdp_native_trial"))]
      let mut frame=[0u8;MAX_NPF];
      let mut plain=[0u8;MAX_IPV4];
      let mut ack=PresentationAck::new(cfg.initial_rx_seq);
@@ -1554,6 +1580,8 @@ fn stage_sources(
          // indefinite low-CPU Tunnel RX wait.
          let wait_ms=direct_rx_wait_timeout_ms(
              deferred_direct_tcp.is_some(),direct_processed);
+         #[cfg(feature="winxdp_native_trial")]
+         let event=match npf.arm(){Ok(e)=>e,Err(_)=>return BAD_STAGE};
          match io::wait_ready(&[stop.handle(),event,early_notify.handle()],wait_ms){
              Ok(WaitResult::Ready(0))=>return OK,
              Ok(WaitResult::Ready(1|2))=>{},
@@ -1564,16 +1592,28 @@ fn stage_sources(
          let mut npf_wakes=TxWakeBatch::default();
          let mut verified_batch=false;
          let mut last_outer_ack=None::<(u32,[WireSack;4],usize)>;
-         for _ in 0..RX_WAKE_BATCH{
+         #[cfg(feature="winxdp_native_trial")]
+         let batch=npf.borrow();
+         #[cfg(feature="winxdp_native_trial")]
+         let ready=batch.len();
+         #[cfg(not(feature="winxdp_native_trial"))]
+         let ready=RX_WAKE_BATCH;
+         for _i in 0..ready{
              if counters.stopping.load(Ordering::Acquire){return OK}
-             let n=match npf.read(&mut frame){
-                 Ok(ReadResult::Frame(n))=>n,
-                 Ok(ReadResult::NoPacket)=>break,
-                 Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>continue,
-                 Ok(ReadResult::EndOfStream)=>return BAD_STAGE,
-                 Err(_)=>return BAD_STAGE,
+             #[cfg(not(feature="winxdp_native_trial"))]
+             let frame_bytes={
+                 let n=match npf.read(&mut frame){
+                     Ok(ReadResult::Frame(n))=>n,
+                     Ok(ReadResult::NoPacket)=>break,
+                     Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>continue,
+                     Ok(ReadResult::EndOfStream)=>return BAD_STAGE,
+                     Err(_)=>return BAD_STAGE,
+                 };
+                 &frame[..n]
              };
-             let Some(packet)=io::ethernet_ipv4(&frame[..n])else{continue};
+             #[cfg(feature="winxdp_native_trial")]
+             let frame_bytes=batch.frame(_i);
+             let Some(packet)=io::ethernet_ipv4(frame_bytes)else{continue};
              // Optional SACK only after actual original Go protected
              // FakeTCP SYN/SYN-ACK; packet checksum is NOT crypto proof.
              if packet.len()>=40 && packet[0]==0x45 && packet[33]==0x10 {
@@ -1606,6 +1646,8 @@ fn stage_sources(
                   }
               }
           }
+          #[cfg(feature="winxdp_native_trial")]
+          drop(batch); // recycle all driver chunks before taking the next Entry lock
           // Advance only on a genuine authenticated RX ready batch; this
           // cannot create a timer, extra DATA, or an inner delivery ACK.
           if sack_negotiated&&verified_batch&&ack.abandon_stalled(m2_clock().0){
@@ -1790,19 +1832,29 @@ fn stage_sources(
          config.wintun_session,config.wintun_read_event,config.wintun)}{
          Ok((rx,tx))=>(rx,tx),Err(_)=>return INVALID
      };
-     let capture=match unsafe{NpcapRx::from_borrowed(config.rx_capture,config.npcap)}{
+     #[cfg(not(feature="winxdp_native_trial"))]
+     let capture=match unsafe{NativeRx::from_borrowed(config.rx_capture,config.npcap)}{
          Ok(v)=>v,Err(_)=>return INVALID
      };
+     #[cfg(not(feature="winxdp_native_trial"))]
      if capture.event().is_err(){return BAD_STAGE}
+     #[cfg(feature="winxdp_native_trial")]
+     let capture=match unsafe{NativeRx::from_cold(config.rx_capture)}{
+         Ok(v)=>v,Err(_)=>return INVALID
+     };
      #[cfg(not(feature="winxdp_tx_trial"))]
      let sender=match unsafe{NativeTx::from_borrowed(config.tx_capture,config.npcap)}{
          Ok(v)=>v,Err(_)=>return INVALID
      };
      // The attach ifindex identifies Wintun, NOT the physical carrier.
      // Resolve the original authenticated physical IP/MAC once at cold attach.
-     #[cfg(feature="winxdp_tx_trial")]
+     #[cfg(all(feature="winxdp_tx_trial",not(feature="winxdp_native_trial")))]
      let sender=match NativeTx::open(config.local_ip,config.source_mac){
          Ok(v)=>v,Err(_)=>return BAD_STAGE
+     };
+     #[cfg(feature="winxdp_native_trial")]
+     let sender=match unsafe{NativeTx::from_cold(config.tx_capture)}{
+         Ok(v)=>v,Err(_)=>return INVALID
      };
      let stop=match WakeEvent::new(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
      let notify=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
@@ -2409,3 +2461,29 @@ fn stage_sources(
          assert_eq!(kernel_result(out,4,3),Ok(0));
      }
  }
+
+// Internal cold driver ABI only. The actual authenticated owner is still
+// established through original TLS and Wintun attach; no record ABI changes.
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_xdp_open(index:u32,port:u16,handles:*mut usize)->i32{
+    match wbd_platform::windows_xdp_rx::cold_open(index,port){
+        Ok((rx,tx))=>{unsafe{handles.write(rx);handles.add(1).write(tx)};0},
+        Err(_)=>BAD_STAGE,
+    }
+}
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_xdp_read(rx:usize,dst:*mut u8,cap:usize)->i32{
+    unsafe{wbd_platform::windows_xdp_rx::cold_read(rx,dst,cap)}
+}
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_xdp_write(tx:usize,src:*const u8,len:usize)->i32{
+    unsafe{wbd_platform::windows_xdp_rx::cold_write(tx,src,len)}
+}
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_xdp_close(rx:usize,tx:usize)->i32{
+    unsafe{wbd_platform::windows_xdp_rx::close_after_join(rx,tx)};0
+}

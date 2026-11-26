@@ -153,7 +153,10 @@ fn configs(c:&WbdWinGameNativeAttachV3)->Result<Vec<LaneConfig>,i32>{
         rx_seq:c.first.initial_rx_seq,
         local_port:c.first.local_port,peer_port:c.first.peer_port,
         rx_capture:c.first.rx_capture,tx_capture:c.first.tx_capture,
+        #[cfg(not(feature="winxdp_native_trial"))]
         npcap:c.first.npcap,
+        #[cfg(feature="winxdp_native_trial")]
+        npcap:c.first.npcap_fns().ok_or(INVALID)?,
     });
     for x in c.extra.iter().take(c.lanes as usize-1){
         a.push(LaneConfig{owner:x.owner,tx_seq:x.initial_tx_seq,
