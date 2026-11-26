@@ -1,0 +1,3458 @@
+{
+  "schema": "m0-machine-rate-database-v1",
+  "observations": [
+    {
+      "schema": "m0-machine-rate-observation-v1",
+      "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+      "run_id": "45749934284",
+      "fixture": "wsl2-tailscale-vxlan-gro-tun500",
+      "product_source": "db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141",
+      "probe_only": true,
+      "classification": "9V45_OBSERVED",
+      "machine": {
+        "windows": {
+          "hardware": {
+            "Name": "AMD EPYC 9V45 96-Core Processor                ",
+            "Manufacturer": "AuthenticAMD",
+            "NumberOfCores": 2,
+            "NumberOfLogicalProcessors": 4,
+            "MaxClockSpeed": 2596,
+            "CurrentClockSpeed": 2596
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "windows",
+            "run_id": "45749934284",
+            "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+            "machine": "AMD64",
+            "system": "Windows",
+            "processor": "AMD64 Family 26 Model 2 Stepping 1, AuthenticAMD",
+            "python": "3.12.10",
+            "openssl": "OpenSSL 3.0.16 11 Feb 2025",
+            "zlib": "1.3.1",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 8673792,
+                    "wall_s": 0.6500182000000052,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 13343921.754806142,
+                    "ops_per_cpu_s": 13539577.75609756,
+                    "cpu_wall_ratio": 0.9855493276957397
+                  },
+                  {
+                    "operations": 8667648,
+                    "wall_s": 0.6500168999999971,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 13334496.380017256,
+                    "ops_per_cpu_s": 13207844.57142857,
+                    "cpu_wall_ratio": 1.0095891352978714
+                  },
+                  {
+                    "operations": 8624640,
+                    "wall_s": 0.650006999999988,
+                    "thread_cpu_s": 0.625,
+                    "ops_per_wall_s": 13268534.031172216,
+                    "ops_per_cpu_s": 13799424,
+                    "cpu_wall_ratio": 0.961528106620408
+                  }
+                ],
+                "median_ops_per_wall_s": 13334496.380017256,
+                "median_ops_per_cpu_s": 13539577.75609756,
+                "median_cpu_wall_ratio": 0.9855493276957397
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 714496,
+                    "wall_s": 0.6500570000000039,
+                    "thread_cpu_s": 0.625,
+                    "ops_per_wall_s": 1099128.2302936446,
+                    "ops_per_cpu_s": 1143193.6,
+                    "cpu_wall_ratio": 0.9614541494053541
+                  },
+                  {
+                    "operations": 744704,
+                    "wall_s": 0.6500906999999927,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 1145538.6148425264,
+                    "ops_per_cpu_s": 1134787.0476190476,
+                    "cpu_wall_ratio": 1.0094745240933416
+                  },
+                  {
+                    "operations": 745216,
+                    "wall_s": 0.6501801999999941,
+                    "thread_cpu_s": 0.625,
+                    "ops_per_wall_s": 1146168.4006987705,
+                    "ops_per_cpu_s": 1192345.6,
+                    "cpu_wall_ratio": 0.9612719673715159
+                  }
+                ],
+                "median_ops_per_wall_s": 1145538.6148425264,
+                "median_ops_per_cpu_s": 1143193.6,
+                "median_cpu_wall_ratio": 0.9614541494053541
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 12530432,
+                    "wall_s": 0.6500128000000132,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 19277208.07959435,
+                    "ops_per_cpu_s": 19093991.61904762,
+                    "cpu_wall_ratio": 1.0095955033500674
+                  },
+                  {
+                    "operations": 12182272,
+                    "wall_s": 0.650008200000002,
+                    "thread_cpu_s": 0.625,
+                    "ops_per_wall_s": 18741720.48906454,
+                    "ops_per_cpu_s": 19491635.2,
+                    "cpu_wall_ratio": 0.9615263315139687
+                  },
+                  {
+                    "operations": 12191232,
+                    "wall_s": 0.6500059999999621,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 18755568.410138845,
+                    "ops_per_cpu_s": 19030215.80487805,
+                    "cpu_wall_ratio": 0.9855678255278219
+                  }
+                ],
+                "median_ops_per_wall_s": 18755568.410138845,
+                "median_ops_per_cpu_s": 19093991.61904762,
+                "median_cpu_wall_ratio": 0.9855678255278219
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "wsl": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"x86_64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Address sizes:\",\n         \"data\": \"48 bits physical, 48 bits virtual\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"AuthenticAMD\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"AMD EPYC 9V45 96-Core Processor\"\n      },{\n         \"field\": \"CPU family:\",\n         \"data\": \"26\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"5192.24\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl xtopology cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\"\n      },{\n         \"field\": \"Virtualization:\",\n         \"data\": \"AMD-V\"\n      },{\n         \"field\": \"Hypervisor vendor:\",\n         \"data\": \"Microsoft\"\n      },{\n         \"field\": \"Virtualization type:\",\n         \"data\": \"full\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"96 KiB (2 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"64 KiB (2 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"2 MiB (2 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"32 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Vulnerable: Safe RET, no microcode\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Vulnerable\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; usercopy/swapgs barriers and __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmbpeip 6.18.58.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct 27 00:24:11 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "wsl",
+            "run_id": "45749934284",
+            "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+            "machine": "x86_64",
+            "system": "Linux",
+            "processor": "x86_64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 5031168,
+                    "wall_s": 0.650033133000008,
+                    "thread_cpu_s": 0.6496602,
+                    "ops_per_wall_s": 7739863.930905101,
+                    "ops_per_cpu_s": 7744306.946923945,
+                    "cpu_wall_ratio": 0.9994262861674653
+                  },
+                  {
+                    "operations": 5137920,
+                    "wall_s": 0.6500111240000024,
+                    "thread_cpu_s": 0.6499014,
+                    "ops_per_wall_s": 7904357.033742058,
+                    "ops_per_cpu_s": 7905691.540285958,
+                    "cpu_wall_ratio": 0.9998311967350232
+                  },
+                  {
+                    "operations": 4950272,
+                    "wall_s": 0.6500060199999922,
+                    "thread_cpu_s": 0.6499055,
+                    "ops_per_wall_s": 7615732.543523304,
+                    "ops_per_cpu_s": 7616910.458520507,
+                    "cpu_wall_ratio": 0.9998453552784139
+                  }
+                ],
+                "median_ops_per_wall_s": 7739863.930905101,
+                "median_ops_per_cpu_s": 7744306.946923945,
+                "median_cpu_wall_ratio": 0.9998311967350232
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 816128,
+                    "wall_s": 0.6500007160000081,
+                    "thread_cpu_s": 0.6499108000000002,
+                    "ops_per_wall_s": 1255580.15539169,
+                    "ops_per_cpu_s": 1255753.8665306065,
+                    "cpu_wall_ratio": 0.9998616678446738
+                  },
+                  {
+                    "operations": 838656,
+                    "wall_s": 0.6500674250000031,
+                    "thread_cpu_s": 0.6499947000000001,
+                    "ops_per_wall_s": 1290106.1762939375,
+                    "ops_per_cpu_s": 1290250.520504244,
+                    "cpu_wall_ratio": 0.9998881269892842
+                  },
+                  {
+                    "operations": 807424,
+                    "wall_s": 0.6500976260000044,
+                    "thread_cpu_s": 0.6499386999999999,
+                    "ops_per_wall_s": 1242004.2278388424,
+                    "ops_per_cpu_s": 1242307.9284246347,
+                    "cpu_wall_ratio": 0.9997555351786432
+                  }
+                ],
+                "median_ops_per_wall_s": 1255580.15539169,
+                "median_ops_per_cpu_s": 1255753.8665306065,
+                "median_cpu_wall_ratio": 0.9998616678446738
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 13193728,
+                    "wall_s": 0.6500184159999947,
+                    "thread_cpu_s": 0.6499159999999997,
+                    "ops_per_wall_s": 20297468.002814412,
+                    "ops_per_cpu_s": 20300666.54767694,
+                    "cpu_wall_ratio": 0.9998424413870838
+                  },
+                  {
+                    "operations": 13744896,
+                    "wall_s": 0.6500035070000081,
+                    "thread_cpu_s": 0.6498941,
+                    "ops_per_wall_s": 21145879.755999267,
+                    "ops_per_cpu_s": 21149439.57792508,
+                    "cpu_wall_ratio": 0.999831682446587
+                  },
+                  {
+                    "operations": 13721344,
+                    "wall_s": 0.6500079819999911,
+                    "thread_cpu_s": 0.6499157999999996,
+                    "ops_per_wall_s": 21109500.775330767,
+                    "ops_per_cpu_s": 21112494.88010602,
+                    "cpu_wall_ratio": 0.9998581832799839
+                  }
+                ],
+                "median_ops_per_wall_s": 21109500.775330767,
+                "median_ops_per_cpu_s": 21112494.88010602,
+                "median_cpu_wall_ratio": 0.9998424413870838
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "relay": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"aarch64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"ARM\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"Neoverse-N2\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"0\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"r0p0\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"2000.00\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"4 MiB (4 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"128 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Mitigation; Speculative Store Bypass disabled via prctl\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; CSV2, BHB\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmnfvap 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 19:06:39 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "relay",
+            "run_id": "45749934284",
+            "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+            "machine": "aarch64",
+            "system": "Linux",
+            "processor": "aarch64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 3856896,
+                    "wall_s": 0.6500379780000003,
+                    "thread_cpu_s": 0.650035936,
+                    "ops_per_wall_s": 5933339.482512509,
+                    "ops_per_cpu_s": 5933358.121296235,
+                    "cpu_wall_ratio": 0.9999968586450801
+                  },
+                  {
+                    "operations": 3888128,
+                    "wall_s": 0.6500356740000086,
+                    "thread_cpu_s": 0.650034528,
+                    "ops_per_wall_s": 5981407.106588966,
+                    "ops_per_cpu_s": 5981417.651709726,
+                    "cpu_wall_ratio": 0.9999982370198214
+                  },
+                  {
+                    "operations": 3886848,
+                    "wall_s": 0.6500378750000095,
+                    "thread_cpu_s": 0.65004544,
+                    "ops_per_wall_s": 5979417.737774038,
+                    "ops_per_cpu_s": 5979348.151415384,
+                    "cpu_wall_ratio": 1.000011637783399
+                  }
+                ],
+                "median_ops_per_wall_s": 5979417.737774038,
+                "median_ops_per_cpu_s": 5979348.151415384,
+                "median_cpu_wall_ratio": 0.9999982370198214
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 709376,
+                    "wall_s": 0.6501031269999942,
+                    "thread_cpu_s": 0.6501165200000001,
+                    "ops_per_wall_s": 1091174.5699079006,
+                    "ops_per_cpu_s": 1091152.0907052169,
+                    "cpu_wall_ratio": 1.0000206013468473
+                  },
+                  {
+                    "operations": 709888,
+                    "wall_s": 0.6500863360000011,
+                    "thread_cpu_s": 0.6500943920000002,
+                    "ops_per_wall_s": 1091990.3414182803,
+                    "ops_per_cpu_s": 1091976.8094230841,
+                    "cpu_wall_ratio": 1.0000123922001631
+                  },
+                  {
+                    "operations": 709888,
+                    "wall_s": 0.6502067760000045,
+                    "thread_cpu_s": 0.650201816,
+                    "ops_per_wall_s": 1091788.06835442,
+                    "ops_per_cpu_s": 1091796.396951312,
+                    "cpu_wall_ratio": 0.9999923716574671
+                  }
+                ],
+                "median_ops_per_wall_s": 1091788.06835442,
+                "median_ops_per_cpu_s": 1091796.396951312,
+                "median_cpu_wall_ratio": 1.0000123922001631
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 7360768,
+                    "wall_s": 0.6500068289999916,
+                    "thread_cpu_s": 0.6499899840000003,
+                    "ops_per_wall_s": 11324139.488386966,
+                    "ops_per_cpu_s": 11324432.962339304,
+                    "cpu_wall_ratio": 0.9999740848876661
+                  },
+                  {
+                    "operations": 7371008,
+                    "wall_s": 0.6500146059999992,
+                    "thread_cpu_s": 0.6500303599999997,
+                    "ops_per_wall_s": 11339757.494618528,
+                    "ops_per_cpu_s": 11339482.666624991,
+                    "cpu_wall_ratio": 1.0000242363784677
+                  },
+                  {
+                    "operations": 7370752,
+                    "wall_s": 0.650013383000001,
+                    "thread_cpu_s": 0.6499793360000004,
+                    "ops_per_wall_s": 11339384.992324056,
+                    "ops_per_cpu_s": 11339978.968192915,
+                    "cpu_wall_ratio": 0.9999476210784407
+                  }
+                ],
+                "median_ops_per_wall_s": 11339384.992324056,
+                "median_ops_per_cpu_s": 11339482.666624991,
+                "median_cpu_wall_ratio": 0.9999740848876661
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "server": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"aarch64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"ARM\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"Neoverse-N2\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"0\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"r0p0\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"2000.00\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"4 MiB (4 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"128 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Mitigation; Speculative Store Bypass disabled via prctl\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; CSV2, BHB\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmu7lcj 7.0.0-1020-azure #21~24.04.2-Ubuntu SMP PREEMPT Tue Nov 10 01:19:17 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "server",
+            "run_id": "45749934284",
+            "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+            "machine": "aarch64",
+            "system": "Linux",
+            "processor": "aarch64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 3868672,
+                    "wall_s": 0.6500337499999773,
+                    "thread_cpu_s": 0.6499250080000001,
+                    "ops_per_wall_s": 5951494.057039553,
+                    "ops_per_cpu_s": 5952489.8294112105,
+                    "cpu_wall_ratio": 0.9998327133014597
+                  },
+                  {
+                    "operations": 3896320,
+                    "wall_s": 0.6500431340000148,
+                    "thread_cpu_s": 0.6500038880000001,
+                    "ops_per_wall_s": 5993940.703633232,
+                    "ops_per_cpu_s": 5994302.60638687,
+                    "cpu_wall_ratio": 0.9999396255448878
+                  },
+                  {
+                    "operations": 3896320,
+                    "wall_s": 0.6500037489999784,
+                    "thread_cpu_s": 0.6499402000000001,
+                    "ops_per_wall_s": 5994303.888238234,
+                    "ops_per_cpu_s": 5994889.991417672,
+                    "cpu_wall_ratio": 0.9999022328716164
+                  }
+                ],
+                "median_ops_per_wall_s": 5993940.703633232,
+                "median_ops_per_cpu_s": 5994302.60638687,
+                "median_cpu_wall_ratio": 0.9999022328716164
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 709632,
+                    "wall_s": 0.6502223720000018,
+                    "thread_cpu_s": 0.6501578320000001,
+                    "ops_per_wall_s": 1091368.1696575,
+                    "ops_per_cpu_s": 1091476.5078151051,
+                    "cpu_wall_ratio": 0.9999007416496557
+                  },
+                  {
+                    "operations": 709888,
+                    "wall_s": 0.6500350309999874,
+                    "thread_cpu_s": 0.64998508,
+                    "ops_per_wall_s": 1092076.5284109954,
+                    "ops_per_cpu_s": 1092160.4538984187,
+                    "cpu_wall_ratio": 0.9999231564491062
+                  },
+                  {
+                    "operations": 709632,
+                    "wall_s": 0.6501798740000027,
+                    "thread_cpu_s": 0.650104512,
+                    "ops_per_wall_s": 1091439.505246816,
+                    "ops_per_cpu_s": 1091566.0280788823,
+                    "cpu_wall_ratio": 0.9998840905370708
+                  }
+                ],
+                "median_ops_per_wall_s": 1091439.505246816,
+                "median_ops_per_cpu_s": 1091566.0280788823,
+                "median_cpu_wall_ratio": 0.9999007416496557
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 7379200,
+                    "wall_s": 0.6500141809999889,
+                    "thread_cpu_s": 0.6499509360000002,
+                    "ops_per_wall_s": 11352367.71088249,
+                    "ops_per_cpu_s": 11353472.379644359,
+                    "cpu_wall_ratio": 0.9999027021227578
+                  },
+                  {
+                    "operations": 7377664,
+                    "wall_s": 0.6500091249999969,
+                    "thread_cpu_s": 0.6499625279999997,
+                    "ops_per_wall_s": 11350092.969848748,
+                    "ops_per_cpu_s": 11350906.678730875,
+                    "cpu_wall_ratio": 0.9999283133140674
+                  },
+                  {
+                    "operations": 7382016,
+                    "wall_s": 0.6500161440000056,
+                    "thread_cpu_s": 0.6499524320000001,
+                    "ops_per_wall_s": 11356665.62767699,
+                    "ops_per_cpu_s": 11357778.872039054,
+                    "cpu_wall_ratio": 0.9999019839728696
+                  }
+                ],
+                "median_ops_per_wall_s": 11352367.71088249,
+                "median_ops_per_cpu_s": 11353472.379644359,
+                "median_cpu_wall_ratio": 0.9999027021227578
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        }
+      },
+      "rows": [
+        {
+          "case": -10,
+          "label": "bare250-before",
+          "rx_mbps": 233.581312,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.012197732925415,
+            "samples": 15,
+            "tx_packets": 99563,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": true,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 250,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9343252479999999,
+          "candidate_changed": false,
+          "kind": "bare",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 20,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 0,
+          "label": "wbd50-first",
+          "rx_mbps": 46.5621728,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.009583234786987,
+            "samples": 15,
+            "tx_packets": 105083,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 14,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 50,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.931243456,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 1,
+          "label": "wbd75-first",
+          "rx_mbps": 69.83934293333334,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.011784553527832,
+            "samples": 15,
+            "tx_packets": 143105,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 26,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 75,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9311912391111112,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 2,
+          "label": "wbd100-first",
+          "rx_mbps": 93.2586176,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.01217555999756,
+            "samples": 15,
+            "tx_packets": 176547,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 17,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 100,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9325861759999999,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 3,
+          "label": "wbd125-first",
+          "rx_mbps": 116.45354613333335,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.014095306396484,
+            "samples": 15,
+            "tx_packets": 242166,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 23,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 125,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9316283690666668,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 4,
+          "label": "wbd150-first",
+          "rx_mbps": 139.53825973333332,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.012314558029175,
+            "samples": 15,
+            "tx_packets": 313672,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 18,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 2
+          },
+          "rate_mbps": 150,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9302550648888888,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 20,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 5,
+          "label": "wbd175-first",
+          "rx_mbps": 157.97212693333333,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.015342473983765,
+            "samples": 15,
+            "tx_packets": 366175,
+            "tx_dropped": 1704
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 25,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 1704,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 20
+          },
+          "rate_mbps": 175,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9026978681904761,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 22,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 6,
+          "label": "wbd200-first",
+          "rx_mbps": 185.45424853333333,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.01582431793213,
+            "samples": 15,
+            "tx_packets": 416908,
+            "tx_dropped": 506
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 7,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 506,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 6
+          },
+          "rate_mbps": 200,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9272712426666666,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 20,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 7,
+          "label": "wbd200-repeat",
+          "rx_mbps": 185.5991504,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.018117904663086,
+            "samples": 15,
+            "tx_packets": 457776,
+            "tx_dropped": 32
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 28,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 32,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 6
+          },
+          "rate_mbps": 200,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9279957520000001,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 8,
+          "label": "wbd175-repeat",
+          "rx_mbps": 155.95636853333332,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.015419006347656,
+            "samples": 15,
+            "tx_packets": 383973,
+            "tx_dropped": 2452
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 12,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 2452,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 51
+          },
+          "rate_mbps": 175,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.8911792487619047,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 9,
+          "label": "wbd150-repeat",
+          "rx_mbps": 138.63080480000002,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 30.017149686813354,
+            "samples": 16,
+            "tx_packets": 319140,
+            "tx_dropped": 192
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 14,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 192,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 30
+          },
+          "rate_mbps": 150,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9242053653333335,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 22,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 10,
+          "label": "wbd125-repeat",
+          "rx_mbps": 113.28472693333333,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 30.012452363967896,
+            "samples": 16,
+            "tx_packets": 234711,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 11,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 125,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9062778154666666,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 22,
+              "direct": true
+            },
+            "relay": {
+              "samples": 22,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 11,
+          "label": "wbd100-repeat",
+          "rx_mbps": 91.31055466666668,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.009966135025024,
+            "samples": 15,
+            "tx_packets": 197274,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 16,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 100,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9131055466666668,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 20,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 12,
+          "label": "wbd75-repeat",
+          "rx_mbps": 69.04042453333334,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.011030912399292,
+            "samples": 15,
+            "tx_packets": 148750,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 29,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 75,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9205389937777778,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 13,
+          "label": "wbd50-repeat",
+          "rx_mbps": 46.69196906666667,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.008843421936035,
+            "samples": 15,
+            "tx_packets": 96987,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 8,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 50,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9338393813333334,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 20,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": -11,
+          "label": "bare250-after",
+          "rx_mbps": 233.672256,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 26.010026454925537,
+            "samples": 14,
+            "tx_packets": 81378,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": true,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 250,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.934689024,
+          "candidate_changed": false,
+          "kind": "bare",
+          "path": {
+            "client": {
+              "samples": 20,
+              "direct": true
+            },
+            "relay": {
+              "samples": 20,
+              "direct": true
+            },
+            "server": {
+              "samples": 20,
+              "direct": true
+            }
+          },
+          "qualified": true
+        }
+      ],
+      "cpu_gate": {
+        "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+        "run_id": "45749934284",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "bare250_drift": 0.00038919468471262356,
+      "stable_bare_controls": true,
+      "rates": [
+        {
+          "cap_mbps": 50,
+          "two_clean": false,
+          "cases": [
+            0,
+            13
+          ]
+        },
+        {
+          "cap_mbps": 75,
+          "two_clean": false,
+          "cases": [
+            1,
+            12
+          ]
+        },
+        {
+          "cap_mbps": 100,
+          "two_clean": false,
+          "cases": [
+            2,
+            11
+          ]
+        },
+        {
+          "cap_mbps": 125,
+          "two_clean": false,
+          "cases": [
+            3,
+            10
+          ]
+        },
+        {
+          "cap_mbps": 150,
+          "two_clean": false,
+          "cases": [
+            4,
+            9
+          ]
+        },
+        {
+          "cap_mbps": 175,
+          "two_clean": false,
+          "cases": [
+            5,
+            8
+          ]
+        },
+        {
+          "cap_mbps": 200,
+          "two_clean": false,
+          "cases": [
+            6,
+            7
+          ]
+        }
+      ],
+      "highest_repeated_clean_wsl_mbps": null,
+      "screen_status": "NO_CLEAN_CANDIDATE",
+      "all_cases_qualified": true,
+      "qualification_job_id": 139682375896
+    },
+    {
+      "schema": "m0-machine-rate-observation-v1",
+      "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+      "run_id": "45749934308",
+      "fixture": "wsl2-tailscale-vxlan-gro-tun500",
+      "product_source": "db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141",
+      "probe_only": true,
+      "classification": "9V45_OBSERVED",
+      "machine": {
+        "windows": {
+          "hardware": {
+            "Name": "AMD EPYC 9V45 96-Core Processor                ",
+            "Manufacturer": "AuthenticAMD",
+            "NumberOfCores": 2,
+            "NumberOfLogicalProcessors": 4,
+            "MaxClockSpeed": 2596,
+            "CurrentClockSpeed": 2596
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "windows",
+            "run_id": "45749934308",
+            "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+            "machine": "AMD64",
+            "system": "Windows",
+            "processor": "AMD64 Family 26 Model 2 Stepping 1, AuthenticAMD",
+            "python": "3.12.10",
+            "openssl": "OpenSSL 3.0.16 11 Feb 2025",
+            "zlib": "1.3.1",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 8882176,
+                    "wall_s": 0.6500148999999737,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 13664572.919790544,
+                    "ops_per_cpu_s": 13534744.38095238,
+                    "cpu_wall_ratio": 1.009592241654809
+                  },
+                  {
+                    "operations": 8811008,
+                    "wall_s": 0.6500208999999586,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 13554961.078944633,
+                    "ops_per_cpu_s": 13753768.585365854,
+                    "cpu_wall_ratio": 0.9855452340071539
+                  },
+                  {
+                    "operations": 8851456,
+                    "wall_s": 0.6500111999999945,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 13617389.977280507,
+                    "ops_per_cpu_s": 13487932.952380951,
+                    "cpu_wall_ratio": 1.009597988465438
+                  }
+                ],
+                "median_ops_per_wall_s": 13617389.977280507,
+                "median_ops_per_cpu_s": 13534744.38095238,
+                "median_cpu_wall_ratio": 1.009592241654809
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 760832,
+                    "wall_s": 0.650169999999946,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 1170204.71568984,
+                    "ops_per_cpu_s": 1187640.1951219512,
+                    "cpu_wall_ratio": 0.9853192242029827
+                  },
+                  {
+                    "operations": 761088,
+                    "wall_s": 0.650019900000018,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 1170868.7687868925,
+                    "ops_per_cpu_s": 1159753.142857143,
+                    "cpu_wall_ratio": 1.0095844757983283
+                  },
+                  {
+                    "operations": 776448,
+                    "wall_s": 0.650127800000007,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 1194300.5667500938,
+                    "ops_per_cpu_s": 1183158.857142857,
+                    "cpu_wall_ratio": 1.0094169177198589
+                  }
+                ],
+                "median_ops_per_wall_s": 1170868.7687868925,
+                "median_ops_per_cpu_s": 1183158.857142857,
+                "median_cpu_wall_ratio": 1.0094169177198589
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 13486592,
+                    "wall_s": 0.6500037000000134,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 20748484.97016205,
+                    "ops_per_cpu_s": 21052241.17073171,
+                    "cpu_wall_ratio": 0.985571312901737
+                  },
+                  {
+                    "operations": 13073408,
+                    "wall_s": 0.6500029999999697,
+                    "thread_cpu_s": 0.65625,
+                    "ops_per_wall_s": 20112842.55611222,
+                    "ops_per_cpu_s": 19921383.61904762,
+                    "cpu_wall_ratio": 1.0096107248736246
+                  },
+                  {
+                    "operations": 13423360,
+                    "wall_s": 0.6500063999999952,
+                    "thread_cpu_s": 0.640625,
+                    "ops_per_wall_s": 20651119.742821146,
+                    "ops_per_cpu_s": 20953537.56097561,
+                    "cpu_wall_ratio": 0.9855672190304661
+                  }
+                ],
+                "median_ops_per_wall_s": 20651119.742821146,
+                "median_ops_per_cpu_s": 20953537.56097561,
+                "median_cpu_wall_ratio": 0.985571312901737
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "wsl": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"x86_64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Address sizes:\",\n         \"data\": \"48 bits physical, 48 bits virtual\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"AuthenticAMD\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"AMD EPYC 9V45 96-Core Processor\"\n      },{\n         \"field\": \"CPU family:\",\n         \"data\": \"26\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"2\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"5192.23\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl xtopology cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\"\n      },{\n         \"field\": \"Virtualization:\",\n         \"data\": \"AMD-V\"\n      },{\n         \"field\": \"Hypervisor vendor:\",\n         \"data\": \"Microsoft\"\n      },{\n         \"field\": \"Virtualization type:\",\n         \"data\": \"full\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"96 KiB (2 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"64 KiB (2 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"2 MiB (2 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"32 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Vulnerable: Safe RET, no microcode\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Vulnerable\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; usercopy/swapgs barriers and __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmbpeip 6.18.58.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct 27 00:24:11 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "wsl",
+            "run_id": "45749934308",
+            "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+            "machine": "x86_64",
+            "system": "Linux",
+            "processor": "x86_64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 5354752,
+                    "wall_s": 0.6500244829999957,
+                    "thread_cpu_s": 0.6499831,
+                    "ops_per_wall_s": 8237769.7148986235,
+                    "ops_per_cpu_s": 8238294.1956490865,
+                    "cpu_wall_ratio": 0.9999363362441294
+                  },
+                  {
+                    "operations": 5404416,
+                    "wall_s": 0.6500022410000099,
+                    "thread_cpu_s": 0.6491887000000001,
+                    "ops_per_wall_s": 8314457.488154902,
+                    "ops_per_cpu_s": 8324876.88094386,
+                    "cpu_wall_ratio": 0.9987484027766454
+                  },
+                  {
+                    "operations": 5452032,
+                    "wall_s": 0.6500010780000025,
+                    "thread_cpu_s": 0.6498739,
+                    "ops_per_wall_s": 8387727.627737841,
+                    "ops_per_cpu_s": 8389369.076062294,
+                    "cpu_wall_ratio": 0.9998043418629492
+                  }
+                ],
+                "median_ops_per_wall_s": 8314457.488154902,
+                "median_ops_per_cpu_s": 8324876.88094386,
+                "median_cpu_wall_ratio": 0.9998043418629492
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 845312,
+                    "wall_s": 0.6500281719999919,
+                    "thread_cpu_s": 0.6499998999999999,
+                    "ops_per_wall_s": 1300423.6376389093,
+                    "ops_per_cpu_s": 1300480.2000738771,
+                    "cpu_wall_ratio": 0.9999565065004721
+                  },
+                  {
+                    "operations": 896256,
+                    "wall_s": 0.6500728559999942,
+                    "thread_cpu_s": 0.6500165999999998,
+                    "ops_per_wall_s": 1378700.851339666,
+                    "ops_per_cpu_s": 1378820.1716694622,
+                    "cpu_wall_ratio": 0.9999134620074117
+                  },
+                  {
+                    "operations": 871680,
+                    "wall_s": 0.6501246739999971,
+                    "thread_cpu_s": 0.6498732999999999,
+                    "ops_per_wall_s": 1340788.9822683516,
+                    "ops_per_cpu_s": 1341307.6056517481,
+                    "cpu_wall_ratio": 0.9996133449320566
+                  }
+                ],
+                "median_ops_per_wall_s": 1340788.9822683516,
+                "median_ops_per_cpu_s": 1341307.6056517481,
+                "median_cpu_wall_ratio": 0.9999134620074117
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 14840064,
+                    "wall_s": 0.6500097019999913,
+                    "thread_cpu_s": 0.6500131999999996,
+                    "ops_per_wall_s": 22830526.920350797,
+                    "ops_per_cpu_s": 22830404.059486806,
+                    "cpu_wall_ratio": 1.0000053814581498
+                  },
+                  {
+                    "operations": 14926336,
+                    "wall_s": 0.6500040089999999,
+                    "thread_cpu_s": 0.6499521999999995,
+                    "ops_per_wall_s": 22963452.21464627,
+                    "ops_per_cpu_s": 22965282.67771078,
+                    "cpu_wall_ratio": 0.9999202943377533
+                  },
+                  {
+                    "operations": 14770176,
+                    "wall_s": 0.6500080840000066,
+                    "thread_cpu_s": 0.6499126999999998,
+                    "ops_per_wall_s": 22723065.0872949,
+                    "ops_per_cpu_s": 22726400.022649202,
+                    "cpu_wall_ratio": 0.9998532572096336
+                  }
+                ],
+                "median_ops_per_wall_s": 22830526.920350797,
+                "median_ops_per_cpu_s": 22830404.059486806,
+                "median_cpu_wall_ratio": 0.9999202943377533
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "relay": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"aarch64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"ARM\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"Neoverse-N2\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"0\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"r0p0\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"2000.00\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"4 MiB (4 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"128 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Mitigation; Speculative Store Bypass disabled via prctl\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; CSV2, BHB\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmnfvap 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 19:06:39 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "relay",
+            "run_id": "45749934308",
+            "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+            "machine": "aarch64",
+            "system": "Linux",
+            "processor": "aarch64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 3869696,
+                    "wall_s": 0.650027792000003,
+                    "thread_cpu_s": 0.64997028,
+                    "ops_per_wall_s": 5953123.924276736,
+                    "ops_per_cpu_s": 5953650.680766512,
+                    "cpu_wall_ratio": 0.9999115237829661
+                  },
+                  {
+                    "operations": 3895552,
+                    "wall_s": 0.6500193429999968,
+                    "thread_cpu_s": 0.6499776,
+                    "ops_per_wall_s": 5992978.581254342,
+                    "ops_per_cpu_s": 5993363.463602438,
+                    "cpu_wall_ratio": 0.9999357819110366
+                  },
+                  {
+                    "operations": 3894784,
+                    "wall_s": 0.6500297759999967,
+                    "thread_cpu_s": 0.6499882319999999,
+                    "ops_per_wall_s": 5991700.909405756,
+                    "ops_per_cpu_s": 5992083.868989186,
+                    "cpu_wall_ratio": 0.9999360890815611
+                  }
+                ],
+                "median_ops_per_wall_s": 5991700.909405756,
+                "median_ops_per_cpu_s": 5992083.868989186,
+                "median_cpu_wall_ratio": 0.9999357819110366
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 708608,
+                    "wall_s": 0.6500784739999972,
+                    "thread_cpu_s": 0.6500290799999999,
+                    "ops_per_wall_s": 1090034.5548128441,
+                    "ops_per_cpu_s": 1090117.3836715121,
+                    "cpu_wall_ratio": 0.999924018403973
+                  },
+                  {
+                    "operations": 709632,
+                    "wall_s": 0.6500567049999972,
+                    "thread_cpu_s": 0.650013848,
+                    "ops_per_wall_s": 1091646.3049173579,
+                    "ops_per_cpu_s": 1091718.2798234785,
+                    "cpu_wall_ratio": 0.9999340719053159
+                  },
+                  {
+                    "operations": 709632,
+                    "wall_s": 0.6500586729999895,
+                    "thread_cpu_s": 0.6500217839999998,
+                    "ops_per_wall_s": 1091643.0000465687,
+                    "ops_per_cpu_s": 1091704.9512297579,
+                    "cpu_wall_ratio": 0.9999432528146736
+                  }
+                ],
+                "median_ops_per_wall_s": 1091643.0000465687,
+                "median_ops_per_cpu_s": 1091704.9512297579,
+                "median_cpu_wall_ratio": 0.9999340719053159
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 7383808,
+                    "wall_s": 0.6500076199999967,
+                    "thread_cpu_s": 0.6499338959999994,
+                    "ops_per_wall_s": 11359571.446254795,
+                    "ops_per_cpu_s": 11360859.997368112,
+                    "cpu_wall_ratio": 0.9998865797911765
+                  },
+                  {
+                    "operations": 7380736,
+                    "wall_s": 0.650016297000036,
+                    "thread_cpu_s": 0.649977496,
+                    "ops_per_wall_s": 11354693.773161799,
+                    "ops_per_cpu_s": 11355371.601973124,
+                    "cpu_wall_ratio": 0.9999403076504156
+                  },
+                  {
+                    "operations": 7379712,
+                    "wall_s": 0.6500014630000237,
+                    "thread_cpu_s": 0.6498912800000003,
+                    "ops_per_wall_s": 11353377.523089869,
+                    "ops_per_cpu_s": 11355302.382269226,
+                    "cpu_wall_ratio": 0.9998304880738039
+                  }
+                ],
+                "median_ops_per_wall_s": 11354693.773161799,
+                "median_ops_per_cpu_s": 11355371.601973124,
+                "median_cpu_wall_ratio": 0.9998865797911765
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        },
+        "server": {
+          "hardware": {
+            "cpu": {
+              "rc": 0,
+              "stdout": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"aarch64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"ARM\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"Neoverse-N2\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"0\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"4\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"r0p0\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"2000.00\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"256 KiB (4 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"4 MiB (4 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"128 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-3\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Mitigation; Speculative Store Bypass disabled via prctl\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Mitigation; __user pointer sanitization\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Mitigation; CSV2, BHB\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}\n",
+              "stderr": ""
+            },
+            "kernel": {
+              "rc": 0,
+              "stdout": "Linux runnervmnfvap 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 19:06:39 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n",
+              "stderr": ""
+            },
+            "cpu_count": 4,
+            "affinity": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "scope": "guest-visible CPU identification, not physical host capacity"
+          },
+          "probe": {
+            "schema": "m0-h2470-cpu-probe-v1",
+            "role": "server",
+            "run_id": "45749934308",
+            "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+            "machine": "aarch64",
+            "system": "Linux",
+            "processor": "aarch64",
+            "python": "3.12.3",
+            "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+            "zlib": "1.3",
+            "logical_cpu_count": 4,
+            "seconds_per_sample": 0.65,
+            "repeats": 3,
+            "workloads": {
+              "crc32_64B": {
+                "samples": [
+                  {
+                    "operations": 3868416,
+                    "wall_s": 0.6500178609999239,
+                    "thread_cpu_s": 0.6499387680000001,
+                    "ops_per_wall_s": 5951245.699693863,
+                    "ops_per_cpu_s": 5951969.924649886,
+                    "cpu_wall_ratio": 0.9998783218051852
+                  },
+                  {
+                    "operations": 3898112,
+                    "wall_s": 0.6500134689999868,
+                    "thread_cpu_s": 0.649896456,
+                    "ops_per_wall_s": 5996971.118147829,
+                    "ops_per_cpu_s": 5998050.864890391,
+                    "cpu_wall_ratio": 0.9998199837302344
+                  },
+                  {
+                    "operations": 3898368,
+                    "wall_s": 0.6500201970000035,
+                    "thread_cpu_s": 0.6499866799999998,
+                    "ops_per_wall_s": 5997302.880728764,
+                    "ops_per_cpu_s": 5997612.135682536,
+                    "cpu_wall_ratio": 0.9999484369867916
+                  }
+                ],
+                "median_ops_per_wall_s": 5996971.118147829,
+                "median_ops_per_cpu_s": 5997612.135682536,
+                "median_cpu_wall_ratio": 0.9998783218051852
+              },
+              "sha256_1160B": {
+                "samples": [
+                  {
+                    "operations": 710144,
+                    "wall_s": 0.6501437250000208,
+                    "thread_cpu_s": 0.6500183759999998,
+                    "ops_per_wall_s": 1092287.709152276,
+                    "ops_per_cpu_s": 1092498.3450006347,
+                    "cpu_wall_ratio": 0.9998071980160679
+                  },
+                  {
+                    "operations": 710144,
+                    "wall_s": 0.65005321000001,
+                    "thread_cpu_s": 0.6499370239999998,
+                    "ops_per_wall_s": 1092439.8019663482,
+                    "ops_per_cpu_s": 1092635.0919808506,
+                    "cpu_wall_ratio": 0.9998212669390398
+                  },
+                  {
+                    "operations": 709888,
+                    "wall_s": 0.6501364690000173,
+                    "thread_cpu_s": 0.6501109840000003,
+                    "ops_per_wall_s": 1091906.1364022344,
+                    "ops_per_cpu_s": 1091948.9402135676,
+                    "cpu_wall_ratio": 0.9999608005376838
+                  }
+                ],
+                "median_ops_per_wall_s": 1092287.709152276,
+                "median_ops_per_cpu_s": 1092498.3450006347,
+                "median_cpu_wall_ratio": 0.9998212669390398
+              },
+              "integer32": {
+                "samples": [
+                  {
+                    "operations": 7378944,
+                    "wall_s": 0.650020793000067,
+                    "thread_cpu_s": 0.6499092320000002,
+                    "ops_per_wall_s": 11351858.401242312,
+                    "ops_per_cpu_s": 11353807.019008461,
+                    "cpu_wall_ratio": 0.9998283731824148
+                  },
+                  {
+                    "operations": 7380224,
+                    "wall_s": 0.6500120160000051,
+                    "thread_cpu_s": 0.6499218959999995,
+                    "ops_per_wall_s": 11353980.877793407,
+                    "ops_per_cpu_s": 11355555.252749948,
+                    "cpu_wall_ratio": 0.999861356409132
+                  },
+                  {
+                    "operations": 7380480,
+                    "wall_s": 0.6500150880000319,
+                    "thread_cpu_s": 0.6499766239999998,
+                    "ops_per_wall_s": 11354321.055390082,
+                    "ops_per_cpu_s": 11354992.975870471,
+                    "cpu_wall_ratio": 0.9999408259889006
+                  }
+                ],
+                "median_ops_per_wall_s": 11353980.877793407,
+                "median_ops_per_cpu_s": 11354992.975870471,
+                "median_cpu_wall_ratio": 0.999861356409132
+              }
+            },
+            "scope": "single Python thread; C library hashing/CRC and Python integer loop proxies, not WBD throughput or physical host capacity"
+          }
+        }
+      },
+      "rows": [
+        {
+          "case": -10,
+          "label": "bare250-before",
+          "rx_mbps": 250.01371733333335,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 26.008053064346313,
+            "samples": 14,
+            "tx_packets": 89509,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": true,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 250,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 1.0000548693333333,
+          "candidate_changed": false,
+          "kind": "bare",
+          "path": {
+            "client": {
+              "samples": 20,
+              "direct": true
+            },
+            "relay": {
+              "samples": 20,
+              "direct": true
+            },
+            "server": {
+              "samples": 20,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 0,
+          "label": "wbd50-first",
+          "rx_mbps": 46.726656,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.011406421661377,
+            "samples": 15,
+            "tx_packets": 107283,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 14,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 50,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.93453312,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 1,
+          "label": "wbd75-first",
+          "rx_mbps": 74.57858506666666,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.012189388275146,
+            "samples": 15,
+            "tx_packets": 153490,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 13,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 75,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9943811342222222,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 2,
+          "label": "wbd100-first",
+          "rx_mbps": 92.169336,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.01062250137329,
+            "samples": 15,
+            "tx_packets": 200519,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 15,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 100,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.92169336,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 3,
+          "label": "wbd125-first",
+          "rx_mbps": 113.36193333333333,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 30.011462688446045,
+            "samples": 16,
+            "tx_packets": 269091,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 9,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 125,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9068954666666666,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 22,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 4,
+          "label": "wbd150-first",
+          "rx_mbps": 147.145328,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.012600898742676,
+            "samples": 15,
+            "tx_packets": 327763,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 12,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 10
+          },
+          "rate_mbps": 150,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9809688533333334,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 5,
+          "label": "wbd175-first",
+          "rx_mbps": 167.14849919999997,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 30.013240337371826,
+            "samples": 16,
+            "tx_packets": 376714,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 8,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 175,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.955134281142857,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 22,
+              "direct": true
+            },
+            "relay": {
+              "samples": 22,
+              "direct": true
+            },
+            "server": {
+              "samples": 22,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 6,
+          "label": "wbd200-first",
+          "rx_mbps": 185.74740906666668,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.01116633415222,
+            "samples": 15,
+            "tx_packets": 417512,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 7,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 2
+          },
+          "rate_mbps": 200,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9287370453333333,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 7,
+          "label": "wbd200-repeat",
+          "rx_mbps": 185.1208064,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.401180028915405,
+            "samples": 15,
+            "tx_packets": 454474,
+            "tx_dropped": 136
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 10,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 136,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 16
+          },
+          "rate_mbps": 200,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.925604032,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 22,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 8,
+          "label": "wbd175-repeat",
+          "rx_mbps": 153.17693813333332,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 26.893820762634277,
+            "samples": 14,
+            "tx_packets": 383697,
+            "tx_dropped": 2596
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 15,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 2596,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 103
+          },
+          "rate_mbps": 175,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.8752967893333333,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 20,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 9,
+          "label": "wbd150-repeat",
+          "rx_mbps": 140.32319146666666,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.04672145843506,
+            "samples": 15,
+            "tx_packets": 335181,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 24,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 2
+          },
+          "rate_mbps": 150,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.935487943111111,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 10,
+          "label": "wbd125-repeat",
+          "rx_mbps": 116.64096746666667,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.01602578163147,
+            "samples": 15,
+            "tx_packets": 257970,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 14,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 125,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9331277397333333,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 22,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 11,
+          "label": "wbd100-repeat",
+          "rx_mbps": 94.95436106666666,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 26.010164499282837,
+            "samples": 14,
+            "tx_packets": 205811,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 19,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 1
+          },
+          "rate_mbps": 100,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9495436106666666,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 20,
+              "direct": true
+            },
+            "relay": {
+              "samples": 21,
+              "direct": true
+            },
+            "server": {
+              "samples": 21,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 12,
+          "label": "wbd75-repeat",
+          "rx_mbps": 74.6367696,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.009277820587158,
+            "samples": 15,
+            "tx_packets": 160189,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 6,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 75,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9951569279999999,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 20,
+              "direct": true
+            },
+            "server": {
+              "samples": 20,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": 13,
+          "label": "wbd50-repeat",
+          "rx_mbps": 46.74959413333333,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 28.008368253707886,
+            "samples": 15,
+            "tx_packets": 103186,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 9,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 50,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.9349918826666667,
+          "candidate_changed": false,
+          "kind": "wbd",
+          "path": {
+            "client": {
+              "samples": 21,
+              "direct": true
+            },
+            "relay": {
+              "samples": 20,
+              "direct": true
+            },
+            "server": {
+              "samples": 20,
+              "direct": true
+            }
+          },
+          "qualified": true
+        },
+        {
+          "case": -11,
+          "label": "bare250-after",
+          "rx_mbps": 233.830016,
+          "receipt": "MEASURED_EXACT",
+          "tun_delta": {
+            "seconds": 26.009702920913696,
+            "samples": 14,
+            "tx_packets": 99065,
+            "tx_dropped": 0
+          },
+          "length_ok": true,
+          "queue_length": 500,
+          "wsl_case_drops": {
+            "available": true,
+            "zero": true,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "tailscale0.rx.dropped": 0,
+              "tailscale0.rx.errors": 0,
+              "tailscale0.tx.dropped": 0,
+              "tailscale0.tx.errors": 0,
+              "h228vc.rx.dropped": 0,
+              "h228vc.rx.errors": 0,
+              "h228vc.tx.dropped": 0,
+              "h228vc.tx.errors": 0,
+              "h228bc.rx.dropped": 0,
+              "h228bc.rx.errors": 0,
+              "h228bc.tx.dropped": 0,
+              "h228bc.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|pfifo_fast|0:|:4|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:3|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:2|": 0,
+              "qdisc.eth0|pfifo_fast|0:|:1|": 0,
+              "qdisc.tailscale0|fq_codel|0:||True": 0,
+              "qdisc.h228bc|noqueue|0:||True": 0,
+              "qdisc.h228vc|noqueue|0:||True": 0,
+              "guest_softnet_drop": 0
+            },
+            "softnet_time_squeeze_delta": 0
+          },
+          "rate_mbps": 250,
+          "duration_s": 30,
+          "steady_window_s": [
+            10,
+            25
+          ],
+          "goodput_to_cap": 0.935320064,
+          "candidate_changed": false,
+          "kind": "bare",
+          "path": {
+            "client": {
+              "samples": 20,
+              "direct": true
+            },
+            "relay": {
+              "samples": 20,
+              "direct": true
+            },
+            "server": {
+              "samples": 19,
+              "direct": true
+            }
+          },
+          "qualified": true
+        }
+      ],
+      "cpu_gate": {
+        "source_sha": "b2c7c99445b046213ab2b1291de3fc7cf5f4f32d",
+        "run_id": "45749934308",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "bare250_drift": 0.06473125357260402,
+      "stable_bare_controls": true,
+      "rates": [
+        {
+          "cap_mbps": 50,
+          "two_clean": false,
+          "cases": [
+            0,
+            13
+          ]
+        },
+        {
+          "cap_mbps": 75,
+          "two_clean": false,
+          "cases": [
+            1,
+            12
+          ]
+        },
+        {
+          "cap_mbps": 100,
+          "two_clean": false,
+          "cases": [
+            2,
+            11
+          ]
+        },
+        {
+          "cap_mbps": 125,
+          "two_clean": false,
+          "cases": [
+            3,
+            10
+          ]
+        },
+        {
+          "cap_mbps": 150,
+          "two_clean": false,
+          "cases": [
+            4,
+            9
+          ]
+        },
+        {
+          "cap_mbps": 175,
+          "two_clean": false,
+          "cases": [
+            5,
+            8
+          ]
+        },
+        {
+          "cap_mbps": 200,
+          "two_clean": false,
+          "cases": [
+            6,
+            7
+          ]
+        }
+      ],
+      "highest_repeated_clean_wsl_mbps": null,
+      "screen_status": "NO_CLEAN_CANDIDATE",
+      "all_cases_qualified": true,
+      "qualification_job_id": 139681917000
+    }
+  ],
+  "rate_profiles": []
+}
