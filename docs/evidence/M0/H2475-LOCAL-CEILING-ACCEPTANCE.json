@@ -1,0 +1,1621 @@
+{
+  "schema": "m0-local-ceiling-v1",
+  "source_sha": "c6dc2d4fbb5468a11b1fa780be36f1dc675dd4c5",
+  "run_id": 45764247116,
+  "observations": [
+    {
+      "replica": "A",
+      "job_id": 139721207160,
+      "gate": {
+        "source_sha": "c6dc2d4fbb5468a11b1fa780be36f1dc675dd4c5",
+        "run_id": "45764247116",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "restore": {
+        "before": [
+          {
+            "kind": "mq",
+            "handle": "0:",
+            "root": true,
+            "options": {}
+          },
+          {
+            "kind": "pfifo_fast",
+            "handle": "0:",
+            "parent": ":4",
+            "options": {
+              "bands": 3,
+              "priomap": [
+                1,
+                2,
+                2,
+                2,
+                1,
+                2,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "multiqueue": false
+            }
+          },
+          {
+            "kind": "pfifo_fast",
+            "handle": "0:",
+            "parent": ":3",
+            "options": {
+              "bands": 3,
+              "priomap": [
+                1,
+                2,
+                2,
+                2,
+                1,
+                2,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "multiqueue": false
+            }
+          },
+          {
+            "kind": "pfifo_fast",
+            "handle": "0:",
+            "parent": ":2",
+            "options": {
+              "bands": 3,
+              "priomap": [
+                1,
+                2,
+                2,
+                2,
+                1,
+                2,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "multiqueue": false
+            }
+          },
+          {
+            "kind": "pfifo_fast",
+            "handle": "0:",
+            "parent": ":1",
+            "options": {
+              "bands": 3,
+              "priomap": [
+                1,
+                2,
+                2,
+                2,
+                1,
+                2,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "multiqueue": false
+            }
+          }
+        ],
+        "after": [
+          {
+            "kind": "mq",
+            "handle": "0:",
+            "root": true,
+            "options": {}
+          },
+          {
+            "kind": "fq_codel",
+            "handle": "0:",
+            "parent": ":4",
+            "options": {
+              "limit": 10240,
+              "flows": 1024,
+              "quantum": 1514,
+              "target": 4999,
+              "interval": 99999,
+              "memory_limit": 33554432,
+              "ecn": true,
+              "drop_batch": 64
+            }
+          },
+          {
+            "kind": "fq_codel",
+            "handle": "0:",
+            "parent": ":3",
+            "options": {
+              "limit": 10240,
+              "flows": 1024,
+              "quantum": 1514,
+              "target": 4999,
+              "interval": 99999,
+              "memory_limit": 33554432,
+              "ecn": true,
+              "drop_batch": 64
+            }
+          },
+          {
+            "kind": "fq_codel",
+            "handle": "0:",
+            "parent": ":2",
+            "options": {
+              "limit": 10240,
+              "flows": 1024,
+              "quantum": 1514,
+              "target": 4999,
+              "interval": 99999,
+              "memory_limit": 33554432,
+              "ecn": true,
+              "drop_batch": 64
+            }
+          },
+          {
+            "kind": "fq_codel",
+            "handle": "0:",
+            "parent": ":1",
+            "options": {
+              "limit": 10240,
+              "flows": 1024,
+              "quantum": 1514,
+              "target": 4999,
+              "interval": 99999,
+              "memory_limit": 33554432,
+              "ecn": true,
+              "drop_batch": 64
+            }
+          }
+        ],
+        "identical": false,
+        "ifb_present": false,
+        "owner_present": false,
+        "passed": true
+      },
+      "rows": [
+        {
+          "case": -10,
+          "kind": "bare",
+          "rate_mbps": 800,
+          "added_rtt_ms": 0,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 795.6685937777778,
+          "bytes": 5970109648,
+          "source": {
+            "bytes": 5970109648,
+            "end": "deadline",
+            "actual_cc": "bbr",
+            "pacing_bytes_per_s": 100000000
+          },
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0,
+          "business_drops": {
+            "available": true,
+            "zero": true,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|fq_codel|0:|:4|": 0,
+              "qdisc.eth0|fq_codel|0:|:3|": 0,
+              "qdisc.eth0|fq_codel|0:|:2|": 0,
+              "qdisc.eth0|fq_codel|0:|:1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "both_used": false
+          },
+          "netem_drops": null,
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 111284
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 113676
+            }
+          },
+          "steady_cpu": null,
+          "clean_candidate": false,
+          "business_ss": [],
+          "origin_ss": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess"
+        },
+        {
+          "case": -11,
+          "kind": "bare",
+          "rate_mbps": 800,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 756.4139306666666,
+          "bytes": 5238928712,
+          "source": {
+            "bytes": 5238928712,
+            "end": "deadline",
+            "actual_cc": "bbr",
+            "pacing_bytes_per_s": 100000000
+          },
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.40599999999994907,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 3588310,
+              "ifbwlm0": 87118
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 87319
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 87408
+            }
+          },
+          "steady_cpu": null,
+          "clean_candidate": false,
+          "business_ss": [],
+          "origin_ss": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess"
+        },
+        {
+          "case": 0,
+          "kind": "wbd",
+          "rate_mbps": 125,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 118.23955022222222,
+          "bytes": 897203904,
+          "source": {
+            "bytes": 897203904,
+            "end": "deadline",
+            "actual_cc": "cubic",
+            "pacing_bytes_per_s": 15625000
+          },
+          "client_stop": true,
+          "server_stop": true,
+          "proxy_accept": true,
+          "proxy_pacing": true,
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.40600000000006276,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8002:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 863304,
+              "ifbwlm0": 438590
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 440786
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 863783
+            }
+          },
+          "steady_cpu": {
+            "samples": 45,
+            "core_equiv": 0.24939616215133206,
+            "estimated_cpu_s_per_gib": 18.118275283942513
+          },
+          "clean_candidate": false,
+          "business_ss": [
+            "ESTAB    0      29665196      192.0.2.2:5400       10.66.0.2:59090\n\t skmem:(r0,rb87380,t31292,tb67108864,f1492,w30423596,o0,bl0,d0) bbr wscale:11,11 rto:604 rtt:400.773/0.021 ato:40 mss:1049 pmtu:1089 rcvmss:536 advmss:1049 cwnd:12028 ssthresh:6018 bytes_sent:320540832 bytes_acked:314242636 bytes_received:1 segs_out:305569 segs_in:149785 data_segs_out:305568 data_segs_in:1 bbr:(bw:125250120bps,mrtt:400.375,pacing_gain:1.25,cwnd_gain:2) send 251860719bps lastrcv:24872 pacing_rate 125000000bps/125000000bps delivery_rate 124750192bps delivered:299565 busy:24864ms unacked:6004 rcv_space:10490 rcv_ssthresh:42641 notsent:23367000 minrtt:400.297 snd_wnd:67108864"
+          ],
+          "origin_ss": "State Recv-Q Send-Q  Local Address:Port Peer Address:Port Process\nESTAB 0      3916432     192.0.2.2:5400    192.0.2.1:40034\n\t skmem:(r0,rb87380,t132240,tb5822976,f2224,w3974992,o0,bl0,d0) cubic wscale:11,11 rto:204 rtt:0.08/0.012 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:669 ssthresh:55 bytes_sent:345536832 bytes_acked:345406512 bytes_received:1 segs_out:238640 segs_in:5258 data_segs_out:238637 data_segs_in:1 send 96871200000bps lastrcv:24960 pacing_rate 125000000bps/125000000bps delivery_rate 124648488bps delivered:238548 busy:24960ms rwnd_limited:1828ms(7.3%) unacked:90 rcv_space:14480 rcv_ssthresh:42242 notsent:3786112 minrtt:0.02 snd_wnd:49061888"
+        },
+        {
+          "case": 1,
+          "kind": "wbd",
+          "rate_mbps": 250,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 240.76629351111112,
+          "bytes": 1780793144,
+          "source": {
+            "bytes": 1780793144,
+            "end": "deadline",
+            "actual_cc": "cubic",
+            "pacing_bytes_per_s": 31250000
+          },
+          "client_stop": true,
+          "server_stop": true,
+          "proxy_accept": true,
+          "proxy_pacing": true,
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.4070000000000391,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8003:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 1705595,
+              "ifbwlm0": 858378
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 861332
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 1706698
+            }
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.3810107921040045,
+            "estimated_cpu_s_per_gib": 13.593504868522928
+          },
+          "clean_candidate": false,
+          "business_ss": [
+            "ESTAB      0      62157038      192.0.2.2:5400       10.66.0.2:60340\n\t skmem:(r0,rb87380,t62762,tb67108864,f3474,w63287918,o0,bl0,d0) bbr wscale:11,11 rto:604 rtt:400.869/0.035 ato:40 mss:1049 pmtu:1089 rcvmss:536 advmss:1049 cwnd:24172 ssthresh:12040 bytes_sent:628425376 bytes_acked:615831082 bytes_received:1 segs_out:599072 segs_in:293537 data_segs_out:599071 data_segs_in:1 bbr:(bw:250583280bps,mrtt:400.402,pacing_gain:1.25,cwnd_gain:2) send 506029212bps lastrcv:24888 pacing_rate 250000000bps/250000000bps delivery_rate 249999632bps delivered:587066 busy:24876ms unacked:12006 rcv_space:10490 rcv_ssthresh:42641 notsent:49562744 minrtt:400.286 snd_wnd:67108864"
+          ],
+          "origin_ss": "State Recv-Q Send-Q  Local Address:Port Peer Address:Port Process\nESTAB 0      5097328     192.0.2.2:5400    192.0.2.1:40438\n\t skmem:(r0,rb87380,t132240,tb7598592,f80,w5173168,o0,bl0,d0) cubic wscale:11,11 rto:204 rtt:0.242/0.225 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:873 ssthresh:69 bytes_sent:681637168 bytes_retrans:88 bytes_acked:681506760 bytes_received:1 segs_out:470753 segs_in:10187 data_segs_out:470750 data_segs_in:1 send 41788561983bps lastrcv:24992 pacing_rate 250000000bps/250000000bps delivery_rate 250014384bps delivered:470661 busy:24992ms rwnd_limited:2000ms(8.0%) unacked:90 retrans:0/1 dsack_dups:1 rcv_space:14480 rcv_ssthresh:42242 notsent:4967008 minrtt:0.023 snd_wnd:59187200"
+        },
+        {
+          "case": 2,
+          "kind": "wbd",
+          "rate_mbps": 400,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 365.0398782222222,
+          "bytes": 2665956640,
+          "source": {
+            "bytes": 2665956640,
+            "end": "deadline",
+            "actual_cc": "cubic",
+            "pacing_bytes_per_s": 50000000
+          },
+          "client_stop": true,
+          "server_stop": true,
+          "proxy_accept": true,
+          "proxy_pacing": true,
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.40600000000006276,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8004:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2549440,
+              "ifbwlm0": 1340511
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 1344626
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 2550239
+            }
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.4729928161568702,
+            "estimated_cpu_s_per_gib": 11.13022876585558
+          },
+          "clean_candidate": false,
+          "business_ss": [
+            "ESTAB      0        51075810      192.0.2.2:5400       10.66.0.2:60580\n\t skmem:(r0,rb87380,t98428,tb67108864,f3678,w51925410,o0,bl0,d0) bbr wscale:11,11 rto:608 rtt:405.903/0.051 ato:40 mss:1049 pmtu:1089 rcvmss:536 advmss:1049 cwnd:39578 ssthresh:19230 bytes_sent:968615027 bytes_retrans:50352 bytes_acked:950133745 bytes_received:1 segs_out:923371 segs_in:462971 data_segs_out:923370 data_segs_in:1 bbr:(bw:399516976bps,mrtt:400.511,pacing_gain:1.25,cwnd_gain:2) send 818270809bps lastrcv:24932 lastack:4 pacing_rate 400000000bps/400000000bps delivery_rate 392304784bps delivered:905753 busy:24924ms unacked:17570 retrans:0/48 rcv_space:10490 rcv_ssthresh:42641 notsent:32644880 minrtt:400.282 snd_wnd:67108864"
+          ],
+          "origin_ss": "State Recv-Q Send-Q  Local Address:Port Peer Address:Port Process\nESTAB 0      7792456     192.0.2.2:5400    192.0.2.1:37090\n\t skmem:(r0,rb87380,t132240,tb11663360,f1720,w7907656,o0,bl0,d0) cubic wscale:11,11 rto:236 rtt:34.281/11.26 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:1340 ssthresh:222 bytes_sent:1055938160 bytes_retrans:1112 bytes_acked:1055415768 bytes_received:1 segs_out:729248 segs_in:7933 data_segs_out:729244 data_segs_in:1 send 452803594bps lastrcv:25080 lastack:4 pacing_rate 400000000bps/400000000bps delivery_rate 153769904bps delivered:728885 busy:25080ms rwnd_limited:2520ms(10.0%) unacked:360 retrans:0/1 dsack_dups:1 reordering:90 reord_seen:1 rcv_space:14480 rcv_ssthresh:42242 notsent:7271176 minrtt:0.019 snd_wnd:10792960"
+        },
+        {
+          "case": 3,
+          "kind": "wbd",
+          "rate_mbps": 600,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 331.9827955555556,
+          "bytes": 2366850336,
+          "source": {
+            "bytes": 2366850336,
+            "end": "deadline",
+            "actual_cc": "cubic",
+            "pacing_bytes_per_s": 75000000
+          },
+          "client_stop": true,
+          "server_stop": true,
+          "proxy_accept": true,
+          "proxy_pacing": true,
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.3909999999999627,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8005:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2488540,
+              "ifbwlm0": 2060399
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 2062561
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 2490981
+            }
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.6531590438718197,
+            "estimated_cpu_s_per_gib": 16.900253688276706
+          },
+          "clean_candidate": false,
+          "business_ss": [
+            "ESTAB      0        52384962     192.0.2.2:5400      10.66.0.2:58286\n\t skmem:(r0,rb87380,t0,tb67108864,f1598,w53164482,o0,bl0,d0) bbr wscale:11,11 rto:1272 backoff:1 rtt:435.369/0.325 ato:40 mss:1049 pmtu:1089 rcvmss:536 advmss:1049 cwnd:4 ssthresh:24258 bytes_sent:937305728 bytes_retrans:85971844 bytes_acked:849760384 bytes_received:1 segs_out:893527 segs_in:665171 data_segs_out:893526 data_segs_in:1 bbr:(bw:523278504bps,mrtt:400.407,pacing_gain:1,cwnd_gain:1) send 77102bps lastsnd:96 lastrcv:24852 lastack:96 pacing_rate 518045720bps/600000000bps delivery_rate 466678264bps delivered:810583 busy:24848ms unacked:1500 retrans:4/81956 lost:988 sacked:512 rcv_space:10490 rcv_ssthresh:42641 notsent:50811462 minrtt:400.251 snd_wnd:67108864"
+          ],
+          "origin_ss": "State Recv-Q Send-Q   Local Address:Port Peer Address:Port Process\nESTAB 0      11514320     192.0.2.2:5400    192.0.2.1:52660\n\t skmem:(r0,rb87380,t0,tb17355776,f688,w11685200,o0,bl0,d0) cubic wscale:11,11 rto:232 backoff:1 rtt:31.256/5.501 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:1993 ssthresh:1495 bytes_sent:967809136 bytes_retrans:1312 bytes_acked:967807824 bytes_received:1 segs_out:668410 segs_in:1107 data_segs_out:668394 data_segs_in:1 send 738639365bps lastsnd:508 lastrcv:24916 lastack:228 pacing_rate 600000000bps/600000000bps delivery_rate 19759824bps delivered:668395 busy:24916ms rwnd_limited:10640ms(42.7%) retrans:0/3 dsack_dups:3 rcv_space:14480 rcv_ssthresh:42242 notsent:11514320 minrtt:0.017"
+        },
+        {
+          "case": 5,
+          "kind": "wbd",
+          "rate_mbps": 125,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 118.2499936,
+          "bytes": 897592024,
+          "source": {
+            "bytes": 897592024,
+            "end": "deadline",
+            "actual_cc": "cubic",
+            "pacing_bytes_per_s": 15625000
+          },
+          "client_stop": true,
+          "server_stop": true,
+          "proxy_accept": true,
+          "proxy_pacing": true,
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.40599999999994907,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8006:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 868143,
+              "ifbwlm0": 440791
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 444256
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 871570
+            }
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.23646723646723647,
+            "estimated_cpu_s_per_gib": 17.17749010013104
+          },
+          "clean_candidate": false,
+          "business_ss": [
+            "ESTAB      0      30523681     192.0.2.2:5400      10.66.0.2:61467\n\t skmem:(r0,rb87380,t31292,tb67108864,f3935,w31293601,o0,bl0,d0) bbr wscale:11,11 rto:604 rtt:400.762/0.04 ato:40 mss:1049 pmtu:1089 rcvmss:536 advmss:1049 cwnd:12028 ssthresh:6018 bytes_sent:320580591 bytes_acked:314294983 bytes_received:1 segs_out:305607 segs_in:149810 data_segs_out:305606 data_segs_in:1 bbr:(bw:125250120bps,mrtt:400.349,pacing_gain:1.25,cwnd_gain:2) send 251867632bps lastrcv:24884 pacing_rate 125000000bps/125000000bps delivery_rate 124947264bps delivered:299615 busy:24884ms unacked:5992 rcv_space:10490 rcv_ssthresh:42641 notsent:24238073 minrtt:400.313 snd_wnd:67108864"
+          ],
+          "origin_ss": "State Recv-Q Send-Q  Local Address:Port Peer Address:Port Process\nESTAB 0      3918008     192.0.2.2:5400    192.0.2.1:39670\n\t skmem:(r0,rb87380,t132240,tb5631488,f648,w3976568,o0,bl0,d0) cubic wscale:11,11 rto:204 rtt:0.152/0.153 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:647 ssthresh:60 bytes_sent:346447664 bytes_acked:346317344 bytes_received:1 segs_out:239269 segs_in:5260 data_segs_out:239266 data_segs_in:1 send 49308210526bps lastrcv:24980 pacing_rate 125000000bps/125000000bps delivery_rate 124992200bps delivered:239177 busy:24980ms rwnd_limited:1900ms(7.6%) unacked:90 rcv_space:14480 rcv_ssthresh:42242 notsent:3787688 minrtt:0.021 snd_wnd:59187200"
+        },
+        {
+          "case": -12,
+          "kind": "bare",
+          "rate_mbps": 800,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 756.5774506666667,
+          "bytes": 5240239432,
+          "source": {
+            "bytes": 5240239432,
+            "end": "deadline",
+            "actual_cc": "bbr",
+            "pacing_bytes_per_s": 100000000
+          },
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.4070000000000391,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 3592595,
+              "ifbwlm0": 87160
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 87357
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 90917
+            }
+          },
+          "steady_cpu": null,
+          "clean_candidate": false,
+          "business_ss": [],
+          "origin_ss": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess"
+        }
+      ]
+    },
+    {
+      "replica": "C",
+      "job_id": 139721207054,
+      "gate": {
+        "source_sha": "c6dc2d4fbb5468a11b1fa780be36f1dc675dd4c5",
+        "run_id": "45764247116",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "restore": {
+        "before": [
+          {
+            "kind": "mq",
+            "handle": "0:",
+            "root": true,
+            "options": {}
+          },
+          {
+            "kind": "pfifo_fast",
+            "handle": "0:",
+            "parent": ":4",
+            "options": {
+              "bands": 3,
+              "priomap": [
+                1,
+                2,
+                2,
+                2,
+                1,
+                2,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "multiqueue": false
+            }
+          },
+          {
+            "kind": "pfifo_fast",
+            "handle": "0:",
+            "parent": ":3",
+            "options": {
+              "bands": 3,
+              "priomap": [
+                1,
+                2,
+                2,
+                2,
+                1,
+                2,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "multiqueue": false
+            }
+          },
+          {
+            "kind": "pfifo_fast",
+            "handle": "0:",
+            "parent": ":2",
+            "options": {
+              "bands": 3,
+              "priomap": [
+                1,
+                2,
+                2,
+                2,
+                1,
+                2,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "multiqueue": false
+            }
+          },
+          {
+            "kind": "pfifo_fast",
+            "handle": "0:",
+            "parent": ":1",
+            "options": {
+              "bands": 3,
+              "priomap": [
+                1,
+                2,
+                2,
+                2,
+                1,
+                2,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "multiqueue": false
+            }
+          }
+        ],
+        "after": [
+          {
+            "kind": "mq",
+            "handle": "0:",
+            "root": true,
+            "options": {}
+          },
+          {
+            "kind": "fq_codel",
+            "handle": "0:",
+            "parent": ":4",
+            "options": {
+              "limit": 10240,
+              "flows": 1024,
+              "quantum": 1514,
+              "target": 4999,
+              "interval": 99999,
+              "memory_limit": 33554432,
+              "ecn": true,
+              "drop_batch": 64
+            }
+          },
+          {
+            "kind": "fq_codel",
+            "handle": "0:",
+            "parent": ":3",
+            "options": {
+              "limit": 10240,
+              "flows": 1024,
+              "quantum": 1514,
+              "target": 4999,
+              "interval": 99999,
+              "memory_limit": 33554432,
+              "ecn": true,
+              "drop_batch": 64
+            }
+          },
+          {
+            "kind": "fq_codel",
+            "handle": "0:",
+            "parent": ":2",
+            "options": {
+              "limit": 10240,
+              "flows": 1024,
+              "quantum": 1514,
+              "target": 4999,
+              "interval": 99999,
+              "memory_limit": 33554432,
+              "ecn": true,
+              "drop_batch": 64
+            }
+          },
+          {
+            "kind": "fq_codel",
+            "handle": "0:",
+            "parent": ":1",
+            "options": {
+              "limit": 10240,
+              "flows": 1024,
+              "quantum": 1514,
+              "target": 4999,
+              "interval": 99999,
+              "memory_limit": 33554432,
+              "ecn": true,
+              "drop_batch": 64
+            }
+          }
+        ],
+        "identical": false,
+        "ifb_present": false,
+        "owner_present": false,
+        "passed": true
+      },
+      "rows": [
+        {
+          "case": -10,
+          "kind": "bare",
+          "rate_mbps": 800,
+          "added_rtt_ms": 0,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 791.3828124444444,
+          "bytes": 5952808144,
+          "source": {
+            "bytes": 5952808144,
+            "end": "deadline",
+            "actual_cc": "bbr",
+            "pacing_bytes_per_s": 100000000
+          },
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.016000000000019554,
+          "business_drops": {
+            "available": true,
+            "zero": true,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "qdisc.eth0|mq|0:||True": 0,
+              "qdisc.eth0|fq_codel|0:|:4|": 0,
+              "qdisc.eth0|fq_codel|0:|:3|": 0,
+              "qdisc.eth0|fq_codel|0:|:2|": 0,
+              "qdisc.eth0|fq_codel|0:|:1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "both_used": false
+          },
+          "netem_drops": null,
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 112667
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 114869
+            }
+          },
+          "steady_cpu": null,
+          "clean_candidate": false,
+          "business_ss": [],
+          "origin_ss": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess"
+        },
+        {
+          "case": -11,
+          "kind": "bare",
+          "rate_mbps": 800,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 741.7526755555556,
+          "bytes": 5237093704,
+          "source": {
+            "bytes": 5237093704,
+            "end": "deadline",
+            "actual_cc": "bbr",
+            "pacing_bytes_per_s": 100000000
+          },
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.4219999999999686,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 3587053,
+              "ifbwlm0": 87117
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 87280
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 87372
+            }
+          },
+          "steady_cpu": null,
+          "clean_candidate": false,
+          "business_ss": [],
+          "origin_ss": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess"
+        },
+        {
+          "case": 0,
+          "kind": "wbd",
+          "rate_mbps": 125,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 119.30197742222222,
+          "bytes": 898651128,
+          "source": {
+            "bytes": 898651128,
+            "end": "deadline",
+            "actual_cc": "cubic",
+            "pacing_bytes_per_s": 15625000
+          },
+          "client_stop": true,
+          "server_stop": true,
+          "proxy_accept": true,
+          "proxy_pacing": true,
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.39100000000001955,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8002:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 864111,
+              "ifbwlm0": 438437
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 440385
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 864629
+            }
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.2705566061379328,
+            "estimated_cpu_s_per_gib": 19.480511558775287
+          },
+          "clean_candidate": false,
+          "business_ss": [
+            "ESTAB 0      33103887     192.0.2.2:5400     10.66.0.2:56876\n\t skmem:(r0,rb87380,t31292,tb67108864,f2673,w33912207,o0,bl0,d0) bbr wscale:11,11 rto:604 rtt:400.98/0.058 ato:40 mss:1049 pmtu:1089 rcvmss:536 advmss:1049 cwnd:12088 ssthresh:6018 bytes_sent:320574297 bytes_acked:314288689 bytes_received:1 segs_out:305601 segs_in:149807 data_segs_out:305600 data_segs_in:1 bbr:(bw:125241120bps,mrtt:400.417,pacing_gain:1.25,cwnd_gain:2) send 252986423bps lastrcv:24892 pacing_rate 125000000bps/125000000bps delivery_rate 124959344bps delivered:299609 busy:24884ms unacked:5992 rcv_space:10490 rcv_ssthresh:42641 notsent:26818279 minrtt:400.296 snd_wnd:67108864"
+          ],
+          "origin_ss": "State Recv-Q Send-Q Local Address:Port Peer Address:Port Process\nESTAB 0      701520     192.0.2.2:5400    192.0.2.1:44806\n\t skmem:(r0,rb87380,t132240,tb974848,f3760,w713040,o0,bl0,d0) cubic wscale:11,11 rto:204 rtt:0.368/0.319 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:112 ssthresh:60 bytes_sent:349412536 bytes_acked:349282216 bytes_received:1 segs_out:241317 segs_in:5378 data_segs_out:241314 data_segs_in:1 send 3525565217bps lastsnd:4 lastrcv:25012 lastack:4 pacing_rate 125000000bps/125000000bps delivery_rate 125007192bps delivered:241225 busy:25008ms rwnd_limited:1840ms(7.4%) unacked:90 rcv_space:14480 rcv_ssthresh:42242 notsent:571200 minrtt:0.028 snd_wnd:59187200"
+        },
+        {
+          "case": 1,
+          "kind": "wbd",
+          "rate_mbps": 250,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 236.5165847111111,
+          "bytes": 1755414576,
+          "source": {
+            "bytes": 1755414576,
+            "end": "deadline",
+            "actual_cc": "cubic",
+            "pacing_bytes_per_s": 31250000
+          },
+          "client_stop": true,
+          "server_stop": true,
+          "proxy_accept": true,
+          "proxy_pacing": true,
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.4060000000000059,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8003:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 1681275,
+              "ifbwlm0": 848279
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 851042
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 1682062
+            }
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.41159612494877257,
+            "estimated_cpu_s_per_gib": 14.948566063344312
+          },
+          "clean_candidate": false,
+          "business_ss": [
+            "ESTAB      0      61190944      192.0.2.2:5400      10.66.0.2:57116\n\t skmem:(r0,rb87380,t62762,tb67108864,f3104,w62309344,o0,bl0,d0) bbr wscale:11,11 rto:604 rtt:401.44/0.246 ato:40 mss:1049 pmtu:1089 rcvmss:536 advmss:1049 cwnd:24220 ssthresh:12042 bytes_sent:629546757 bytes_acked:616869592 bytes_received:1 segs_out:600141 segs_in:294032 data_segs_out:600140 data_segs_in:1 bbr:(bw:250583280bps,mrtt:400.401,pacing_gain:1.25,cwnd_gain:2) send 506312874bps lastrcv:24900 lastack:4 pacing_rate 250000000bps/250000000bps delivery_rate 249999632bps delivered:588056 busy:24892ms unacked:12085 rcv_space:10490 rcv_ssthresh:42641 notsent:48513779 minrtt:400.33 snd_wnd:67108864"
+          ],
+          "origin_ss": "State Recv-Q Send-Q  Local Address:Port Peer Address:Port Process\nESTAB 0      4883344     192.0.2.2:5400    192.0.2.1:59620\n\t skmem:(r0,rb87380,t132240,tb7206912,f3952,w4956304,o0,bl0,d0) cubic wscale:11,11 rto:204 rtt:0.328/0.375 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:828 ssthresh:124 bytes_sent:682686928 bytes_retrans:32 bytes_acked:682556576 bytes_received:1 segs_out:471479 segs_in:10168 data_segs_out:471475 data_segs_in:1 send 29242536585bps lastrcv:25036 pacing_rate 250000000bps/250000000bps delivery_rate 211044528bps delivered:471386 busy:25036ms rwnd_limited:2280ms(9.1%) unacked:90 retrans:0/1 dsack_dups:1 rcv_space:14480 rcv_ssthresh:42242 notsent:4753024 minrtt:0.023 snd_wnd:59187200"
+        },
+        {
+          "case": 2,
+          "kind": "wbd",
+          "rate_mbps": 400,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 334.4193809777778,
+          "bytes": 2483766560,
+          "source": {
+            "bytes": 2483766560,
+            "end": "deadline",
+            "actual_cc": "cubic",
+            "pacing_bytes_per_s": 50000000
+          },
+          "client_stop": true,
+          "server_stop": true,
+          "proxy_accept": true,
+          "proxy_pacing": true,
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.40699999999998226,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8004:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2395228,
+              "ifbwlm0": 1474091
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 1477605
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 2395930
+            }
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.5683302662668126,
+            "estimated_cpu_s_per_gib": 14.59819643111614
+          },
+          "clean_candidate": false,
+          "business_ss": [
+            "ESTAB      0        61918274      192.0.2.2:5400      10.66.0.2:57356\n\t skmem:(r0,rb87380,t98428,tb67108864,f2302,w62936834,o0,bl0,d0) bbr wscale:11,11 rto:604 rtt:403.241/2.905 ato:40 mss:1049 pmtu:1089 rcvmss:536 advmss:1049 cwnd:43166 ssthresh:29995 bytes_sent:973589385 bytes_retrans:341974 bytes_acked:953209413 bytes_received:1 segs_out:928113 segs_in:477268 data_segs_out:928112 data_segs_in:1 bbr:(bw:400926048bps,mrtt:400.319,pacing_gain:1,cwnd_gain:2) send 898343849bps lastsnd:4 lastrcv:24956 pacing_rate 396916784bps/400000000bps delivery_rate 311803464bps delivered:908685 busy:24948ms unacked:19102 retrans:0/326 reordering:11 reord_seen:14 rcv_space:10490 rcv_ssthresh:42641 notsent:41880276 minrtt:400.319 snd_wnd:67108864"
+          ],
+          "origin_ss": "State Recv-Q Send-Q  Local Address:Port Peer Address:Port Process\nESTAB 0      8215136     192.0.2.2:5400    192.0.2.1:52808\n\t skmem:(r0,rb87380,t132240,tb12464128,f1440,w8338016,o0,bl0,d0) cubic wscale:11,11 rto:224 rtt:22.144/13.615 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:1254 ssthresh:1074 bytes_sent:1046731400 bytes_retrans:1112 bytes_acked:1045818048 bytes_received:1 segs_out:722891 segs_in:7941 data_segs_out:722886 data_segs_in:1 send 655994220bps lastsnd:4 lastrcv:25084 lastack:20 pacing_rate 400000000bps/400000000bps delivery_rate 310082680bps delivered:722257 busy:25084ms rwnd_limited:2956ms(11.8%) unacked:630 retrans:0/1 dsack_dups:1 rcv_space:14480 rcv_ssthresh:42242 notsent:7302896 minrtt:0.027 snd_wnd:31641600"
+        },
+        {
+          "case": 3,
+          "kind": "wbd",
+          "rate_mbps": 600,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 317.8276419555556,
+          "bytes": 2238912480,
+          "source": {
+            "bytes": 2238912480,
+            "end": "deadline",
+            "actual_cc": "cubic",
+            "pacing_bytes_per_s": 75000000
+          },
+          "client_stop": true,
+          "server_stop": true,
+          "proxy_accept": true,
+          "proxy_pacing": true,
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.4069999999999254,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8005:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2337684,
+              "ifbwlm0": 1863805
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 1868795
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 2340676
+            }
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.667728968136641,
+            "estimated_cpu_s_per_gib": 18.04672534517773
+          },
+          "clean_candidate": false,
+          "business_ss": [
+            "ESTAB      0        60378342      192.0.2.2:5400       10.66.0.2:58378\n\t skmem:(r0,rb87380,t0,tb67108864,f1434,w61340262,o0,bl0,d0) bbr wscale:11,11 rto:620 rtt:418.25/0.058 ato:40 mss:1049 pmtu:1089 rcvmss:536 advmss:1049 cwnd:4 ssthresh:21266 bytes_sent:883316114 bytes_retrans:122128776 bytes_acked:721801584 bytes_received:1 segs_out:842057 segs_in:648536 data_segs_out:842056 data_segs_in:1 bbr:(bw:473271792bps,mrtt:417.812,pacing_gain:1,cwnd_gain:1) send 80258bps lastsnd:264 lastrcv:24884 pacing_rate 468539072bps/600000000bps delivery_rate 235131456bps delivered:701737 busy:24876ms unacked:37546 retrans:336/116424 lost:17469 sacked:13650 rcv_space:10490 rcv_ssthresh:42641 notsent:20992588 minrtt:400.26 snd_wnd:67108864"
+          ],
+          "origin_ss": "State Recv-Q Send-Q   Local Address:Port Peer Address:Port Process\nESTAB 0      11626112     192.0.2.2:5400    192.0.2.1:45074\n\t skmem:(r0,rb87380,t0,tb17338368,f2624,w11797952,o0,bl0,d0) cubic wscale:11,11 rto:232 rtt:30.643/8.385 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:1992 ssthresh:1483 bytes_sent:847885936 bytes_retrans:1296 bytes_acked:847884640 bytes_received:1 segs_out:585589 segs_in:1465 data_segs_out:585572 data_segs_in:1 send 753037496bps lastsnd:208 lastrcv:24984 lastack:180 pacing_rate 600000000bps/600000000bps delivery_rate 256935304bps delivered:585573 busy:24984ms rwnd_limited:10724ms(42.9%) retrans:0/1 dsack_dups:1 rcv_space:14480 rcv_ssthresh:42242 notsent:11626112 minrtt:0.025"
+        },
+        {
+          "case": 5,
+          "kind": "wbd",
+          "rate_mbps": 125,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 118.26826951111111,
+          "bytes": 897857176,
+          "source": {
+            "bytes": 897857176,
+            "end": "deadline",
+            "actual_cc": "cubic",
+            "pacing_bytes_per_s": 15625000
+          },
+          "client_stop": true,
+          "server_stop": true,
+          "proxy_accept": true,
+          "proxy_pacing": true,
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.39000000000010004,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8006:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 867430,
+              "ifbwlm0": 438818
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 443447
+            },
+            "tx": {
+              "dropped": 2,
+              "errors": 0,
+              "packets": 872387
+            }
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.24662822962154315,
+            "estimated_cpu_s_per_gib": 17.9128380735357
+          },
+          "clean_candidate": false,
+          "business_ss": [
+            "ESTAB      0      31446956       192.0.2.2:5400        10.66.0.2:54365\n\t skmem:(r0,rb87380,t0,tb67108864,f1940,w31950956,o0,bl0,d0) bbr wscale:11,11 rto:604 rtt:400.774/0.046 ato:40 mss:1049 pmtu:1089 rcvmss:536 advmss:1049 cwnd:4 ssthresh:6018 bytes_sent:314419814 bytes_acked:313670828 bytes_received:1 segs_out:299734 segs_in:149520 data_segs_out:299733 data_segs_in:1 bbr:(bw:125250120bps,mrtt:400.474,pacing_gain:1,cwnd_gain:1) send 83758bps lastsnd:356 lastrcv:24868 lastack:4 pacing_rate 123997624bps/125000000bps delivery_rate 124999936bps delivered:299020 busy:24860ms unacked:714 reordering:11 reord_seen:9 rcv_space:10490 rcv_ssthresh:42641 notsent:30697970 minrtt:400.306 snd_wnd:67108864"
+          ],
+          "origin_ss": "State Recv-Q Send-Q  Local Address:Port Peer Address:Port Process\nESTAB 0      2376336     192.0.2.2:5400    192.0.2.1:38212\n\t skmem:(r0,rb87380,t132240,tb3559936,f688,w2411856,o0,bl0,d0) cubic wscale:11,11 rto:204 rtt:0.142/0.051 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:409 ssthresh:60 bytes_sent:346681624 bytes_acked:346551304 bytes_received:1 segs_out:239429 segs_in:5244 data_segs_out:239426 data_segs_in:1 send 33365183099bps lastsnd:4 lastrcv:24948 lastack:4 pacing_rate 125000000bps/125000000bps delivery_rate 122943392bps delivered:239337 busy:24948ms rwnd_limited:1900ms(7.6%) unacked:90 rcv_space:14480 rcv_ssthresh:42242 notsent:2246016 minrtt:0.019 snd_wnd:59187200"
+        },
+        {
+          "case": -12,
+          "kind": "bare",
+          "rate_mbps": 800,
+          "added_rtt_ms": 400,
+          "status": "MEASURED_EXACT",
+          "rx_mbps": 756.5011413333334,
+          "bytes": 5321766216,
+          "source": {
+            "bytes": 5321766216,
+            "end": "deadline",
+            "actual_cc": "bbr",
+            "pacing_bytes_per_s": 100000000
+          },
+          "rcvbuf": 67108864,
+          "connect_elapsed_s": 0.40599999999994907,
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 3649522,
+              "ifbwlm0": 88486
+            },
+            "both_used": true
+          },
+          "netem_drops": {
+            "eth0": 0,
+            "ifb": 0
+          },
+          "eth0_deltas": {
+            "rx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 88673
+            },
+            "tx": {
+              "dropped": 0,
+              "errors": 0,
+              "packets": 93946
+            }
+          },
+          "steady_cpu": null,
+          "clean_candidate": false,
+          "business_ss": [],
+          "origin_ss": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess"
+        }
+      ]
+    }
+  ]
+}
