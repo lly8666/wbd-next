@@ -34,7 +34,8 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-TX-TURN-INTENT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-INTENT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-INTENT.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-RESULT.md"
   ],
   "verification": [
     {
@@ -60,6 +61,13 @@
     },
     {
       "platform": "linux/x86_64",
+      "scope": "Experimental CUBIC middle SOURCE with original kernel BBR functional fixture, actual Normal business and Stop",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f2b88695d062556fdb804c69041705beb5b64280",
+      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
+    },
+    {
+      "platform": "linux/x86_64",
       "scope": "Same-host splice performance",
       "status": "NOT_RUN",
       "source_sha": null,
@@ -95,6 +103,13 @@
     },
     {
       "platform": "linux/aarch64",
+      "scope": "Experimental CUBIC middle SOURCE with original kernel BBR functional fixture, actual Normal business and Stop",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f2b88695d062556fdb804c69041705beb5b64280",
+      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
+    },
+    {
+      "platform": "linux/aarch64",
       "scope": "Same-host splice performance",
       "status": "NOT_RUN",
       "source_sha": null,
@@ -113,7 +128,7 @@
     "Normal scoped product PASS; server-local/source-policy parity, multi-lease, generation handoff and performance unverified.",
     "Old splice retained for same-host comparison; Windows unchanged",
     "Clean x86 ABBA measured capped goodput parity, but client CPU +29.1%; full performance qualification NOT_RUN. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json",
-    "Ready turn accounting function PASS and neutral performance; matched CUBIC test source changes both middle endpoints only. New SOURCE unqualified."
+    "Matched CUBIC ABBA measured capped goodput parity, client CPU +47.45%, host +15.19%; mixed BBR same VM similar gap. CUBIC trial not selected for product; restore BBRv3 in next substantive candidate. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
   ],
   "promotion": null
 }

@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "f2b88695d062556fdb804c69041705beb5b64280",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Scoped Linux Normal actual product functional test on both native ISAs for CUBIC middle SOURCE; x86_64 single VM clean 25s matched-CUBIC ABBA plus mixed-BBR reference ABBA completed, not full performance qualification. Both product paths use existing TLS/RAW/MTU and Stop.",
+  "run_id": 45815349231,
+  "attempt": 1,
+  "measure_job_id": 139895103523,
+  "artifact_id": 15114877979,
+  "artifact_sha256": "fef3d9200f921b8b2660ef48ad533ba4349881507c69e91946e93086979ca187",
+  "scenario": {
+    "duration_s": 25,
+    "outer_mtu": 1460,
+    "repair": "on",
+    "mode": "normal/off",
+    "origin_fq_mbps": 600,
+    "added_rtt_ms": 0,
+    "loss_pct": 0,
+    "seed": 0,
+    "one_vm": true,
+    "boot_id": "21fb92dd-4175-40ed-b979-aeda9950013d",
+    "kernel": "7.0.0-1018-aws #19~24.04.1-Ubuntu",
+    "rust": "1.85.1",
+    "order": "CUBIC ABBA then mixed BBR ABBA"
+  },
+  "builds": {
+    "A": {
+      "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+      "artifact_id": 15112597057,
+      "zip_sha256": "7c1eb57588c35746dff56ceda6e16db09eba5c2c6c4b5abf06c52081776533f1",
+      "manifest_sha256": "eee5c3b559e4d61c4acb880b32fd845f2fdf82eb6e314c3b64694a1241aa45c4"
+    },
+    "B_cubic": {
+      "source": "f2b88695d062556fdb804c69041705beb5b64280",
+      "artifact_id": 15115906082,
+      "zip_sha256": "1447ed3597d8b3c6898f702c613714fec971e5092fd431d55ef1fed39b4a69c6",
+      "manifest_sha256": "24194e4b4a2d89ef86fd9a07731c04cb4b80921cbf1e88c147bc3fc2a09f2272"
+    },
+    "B_bbr": {
+      "source": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
+      "artifact_id": 15114024595,
+      "zip_sha256": "cef7f75e044b17109f6a6c686bc7c4a7050e09b55bee385b2dc24d30cf3726c5",
+      "manifest_sha256": "e8ef045199bb2632bb681811157e0f0a814a0ee8ad8979038f02dd92c5cdef4b"
+    }
+  },
+  "kernel_bbr": {
+    "name": "tcp_bbr",
+    "intree": true,
+    "srcversion": "5B6C12777290291DF28F230",
+    "sha256": "364e63706cda6ed5a065b1353c5992458bd242e2b18dbc727644a7bb09ccb084",
+    "version": "not proven by module metadata; pktkit source explicitly BBRv3 draft-06"
+  },
+  "blocks": {
+    "cubic": {
+      "all_namespace_cc": "cubic",
+      "old_accepted_socket_cc": "cubic",
+      "iperf_sender_receiver_cc": "cubic",
+      "rust_local_cc": "Cubic",
+      "rust_middle_cc": "Cubic",
+      "rows": [
+        {
+          "leg": "A",
+          "mbps": 573.6802414457884,
+          "bytes": 1792802816,
+          "server": 9.414990495686505,
+          "client": 7.749998537797923,
+          "host": 20.536897207194034
+        },
+        {
+          "leg": "B",
+          "mbps": 573.8170838798947,
+          "bytes": 1793196032,
+          "server": 8.80815145091733,
+          "client": 11.562569987574006,
+          "host": 23.861647540384475
+        },
+        {
+          "leg": "B",
+          "mbps": 573.8428672510445,
+          "bytes": 1793327104,
+          "server": 8.741645958193246,
+          "client": 11.501850606636458,
+          "host": 23.213261219120014
+        },
+        {
+          "leg": "A",
+          "mbps": 573.810519552144,
+          "bytes": 1793196032,
+          "server": 9.532683283385717,
+          "client": 7.892007894159783,
+          "host": 20.328806373803086
+        }
+      ],
+      "means": {
+        "A": {
+          "mbps": 573.7453804989661,
+          "server": 9.473836889536111,
+          "client": 7.821003215978854,
+          "host": 20.43285179049856,
+          "client_rx_s": 6.528396593,
+          "client_tx_s": 4.522143026,
+          "client_tun_routed": 457591,
+          "client_outer_first_copy": 457591,
+          "client_outer_first_wire_bytes": 56282397,
+          "client_outer_rx_unique": 1344570.5
+        },
+        "B": {
+          "mbps": 573.8299755654696,
+          "server": 8.774898704555287,
+          "client": 11.532210297105232,
+          "host": 23.537454379752244,
+          "client_rx_s": 5.0783328345,
+          "client_tx_s": 11.3984532395,
+          "client_tun_routed": 1043279,
+          "client_outer_first_copy": 700643.5,
+          "client_outer_first_wire_bytes": 86179613,
+          "client_outer_rx_unique": 1370488
+        }
+      },
+      "origin_retransmits": 0,
+      "steal_ticks": 1
+    },
+    "bbr": {
+      "all_namespace_cc": "bbr",
+      "old_accepted_socket_cc": "bbr",
+      "iperf_sender_receiver_cc": "bbr",
+      "rust_local_cc": "Cubic",
+      "rust_middle_cc": "pktkit BBRv3",
+      "rows": [
+        {
+          "leg": "A",
+          "mbps": 570.999619128623,
+          "bytes": 1784414208,
+          "server": 9.627736153959159,
+          "client": 7.966951667401204,
+          "host": 20.72370207139709
+        },
+        {
+          "leg": "B",
+          "mbps": 573.3418861095478,
+          "bytes": 1791754240,
+          "server": 9.126858814923189,
+          "client": 11.757647403072422,
+          "host": 24.27037307973665
+        },
+        {
+          "leg": "B",
+          "mbps": 573.7632070953347,
+          "bytes": 1793064960,
+          "server": 9.162105263157896,
+          "client": 11.826900584795322,
+          "host": 23.9172865497076
+        },
+        {
+          "leg": "A",
+          "mbps": 570.9588189299773,
+          "bytes": 1784283136,
+          "server": 9.508087857195328,
+          "client": 7.750896936751635,
+          "host": 20.448406670094762
+        }
+      ],
+      "means": {
+        "A": {
+          "mbps": 570.9792190293001,
+          "server": 9.567912005577243,
+          "client": 7.85892430207642,
+          "host": 20.586054370745927,
+          "client_rx_s": 6.4285704375,
+          "client_tx_s": 4.5544984605,
+          "client_tun_routed": 468930.5,
+          "client_outer_first_copy": 468930.5,
+          "client_outer_first_wire_bytes": 57678447.5,
+          "client_outer_rx_unique": 1341022.5
+        },
+        "B": {
+          "mbps": 573.5525466024412,
+          "server": 9.144482039040543,
+          "client": 11.792273993933872,
+          "host": 24.093829814722127,
+          "client_rx_s": 5.1389743715,
+          "client_tx_s": 11.6204463955,
+          "client_tun_routed": 1016313,
+          "client_outer_first_copy": 705564.5,
+          "client_outer_first_wire_bytes": 86785006.5,
+          "client_outer_rx_unique": 1374494.5
+        }
+      },
+      "origin_retransmits": 2,
+      "steal_ticks": 0
+    }
+  },
+  "all_eight_stop": true,
+  "all_client_shared_tun_full_drops": 0,
+  "cpu_unit": "CPU-s/GiB actual receiver; client worker lifetime CPU seconds separately",
+  "functional": {
+    "run_id": 45815349281,
+    "scope": "CUBIC middle SOURCE, original functional fixture uses kernel BBR on OS sockets, NOT full matched-CUBIC dual ISA performance",
+    "jobs": [
+      {
+        "isa": "x86_64",
+        "job_id": 139893558220,
+        "artifact_id": 15115506780,
+        "sha256": "592364f51450b35dba86cc343fc79bd9bbe7201646e70c93457b2b46fbf2cb06",
+        "first_response_ns_after_fin": 14779173
+      },
+      {
+        "isa": "aarch64",
+        "job_id": 139893558980,
+        "artifact_id": 15115696800,
+        "sha256": "9152c8f530a711a89fb297a23cddc0f13da51694c4a61d677c8d0bb642dea7a9",
+        "first_response_ns_after_fin": 17789991
+      }
+    ],
+    "each": {
+      "upload_bytes": 4194304,
+      "download_bytes": 11534336,
+      "connections": 9,
+      "halfclose": true,
+      "udp": true,
+      "client_exit": 0,
+      "server_exit": 0
+    }
+  },
+  "artifact_review": "Downloaded measurement ZIP, new CUBIC build ZIP and both functional ZIPs; verified SHA256; new build all three actual binary hashes match manifest. Previously reviewed A and BBR build ZIPs reused by exact manifests. Both measurement block runner boot ID and uname match, rows sequential. Independent iperf receiver byte/CC readback, old splice accepted-socket CC and Stop/packet logs inspected. Functional ZIPs no binaries. The automatic functional workflow independently rebuilt x86 on the same SOURCE; future build reuse desirable.",
+  "decision": "Matched CUBIC confirms clean capped goodput parity but client CPU +47.45%, host +15.19%; mixed BBR +50.05%, +17.04%. CC mismatch is not dominant here. CUBIC local and WAN reverse packet counts still high. Do not permanently switch or promote CUBIC based on clean run. Preserve trial exact SHA; next substantive candidate restores BBRv3 middle and investigates actual ACK-only counts / segment sizes and owner costs at two layers. Weak network and ARM performance still NOT_RUN."
+}
