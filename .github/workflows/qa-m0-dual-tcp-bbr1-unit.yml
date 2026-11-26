@@ -1,0 +1,21 @@
+name: M0 dual Rust BBRv1-style native core tests
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths: ['.github/workflows/qa-m0-dual-tcp-bbr1-unit.yml']
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 649fe3bf19a81d579ebae510c78acf2908902ca7
+          persist-credentials: false
+      - name: Native complete TCP core including BBRv1 rate model and transient recovery
+        run: |
+          test "$(git rev-parse HEAD)" = "649fe3bf19a81d579ebae510c78acf2908902ca7"
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --lib v4_rust_tcp
