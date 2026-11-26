@@ -1,0 +1,2 @@
+# Bounded native pacing causal experiment
+Same frozen source 7aafa40a0acd1ae18709c5c41d72befd9f1707c2 run45849688305, A off B on. Two ABBA blocks, CUBIC and BBRv1-style at 400ms zero injected loss, same ARM triple, single TCP reverse, 45s, cap64/ACK3/SACK on in both; exact mode and admission/publish receipt required. No queue size change, no CC model or outer change. Measure local and middle queue admission loss, publish burst maxima, throughput, TCP retransmission, RTO/DSACK, CPU/GiB and RSS. Baseline no additional old splice repeat. No promotion before result.
