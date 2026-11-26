@@ -427,6 +427,8 @@ pub struct ConnConfig {
     /// Paired WBD middle endpoint: cumulative ACK after three full segments
     /// in steady in-order traffic. OS-facing endpoints retain two.
     pub(crate) middle_ack_three: bool,
+    /// Experimental SACK compression on paired middle TCP only.
+    pub(crate) middle_sack_compress: bool,
     /// Explicit Congestion Notification (RFC 3168, and RFC 9768's
     /// AccECN): whether to ask for it in the handshake, and accept it. By
     /// default a peer's request is accepted, and none made, as on Linux.
@@ -524,6 +526,7 @@ impl Default for ConnConfig {
             time_wait: TIME_WAIT_DURATION,
             nodelay: false,
             middle_ack_three: false,
+            middle_sack_compress: false,
             ecn: EcnMode::default(),
             mtu_probing: MtuProbing::default(),
             fast_open: false,
@@ -705,6 +708,10 @@ pub struct Conn {
     /// When the ACK held back for data received goes out on its own,
     /// unless something we send first carries it.
     delack_deadline: std::option::Option<Instant>,
+    sack_ack_base: Option<u32>,
+    sack_ack_immediate: u8,
+    sack_ack_pending: u8,
+    sack_ack_deferred: u64,
     /// Segments still to be ACKed at once, not delayed (Linux's quick-ACK
     /// mode): at the start of the connection, after an idle spell, and
     /// after a duplicate, when the sender's window is small and waiting on
@@ -951,6 +958,10 @@ impl Conn {
             pace_srtt: None,
             pace_late: Duration::ZERO,
             delack_deadline: None,
+            sack_ack_base: None,
+            sack_ack_immediate: 0,
+            sack_ack_pending: 0,
+            sack_ack_deferred: 0,
             quick_acks: 0,
             pingpong: false,
             // Until the peer shows larger, RFC 9293's default send MSS,
@@ -1190,8 +1201,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline));
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -2086,6 +2097,7 @@ impl Conn {
         if seg.has_flag(flags::ACK) && self.recv_buf.is_some() {
             // Whatever we send acknowledges everything received so far.
             self.delack_deadline = None;
+            self.sack_ack_pending = 0;
             self.ack_pushed = false;
             self.last_ack_sent = Some(seg.ack);
             // Reported once (RFC 2883 §4).
@@ -2734,6 +2746,7 @@ impl Conn {
         // Some ACK is owed; `ack_now` if it must not be delayed.
         let mut need_ack = false;
         let mut ack_now = false;
+        let mut sack_only = false;
 
         if !self.check_paws(seg) {
             return self.take_outgoing();
@@ -2755,6 +2768,7 @@ impl Conn {
             }
             let rb = self.recv_buf.as_ref().unwrap();
             let (nxt, had_holes) = (rb.nxt(), rb.has_ooo());
+            let received_before = self.stats.bytes_received;
             self.process_data(seg);
             let dup = self.recv_buf.as_mut().unwrap().take_dup();
             if self.sack_ok && dup.is_some() {
@@ -2776,6 +2790,14 @@ impl Conn {
                 || rb.has_ooo()
                 || seq_before(rb.nxt(), end)
                 || self.rcv_wnd_bytes() < self.rcv_mss.max(seg.payload.len() as u32);
+            // Only newly accepted bytes above an unchanged cumulative ACK.
+            // Hole filling, partial acceptance, duplicate/DSACK and window
+            // exhaustion keep their existing immediate path.
+            sack_only = self.cfg.middle_sack_compress && self.sack_ok
+                && seq_after(seg.seq, nxt) && rb.nxt() == nxt && rb.has_ooo()
+                && self.stats.bytes_received - received_before == seg.payload.len() as u64
+                && dup.is_none() && self.dsack_out.is_none()
+                && self.rcv_wnd_bytes() >= self.rcv_mss.max(seg.payload.len() as u32);
             if duplicate {
                 self.enter_quickack();
             } else {
@@ -2785,6 +2807,7 @@ impl Conn {
         }
 
         if seg.has_flag(flags::FIN) {
+            sack_only = false;
             let fin_seq = seg.seq.wrapping_add(seg.data_len());
             let rcv_nxt = self.recv_buf.as_ref().unwrap().nxt();
             if fin_seq == rcv_nxt {
@@ -2804,12 +2827,43 @@ impl Conn {
         if self.ecn.take_ack_now() {
             need_ack = true;
             ack_now = true;
+            sack_only = false;
         }
 
-        if need_ack {
+        if need_ack && !(sack_only && self.defer_sack_ack()) {
             self.ack_data(ack_now);
         }
         self.take_outgoing()
+    }
+
+    // Independently implement Linux's SACK compression policy (first three
+    // duplicate ACKs, 1ms ceiling, at most 44 pending). Reuse the existing
+    // ACK deadline and ACK serialization; never hold DATA for a batch.
+    fn defer_sack_ack(&mut self) -> bool {
+        let nxt = self.recv_buf.as_ref().unwrap().nxt();
+        if self.sack_ack_base != Some(nxt) {
+            self.sack_ack_base = Some(nxt);
+            self.sack_ack_immediate = 0;
+        }
+        if self.sack_ack_immediate < 3 {
+            self.sack_ack_immediate += 1;
+            return false;
+        }
+        if (self.quick_acks > 0 && !self.pingpong) || self.sack_ack_pending >= 44 {
+            return false;
+        }
+        // Prefer the receiver RTT estimate; at 400ms the 1ms cap dominates.
+        let (rx_rtt, _) = self.rcv_space.snapshot();
+        let rtt = rx_rtt.unwrap_or_else(|| self.rto.srtt());
+        let delay = (rtt / 20).min(Duration::from_millis(1));
+        if delay.is_zero() {
+            return false;
+        }
+        let due = self.now + delay;
+        self.delack_deadline = Some(self.delack_deadline.map_or(due, |d| d.min(due)));
+        self.sack_ack_pending += 1;
+        self.sack_ack_deferred += 1;
+        true
     }
 
     /// New data of `len` bytes came in (Linux's `tcp_event_data_recv`
@@ -10276,6 +10330,36 @@ mod tests {
         assert_eq!(acks_in(&filled), [parse(&segs[2]).seq]);
         // A duplicate is answered at once too.
         assert_eq!(deliver(&mut server, &segs[0..1]).len(), 1, "duplicate");
+    }
+
+    #[test]
+    fn middle_sack_compression_keeps_three_gap_acks_and_flushes_latest_range() {
+        let (_client, mut server, segs) = delack_pair(40692, 8);
+        server.cfg.middle_sack_compress = true;
+        // Fix a measurable receive RTT for the synthetic test clock.
+        server.rcv_space.measure_ts(Duration::from_millis(400));
+        for i in 1..4 {
+            let ack = deliver(&mut server, &segs[i..i+1]);
+            assert_eq!(ack.len(), 1);
+            assert_eq!(parse(&ack[0]).ack, parse(&segs[0]).seq);
+        }
+        assert!(deliver(&mut server, &segs[4..5]).is_empty());
+        let due = server.delack_deadline.unwrap();
+        assert!(due <= test_now() + Duration::from_millis(1));
+        assert!(deliver(&mut server, &segs[5..6]).is_empty());
+        assert_eq!(server.delack_deadline, Some(due));
+        let ack = delack_expired(&mut server);
+        assert_eq!(ack.len(), 1);
+        let blocks = get_sack_blocks(&parse(&ack[0]).options);
+        assert_eq!(blocks[0].left, parse(&segs[1]).seq);
+        assert_eq!(blocks[0].right, parse(&segs[6]).seq);
+        assert!(deliver(&mut server, &segs[6..7]).is_empty());
+        let fill = deliver(&mut server, &segs[0..1]);
+        assert_eq!(fill.len(), 1);
+        assert_eq!(parse(&fill[0]).ack, parse(&segs[7]).seq);
+        assert_eq!(server.delack_deadline, None);
+        assert_eq!(server.sack_ack_pending, 0);
+        assert_eq!(deliver(&mut server, &segs[0..1]).len(), 1);
     }
 
     /// The first segments of a connection are each ACKed at once, so
