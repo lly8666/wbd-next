@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "86e3ec30010a59cbb60539b902cb96dc21e04d6a",
+  "harness_sha": "6674e6ff26c2fe1ed255e7868f7728267bd5a7fa",
+  "result": "DIAGNOSTIC_ONLY",
+  "run_id": 45813361467,
+  "attempt": 1,
+  "job_id": 139886668824,
+  "artifact_id": 15113333515,
+  "sha256": "bc2f5cbb995249ef30fc2b289ef80648f8bb80af2a739932766ab7aefbe44f5f",
+  "artifact_verified": true,
+  "scope": "Existing exact B x86 binary from run45810506381 artifact15113365713, clean 25s download, client process cpu-clock software sampling with DWARF call graph, no paired performance claim",
+  "samples": 2427,
+  "lost_samples": 0,
+  "record_rc": -2,
+  "report_rc": 0,
+  "profile_stop": "SIGINT after workload, valid written perf.data and successful report",
+  "selected_self_pct": {
+    "kernel_raw_spin_unlock_irqrestore": 8.12,
+    "raw_spin_unlock_wake_path": 5.97,
+    "wake_from_packet_rcv": 3.71,
+    "wake_from_tcp_data_ready": 2.22,
+    "chacha_open_avx2": 4.08,
+    "kernel_finish_task_switch_native": 3.26,
+    "kernel_finish_task_switch_shared_tun": 2.97,
+    "ipv4_encode": 1.61,
+    "malloc": 1.07,
+    "tcp_sum": 0.95,
+    "conn_flush_send_queue": 0.37,
+    "conn_process_ack": 0.37
+  },
+  "interpretation": "Samples across client process all threads, two M4 thread names truncated identically; not separate TX attribution. Dominant visible kernel receive/send/wake paths; codec/alloc and TCP conn work spread across additional symbols. No claim exact causal contribution or zero other costs. Previous ABBA establishes TX CPU growth, reverse packet inflation. First isolated source candidate should stop charging already-ready TCP egress staging to ingress quota; keep actual M1 cap 32, no wait to fill. Measure ACK counts, batch and cost; not expected to eliminate all per-packet overhead.",
+  "prior_failed": {
+    "run_id": 45813155885,
+    "job_id": 139885951224,
+    "reason": "perf executable symlink not found before product start"
+  }
+}
