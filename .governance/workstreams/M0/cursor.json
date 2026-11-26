@@ -4,26 +4,27 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2451,
-  "checkpoint_sha": "205fce9cc582c7711691dd604ce1ead2c197afab",
+  "sequence": 2452,
+  "checkpoint_sha": "cead0aa6f54671c12be7228fe450c63334cbca75",
   "progress": "partial",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "先收精确86e3ec30010a59cbb60539b902cb96dc21e04d6a run45809301919双ISA完整产品构建/真实TCP/UDP/Stop及产物；按实际失败修复，Normal真业务通过后继续同机splice性能及受影响模式/换代。不要重复dispatch。",
+  "next_action": "Linux Normal scoped真实产品双ISA已PASS；先以26b11e2旧splice和86e3ec3候选精确SOURCE做同机顺序A/B吞吐与CPU（独立场景），再受影响模式、server-local/source-policy、换代与多lease；未达性能及功能门不得退役旧splice。",
   "unverified": true,
-  "last_tested_source": "3e709e0c8577b56ca237a24e6d18fccf998e9965",
+  "last_tested_source": "86e3ec30010a59cbb60539b902cb96dc21e04d6a",
   "evidence_refs": [
-    "docs/evidence/M0/20261126-DUAL-RUST-TCP-ENDPOINT-CORE.json"
+    "docs/evidence/M0/20261126-DUAL-RUST-TCP-NORMAL-PRODUCT.json"
   ],
   "context_refs": [
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-REGISTRATION.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-HANDOFF.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-HANDOFF.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-HANDOFF.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-HANDOFF.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md"
   ],
   "open_requests": [],
-  "partial_summary": "分支86e3ec30010a59cbb60539b902cb96dc21e04d6a / PR80已接原Normal TX flow owner、post-AEAD LINK到原队列、epoll/deadline、冷CLI/assembly与真实四netns双ISA功能夹具。run45809301919 in_progress，完整产品/性能NOT_RUN或未收；上轮组件329各PASS证据保持。分支历史治理FAIL不修改旧证据；main产品源码未合入。"
+  "partial_summary": "PR80 branch b779a0e88c503273e8da70c496f03e777666445f；run45809301919 双native ISA实际Normal TCP/UDP/Stop全PASS，ZIP独立校验，精确SOURCE 86e3ec3；性能/其他模式/多lease/换代/物理/Windows NOT_RUN。分支继承治理失败保留；main未合产品源码。"
 }
