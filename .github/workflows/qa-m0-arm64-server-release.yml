@@ -1,0 +1,98 @@
+name: M0 Linux ARM64 complete server release
+run-name: "M0 Linux ARM64 native server glibc2.31 PLAN030 | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-winxdp']
+    paths: ['.github/workflows/qa-m0-arm64-server-release.yml']
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  arm64-server:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    env:
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_DUAL_ISA: '1'
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      WBD_LINUX_GLIBC_BUILD_BASELINE: '2.31'
+      WBD_PLAN029_ALL_MODES: '1'
+      WBD_PLAN030_ALL_CLI: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Build exact original native ARM64 Go and Rust ISA-L product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm python3 iproute2 iputils-ping iptables openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >arm64-build.log 2>&1 || { tail -n 120 arm64-build.log; exit 1; }
+          tail -n 12 arm64-build.log
+      - name: Seven real original ARM64 client/server kernel TCP UDP modes and owned Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_plan029_linux_dual_isa_suite.py >arm64-network.log 2>&1 || { tail -n 120 arm64-network.log; exit 1; }
+          cat arm64-network.log
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open('linux-plan029-public-bundle/manifest.json'))
+          d=json.load(open('linux-plan029-result/summary.json'))
+          assert m['source_sha']==d['source_sha']==os.environ['GITHUB_SHA']
+          assert m['architecture']==d['native_isa']=='aarch64'
+          assert m['build_glibc']=='glibc 2.31'
+          assert m['rust_native_fec_acceleration'] is True
+          assert d['status']=='PASS_SCOPED_SEVEN_REAL_LINUX_CLIENT_SERVER_MODES'
+          assert len(d['cases'])==7
+          assert all(c['real_both_way_tcp']==c['real_both_way_udp']=='PASS' and c['owned_stop']=='PASS_BOTH' for c in d['cases'])
+          PY
+      - name: Build original PLAN030 complete server package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/plan030_package.py
+          tar -xzf wbd-next-plan030-server.tar.gz
+          (cd wbd-next && sha256sum -c SHA256SUMS)
+      - name: Actual ARM64 installed server CLI and systemd lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/plan030_systemd_smoke.sh "$PWD/wbd-next" 2>&1 | tee arm64-systemd.log
+          grep -F 'PLAN030_NATIVE_SYSTEMD_INSTALL_READY_CONFIG_STOP_REINSTALL_UNINSTALL_PASS' arm64-systemd.log
+      - name: Final complete server release archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p delivery
+          cp wbd-next-plan030-server.tar.gz delivery/WBD-Linux-arm64-server.tar.gz
+          cp linux-plan029-result/summary.json delivery/FUNCTIONAL-RESULT.json
+          cp arm64-systemd.log delivery/INSTALL-TEST.log
+          (cd delivery && sha256sum WBD-Linux-arm64-server.tar.gz > SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: wbd-linux-arm64-server-full
+          path: |
+            delivery/WBD-Linux-arm64-server.tar.gz
+            delivery/SHA256SUMS
+            delivery/FUNCTIONAL-RESULT.json
+            delivery/INSTALL-TEST.log
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: wbd-linux-arm64-server-build-and-test-evidence
+          path: |
+            arm64-build.log
+            arm64-network.log
+            arm64-systemd.log
+            linux-plan029-public-bundle/manifest.json
+            linux-plan029-result/summary.json
+          if-no-files-found: warn
+          retention-days: 30
