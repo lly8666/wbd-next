@@ -1,5 +1,5 @@
 name: M0 WinXDP pressure evidence readback
-run-name: "M0 WinXDP pressure initial S log diagnosis"
+run-name: "M0 WinXDP small-packet TX and duplex incomplete diagnosis"
 on:
   push:
     branches: ['experiment/m0-winxdp']
@@ -13,23 +13,31 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Read bounded exact S artifacts from initial pressure fixture
+      - name: Read actual failed TCP flow and small-packet shutdown receipts
         shell: bash
         run: |
           set -euo pipefail
-          gh run download 45841523697 -R "$GITHUB_REPOSITORY" -n winxdp-pressure-S -D evidence
+          gh run download 45847069325 -R "$GITHUB_REPOSITORY" -n winxdp-carrier-abba-S -D tcp
+          for arm in J K L; do
+            gh run download 45846110092 -R "$GITHUB_REPOSITORY" -n winxdp-udp-pressure-$arm -D "udp-$arm"
+          done
           python3 - <<'PY'
-          import json,pathlib
-          root=pathlib.Path("evidence")
-          for p in sorted(root.rglob("*")):
-              if not p.is_file():continue
-              if p.name=="measurement.json" or (p.name=="result.json" and "case-" in str(p)):
-                  try:
+          import json,pathlib,re
+          for root in (pathlib.Path("tcp"),*(pathlib.Path("udp-"+x) for x in "JKL")):
+              for p in root.rglob("*"):
+                  if not p.is_file():continue
+                  if root.name=="tcp" and p.name=="measurement.json":
                       d=json.loads(p.read_text(encoding="utf-8-sig"))
-                      print("CASE_EVIDENCE",str(p),json.dumps({k:d[k] for k in ("case","status","server","source","flows","error","client_stop","netem_packets","exact_hash") if k in d})[:5000])
-                  except Exception as e:print(repr(e))
-              elif p.name in ("server.log","client.log","source.log","server-control.log"):
-                  print("LOG_TAIL",str(p))
-                  lines=p.read_text(errors="replace").splitlines()
-                  print("\n".join(l[:1000] for l in lines[-28:]))
+                      if d.get("arm")!="B":continue
+                      b=d.get("server",{}).get("source") or {}
+                      for i,(x,y) in enumerate(zip(d.get("flows",[]),b.get("flows",[]))):
+                          print("TCP_FLOW",p.parent.name,i,json.dumps({"win":x,"linux":y},sort_keys=True))
+                  if p.name in ("client.log","server.log"):
+                      if root.name=="tcp" and not any(x in p.parts for x in ("case-5","case-6")):continue
+                      if root.name.startswith("udp") and "fixed-rx4096-small" not in p.parts:continue
+                      lines=p.read_text(errors="replace").splitlines()
+                      hits=[l for l in lines if re.search(r'WBD_XDP_|worker rc|panic|BAD_STAGE|WAL|STOP|FEC.*(invalid|conflict)|OUTER_REPAIR|failed|error',l,re.I)]
+                      print("FAIL_LOG",p)
+                      print("\n".join(l[:1600] for l in hits[-35:]))
+                      print("FINAL_LINES", "\n".join(l[:1000] for l in lines[-8:]))
           PY
