@@ -357,6 +357,8 @@ fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
         if !presentation_game_ack_due(now,last_ns[i],ack,
             c.ack_sent[i].load(Ordering::Acquire),
             future!=future_sent[i]){continue}
+        #[cfg(feature="winxdp_native_trial")]
+        if npf.credit(1).map_err(|_|BAD_STAGE)?==0{break}
         let mut slot=[SackRange32{start:0,end:0};4];
         let mut count=0;
         for field in &c.sack[i]{
@@ -474,10 +476,17 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             }
         }
         let mut did_work=direct_progress;
+        // Original adapter drains at most 32 dispatches, even when <=16
+        // fresh Wintun sources were offered. Preserve that atomic dispatch
+        // quantum and never stage into an unavailable carrier.
+        #[cfg(feature="winxdp_native_trial")]
+        let source_limit=match npf.credit(32){Ok(32)=>BATCH,Ok(_)=>0,Err(_)=>return BAD_STAGE};
+        #[cfg(not(feature="winxdp_native_trial"))]
+        let source_limit=BATCH;
         let mut sources=[[0u8;MAX_IPV4];BATCH];
         let mut lengths=[0usize;BATCH];
         let mut count=0usize;
-        for _ in 0..BATCH{
+        for _ in 0..source_limit{
             if c.stop.load(Ordering::Acquire){return OK}
             let bytes=&mut sources[count];
             match tun.read(bytes){
@@ -534,10 +543,14 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         }
         // Same Game4 scheduler/FEC parity owner as original Linux.
         // One bounded due pass, no Go per-packet polling.
-        let due=match group.lock(){
+        #[cfg(feature="winxdp_native_trial")]
+        let due_credit=match npf.credit(32){Ok(n)=>n==32,Err(_)=>return BAD_STAGE};
+        #[cfg(not(feature="winxdp_native_trial"))]
+        let due_credit=true;
+        let due=if due_credit{match group.lock(){
             Ok(mut g)=>game::native_game_due(&mut g,cfg.group,32),
             Err(_)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_lock");return BAD_STAGE},
-        };
+        }}else{Ok(Vec::new())};
         match due{
             Ok(rows) if !rows.is_empty()=>{
                 if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&outer,&lanes,
@@ -549,10 +562,14 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         }
         // Exactly one Normal M2 opportunity per owner turn, using the
         // original same-lane Game ciphertext/PN and original TCP Seq.
-        let repair=match outer.lock(){
+        #[cfg(feature="winxdp_native_trial")]
+        let repair_credit=match npf.credit(1){Ok(n)=>n>0,Err(_)=>return BAD_STAGE};
+        #[cfg(not(feature="winxdp_native_trial"))]
+        let repair_credit=true;
+        let repair=if repair_credit{match outer.lock(){
             Ok(mut m)=>match m.prepare(&active){Ok(v)=>v,Err(e)=>return e},
             Err(_)=>return BAD_STAGE,
-        };
+        }}else{None};
         if let Some(row)=repair{
             let index=row.index;
             let seq=row.seq;let pn=row.pn;
@@ -589,13 +606,17 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         health_evidence.absorb(&mut health);
         let now_health=health_origin.elapsed().as_nanos()
             .min(u128::from(u64::MAX)) as u64;
+        #[cfg(feature="winxdp_native_trial")]
+        let health_credit=match npf.credit(1){Ok(n)=>n>0,Err(_)=>return BAD_STAGE};
+        #[cfg(not(feature="winxdp_native_trial"))]
+        let health_credit=true;
         match health.control_due(now_health){
             ControlDue::DeadPeer=>{
                 eprintln!("M0_GAME_NATIVE_HEALTH_DEAD age_ns={} threshold_ns={}",
                     now_health,health.policy().dead_ns());
                 return AUTHENTICATED_PEER_DEAD
             },
-            ControlDue::Health=>{
+            ControlDue::Health if health_credit=>{
                 let Some(index)=active.iter().position(|v|*v)else{return BAD_STAGE};
                 let mut wire=[0u8;512];
                 let sealed={
@@ -640,19 +661,34 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 // A genuine failed control copy waits >=1s; fresh DATA and
                 // parity are independent, never blocked behind Health.
             },
-            ControlDue::None=>{},
+            ControlDue::Health|ControlDue::None=>{},
         }
         if did_work{continue}
+        #[cfg(feature="winxdp_native_trial")]
+        let (carrier_credit,completion)={
+            let credit=match npf.credit(32){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+            let event=if credit<32{
+                match npf.completion_event(){Ok(h)=>Some(h),Err(_)=>return BAD_STAGE}
+            }else{None};
+            (credit,event)
+        };
+        #[cfg(not(feature="winxdp_native_trial"))]
+        let (carrier_credit,completion)=(32,None::<usize>);
         let timeout={
             let group=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
             let (now,due)=game::native_game_wait_deadline(&group);
-            let game_timeout=game_wait_timeout_ms(now,due);
-            let health_wait=health.next_deadline().map(|at|{
+            let game_timeout=if carrier_credit<32{u32::MAX}else{game_wait_timeout_ms(now,due)};
+            let health_wait=if carrier_credit==0{
+                let age=health.last_authenticated_age_ns(now_health)
+                    .unwrap_or_else(||health.attached_age_ns(now_health));
+                health.policy().dead_ns().saturating_sub(age)
+                    .div_ceil(1_000_000).min(u64::from(u32::MAX-1)) as u32
+            }else{health.next_deadline().map(|at|{
                 at.saturating_sub(health_origin.elapsed().as_nanos()
                     .min(u128::from(u64::MAX)) as u64)
                     .div_ceil(1_000_000).max(1).min(u64::from(u32::MAX-1)) as u32
-            }).unwrap_or(u32::MAX);
-            let outer_wait={
+            }).unwrap_or(u32::MAX)};
+            let outer_wait=if carrier_credit==0{u32::MAX}else{
                 let m=match outer.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
                 game_wait_timeout_ms(m2_clock().0,m.next_deadline())
             };
@@ -666,7 +702,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         }else{timeout};
         // Stop remains absolute first. 3 existing events + <=16 TCP shards
         // + <=16 Direct UDP socket FD_READ handles (<64 WAIT_ANY).
-        let mut handles=vec![stop.handle(),tun.event(),wake.handle()];
+        let mut handles=vec![stop.handle(),completion.unwrap_or(tun.event()),wake.handle()];
         let mut tcp_count=0usize;
         let mut udp_count=0usize;
         if let Some(actor)=split.as_ref(){

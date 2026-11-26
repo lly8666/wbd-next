@@ -548,7 +548,13 @@ fn stage_sources(
      // One bounded RX quantum even when EVERY packet belongs to Direct.
      // Only the Tunnel subset may enter the existing M3/FEC/AEAD seal.
      // Direct never queues behind an old large Tunnel batch or vice versa.
-     for _ in 0..BATCH {
+     #[cfg(feature="winxdp_tx_trial")]
+     let admitted=npf.credit(BATCH).map_err(|_|BAD_STAGE)?;
+     #[cfg(not(feature="winxdp_tx_trial"))]
+     let admitted=BATCH;
+     // No Wintun loan is consumed without a physical descriptor. Use
+     // even a single ready credit; never wait to assemble a full batch.
+     for _ in 0..admitted {
          if counters.stopping.load(Ordering::Acquire){break}
          match tun.read(&mut sources[count]){
              Ok(ReadResult::Frame(n))=>{
@@ -727,6 +733,10 @@ fn stage_sources(
      cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
      npf:&mut NativeTx,counters:&Counters,ip_id:&mut u16,
  )->Result<bool,i32>{
+     // The original FixedStream consumes a whole <=4-row quantum when
+     // polled. Do not consume its PN/row if carrier admission is unavailable.
+     #[cfg(feature="winxdp_tx_trial")]
+     if npf.credit(4).map_err(|_|BAD_STAGE)?<4{return Ok(false)}
      let batch={
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          fec2::stage_fixed_parity_entry(
@@ -796,6 +806,8 @@ fn stage_sources(
      cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
      npf:&mut NativeTx,counters:&Counters,ip_id:&mut u16,
  )->Result<bool,i32>{
+     #[cfg(feature="winxdp_tx_trial")]
+     if npf.credit(1).map_err(|_|BAD_STAGE)?==0{return Ok(false)}
      let mut wire=[0u8;MAX_IPV4];
      let ack=counters.ack.load(Ordering::Acquire);
      let feedback={
@@ -1280,19 +1292,36 @@ fn stage_sources(
              if native_ack_only_due(sack_negotiated,sack_pending,
                  next_ack!=counters.ack_sent.load(Ordering::Acquire),active,
                  last_pure_ack.is_none_or(|t|t.elapsed()>=Duration::from_millis(10))){
+                 #[cfg(feature="winxdp_tx_trial")]
+                 let ack_credit=npf.credit(1).map_err(|_|BAD_STAGE)?>0;
+                 #[cfg(not(feature="winxdp_tx_trial"))]
+                 let ack_credit=true;
+                 if ack_credit{
                  send_presentation_ack(&cfg,&mut npf,&counters,&mut ip_id,
                      sack_negotiated)?;
                  last_pure_ack=Some(Instant::now());
                  return Ok(false)
+                 }
              }
              // Original authenticated Tunnel ACK semantics use Tunnel
              // work only. Direct socket progress keeps scheduling fair
              // without waiting for the 10ms poll; WouldBlock falls through.
              if active||direct_progress||still_ready{return Ok(false)}
+             #[cfg(feature="winxdp_tx_trial")]
+             let (carrier_blocked,parity_blocked,completion)={
+                 let required=if fixed{4}else{1};
+                 let credit=npf.credit(required).map_err(|_|BAD_STAGE)?;
+                 let completion=if credit<required{
+                     Some(npf.completion_event().map_err(|_|BAD_STAGE)?)
+                 }else{None};
+                 (credit==0,fixed&&credit<4,completion)
+             };
+             #[cfg(not(feature="winxdp_tx_trial"))]
+             let (carrier_blocked,parity_blocked,completion)=(false,false,None::<usize>);
              let timeout={
                  let e=lock_owner(&lane,&counters,LockDirection::Tx)?;
                  let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
-                 let fec_due=if fixed{
+                 let fec_due=if fixed&&!parity_blocked{
                      #[cfg(feature="fec2_product_record")]
                      {e.fec2_tx.as_ref().and_then(|tx|tx.next_deadline())}
                      #[cfg(not(feature="fec2_product_record"))]
@@ -1317,7 +1346,16 @@ fn stage_sources(
                       .chain(m.health.next_tx_deadline().map(MonoNs))
                       .chain(auto_due).min_by_key(|d|d.0);
                   let receipt_due=None; // PLAN027 no per-record M2 timer
-                  m2_wake_timeout_ms(now,receipt_due,next)
+                  if carrier_blocked{
+                      // An expired send deadline cannot make a full ring
+                      // ready. Wait for a genuine completion, Direct/Stop,
+                      // or the unchanged authenticated 90s peer deadline.
+                      if m.health.unhealthy(now.0){return Err(AUTHENTICATED_PEER_DEAD)}
+                      let age=m.health.last_authenticated_age_ns(now.0)
+                          .unwrap_or_else(||m.health.attached_age_ns(now.0));
+                      let dead=m.health.policy().dead_ns().saturating_sub(age);
+                      dead.div_ceil(1_000_000).min(u64::from(u32::MAX-1)) as u32
+                  }else{m2_wake_timeout_ms(now,receipt_due,next)}
              };
              // Only non-event UDP overflow and DNS retain <=10ms poll.
              // The ordinary 16 Direct UDP sockets now signal native TX
@@ -1375,9 +1413,17 @@ fn stage_sources(
              if base_n==19||udp_count>0{
                  wait_phase=(wait_phase+1)%3;
              }
-             let mut ordered=[0usize;35];
+             let mut ordered=[0usize;36];
+             // If no credits, a permanently ready Wintun event would
+             // spin. Replace only that event; preserve Direct and Stop.
+             if carrier_blocked{handles[1]=completion.unwrap();}
              for i in 0..n{ordered[i]=handles[usize::from(order[i])];}
+             if !carrier_blocked{
+                 if let Some(event)=completion{ordered[n]=event;n+=1;}
+             }
              match io::wait_ready(&ordered[..n],timeout){
+                 Ok(WaitResult::Ready(index)) if index>=order.len()||
+                     (!carrier_blocked&&completion.is_some()&&index==n-1)=>Ok(false),
                  Ok(WaitResult::Ready(index)) if order[index]==0=>Ok(true),
                  Ok(WaitResult::Ready(index))=>{
                      let kind=usize::from(order[index]);

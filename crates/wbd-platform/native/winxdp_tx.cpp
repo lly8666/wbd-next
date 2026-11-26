@@ -15,14 +15,20 @@
 #include <cstddef>
 
 namespace {
-constexpr UINT32 Slots=1024, Chunk=4096, Batch=16;
+// Original NPF sends <=16 ready frames/64KiB. XDP is asynchronous:
+// outage 31612-30590=1022 outstanding; one maximal Normal turn
+// 32 fresh + 40 parity + 4 controls + 1 ACK = 77. Power-of-two
+// ceil(1022+77)=2048, not a substitute for completion credit.
+constexpr UINT32 Slots=2048, Chunk=4096, Batch=16;
 struct TxOwner {
-    HANDLE socket;
+    HANDLE socket,completion_event;
+    XDP_OVERLAPPED completion_ov;
+    bool completion_pending;
     unsigned char* umem;
     XSK_RING tx,completion;
     UINT64 free_chunks[Slots];
     UINT32 free_count,reserved_index,reserved_count;
-    UINT64 published,completed,pokes;
+    UINT64 published,completed,pokes,credit_limited,completion_waits;
     bool reported;
 };
 void reclaim(TxOwner* o) {
@@ -33,7 +39,12 @@ void reclaim(TxOwner* o) {
     if(n){XskRingConsumerRelease(&o->completion,n);o->completed+=n;}
 }
 void close_owner(TxOwner* o){
+    if(o->completion_pending){
+        CancelIoEx(o->socket,&o->completion_ov);
+        WaitForSingleObject(o->completion_event,INFINITE);
+    }
     if(o->socket)CloseHandle(o->socket);
+    if(o->completion_event)CloseHandle(o->completion_event);
     if(o->umem)VirtualFree(o->umem,0,MEM_RELEASE);
     HeapFree(GetProcessHeap(),0,o);
 }
@@ -95,9 +106,56 @@ extern "C" void* wbd_xdp_tx_open(const unsigned char* ip,const unsigned char* ma
     if(!ifindex){std::fprintf(stderr,"WBD_XDP_TX no physical IP/MAC match\n");return nullptr;}
     return wbd_xdp_tx_open_index(ifindex);
 }
+// A single producer owns every free chunk. Completion can only ADD
+// credit; publication is the sole operation consuming it. No lock,
+// queue, wait or IOCTL in the sufficient-credit case.
+extern "C" int wbd_xdp_tx_credit(void* raw,UINT32 wanted){
+    auto* o=static_cast<TxOwner*>(raw);
+    if(o->free_count<wanted)reclaim(o);
+    if(o->free_count<wanted){
+        ++o->credit_limited;
+        if(XskRingError(&o->tx)||XskRingError(&o->completion))return -1;
+    }
+    return static_cast<int>(o->free_count<wanted?o->free_count:wanted);
+}
+// WAIT_TX signals available completion descriptors, not remote ACK.
+// Only a credit-starved worker arms this event; the original Stop/
+// Direct/owner events still share its WAIT_ANY set.
+extern "C" uintptr_t wbd_xdp_tx_completion_event(void* raw){
+    auto* o=static_cast<TxOwner*>(raw);
+    if(!o->completion_event){
+        o->completion_event=CreateEventW(nullptr,TRUE,FALSE,nullptr);
+        if(!o->completion_event)return 0;
+    }
+    if(o->completion_pending){
+        DWORD state=WaitForSingleObject(o->completion_event,0);
+        if(state==WAIT_TIMEOUT)return reinterpret_cast<uintptr_t>(o->completion_event);
+        if(state!=WAIT_OBJECT_0)return 0;
+        XSK_NOTIFY_RESULT_FLAGS result{};
+        HRESULT hr=XskGetNotifyAsyncResult(&o->completion_ov,&result);
+        o->completion_pending=false;
+        if(FAILED(hr))return 0;
+    }
+    if(XskRingError(&o->tx)||XskRingError(&o->completion))return 0;
+    ResetEvent(o->completion_event);
+    o->completion_ov={};o->completion_ov.hEvent=o->completion_event;
+    XSK_NOTIFY_FLAGS flags=XSK_NOTIFY_FLAG_WAIT_TX;
+    // Official SDK requires a poke after reclaim as well as publish
+    // whenever TX is marked NEED_POKE.
+    if(XskRingProducerNeedPoke(&o->tx)){
+        flags=static_cast<XSK_NOTIFY_FLAGS>(flags|XSK_NOTIFY_FLAG_POKE_TX);
+        ++o->pokes;
+    }
+    ++o->completion_waits;
+    HRESULT hr=XskNotifyAsync(o->socket,flags,&o->completion_ov);
+    if(hr==HRESULT_FROM_WIN32(ERROR_IO_PENDING)){o->completion_pending=true;}
+    else if(FAILED(hr)){std::fprintf(stderr,"WBD_XDP_TX_COMPLETION_NOTIFY_FAILED hr=0x%08lx\n",(unsigned long)hr);return 0;}
+    else SetEvent(o->completion_event);
+    return reinterpret_cast<uintptr_t>(o->completion_event);
+}
 extern "C" int wbd_xdp_tx_reserve(void* raw,size_t count,unsigned char** frames){
     auto* o=static_cast<TxOwner*>(raw);
-    reclaim(o);
+    if(o->free_count<count)reclaim(o);
     if(count>Batch||count>o->free_count||
        XskRingProducerReserve(&o->tx,static_cast<UINT32>(count),&o->reserved_index)!=count){
         std::fprintf(stderr,"WBD_XDP_TX_RING_FULL requested=%zu free=%u published=%llu completed=%llu\n",count,o->free_count,o->published,o->completed);
@@ -132,7 +190,7 @@ extern "C" void wbd_xdp_tx_report(void* raw){
     reclaim(o);
     XSK_STATISTICS stats{};UINT32 size=sizeof(stats);
     HRESULT hr=XskGetSockopt(o->socket,XSK_SOCKOPT_STATISTICS,&stats,&size);
-    std::fprintf(stderr,"WBD_XDP_TX_STOP published=%llu completed_before_close=%llu pokes=%llu invalid=%llu stats_hr=0x%08lx\n",o->published,o->completed,o->pokes,stats.TxInvalidDescriptors,(unsigned long)hr);
+    std::fprintf(stderr,"WBD_XDP_TX_STOP published=%llu completed_before_close=%llu pokes=%llu invalid=%llu stats_hr=0x%08lx credit_limited=%llu completion_waits=%llu\n",o->published,o->completed,o->pokes,stats.TxInvalidDescriptors,(unsigned long)hr,o->credit_limited,o->completion_waits);
 }
 extern "C" void wbd_xdp_tx_close(void* raw){
     wbd_xdp_tx_report(raw);
@@ -145,7 +203,13 @@ extern "C" void wbd_xdp_tx_close(void* raw){
 // Queue-local registered slices of one preallocated region keep each
 // producer/consumer ownership independent without copying frames.
 namespace {
-constexpr UINT32 RxSlots=1024,DnsSlots=16,MaxRxQueues=62,MaxPorts=4,RxChunk=2048;
+// Per RSS queue, NOT divided across queues: one flow can hash to any
+// one queue. Old NPF RX capture budget=16MiB per lane. NPF v1.88
+// NPF_CAP_SIZE = sizeof(bpf_hdr) + caplen (20+14+1160=1194).
+// floor(16MiB/1194)=14051 full-size frames; next power of two 16384.
+// 2048-byte chunks retain the existing maximum IPv4+Ethernet coverage.
+// This matches bulk/full-size capacity, not NPF's packed ACK-only capacity.
+constexpr UINT32 RxSlots=16384,DnsSlots=16,MaxRxQueues=62,MaxPorts=4,RxChunk=2048;
 struct RxQueue {
     HANDLE socket,event;
     bool pending;

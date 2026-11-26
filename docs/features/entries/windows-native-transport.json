@@ -180,7 +180,8 @@
     "H2400-H2402 Windows Game cold RTO/timeout retry/fresh group tuples, NAT-independent protected attempt and final TLS ACK repair已入main，当前新源原生及物理资格待验。普通Game packet telemetry仅诊断输出。",
     "H2406 Windows Game native Health90明确返回与Normal一致的终止状态，完成原有owned Stop后由同一Go supervisor用新端口组重建。未实现Windows独立单lane热换；新源真实物理NAT blackhole恢复待验。",
     "H2408 Normal OFF/Fixed/Auto 冷TLS最终ACK、Detach迟到报文及冷超时修复已进main；当前源码原生回归待验，未更改已有认证身份、NAT路由或稳态数据面。",
-    "b3c74eb 安装发行版真实测试9/9通过，实体NIC Native、已有系统驱动升级/卸载、历史 NPF 源码裁剪及治理验收不在本次通过范围。"
+    "b3c74eb 安装发行版真实测试9/9通过，实体NIC Native、已有系统驱动升级/卸载、历史 NPF 源码裁剪及治理验收不在本次通过范围。",
+    "真实Windows日志出现TX 1022/1024在途、Fixed四行申请失败rc3及RX 2902本地丢弃；旧包不得视为稳定。本候选以原16MiB NPF bulk容量计算RX每RSS 16384×2048、TX 2048×4096，先物理credit再stage并原WAIT_ANY等待completion；小包等价/物理NIC待测。"
   ],
   "promotion": null,
   "legacy_branch_reason": "旧M4/集成分支为冻结历史；M0现只在main接线和验收，旧SOURCE原始证据均保留。",

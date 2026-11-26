@@ -6,6 +6,8 @@ const BATCH:usize=16;
 const CHUNK:usize=4096;
 extern "C"{
     fn wbd_xdp_tx_open(ip:*const u8,mac:*const u8)->*mut c_void;
+    fn wbd_xdp_tx_credit(owner:*mut c_void,wanted:u32)->i32;
+    fn wbd_xdp_tx_completion_event(owner:*mut c_void)->usize;
     fn wbd_xdp_tx_reserve(owner:*mut c_void,count:usize,frames:*mut *mut u8)->i32;
     fn wbd_xdp_tx_publish(owner:*mut c_void,lengths:*const usize)->i32;
     fn wbd_xdp_tx_close(owner:*mut c_void);
@@ -23,6 +25,16 @@ impl XdpTx{
     pub unsafe fn from_cold(raw:usize)->Result<Self,TxError>{
         let owner=NonNull::new(raw as *mut c_void).ok_or(TxError::IoFailed)?;
         Ok(Self{owner,failed:false,owned:false})
+    }
+    // Admission precedes consuming Wintun or staging a record/PN.
+    pub fn credit(&mut self,wanted:usize)->Result<usize,TxError>{
+        if self.failed{return Err(TxError::IoFailed)}
+        let n=unsafe{wbd_xdp_tx_credit(self.owner.as_ptr(),wanted as u32)};
+        if n<0{Err(TxError::IoFailed)}else{Ok(n as usize)}
+    }
+    pub fn completion_event(&mut self)->Result<usize,TxError>{
+        let h=unsafe{wbd_xdp_tx_completion_event(self.owner.as_ptr())};
+        if h==0{Err(TxError::IoFailed)}else{Ok(h)}
     }
     pub fn reserve(&mut self,count:usize)->Result<XdpBatch<'_>,TxError>{
         if self.failed{return Err(TxError::IoFailed)}
