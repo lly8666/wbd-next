@@ -2,7 +2,20 @@
 # Actual CHR VM + native x86 server container + native Linux client + origin.
 # One scenario per isolated Actions job; no physical deployment.
 set -euo pipefail
-case "${ROS_SCENE:?}" in routed|dnat|splice) ;; *) exit 2;; esac
+case "${ROS_SCENE:?}" in
+  dnat) mode=normal; ingress= ;;
+  dnat-fec-fixed) mode=fec-fixed; ingress= ;;
+  dnat-fec-auto) mode=fec-auto; ingress= ;;
+  dnat-game2) mode=game2; ingress= ;;
+  dnat-game4) mode=game4; ingress= ;;
+  dnat-game4-fec) mode=game4; ingress= ;;
+  dnat-redirect) mode=normal; ingress=redirect ;;
+  routed-legacy-tproxy) mode=normal; ingress=legacy-tproxy ;;
+  *) exit 2;;
+esac
+client_extra=()
+if [ "$ROS_SCENE" = dnat-game4-fec ]; then client_extra+=(--game-fec fixed1); fi
+if [ "$mode" = fec-fixed ]; then client_extra+=(--fec-profile 1); fi
 name=wbd-ros
 out="$PWD/ros-evidence"
 bundle="$PWD/linux-plan029-public-bundle"
@@ -87,7 +100,7 @@ ros '/ip/firewall/filter/add chain=forward action=accept in-interface=br-wbd out
 ros '/ip/firewall/filter/add chain=forward action=accept in-interface=br-wbd out-interface=ether3 src-address=10.248.82.2 comment=wbd-lab-origin'
 ros '/ip/firewall/filter/add chain=forward action=accept in-interface=ether3 out-interface=br-wbd dst-address=10.248.82.2 comment=wbd-lab-origin-return'
 peer=10.248.82.2
-if [ "$ROS_SCENE" = dnat ]; then
+if [[ "$ROS_SCENE" == dnat* ]]; then
   ros '/ip/firewall/nat/add chain=dstnat action=dst-nat in-interface=ether2 dst-address=10.248.81.2 protocol=tcp dst-port=443 to-addresses=10.248.82.2 to-ports=443 comment=wbd-lab-dnat'
   peer=10.248.81.2
 fi
@@ -103,8 +116,8 @@ printf '{"bench":"%s"}\n' "$password" >"$fixture/users.json"
 openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes -keyout "$fixture/key.pem" -out "$fixture/cert.pem" -subj /CN=wbd-h2228.example.test -addext subjectAltName=DNS:wbd-h2228.example.test >"$out/cert-generation.txt" 2>&1
 chmod 600 "$fixture"/{key.pem,users.json,route-key.hex}
 cc=
-if [ "$ROS_SCENE" = splice ]; then cc=cubic; fi
-docker build --platform linux/amd64 --build-arg WBD_CC="$cc" -t wbd-ros-lab "$work/image" >"$out/image-build.txt" 2>&1
+if [ -n "$ingress" ]; then cc=cubic; fi
+docker build --platform linux/amd64 --build-arg WBD_CC="$cc" --build-arg WBD_INGRESS="$ingress" -t wbd-ros-lab "$work/image" >"$out/image-build.txt" 2>&1
 docker save wbd-ros-lab | gzip -1 >"$work/http/wbd.tar.gz"
 python3 -m http.server 18080 --bind 127.0.0.1 --directory "$work/http" >"$out/http.log" 2>&1 &
 http_pid=$!
@@ -135,14 +148,14 @@ if [ -n "$cc" ]; then grep -q 'WBD_TCP_SPLICE_READY tun=wbds0 port=46180 cc=cubi
 # eight concurrent streams and UDP echo fixture, not just client READY.
 sudo tcpdump -nn -l -c 80 -i wbd-ros-wan 'tcp port 443' >"$out/wire-headers.txt" 2>&1 &
 capture_pid=$!
-sudo ip netns exec wbd-ros-client env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-client" --raw-interface wan0 --local-ip 10.248.81.3 --local-port 44100 --peer-ip "$peer" --peer-port 443 --tun-name wbdc0 --server-name wbd-h2228.example.test --route-key-hex-file "$fixture/route-key.hex" --username bench --password "$password" --auto-ip --installation-id-file "$work/install" --mode normal --outer-repair on --outer-mtu 1460 >"$out/client.log" 2>&1 &
+sudo ip netns exec wbd-ros-client env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-client" --raw-interface wan0 --local-ip 10.248.81.3 --local-port 44100 --peer-ip "$peer" --peer-port 443 --tun-name wbdc0 --server-name wbd-h2228.example.test --route-key-hex-file "$fixture/route-key.hex" --username bench --password "$password" --auto-ip --installation-id-file "$work/install" --mode "$mode" "${client_extra[@]}" --outer-repair on --outer-mtu 1460 >"$out/client.log" 2>&1 &
 client_pid=$!
 for i in $(seq 1 120); do
   kill -0 "$client_pid"
-  if grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client' "$out/client.log"; then break; fi
+  if grep -Eq 'V4_ORIGINAL_GO_(GAME_)?CLIENT_NATIVE_READY role=client|V4_ORIGINAL_GO_GAME_NATIVE_READY role=client' "$out/client.log"; then break; fi
   sleep 1
 done
-grep -q 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client' "$out/client.log"
+grep -Eq 'V4_ORIGINAL_GO_(GAME_)?CLIENT_NATIVE_READY role=client|V4_ORIGINAL_GO_GAME_NATIVE_READY role=client' "$out/client.log"
 ns ip route replace 198.18.77.2/32 dev wbdc0
 ns ip route get 198.18.77.2 >"$out/client-route.txt"
 python3 -u tools/routeros-server/app.py origin 5300 >"$out/origin.log" 2>&1 &
@@ -158,7 +171,7 @@ origin_pid=
 sudo kill -TERM "$client_pid"
 wait "$client_pid"
 client_pid=
-grep -Eq 'V4_PUBLIC_SHARED_TUN_STOP|V4_PUBLIC_NATIVE_STOP_DRAINED' "$out/client.log"
+grep -Eq 'V4_PUBLIC_SHARED_TUN_STOP|V4_PUBLIC_NATIVE_STOP_DRAINED|V4_PUBLIC_GAME_NATIVE_STOP_DRAINED' "$out/client.log"
 ros '/container/stop [find where name=wbd]'
 for i in $(seq 1 35); do
   ros '/log/print where topics~"container"' >"$out/ros-container-log.txt"
@@ -168,7 +181,16 @@ done
 grep -q 'V4_PUBLIC_SHARED_TUN_STOP.*reader_joined=1' "$out/ros-container-log.txt"
 grep -q 'V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED' "$out/ros-container-log.txt"
 if [ -n "$cc" ]; then
-  grep -q 'WBD_TCP_SPLICE_DONE.*target=198.18.77.2:5300' "$out/ros-container-log.txt"
+  grep -q 'WBD_TCP_SPLICE_ACCEPT target=198.18.77.2:5300 cc=cubic' "$out/ros-container-log.txt"
+  python3 - "$out/ros-container-log.txt" "$out/application.json" <<'PY'
+import json,re,sys
+log=open(sys.argv[1]).read()
+app=json.load(open(sys.argv[2]))
+rows=[(int(a),int(b)) for a,b in re.findall(r"WBD_TCP_SPLICE_DONE up=(\d+) down=(\d+)",log)]
+assert len(rows)>=9,rows
+assert sum(a for a,b in rows)>=app["upload_bytes"]+app["concurrent_upload_bytes"],rows
+assert sum(b for a,b in rows)>=app["received_bytes"]+app["concurrent_download_bytes"],rows
+PY
   grep -q 'WBD_TCP_SPLICE_STOP error=<nil>' "$out/ros-container-log.txt"
 fi
-echo WBD_ROS_REAL_APPLICATION_AND_STOP_PASS
+printf "WBD_ROS_REAL_APPLICATION_AND_STOP_PASS scene=%s mode=%s ingress=%s\n" "$ROS_SCENE" "$mode" "$ingress"

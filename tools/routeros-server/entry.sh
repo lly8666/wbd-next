@@ -56,6 +56,12 @@ else
   exit 2
 fi
 echo WBD_ROS_MASQUERADE_AVAILABLE
+# The tested nft path lacks TPROXY. One isolated legacy control tests whether
+# the old xtables backend exposes it; the REDIRECT candidate uses nft NAT.
+if [ "$WBD_INGRESS" = legacy-tproxy ]; then
+  update-alternatives --set iptables /usr/sbin/iptables-legacy
+  iptables --version
+fi
 if iptables -w 3 -t mangle -A PREROUTING -i wbprobe -p tcp -m addrtype ! --dst-type LOCAL -j TPROXY --on-port 46180 --on-ip 127.0.0.1 --tproxy-mark 0x5742b464/0xffffffff; then
   iptables -w 3 -t mangle -D PREROUTING -i wbprobe -p tcp -m addrtype ! --dst-type LOCAL -j TPROXY --on-port 46180 --on-ip 127.0.0.1 --tproxy-mark 0x5742b464/0xffffffff
   echo WBD_ROS_TPROXY_AVAILABLE
@@ -73,5 +79,6 @@ echo WBD_ROS_RST_RULE_APPLIED
 set -- --raw-interface "$dev" --local-ip 10.248.82.2 --local-port 443 --tun-name wbds0 --tun-ipv4 10.66.0.1/24 --server-name wbd-h2228.example.test --route-key-hex-file fixture/route-key.hex --users-file fixture/users.json --lease-pool 10.66.0.128/25 --tls-cert fixture/cert.pem --tls-key fixture/key.pem --outer-mtu 1460 --mode shared --outer-repair on --tun-fq-maxrate-mbps "$fq"
 if [ -n "$WBD_CC" ]; then
   set -- "$@" --tcp-proxy-cc "$WBD_CC" --tcp-proxy-port 46180
+  if [ "$WBD_INGRESS" = redirect ]; then set -- "$@" --tcp-proxy-ingress redirect; fi
 fi
 exec ./wbd-v4-server "$@"

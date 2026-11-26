@@ -1,6 +1,6 @@
 //! Experimental Linux TCP exit: kernel TCP endpoints, two kernel pipes,
  //! single readiness owner. No WBD packet reader or user-space payload copy.
-use std::{collections::HashMap, ffi::{c_int,c_void}, io, net::{TcpListener,TcpStream,SocketAddr},
+use std::{collections::HashMap, ffi::{c_int,c_void}, io, net::{TcpListener,TcpStream,SocketAddr,SocketAddrV4,Ipv4Addr},
     os::fd::{AsRawFd,FromRawFd,OwnedFd,RawFd}, thread::{self,JoinHandle}};
 const IN:u32=1; const OUT:u32=4; const ERR:u32=8; const RDHUP:u32=0x2000;
 const NB:i32=0x800; const CE:i32=0x80000;
@@ -127,7 +127,15 @@ impl Flow{
         Ok(())
     }
 }
-fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>,pacing:Option<u64>)->io::Result<()>{
+// Linux IPv4 NAT conntrack: recover the pre-REDIRECT destination once per accept.
+fn original_destination(s:RawFd)->io::Result<SocketAddr>{
+    let mut addr=Addr4{family:0,port:0,addr:0,pad:[0;8]};
+    let mut len=16u32;
+    ok(unsafe{getsockopt(s,0,80,(&mut addr as *mut Addr4).cast(),&mut len)})?;
+    if len!=16||addr.family!=2{return Err(io::Error::new(io::ErrorKind::InvalidData,"SO_ORIGINAL_DST IPv4"))}
+    Ok(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::from(addr.addr.to_ne_bytes()),u16::from_be(addr.port))))
+}
+fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>,pacing:Option<u64>,redirect:bool)->io::Result<()>{
     let e=ep.as_raw_fd();
     let local_listener=listener.local_addr()?;
     let mut flows=HashMap::<u64,Flow>::new();let mut id=1u64;
@@ -146,7 +154,7 @@ fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>,pacing:Option<u64>)
                     let c=match listener.accept(){Ok((s,_))=>s,Err(x) if x.kind()==io::ErrorKind::WouldBlock=>break,Err(x)=>return Err(x)};
                     if let Err(x)=(|| ->io::Result<()>{
                         c.set_nonblocking(true)?;
-                        let target=c.local_addr()?;
+                        let target=if redirect{original_destination(c.as_raw_fd())?}else{c.local_addr()?};
                         // Only original nonlocal destinations should reach the transparent owner.
                         // A direct localhost connection must not connect back into this listener.
                         if target==local_listener{return Ok(())}
@@ -189,6 +197,13 @@ struct Owner{stop:OwnedFd,thread:JoinHandle<io::Result<()>>}
 /// Cold-only C ABI; duplicates listener and owns all accepted sockets.
 #[no_mangle]
 pub unsafe extern "C" fn wbd_linux_tcp_splice_start(listener:i32,cc:*const std::ffi::c_char)->*mut c_void{
+    unsafe{start_owner(listener,cc,false)}
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_linux_tcp_splice_start_redirect(listener:i32,cc:*const std::ffi::c_char)->*mut c_void{
+    unsafe{start_owner(listener,cc,true)}
+}
+unsafe fn start_owner(listener:i32,cc:*const std::ffi::c_char,redirect:bool)->*mut c_void{
     let start=|| ->io::Result<Owner>{
         let cc=unsafe{std::ffi::CStr::from_ptr(cc)}.to_bytes_with_nul().to_vec();
         let l=fd(unsafe{fcntl(listener,1030,0)})?;
@@ -203,7 +218,7 @@ pub unsafe extern "C" fn wbd_linux_tcp_splice_start(listener:i32,cc:*const std::
             Err(std::env::VarError::NotPresent)=>None,
             Err(e)=>return Err(io::Error::new(io::ErrorKind::InvalidInput,e)),
         };
-        let thread=thread::Builder::new().name("wbd-tcp-splice".into()).spawn(move||run(listener,ep,stopfd,cc,pacing))?;
+        let thread=thread::Builder::new().name("wbd-tcp-splice".into()).spawn(move||run(listener,ep,stopfd,cc,pacing,redirect))?;
         Ok(Owner{stop,thread})
     };
     match start(){Ok(o)=>Box::into_raw(Box::new(o)).cast(),Err(e)=>{eprintln!("WBD_TCP_SPLICE_START_ERROR {e}");std::ptr::null_mut()}}

@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scene: [routed, dnat, splice]
+        scene: [dnat, dnat-fec-fixed, dnat-fec-auto, dnat-game2, dnat-game4, dnat-game4-fec, dnat-redirect, routed-legacy-tproxy]
     env:
       ROS_SCENE: ${{ matrix.scene }}
     steps:

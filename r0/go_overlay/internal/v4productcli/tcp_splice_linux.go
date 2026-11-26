@@ -6,6 +6,7 @@ package v4productcli
 #cgo LDFLAGS: -lwbd_engine
 #include <stdlib.h>
 void *wbd_linux_tcp_splice_start(int listener, const char *cc);
+void *wbd_linux_tcp_splice_start_redirect(int listener, const char *cc);
 int wbd_linux_tcp_splice_stop(void *owner);
 */
 import "C"
@@ -55,15 +56,24 @@ func startOwnedTCPSplice(c config)(*ownedTCPSplice,error){
             if e==nil{e=syscall.SetsockoptString(int(fd),syscall.IPPROTO_TCP,syscall.TCP_CONGESTION,c.tcpProxyCC)}
         });er!=nil{return er};return e
     }}
-    l,e:=lc.Listen(context.Background(),"tcp4","127.0.0.1:"+strconv.Itoa(c.tcpProxyPort))
+    bind:="127.0.0.1"
+    if c.tcpProxyRedirect {ip,_,e:=net.ParseCIDR(c.tunCIDR);if e!=nil{return nil,e};bind=ip.String()}
+    l,e:=lc.Listen(context.Background(),"tcp4",net.JoinHostPort(bind,strconv.Itoa(c.tcpProxyPort)))
     if e!=nil{return nil,e}
     f,e:=l.(*net.TCPListener).File();l.Close()
     if e!=nil{return nil,e};defer f.Close()
     cc:=C.CString(c.tcpProxyCC);defer C.free(unsafe.Pointer(cc))
-    native:=C.wbd_linux_tcp_splice_start(C.int(f.Fd()),cc)
+    var native unsafe.Pointer
+    if c.tcpProxyRedirect{native=C.wbd_linux_tcp_splice_start_redirect(C.int(f.Fd()),cc)}else{native=C.wbd_linux_tcp_splice_start(C.int(f.Fd()),cc)}
     if native==nil{return nil,fmt.Errorf("TCP splice native start failed")}
     p:=&ownedTCPSplice{native:native}
     fail:=func(e error)(*ownedTCPSplice,error){return nil,errors.Join(e,p.Close())}
+    if c.tcpProxyRedirect{
+        match:=[]string{"-i",c.tunName,"-p","tcp","-m","addrtype","!","--dst-type","LOCAL","-j","REDIRECT","--to-ports",strconv.Itoa(c.tcpProxyPort)}
+        if e=p.add(append([]string{"iptables","-w","3","-t","nat","-I","PREROUTING","1"},match...),append([]string{"iptables","-w","3","-t","nat","-D","PREROUTING"},match...));e!=nil{return fail(e)}
+        log.Printf("WBD_TCP_SPLICE_READY tun=%s port=%d cc=%s ingress=redirect",c.tunName,c.tcpProxyPort,c.tcpProxyCC)
+        return p,nil
+    }
     // Reserved per-instance route table / mark from configured listener port.
     // Explicit route table and rule owner, no global TCP sysctl mutation.
     table:=strconv.Itoa(100000+c.tcpProxyPort)

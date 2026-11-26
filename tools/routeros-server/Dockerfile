@@ -8,5 +8,7 @@ RUN chmod 755 wbd-v4-server entry.sh && chmod 600 fixture/key.pem fixture/route-
 ENV LD_LIBRARY_PATH=/opt/wbd
 ARG WBD_CC=
 ENV WBD_CC=$WBD_CC
+ARG WBD_INGRESS=
+ENV WBD_INGRESS=$WBD_INGRESS
 STOPSIGNAL SIGTERM
 ENTRYPOINT ["/opt/wbd/entry.sh"]

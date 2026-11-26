@@ -7,14 +7,16 @@
   "stage": "experimental",
   "development_branch": "experiment/m0-linux-tcp-splice",
   "available_on": [
-    "experiment/m0-linux-tcp-splice"
+    "experiment/m0-linux-tcp-splice",
+    "experiment/m0-routeros-server"
   ],
   "defaults": {
     "tcp-proxy-cc": "",
-    "tcp-proxy-port": 46180
+    "tcp-proxy-port": 46180,
+    "tcp-proxy-ingress": "tproxy"
   },
   "usage": {
-    "cli": "wbd-v4-server --tcp-proxy-cc bbr --tcp-proxy-port 46180 (omit cc for original NAT)",
+    "cli": "wbd-v4-server --tcp-proxy-cc bbr --tcp-proxy-port 46180 (omit cc for original NAT); RouterOS experiment: --tcp-proxy-cc cubic --tcp-proxy-ingress redirect",
     "config": "Experimental server CLI only",
     "gui": "Not applicable"
   },
@@ -23,7 +25,8 @@
     "r0/go_overlay/internal/v4productcli/tcp_splice_linux.go"
   ],
   "doc_refs": [
-    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md"
+    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
+    "docs/decisions/M0-ROUTEROS-SERVER-20261126.md"
   ],
   "verification": [
     {
@@ -32,12 +35,27 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "RouterOS CHR x86",
+      "scope": "Original TPROXY with iptables-nft",
+      "status": "FAIL",
+      "source_sha": "1762401af91c0e9650e9a5ba92c988e638c93773",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45777676652"
+    },
+    {
+      "platform": "RouterOS CHR x86",
+      "scope": "REDIRECT and SO_ORIGINAL_DST with same Rust splice owner",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
     "IPv4 forwarded TCP only; local server services and UDP unchanged",
     "End-to-end TCP acknowledgement becomes two real TCP segments",
-    "No custom CC algorithm implemented; old-kernel and physical paths not verified"
+    "No custom CC algorithm implemented; old-kernel and physical paths not verified",
+    "CHR 7.24.7 lacks exposed BBR/fq; iptables-nft TPROXY failed; REDIRECT requires conntrack original destination."
   ],
   "promotion": null
 }

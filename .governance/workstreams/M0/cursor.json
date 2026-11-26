@@ -4,20 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2417,
-  "checkpoint_sha": "1612c6c800854a4226cd37811068e654f260c3b8",
+  "sequence": 2418,
+  "checkpoint_sha": "1762401af91c0e9650e9a5ba92c988e638c93773",
   "progress": "partial",
   "task_id": "M0-ROUTEROS-SERVER",
   "current_task": "分支局部RouterOS CHR x86服务端适配实验；非main角色分配更新。基线fbce0649，PR79。",
   "why_now": "用户授权独立RouterOS服务器分支并检查红色Actions。",
   "done_when": "原生客户端认证、实际双向TCP/UDP和owned Stop；直接路由、DNAT及splice分别结算。",
-  "next_action": "同SOURCE复测修复后的真实容器能力、服务端启动和应用收据；根据首个实际内核失败定位，未测不晋级。",
+  "next_action": "验收六模式DNAT、REDIRECT CUBIC及legacy TPROXY；不重刷旧失败，不默认晋级。",
   "unverified": true,
-  "last_tested_source": "1612c6c800854a4226cd37811068e654f260c3b8",
-  "evidence_refs": [],
+  "last_tested_source": "1762401af91c0e9650e9a5ba92c988e638c93773",
+  "evidence_refs": [
+    "docs/evidence/M0/20261126-ROUTEROS-CHR-NORMAL-SCOPED.json"
+  ],
   "context_refs": [
     "docs/decisions/M0-ROUTEROS-SERVER-20261126.md"
   ],
   "open_requests": [],
-  "partial_summary": "两轮x86构建PASS，6/6 CHR启动/container安装镜像解包PASS；共同在入口诊断cat tcp_available_congestion_control ENOENT退出，真实WBD未启动；治理继承历史cursor evidence口径不匹配，原证据不改。"
+  "partial_summary": "1762401：Normal direct/DNAT真实九TCP、UDP、Stop PASS_SCOPED；TPROXY nft失败、BBR/fq不可用，双治理PASS。新增明确REDIRECT ingress候选、DNAT六模式和legacy TPROXY独立对照，待新SOURCE验收。"
 }
