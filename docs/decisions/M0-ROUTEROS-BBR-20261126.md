@@ -1,0 +1,13 @@
+# M0 RouterOS — real BBR, not CUBIC pacing
+
+User corrected target: transparent split is a mechanism for true BBR on the client-facing TCP sender. 1762401 CHR kernel 5.6.3-64: TCP_CONGESTION bbr ENOENT, CUBIC works, nft TPROXY fails, fq unavailable. b90f681 REDIRECT/mode batch remains in flight; do not interrupt. REDIRECT CUBIC cannot close the BBR goal.
+
+Ordinary TCP sockets do not expose writable cwnd/ACK congestion callbacks. SO_MAX_PACING_RATE cannot override CUBIC window/recovery. Kernel module install needs matching host ABI and authorized host module support; no module or firmware modifications assumed. Linux 5.6 introduced BPF struct_ops tcp_congestion_ops, conditional on BTF and BPF support. Run an isolated actual CHR container probe of BTF enumeration and BPF map access, with native runner control. A positive probe is only prerequisite, not registration proof; a negative result must not be bypassed.
+
+Parallel concrete fallback: pin public gVisor BBRv3 RFC fork adios-404/gvisor 9b14a44348f259003600d98cdb4dbd57a8302ca7 (BBR draft-07, ACK delivery sampling, cwnd, pacing, recovery, no ECN), build a standalone reference TCP endpoint with direct L3 TUN. Not gVisor sandbox, no runsc, not a WBD product dependency. Test in actual CHR container against native Linux peer over routed TAP. Per-accepted socket actual CC, TCP info and exact 512 KiB SHA receipt after half-close. One BBR clean, one BBR 400ms added RTT/5% loss both ways, one same-profile CUBIC control. These are real TCP packets, not simulator output. CHR free cap means functional only, not performance claim. Reference is unmerged third-party code; no claim it is production-ready or WBD integrated. Keep external source/license intact, no vendoring into project.
+
+If BPF extension available, prefer in-kernel BBR reimplementation with actual struct_ops registration and rate_sample-driven cwnd/pacing; retain native splice. If unavailable, actual user-space TCP endpoint is required for tunnel leg. Use this reference to validate feasibility and rate sample contract; final WBD design must retain sole Rust TUN owner, existing UDP bypass and origin kernel socket, no second TUN reader, no per-packet FFI, and compare copy/CPU costs. Rust native implementation/port is not yet done. BBRv1 of original Linux baseline and BBRv3 reference are separate variants. No default changes.
+
+Reference: https://github.com/adios-404/gvisor/blob/9b14a44348f259003600d98cdb4dbd57a8302ca7/pkg/tcpip/transport/tcp/bbr.go
+Upstream kernel design: https://github.com/torvalds/linux/blob/v5.6/net/ipv4/tcp_bbr.c
+BPF kernel interface: https://docs.ebpf.io/linux/program-type/BPF_PROG_TYPE_STRUCT_OPS/tcp_congestion_ops/
