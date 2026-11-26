@@ -122,6 +122,7 @@ enum AckPhase {
 #[derive(Debug)]
 pub struct Bbr {
     mss: u32,
+    loss_thresh: f64,
     cwnd: u32,
     init_cwnd: u32,
     state: State,
@@ -232,6 +233,8 @@ impl Bbr {
         let init_cwnd = initial_window(mss);
         let mut b = Self {
             mss,
+            // Temporary paired diagnostic; the normal BBRv3 threshold is unchanged.
+            loss_thresh: if std::env::var_os("WBD_M0_TCP_EXPERIMENT").as_deref() == Some(std::ffi::OsStr::new("loss10")) {0.10} else {LOSS_THRESH},
             cwnd: init_cwnd,
             init_cwnd,
             state: State::Startup,
@@ -329,8 +332,8 @@ impl Bbr {
     }
 
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
-        eprintln!("WBD_M0_BBR wall_ns={} leg={} id={} phase={:?} bw={} max_bw={} bw_shortterm={} bw_hi={:?} bw_latest={} inflight_longterm={} inflight_shortterm={} inflight_latest={} min_rtt={:?} round={} full_bw_reached={} full_bw={} full_bw_count={} pacing_gain={} cwnd_gain={} recovery={} conservation={} loss_events={} ack_phase={:?}",
-            wall_ns,leg,id,self.state,self.bw,self.max_bw,self.bw_shortterm,self.bw_hi,self.bw_latest,self.inflight_longterm,self.inflight_shortterm,self.inflight_latest,self.min_rtt,self.round_count,self.full_bw_reached,self.full_bw,self.full_bw_count,self.pacing_gain,self.cwnd_gain,self.in_recovery,self.packet_conservation,self.loss_events_in_round,self.ack_phase);
+        eprintln!("WBD_M0_BBR wall_ns={} leg={} id={} phase={:?} loss_thresh={} bw={} max_bw={} bw_shortterm={} bw_hi={:?} bw_latest={} inflight_longterm={} inflight_shortterm={} inflight_latest={} min_rtt={:?} round={} full_bw_reached={} full_bw={} full_bw_count={} pacing_gain={} cwnd_gain={} recovery={} conservation={} loss_events={} ack_phase={:?}",
+            wall_ns,leg,id,self.state,self.loss_thresh,self.bw,self.max_bw,self.bw_shortterm,self.bw_hi,self.bw_latest,self.inflight_longterm,self.inflight_shortterm,self.inflight_latest,self.min_rtt,self.round_count,self.full_bw_reached,self.full_bw,self.full_bw_count,self.pacing_gain,self.cwnd_gain,self.in_recovery,self.packet_conservation,self.loss_events_in_round,self.ack_phase);
     }
 
     /// InitPacingRate (§5.6.2): the initial window over the first round
@@ -714,8 +717,8 @@ impl Bbr {
     }
 
     /// IsInflightTooHigh (§5.5.10.2).
-    fn is_inflight_too_high(lost: u64, tx_in_flight: u32, sack: bool) -> bool {
-        lost as f64 > f64::from(tx_in_flight) * LOSS_THRESH || (lost > 0 && !sack)
+    fn is_inflight_too_high(&self, lost: u64, tx_in_flight: u32, sack: bool) -> bool {
+        lost as f64 > f64::from(tx_in_flight) * self.loss_thresh || (lost > 0 && !sack)
     }
 
     /// HandleInflightTooHigh (§5.5.10.2).
@@ -770,7 +773,7 @@ impl Bbr {
                 && self.in_recovery
                 && self.round_count > self.recovery_round
                 && self.loss_events_in_round >= STARTUP_FULL_LOSS_CNT
-                && Self::is_inflight_too_high(rs.lost, rs.tx_in_flight, true)
+                && self.is_inflight_too_high(rs.lost, rs.tx_in_flight, true)
         } else {
             self.in_recovery && a.newly_lost > 0
         };
@@ -836,7 +839,7 @@ impl Bbr {
                 self.handle_inflight_too_high(u64::from(rs.tx_in_flight), rs.is_app_limited);
                 return self.state != state;
             }
-        } else if !Self::is_inflight_too_high(rs.lost, rs.tx_in_flight, a.sack) {
+        } else if !self.is_inflight_too_high(rs.lost, rs.tx_in_flight, a.sack) {
             if self.inflight_longterm == u64::MAX {
                 return false;
             }
@@ -1114,13 +1117,13 @@ impl CongestionController for Bbr {
             return;
         }
         let lost = l.total_lost.saturating_sub(l.tx.lost);
-        if Self::is_inflight_too_high(lost, l.tx.tx_in_flight, self.sack) {
+        if self.is_inflight_too_high(lost, l.tx.tx_in_flight, self.sack) {
             // InflightAtLoss: where within this segment the loss rate
             // crossed the threshold.
             let size = f64::from(l.len);
             let inflight_prev = f64::from(l.tx.tx_in_flight) - size;
             let lost_prev = lost as f64 - size;
-            let prefix = (LOSS_THRESH * inflight_prev - lost_prev) / (1.0 - LOSS_THRESH);
+            let prefix = (self.loss_thresh * inflight_prev - lost_prev) / (1.0 - self.loss_thresh);
             let at_loss = (inflight_prev + prefix).max(0.0) as u64;
             self.handle_inflight_too_high(at_loss, l.tx.app_limited);
         }

@@ -20,6 +20,8 @@ impl Endpoint {
         // IPv4/TCP options are subtracted from the MSS by pktkit itself.
         let mss = mtu.checked_sub(40).filter(|&v| v >= 64)
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "inner TCP MTU"))?;
+        // Temporary native experiment: only middle capacity changes in the cap64 leg.
+        let max_buf = if middle && std::env::var_os("WBD_M0_TCP_EXPERIMENT").as_deref() == Some(std::ffi::OsStr::new("cap64")) {64 << 20} else {16 << 20};
         let conn = Conn::new(ConnConfig {
             local_addr: Some(SocketAddr::V4(tuple.src)),
             remote_addr: Some(SocketAddr::V4(tuple.dst)),
@@ -28,6 +30,8 @@ impl Endpoint {
             mss,
             congestion: cc,
             nodelay: true,
+            send_buf_max: max_buf,
+            recv_buf_max: max_buf,
             // Temporary causal experiment: both variants use the same instrumented build.
             middle_ack_three: middle && std::env::var_os("WBD_M0_ACK_PROBE").as_deref() != Some(std::ffi::OsStr::new("2")),
             mtu_probing: MtuProbing::Off,
