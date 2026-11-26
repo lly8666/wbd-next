@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "candidate_source": "8a6439bd0ec7b807957f35c978729cc86986e1f2",
+  "splice_source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+  "harness_source": "d3403e4d6f548871ab83578263f6c233a5c5cd75",
+  "decision": "FAIL_PERFORMANCE_NOT_PROMOTED",
+  "scope": "ARM64 independent client/router/server, same triple sequential ABBA per condition, download -P1 45s, outer MTU1160, FEC off, repair on, 200ms netem each direction, IID loss, no rate cap/jitter. Both runs completed all business and joined Stop. No unmodified BBRv3 control in weak network: cannot isolate ACK3 causation.",
+  "unit_tests": {
+    "run": 45822770227,
+    "source": "8a6439bd0ec7b807957f35c978729cc86986e1f2",
+    "passed": 330,
+    "failed": 0
+  },
+  "artifact_receipt": "Six ZIPs downloaded, SHA256 matched API digests; recalculated raw per-leg values and relay netem deltas. All three path watchers have 47–51 in-window samples per WBD leg, no non-direct sample, largest observed sample gap ~1.01 s; not proof between samples. tc seed unsupported, actual loss checked; clean bare single-stream 758.53 and 702.93 Mbps, below historical 800 Mbps absolute capacity qualification; within-triple weak-network contrast usable, no absolute physical capacity PASS.",
+  "conditions": [
+    {
+      "loss_pct": 1,
+      "run_id": 45822382519,
+      "clean_bare_mbps": 758.5326,
+      "artifact_sha256": {
+        "15118458787": "9351a94c8facca7a51709e43cf12fdfebc4d73cb77e866f2af11c465f24167f3",
+        "15118368964": "3be38f6fefd1467b805c83b14f6cd8be08de305f3dcc9343df635f424c4b90d3",
+        "15118109283": "dfb37ca38ec1cacb16f36e581cd12553392405142530e8d01e49b5a887a8cd2a"
+      },
+      "mbps_abba": [
+        72.7229065,
+        9.5068696,
+        9.2505592,
+        87.0775348
+      ],
+      "mean_mbps": {
+        "A": 79.9002206,
+        "B": 9.3787144
+      },
+      "actual_loss_pct_abba": [
+        [
+          0.987,
+          0.981
+        ],
+        [
+          0.985,
+          1.021
+        ],
+        [
+          0.987,
+          1.005
+        ],
+        [
+          1.024,
+          1.055
+        ]
+      ],
+      "cpu_s_per_gib": {
+        "A": {
+          "client_product": 15.082909,
+          "server_product": 17.513009,
+          "relay_host": 63.936262,
+          "all_hosts": 179.627426
+        },
+        "B": {
+          "client_product": 56.295724,
+          "server_product": 49.346665,
+          "relay_host": 232.118299,
+          "all_hosts": 613.196811
+        }
+      },
+      "product_hwm_mib": {
+        "A": {
+          "client": 21.8848,
+          "server": 55.7656
+        },
+        "B": {
+          "client": 24.2324,
+          "server": 22.7754
+        }
+      },
+      "candidate_middle_ack_data": [
+        [
+          51233,
+          54077
+        ],
+        [
+          50723,
+          52539
+        ]
+      ],
+      "candidate_source_origin_rwnd_limited_pct_first_leg": 97.7
+    },
+    {
+      "loss_pct": 5,
+      "run_id": 45822382479,
+      "clean_bare_mbps": 702.934,
+      "artifact_sha256": {
+        "15118523688": "2e0beddc428549c28f16bf20ac6f99287aac6238271035ff2989febd30325951",
+        "15117664841": "73e2ba3091b3e783cc96369e8a6985d54a6dc201cdd982b17c41d54357151a62",
+        "15117879700": "4221dcad21f98127a907354a5a7c8c79b339d742e1183f3e27969144ef27609a"
+      },
+      "mbps_abba": [
+        35.3012483,
+        0.792242,
+        0.60583,
+        33.6701713
+      ],
+      "mean_mbps": {
+        "A": 34.4857098,
+        "B": 0.699036
+      },
+      "actual_loss_pct_abba": [
+        [
+          5.046,
+          4.909
+        ],
+        [
+          5.341,
+          4.6
+        ],
+        [
+          5.037,
+          4.533
+        ],
+        [
+          4.933,
+          4.976
+        ]
+      ],
+      "cpu_s_per_gib": {
+        "A": {
+          "client_product": 36.025547,
+          "server_product": 43.281006,
+          "relay_host": 161.936045,
+          "all_hosts": 450.169517
+        },
+        "B": {
+          "client_product": 180.891222,
+          "server_product": 202.390588,
+          "relay_host": 888.794932,
+          "all_hosts": 2595.770498
+        }
+      },
+      "product_hwm_mib": {
+        "A": {
+          "client": 21.1641,
+          "server": 32.7246
+        },
+        "B": {
+          "client": 19.123,
+          "server": 19.7988
+        }
+      },
+      "candidate_middle_ack_data": [
+        [
+          4350,
+          4570
+        ],
+        [
+          3390,
+          3545
+        ]
+      ]
+    }
+  ],
+  "interpretation": "Candidate throughput -88.3%/-98.0%; absolute product CPU lower but much worse per delivered GiB; not CPU saturation. ACK-only approaches one per DATA under loss; consistent with frequent immediate feedback, exact trigger classification absent. Origin socket window limitation is downstream backpressure observation, not proven root cause. Do not blindly reduce SACK or ACK cadence. Compare original BBRv3 vs ACK3 under matched loss and instrument existing cwnd/inflight/rate/window/loss-recovery state; include 400ms zero-loss control to separate RTT from loss; no performance promotion or splice retirement.",
+  "clean": {
+    "original_run": 45821912542,
+    "original_measure_job": 139916050575,
+    "status": "stalled in artifact discovery; live logs unavailable, all three artifacts exist, exact discovery failure not proven",
+    "replacement_run": 45823880796,
+    "replacement_harness_commit": "8a0f887bb3d6b229ea6749b182bfc1d907773804",
+    "source_unchanged": true,
+    "old_arm_build_artifact": 15117998615,
+    "old_run_cancel": "No connected cancellation operation; old run still active at check."
+  }
+}

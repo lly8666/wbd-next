@@ -1,0 +1,5 @@
+# ACK3 ARM 400ms weak-network result (not promoted)
+
+docs/evidence/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-LOSS-RESULT.json
+
+Run45822382519 1% ABBA 72.72 / 9.51 / 9.25 / 87.08 Mbps; run45822382479 5% ABBA 35.30 / 0.79 / 0.61 / 33.67 Mbps. Both true ARM triples, same VMs within each run; business/Stop complete, all measured direct path samples passed, seeds unsupported, actual netem loss recorded before clear. Absolute clean capacity below historical 800M threshold, not physical qualification. Candidate fails relative throughput and CPU/GiB. Exact unit run45822770227 330/330. Candidate ACK/DATA ~95% at loss vs mixed functional zero-loss ~35%; no baseline Rust loss arm or zero-loss 400ms arm, cannot attribute to ACK3. Origin first 1% B run window-limited 97.7%, trace middle flow CC/pacing/scoreboard/window state and compare original Rust before changing. Main not merged, old splice retained. Clean run45821912542 stalled in artifact discovery; exact source replacement 45823880796 consumes frozen bundles, no rebuild. Live logs 404; root cause of lookup not proven; connector cannot cancel original.
