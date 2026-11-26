@@ -1,0 +1,35 @@
+name: M0 WinXDP pressure evidence readback
+run-name: "M0 WinXDP pressure initial S log diagnosis"
+on:
+  push:
+    branches: ['experiment/m0-winxdp']
+    paths: ['.github/workflows/qa-m0-winxdp-pressure-evidence.yml']
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Read bounded exact S artifacts from initial pressure fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download 45841523697 -R "$GITHUB_REPOSITORY" -n winxdp-pressure-S -D evidence
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path("evidence")
+          for p in sorted(root.rglob("*")):
+              if not p.is_file():continue
+              if p.name=="measurement.json" or (p.name=="result.json" and "case-" in str(p)):
+                  try:
+                      d=json.loads(p.read_text(encoding="utf-8-sig"))
+                      print("CASE_EVIDENCE",str(p),json.dumps({k:d[k] for k in ("case","status","server","source","flows","error","client_stop","netem_packets","exact_hash") if k in d})[:5000])
+                  except Exception as e:print(repr(e))
+              elif p.name in ("server.log","client.log","source.log","server-control.log"):
+                  print("LOG_TAIL",str(p))
+                  lines=p.read_text(errors="replace").splitlines()
+                  print("\n".join(l[:1000] for l in lines[-28:]))
+          PY
