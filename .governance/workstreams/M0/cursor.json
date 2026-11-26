@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2466,
-  "checkpoint_sha": "81b47eb009dec60caa21518dd66a7295a82834f8",
-  "progress": "verifying",
+  "sequence": 2467,
+  "checkpoint_sha": "d3119d188ab6b3eaf84bc5c41e3d56d1024eacb7",
+  "progress": "partial",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收 SACK compression source dffe77d native45842035087/core45842115480/ARM 45842115562，核实际sack_deferred、ACK-only、重传、业务吞吐和CPU/GiB及路径实损；区分本地GRO/owner处理与SACK反馈节奏。保持旧splice，不将loss10/64MiB诊断直接晋级。",
+  "next_action": "SACK compression actual ACK/CPU benefit recorded, 5% throughput unresolved; inspect zero-injection retransmits and BBR/RACK feedback, qualify further candidate changes before promotion; GRO separate, keep splice.",
   "unverified": true,
-  "last_tested_source": "66215fee89068f4a1dad5c2b6658642f22614dfc",
+  "last_tested_source": "dffe77daa5adaeac89a86e48cd6730c4c67a655f",
   "evidence_refs": [
-    "docs/evidence/M0/20261126-DUAL-RUST-TCP-BDP-LOSS-PROBE-RESULT.json"
+    "docs/evidence/M0/20261126-DUAL-RUST-TCP-SACK-COMPRESS-RESULT.json"
   ],
   "context_refs": [
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
@@ -29,8 +29,9 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-CLEAN-RESULT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK-LOSS-DIAG-RESULT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-EXACT-FILL-SNDBUF-RESULT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-BDP-LOSS-PROBE-RESULT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-BDP-LOSS-PROBE-RESULT.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-SACK-COMPRESS-RESULT.md"
   ],
   "open_requests": [],
-  "partial_summary": "PR80 WIP HEAD be216b6ee2e04e4b02adfc6b0026b5f6d8010910；BDP/loss model run45834669282 12/12，cap64 201.47→229.67Mbps，loss10 1%22.16→24.68、5%0.652→21.216，未晋级。Linux-inspired SACK compression dffe77d 已施工、native/core/ARM在途；无GRO施工，无产品main合入，治理失败待解决。"
+  "partial_summary": "PR80 WIP HEAD be216b6ee2e04e4b02adfc6b0026b5f6d8010910；SACK dffe77d native双ISA/332 core/ARM 12/12完成，0/1/5% 256.13→315.93、60.76→61.32、16.72→15.09 Mbps，ACK/DATA 69.95→11.05%、99.70→6.74%、99.84→26.26%，CPU/GiB改善；5%吞吐未过非劣性，未晋级，无产品main合入。"
 }
