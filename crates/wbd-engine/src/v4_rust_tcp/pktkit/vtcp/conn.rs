@@ -722,6 +722,8 @@ pub struct Conn {
     /// A segment shorter than `rcv_mss` is among those not yet ACKed: a
     /// sender with Nagle on holds its next one back until this ACK.
     ack_pushed: bool,
+    // Diagnostic cause counts: immediate, quick, cumulative, timer, drained, window.
+    m0_ack_causes: [u64; 6],
 
     // Buffer auto-tuning.
     /// Where buffer growth is drawn from, process-wide.
@@ -956,6 +958,7 @@ impl Conn {
             rcv_mss: u32::from(mss.min(536)),
             last_data_recv: None,
             ack_pushed: false,
+            m0_ack_causes: [0; 6],
             budget: &autotune::GLOBAL,
             budget_share: None,
             grown: 0,
@@ -1181,6 +1184,17 @@ impl Conn {
             rwnd_limited,
             sndbuf_limited,
         }
+    }
+
+    /// Low-frequency snapshot from the existing owner, not an independent timer.
+    pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
+        let now=wall_clock();
+        let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.info());
+        eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?}",
+            wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline));
+        if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
     }
 
     /// The first slow start may have just ended, for `reason`, with cwnd
@@ -2851,6 +2865,7 @@ impl Conn {
         let quick = self.quick_acks > 0 && !self.pingpong;
         let threshold = self.rcv_mss * if self.cfg.middle_ack_three { 2 } else { 1 };
         if now || quick || unacked > threshold {
+            self.m0_ack_causes[if now {0} else if quick {1} else {2}] += 1;
             if quick {
                 self.quick_acks -= 1;
             }
@@ -4801,6 +4816,7 @@ impl Conn {
             // time: not a request/response exchange after all (Linux's
             // tcp_delack_timer_handler).
             self.pingpong = false;
+            self.m0_ack_causes[3] += 1;
             self.queue_ack();
         }
 
@@ -5236,6 +5252,7 @@ impl Conn {
                 State::Established | State::FinWait1 | State::FinWait2
             )
         {
+            self.m0_ack_causes[if drained {4} else {5}] += 1;
             self.queue_ack();
         }
     }

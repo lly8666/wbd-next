@@ -129,6 +129,9 @@ impl RecvBuf {
         self.window_size.saturating_sub(self.buf.len()) as u32
     }
 
+    /// Snapshot of disjoint out-of-order range count and allocated cost.
+    pub(crate) fn m0_ooo(&self)->(usize,usize){(self.ooo.len(),self.ooo_mem)}
+
     /// The most the out-of-order ranges may cost before the furthest are
     /// given up. The bytes they hold lie inside the window, so they never
     /// come to more than the buffer (a unit more, when a scaled window was

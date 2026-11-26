@@ -28,7 +28,8 @@ impl Endpoint {
             mss,
             congestion: cc,
             nodelay: true,
-            middle_ack_three: middle,
+            // Temporary causal experiment: both variants use the same instrumented build.
+            middle_ack_three: middle && std::env::var_os("WBD_M0_ACK_PROBE").as_deref() != Some(std::ffi::OsStr::new("2")),
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()
         });
@@ -108,6 +109,10 @@ impl ClientFlow {
         flow.local.accept(syn, &mut out.local)?;
         flow.middle.open(&mut out.tunnel)?;
         Ok((flow, out))
+    }
+    pub(crate) fn probe(&self, id:u64, wall_ns:u128) {
+        self.local.conn.m0_probe("client-local",id,wall_ns);
+        self.middle.conn.m0_probe("client-middle",id,wall_ns);
     }
     pub(crate) fn tuple(&self) -> Tuple { self.middle.tuple }
     pub(crate) fn on_local(&mut self, p: &Packet) -> io::Result<ClientOutput> {
@@ -202,6 +207,11 @@ impl ServerFlow {
         let mut out = Vec::new();
         middle.accept(syn, &mut out)?;
         Ok((Self { middle, stream, connected, origin_eof: false, origin_write_closed: false }, out))
+    }
+    pub(crate) fn probe(&self, id:u64, wall_ns:u128) {
+        self.middle.conn.m0_probe("server-middle",id,wall_ns);
+        eprintln!("WBD_M0_TCP_ORIGIN wall_ns={} id={} connected={} interest={:?} eof={} write_closed={}",
+            wall_ns,id,self.connected,self.interest(),self.origin_eof,self.origin_write_closed);
     }
     pub(crate) fn tuple(&self) -> Tuple { self.middle.tuple.reverse() }
     pub(crate) fn socket(&self) -> &TcpStream { &self.stream }

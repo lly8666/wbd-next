@@ -328,6 +328,11 @@ impl Bbr {
         self.min_rtt
     }
 
+    pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
+        eprintln!("WBD_M0_BBR wall_ns={} leg={} id={} phase={:?} bw={} max_bw={} bw_shortterm={} bw_hi={:?} bw_latest={} inflight_longterm={} inflight_shortterm={} inflight_latest={} min_rtt={:?} round={} full_bw_reached={} full_bw={} full_bw_count={} pacing_gain={} cwnd_gain={} recovery={} conservation={} loss_events={} ack_phase={:?}",
+            wall_ns,leg,id,self.state,self.bw,self.max_bw,self.bw_shortterm,self.bw_hi,self.bw_latest,self.inflight_longterm,self.inflight_shortterm,self.inflight_latest,self.min_rtt,self.round_count,self.full_bw_reached,self.full_bw,self.full_bw_count,self.pacing_gain,self.cwnd_gain,self.in_recovery,self.packet_conservation,self.loss_events_in_round,self.ack_phase);
+    }
+
     /// InitPacingRate (§5.6.2): the initial window over the first round
     /// trip, or a millisecond before there is one.
     fn init_pacing_rate(&mut self, rtt: Option<Duration>) {
@@ -1021,7 +1026,6 @@ impl CongestionController for Bbr {
         true
     }
 
-    #[cfg(test)]
     fn as_bbr(&self) -> Option<&Bbr> {
         Some(self)
     }

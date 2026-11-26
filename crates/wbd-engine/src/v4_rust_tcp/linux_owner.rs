@@ -94,6 +94,7 @@ pub(crate) struct Owner{
     keys:HashMap<Tuple,u64>,flows:HashMap<u64,Entry>,
     deadlines:BTreeSet<(Instant,u64)>,scratch:Vec<u8>,
     local_in:TcpWireCount,local_out:TcpWireCount,middle_in:TcpWireCount,middle_out:TcpWireCount,
+    probe_next:Option<Instant>,
 }
 impl Owner{
     pub(crate) fn new(server:bool,local_mtu:u16,middle_mtu:u16,wake:Arc<Wake>)->io::Result<Self>{
@@ -101,7 +102,8 @@ impl Owner{
         change(ep.as_raw_fd(),1,wake.fd.as_raw_fd(),0,IN)?;
         Ok(Self{server,local_mtu,middle_mtu,ep,wake,next_id:1,keys:HashMap::new(),
             flows:HashMap::new(),deadlines:BTreeSet::new(),scratch:vec![0;65536],
-            local_in:Default::default(),local_out:Default::default(),middle_in:Default::default(),middle_out:Default::default()})
+            local_in:Default::default(),local_out:Default::default(),middle_in:Default::default(),middle_out:Default::default(),
+            probe_next:std::env::var_os("WBD_M0_ACK_PROBE").map(|_|Instant::now())})
     }
     fn insert(&mut self,tuple:Tuple,flow:Flow)->io::Result<()>{
         let id=self.next_id;self.next_id+=1;
@@ -171,6 +173,22 @@ impl Owner{
         self.local_out.output(&out.local);self.middle_out.output(&out.tunnel);
         Ok(out)
     }
+    // Experiment only: sample during existing owner service turns; no extra wake/deadline.
+    fn probe(&mut self,now:Instant) {
+        if !self.probe_next.is_some_and(|next|now>=next){return}
+        self.probe_next=Some(now+Duration::from_secs(1));
+        let wall_ns=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos();
+        eprintln!("WBD_M0_TCP_OWNER wall_ns={} role={} flows={} deadlines={} local_in={:?} local_out={:?} middle_in={:?} middle_out={:?}",
+            wall_ns,if self.server{"server"}else{"client"},self.flows.len(),self.deadlines.len(),self.local_in,self.local_out,self.middle_in,self.middle_out);
+        for (&id,entry) in &self.flows {
+            eprintln!("WBD_M0_TCP_FLOW wall_ns={} id={} tuple={:?} interest={} deadline_in_us={:?}",
+                wall_ns,id,entry.tuple,entry.interest,entry.deadline.map(|d|d.saturating_duration_since(now).as_micros()));
+            match &entry.flow{
+                Flow::Client(f)=>f.probe(id,wall_ns),
+                Flow::Server(f)=>f.probe(id,wall_ns),
+            }
+        }
+    }
     /// Real readiness or earliest TCP/outer deadline. No per-flow scan.
     /// A zero duration services only already-ready work.
     pub(crate) fn service(&mut self,wait:Duration)->io::Result<ClientOutput>{
@@ -209,6 +227,7 @@ impl Owner{
             self.refresh(id)?;
         }
         self.local_out.output(&out.local);self.middle_out.output(&out.tunnel);
+        self.probe(Instant::now());
         Ok(out)
     }
 }

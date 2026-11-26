@@ -156,8 +156,7 @@ pub trait CongestionController: Send {
     fn set_paced(&mut self, paced: bool) {
         let _ = paced;
     }
-    /// The controller as BBR, for tests to look inside.
-    #[cfg(test)]
+    /// The controller as BBR, for native TCP diagnostics and tests.
     fn as_bbr(&self) -> Option<&super::bbr::Bbr> {
         None
     }
