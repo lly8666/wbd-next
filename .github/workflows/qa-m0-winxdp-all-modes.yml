@@ -1,0 +1,324 @@
+name: M0 WinXDP all-mode original functional
+run-name: "M0 WinXDP 1.4 XDP-only functional | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-winxdp']
+    paths: ['.github/workflows/qa-m0-winxdp-all-modes.yml']
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+concurrency:
+  group: winxdp-all-modes-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Assemble and compile exact original Go cold client
+        shell: pwsh
+        run: |
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'original Go assembly failed'}
+          New-Item -ItemType Directory -Force xdp-build | Out-Null
+          Push-Location legacy
+          try{
+            go build -trimpath -tags wbd_v4_embedded_go -o ../xdp-build/wbd-client-embedded.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'original Go client build failed'}
+          }finally{Pop-Location}
+      - name: H1394 pin official ISA-L Win64 static prerequisite
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          choco install nasm -y --no-progress
+          if($LASTEXITCODE -ne 0){throw 'native ISA-L NASM prerequisite failed'}
+          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin') |
+            Where-Object {Test-Path (Join-Path $_ 'nasm.exe')} | Select-Object -First 1
+          if(-not $nasm){throw 'ISA-L NASM missing after install'}
+          Add-Content -Path $env:GITHUB_PATH -Value $nasm
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          if($LASTEXITCODE -ne 0){throw 'official ISA-L clone failed'}
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if((git -C isa-l rev-parse HEAD).Trim() -ne 'c387163fcbca62701d646149564c550c78a4f985'){throw 'official pinned ISA-L source mismatch'}
+      - name: H1394 build official static ISA-L for real MSVC release DLL
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          # The actual Windows native runner can have a different VS edition/year.
+          # Require the installed x64 MSVC tools, not a hard-coded Enterprise path.
+          $vswhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if(-not (Test-Path -LiteralPath $vswhere)){throw 'VS installer vswhere missing: cannot build pinned native ISA-L'}
+          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath |
+            Select-Object -First 1
+          if([string]::IsNullOrWhiteSpace($vsroot)){throw 'No installed native MSVC x64 toolchain'}
+          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          if(-not (Test-Path -LiteralPath $vcvars)){throw 'Installed MSVC lacks vcvars64.bat'}
+          $nativeBuild='call "'+$vcvars+'" && where nmake && cd isa-l && nmake /f Makefile.nmake'
+          & cmd.exe /d /s /c $nativeBuild
+          if($LASTEXITCODE -ne 0){throw 'Native ISA-L MSVC static build failed'}
+          Write-Output 'H1396_WIN_NATIVE_ISAL_VSWHERE_MSVC_BUILD_PASS'
+      - name: Build exact-source WinXDP release DLL with ISA-L
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust toolchain'}
+          nuget install Microsoft.XDP-for-Windows.Sdk -Version 1.4.0 -OutputDirectory xdp-packages -NonInteractive
+          if($LASTEXITCODE -ne 0){throw 'official XDP SDK unavailable'}
+          $env:WBD_XDP_SDK_INCLUDE=(Get-ChildItem xdp-packages -Recurse -Filter xdpapi.h | Where-Object {$_.Directory.Name -eq 'include'} | Select-Object -First 1).Directory.FullName
+          $archive=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File | Select-Object -First 1
+          if(-not $archive){throw 'ISA-L archive missing'}
+          $env:WBD_ISAL_PREFIX=$archive.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration,winxdp_native_trial'
+          $vs=& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          New-Item -ItemType Directory -Force xdp-build | Out-Null
+          $cmd='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo +1.85.1 build --locked -p wbd-engine --release --features '+$features+' && copy /Y target\release\wbd_engine.dll xdp-build\wbd_engine.dll'
+          cmd.exe /d /s /c $cmd
+          if($LASTEXITCODE -ne 0){throw 'native ISA-L A/B build failed'}
+          [ordered]@{source_sha=$env:GITHUB_SHA;go_source_sha=$env:GITHUB_SHA;xdp_sdk='1.4.0';features=$features;native_fec_acceleration=$true;exe=(Get-FileHash xdp-build/wbd-client-embedded.exe).Hash.ToLowerInvariant();dll=(Get-FileHash xdp-build/wbd_engine.dll).Hash.ToLowerInvariant();isa_l_source=$env:WBD_ISAL_SOURCE_SHA;isa_l_archive_sha256=(Get-FileHash $archive.FullName).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content xdp-build/manifest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: winxdp-release, path: xdp-build/, if-no-files-found: error, retention-days: 14}
+  functional:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [normal, fixed, auto, game2, game4, game2-fec, game4-fec, dns-tc]
+    runs-on: windows-2025
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONUTF8: '1'
+      WBD_WL_PUBLIC_MODE: ${{ matrix.mode }}
+      WBD_WL_NATIVE_OUTER_MTU_REQUEST: default1460
+      WBD_WL_TUN_MTU: '1460'
+      WBD_PLAN029_NATIVE_V3_TRIAL: '0'
+      LINUX_BINARY_SRC: 5e1b68331a4b666287ee28219f30a6b7c70df0dd
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c80933
+        with: {name: winxdp-release, path: xdp-build}
+      - name: Fetch exact frozen Linux x86_64 product for local WSL server
+        shell: bash
+        env:
+          WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+        run: |
+          # All product differences from the verified H2480 base are the
+          # already-built Windows-only TX candidate. Check exact build identity
+          # above, then use the original frozen-server verifier at its base SHA.
+          git diff --exit-code 26b11e2da236e909b73f461964c52d5a86d42dca "$GITHUB_SHA" -- crates r0 Cargo.toml Cargo.lock tools/m0_plan029_linux_dual_native_build.sh tools/m0_linux_glibc231_build.sh ':!crates/wbd-engine/src/v4_windows_native_runtime.rs' ':!crates/wbd-engine/Cargo.toml' ':!crates/wbd-platform/Cargo.toml' ':!crates/wbd-platform/src/lib.rs' ':!crates/wbd-platform/build.rs' ':!crates/wbd-platform/native/winxdp_tx.cpp' ':!crates/wbd-platform/src/windows_xdp_tx.rs' ':!crates/wbd-platform/src/windows_xdp_rx.rs' ':!crates/wbd-engine/src/v4_windows_game_native_runtime.rs' ':!r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go' ':!r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go' ':!r0/go_overlay/internal/faketcp/xdp_native_windows.go' ':!r0/go_overlay/assembly/manifest-plan020-m0.json' ':!r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go' ':!r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go' ':!r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows.go'
+          GITHUB_SHA=26b11e2da236e909b73f461964c52d5a86d42dca bash tools/m0_h2476_fetch_frozen_linux.sh
+          cp -a linux-plan029-public-bundle linux-product
+      - name: WSL stage 1 - bounded distro inventory
+        id: wsl_inventory
+        shell: pwsh
+        timeout-minutes: 2
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force result,h2442-out | Out-Null
+          Write-Output 'H2476_WSL_INVENTORY_START'
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          $rc=$LASTEXITCODE
+          $known | Set-Content result/h2476-distro-list.txt
+          if($rc -ne 0){throw 'real WSL2 distro query unavailable'}
+          $need=($known -notmatch '(?im)^\s*Ubuntu\s*$')
+          "needs_import=$($need.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Output "H2476_WSL_INVENTORY_DONE needs_import=$need"
+      - name: WSL stage 2 - official pinned image download
+        if: ${{ steps.wsl_inventory.outputs.needs_import == 'true' }}
+        shell: pwsh
+        timeout-minutes: 4
+        run: |
+          $ErrorActionPreference='Stop'
+          $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+          Write-Output 'H2476_WSL_DOWNLOAD_START'
+          & python tools/m0_wl_windows_bounded_cmd.py 190 curl.exe --fail --location --connect-timeout 20 --max-time 180 --output $img 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl'
+          if($LASTEXITCODE -ne 0){throw 'Ubuntu pinned download failed'}
+          if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'Ubuntu real image checksum mismatch'}
+          Write-Output 'H2476_WSL_DOWNLOAD_HASH_PASS'
+      - name: WSL stage 3 - file-backed import with one owned retry
+        if: ${{ steps.wsl_inventory.outputs.needs_import == 'true' }}
+        shell: pwsh
+        timeout-minutes: 6
+        run: |
+          $ErrorActionPreference='Stop'
+          python -u tools/m0_h2476_import_wsl.py
+          if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 import failed'}
+      - name: WSL stage 4 - bounded guest network startup
+        shell: pwsh
+        timeout-minutes: 2
+        run: |
+          $ErrorActionPreference='Stop'
+          Write-Output 'H2476_WSL_BOOT_START'
+          $lines=(& python tools/m0_wl_windows_bounded_cmd.py 35 wsl.exe -d Ubuntu -u root --exec ip -4 -o addr show dev eth0 2>&1 | Out-String)
+          $rc=$LASTEXITCODE
+          $lines | Set-Content result/h2476-guest-network.txt
+          if($rc -ne 0){throw 'real independent Linux eth0 unavailable'}
+          $m=[regex]::Match($lines,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
+          if(-not $m.Success){throw 'real Linux guest does not have its own IPv4'}
+          $ip=$m.Groups[1].Value
+          if($ip -match '^(127\.|0\.)'){throw 'guest source is not a networked Linux kernel'}
+          $ip | Set-Content -Encoding ascii result/h1706-ubuntu-guest-ip.txt
+          Write-Output "H2476_WSL_BOOT_DONE ip=$ip"
+      - name: Prepare real WSL kernel tools
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          & python tools/m0_wl_windows_bounded_cmd.py 210 wsl.exe -d Ubuntu -u root --exec sh -c 'command -v iptables && command -v openssl && command -v python3 && command -v tc && command -v modprobe && command -v sudo || (apt-get update -qq && apt-get install -y -qq iproute2 iptables openssl python3 kmod sudo)'
+          if($LASTEXITCODE -ne 0){throw 'WSL prerequisites unavailable'}
+          & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root --exec sh -c 'command -v tcpdump && command -v ethtool || (apt-get update -qq && apt-get install -y -qq tcpdump ethtool)'
+          if($LASTEXITCODE -ne 0){throw 'H2480 ethtool/tcpdump prerequisites unavailable'}
+      - name: Deploy exact newly built client
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          $m=Get-Content xdp-build/manifest.json -Raw | ConvertFrom-Json
+          if($m.source_sha -ne $env:GITHUB_SHA -or (Get-FileHash xdp-build/wbd_engine.dll).Hash.ToLowerInvariant() -ne $m.dll -or (Get-FileHash xdp-build/wbd-client-embedded.exe).Hash.ToLowerInvariant() -ne $m.exe){throw 'build identity mismatch'}
+          Copy-Item xdp-build/wbd-client-embedded.exe,xdp-build/wbd_engine.dll result/wl-public/
+      - name: Install original signed Wintun only (no Npcap)
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=Join-Path $env:RUNNER_TEMP 'wl-public-real'
+          New-Item -ItemType Directory -Force $root,result/wl-public | Out-Null
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'runner already has Npcap; cannot prove XDP-only product'}
+          function Get-PinnedPublicNativeDriverPackage([string]$Uri,[string]$Destination){
+            for($attempt=1;$attempt -le 5;$attempt++){
+              try {
+                Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Destination -TimeoutSec 65 -ErrorAction Stop
+                if(-not (Test-Path -LiteralPath $Destination)){throw 'signed package download absent'}
+                return
+              }catch{
+                Remove-Item -LiteralPath $Destination -Force -ErrorAction SilentlyContinue
+                Write-Output ('PLAN028_EXTERNAL_SIGNED_DRIVER_DOWNLOAD_RETRY attempt='+$attempt+' status='+$_.Exception.GetType().Name)
+                if($attempt -eq 5){throw}
+                Start-Sleep -Seconds ([Math]::Min(24,4*$attempt))
+              }
+            }
+          }
+          $wzip=Join-Path $root 'wintun.zip'
+          $wdir=Join-Path $root 'wintun'
+          Get-PinnedPublicNativeDriverPackage 'https://www.wintun.net/builds/wintun-0.14.1.zip' $wzip
+          if((Get-FileHash $wzip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'official Wintun archive hash changed'}
+          Expand-Archive $wzip $wdir -Force
+          $dll=Join-Path $wdir 'wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun DLL unsigned'}
+          Copy-Item $dll result/wl-public/wintun.dll
+      - name: Install official WinXDP runtime
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          nuget install Microsoft.XDP-for-Windows.Runtime.x64 -Version 1.4.0 -OutputDirectory xdp-packages -NonInteractive
+          if($LASTEXITCODE -ne 0){throw 'XDP runtime unavailable'}
+          $runtime=(Get-ChildItem xdp-packages -Recurse -Filter xdp-setup.ps1 | Select-Object -First 1).Directory.FullName
+          & "$runtime/xdp-setup.ps1" -Install xdp
+          if($LASTEXITCODE -ne 0){throw 'XDP install failed'}
+      - name: Real original product functional mode (no throughput benchmark)
+        shell: pwsh
+        timeout-minutes: 45
+        run: |
+          $ErrorActionPreference='Stop'
+          $guestText=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 | Out-String)
+          $guestIP=[regex]::Match($guestText,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/').Groups[1].Value
+          if(-not $guestIP){throw 'WSL guest address absent'}
+          $nic=@(Get-NetAdapter -IncludeHidden | Where-Object {$_.Name -match '^vEthernet \(WSL' -and $_.Status -eq 'Up'})
+          if($nic.Count -ne 1){throw 'WSL adapter ambiguous'}
+          $hostIP=@(Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex | Where-Object {$_.IPAddress -notmatch '^169\.254\.'})
+          $creator=@(Get-NetFirewallHyperVVMCreator | Where-Object {$_.FriendlyName -eq 'WSL'})
+          if($hostIP.Count -ne 1 -or $creator.Count -ne 1){throw 'WSL test endpoints ambiguous'}
+          $name='WBD-H2476-'+$env:GITHUB_RUN_ID
+          $rst=$false
+          $neighbor=$false
+          try{
+            & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
+            if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
+            & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443 -j DROP
+            if($LASTEXITCODE -ne 0){throw 'test RST suppression failed'}
+            $rst=$true
+            # Same configured source port for all modes. Original persisted
+            # cold tuple ordinal reserves successive lane/retry slots.
+            $ports=@(41031..41094 | ForEach-Object {[string]$_})
+            $appPorts=@('45901','45902')
+            New-NetFirewallHyperVRule -Name $name -DisplayName $name -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $hostIP[0].IPAddress -LocalPorts @('443') -RemotePorts $ports | Out-Null
+            New-NetFirewallRule -Name ($name+'-tcp') -DisplayName ($name+'-tcp') -Direction Inbound -Action Allow -Protocol TCP -LocalAddress 10.66.0.2 -RemoteAddress @('10.66.0.1','203.0.113.77') -LocalPort $appPorts | Out-Null
+            New-NetFirewallRule -Name ($name+'-udp') -DisplayName ($name+'-udp') -Direction Inbound -Action Allow -Protocol UDP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort $appPorts | Out-Null
+            # Real NPF header showed original product SYN destination MAC equals
+            # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
+            # Linux eth0 MAC, never fabricate an IP/TLS/ACK or replace Npcap.
+            $guestLink=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 | ConvertFrom-Json)
+            if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 MAC lookup failed'}
+            $guestMAC=[string]$guestLink.address
+            $hostMAC=([string]$nic[0].MacAddress).Replace('-',':')
+            if(@($guestMAC.Split(':')).Count -ne 6 -or $guestMAC -eq $hostMAC){throw 'actual WSL2 guest Ethernet MAC invalid or same as Windows host'}
+            $existing=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction SilentlyContinue)
+            if(@($existing|Where-Object {$_.State -eq 'Permanent'}).Count -gt 0){throw 'foreign WSL neighbor present, refusing overwrite'}
+            [ordered]@{owner=$name;interface_index=$nic[0].InterfaceIndex;guest_ip=$guestIP;guest_mac=$guestMAC;source_host_mac=$hostMAC} |
+              ConvertTo-Json | Set-Content result/wl-public/native-wsl-neighbor-owner.json
+            & netsh.exe interface ipv4 set neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "neighbor=$($guestMAC.Replace(':','-'))" "store=active"
+            if($LASTEXITCODE -ne 0){throw 'native WSL2 exact Linux eth0 neighbor install failed'}
+            $neighbor=$true
+            $entry=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction Stop)
+            if($entry.Count -ne 1 -or $entry[0].LinkLayerAddress.Replace('-',':') -ne $guestMAC){throw 'real WSL2 guest neighbor MAC readback mismatch'}
+            Write-Output ('WL_REAL_GUEST_MAC_NEIGHBOR_BOUND mac='+$guestMAC)
+            # Pass only the exact MAC already read from ACTUAL Linux eth0 and
+            # verified by Windows NetNeighbor into this public Go/Npcap child.
+            # SendARP alone returned the host self MAC (proven wrong SYN L2).
+            $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_MAC=$guestMAC
+            $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4=$guestIP
+            $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4=[string]$hostIP[0].IPAddress
+            $env:WBD_PLAN024_NATIVE_VERIFIED_IFINDEX=[string]$nic[0].InterfaceIndex
+            Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
+            if($env:WBD_WL_PUBLIC_MODE -eq 'dns-tc'){
+              $env:WBD_WL_PUBLIC_MODE='normal'
+              $env:WBD_PLAN029_BOOTSTRAP_TC_SCENE='1'
+              $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE='1'
+              $env:WBD_PLAN029_V3_DIRECT_SCENE='1'
+              foreach($proto in @('UDP','TCP')){
+                New-NetFirewallHyperVRule -Name ($name+'-dns-'+$proto) -DisplayName ($name+'-dns-'+$proto) -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol $proto -LocalAddresses $guestIP -RemoteAddresses $hostIP[0].IPAddress -LocalPorts @('53','46112') | Out-Null
+              }
+            }
+            $env:WBD_WL_PUBLIC_MODES=$env:WBD_WL_PUBLIC_MODE
+            $env:WBD_WL_BINARY_SOURCE=$env:GITHUB_SHA
+            & python -u tools/m0_wl_public_modes_e2e.py
+            if($LASTEXITCODE -ne 0){throw 'original functional mode failed'}
+            $r=Get-Content ("result/wl-public/"+$env:WBD_WL_PUBLIC_MODE+"-report.json") -Raw | ConvertFrom-Json
+            if($r.mode_public -ne ("PASS_ACTUAL_WINDOWS_LINUX_NATIVE_"+$env:WBD_WL_PUBLIC_MODE) -or $r.stop -ne 'PASS_BOTH_OWNED'){throw 'original functional receipt missing'}
+            $log=Get-Content result/wl-public/client.log -Raw
+            if($log -notmatch 'WBD_XDP_RX_READY' -or $log -notmatch 'WBD_XDP_TX_READY' -or $log -notmatch 'WBD_XDP_RX_STOP' -or $log -notmatch 'WBD_XDP_TX_STOP'){throw 'XDP carrier receipt missing'}
+            if($env:WBD_PLAN029_BOOTSTRAP_TC_SCENE -eq '1' -and ($log -notmatch 'udp=1 provider=' -or $null -eq $r.plan029_physical_bootstrap_tc)){throw 'cold XDP DNS receipt missing'}
+            Write-Output ('WBD_XDP_FUNCTIONAL_PASS mode='+$env:WBD_WL_PUBLIC_MODE+' no_npcap=true')
+          } finally {
+            if($neighbor){& netsh.exe interface ipv4 delete neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "store=active" | Out-Null}
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+            Remove-NetFirewallHyperVRule -Name ($name+'-dns-UDP'),($name+'-dns-TCP') -ErrorAction SilentlyContinue
+            Remove-NetFirewallRule -Name ($name+'-tcp'),($name+'-udp') -ErrorAction SilentlyContinue
+            if($rst){& wsl.exe -d Ubuntu -u root -- iptables -D OUTPUT -p tcp --tcp-flags RST RST --sport 443 -j DROP}
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: winxdp-functional-${{ matrix.mode }}
+          path: |
+            result/wl-public/*-report.json
+            result/wl-public/report.json
+            result/wl-public/client.log
+            result/wl-public/server.log
+            result/wl-public/*app.log
+            result/wl-public/plan029-bootstrap-tc-guest.log
+            result/wl-public/mode-evidence/
+            result/h2476-*.txt
+            xdp-build/manifest.json
+          if-no-files-found: warn
+          retention-days: 14
