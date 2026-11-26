@@ -1,0 +1,21 @@
+name: M0 dual Rust ingress scheduling native core tests
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths: ['.github/workflows/qa-m0-dual-tcp-ingress-turn-unit.yml']
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 182bd73efbd159a52dba6f827be0bdd53ad0c874
+          persist-credentials: false
+      - name: Native complete TCP core including bounded native pacing active-controller regression
+        run: |
+          test "$(git rev-parse HEAD)" = "182bd73efbd159a52dba6f827be0bdd53ad0c874"
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --lib v4_rust_tcp
