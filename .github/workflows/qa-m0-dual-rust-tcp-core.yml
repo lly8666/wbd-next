@@ -11,6 +11,7 @@ on:
       - '.github/workflows/qa-m0-dual-rust-tcp-core.yml'
 permissions:
   contents: read
+  actions: read
 jobs:
   native:
     strategy:
@@ -43,6 +44,15 @@ jobs:
         shell: bash
         run: |
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out python3 -u tools/m0_dual_rust_tcp_local.py
+      - name: Retain exact native binary for performance jobs
+        run: |
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          tar -C linux-plan029-public-bundle -cf bundle.tar .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dual-tcp-native-build-${{ matrix.arch }}
+          path: bundle.tar
+          if-no-files-found: error
       - name: Preserve owned evidence
         if: always()
         run: |

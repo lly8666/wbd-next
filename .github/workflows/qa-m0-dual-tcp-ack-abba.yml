@@ -1,0 +1,91 @@
+name: M0 dual Rust TCP ACK3 clean splice and original Rust BBR ABBA
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths:
+      - '.github/workflows/qa-m0-dual-tcp-ack-abba.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  old-arm:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 26b11e2da236e909b73f461964c52d5a86d42dca
+      - name: Build pinned product once
+        env:
+          PRODUCT_SOURCE: 26b11e2da236e909b73f461964c52d5a86d42dca
+          WBD_RUST_TOOLCHAIN: '1.85.1'
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_SOURCE"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iputils-ping autoconf automake libtool make gcc g++ nasm openssl
+          GITHUB_SHA="$PRODUCT_SOURCE" bash tools/m0_plan029_linux_dual_native_build.sh >build.log 2>&1 || { tail -n 180 build.log; exit 2; }
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          tar -C linux-plan029-public-bundle -cf bundle.tar .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dual-tcp-old-arm-build
+          path: |
+            bundle.tar
+            build.log
+          if-no-files-found: error
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Consume exact builds without recompiling
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          core=
+          for i in $(seq 1 150); do
+            core=$(gh run list -R "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --limit 40 --json databaseId,workflowName,status,conclusion | jq -r '.[] | select(.workflowName=="M0 dual Rust TCP Normal native product" and .status=="completed" and .conclusion=="success") | .databaseId' | head -1)
+            test -z "$core" || break
+            sleep 10
+          done
+          test -n "$core"
+          for leg in A B BBR; do
+            mkdir -p "bundles/$leg"
+            if [ "$leg" = A ]; then
+              gh run download 45810506381 -R "$GITHUB_REPOSITORY" -n dual-tcp-build-A -D bundles/A
+            elif [ "$leg" = BBR ]; then
+              gh run download 45813936389 -R "$GITHUB_REPOSITORY" -n dual-tcp-build-B -D bundles/BBR
+            else
+              gh run download "$core" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-x86_64 -D bundles/B
+            fi
+            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
+            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
+          done
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iperf3 openssl
+          python3 -m py_compile tools/m0_dual_tcp_perf.py
+      - name: One VM old kernel vs ACK3 BBRv3 then original Rust BBRv3 vs ACK3 BBRv3
+        run: |
+          set -euo pipefail
+          for comparison in ack-splice ack-bbr; do
+            sudo env DUAL_TCP_COMPARE="$comparison" DUAL_TCP_PERF_OUT="dual-tcp-perf-out/$comparison" GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" GITHUB_JOB="$GITHUB_JOB" RUNNER_NAME="$RUNNER_NAME" python3 -u tools/m0_dual_tcp_perf.py
+          done
+      - name: Preserve measurement evidence
+        if: always()
+        run: |
+          if test -d dual-tcp-perf-out; then
+            sudo find dual-tcp-perf-out -type f \( -name install -o -name route-key.hex -o -name users.json -o -name key.pem -o -name cert.pem \) -delete
+            sudo chown -R "$(id -u):$(id -g)" dual-tcp-perf-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: dual-tcp-ack-abba-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dual-tcp-perf-out/
+          if-no-files-found: error

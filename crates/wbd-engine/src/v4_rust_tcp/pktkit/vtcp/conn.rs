@@ -424,6 +424,9 @@ pub struct ConnConfig {
     /// cannot wait out a delayed ACK. Off by default;
     /// [`Conn::set_nodelay`] changes it on an open connection.
     pub nodelay: bool,
+    /// Paired WBD middle endpoint: cumulative ACK after three full segments
+    /// in steady in-order traffic. OS-facing endpoints retain two.
+    pub(crate) middle_ack_three: bool,
     /// Explicit Congestion Notification (RFC 3168, and RFC 9768's
     /// AccECN): whether to ask for it in the handshake, and accept it. By
     /// default a peer's request is accepted, and none made, as on Linux.
@@ -520,6 +523,7 @@ impl Default for ConnConfig {
             fin_wait2_timeout: Some(DEFAULT_FIN_WAIT2_TIMEOUT),
             time_wait: TIME_WAIT_DURATION,
             nodelay: false,
+            middle_ack_three: false,
             ecn: EcnMode::default(),
             mtu_probing: MtuProbing::default(),
             fast_open: false,
@@ -2845,7 +2849,8 @@ impl Conn {
             .last_ack_sent
             .map_or(u32::MAX, |last| rb.nxt().wrapping_sub(last));
         let quick = self.quick_acks > 0 && !self.pingpong;
-        if now || quick || unacked > self.rcv_mss {
+        let threshold = self.rcv_mss * if self.cfg.middle_ack_three { 2 } else { 1 };
+        if now || quick || unacked > threshold {
             if quick {
                 self.quick_acks -= 1;
             }
@@ -10190,6 +10195,29 @@ mod tests {
         let late = delack_expired(&mut server);
         assert_eq!(acks_in(&late), [end(&segs[4])]);
         assert_eq!(server.delack_deadline, None);
+    }
+
+    #[test]
+    fn middle_three_full_segments_keeps_timer_and_gap_ack() {
+        let (_client, mut server, segs) = delack_pair(40690, 5);
+        server.cfg.middle_ack_three = true;
+        assert!(deliver(&mut server, &segs[..1]).is_empty());
+        let due = server.delack_deadline.unwrap();
+        assert!(deliver(&mut server, &segs[1..2]).is_empty());
+        assert_eq!(server.delack_deadline, Some(due));
+        let third = deliver(&mut server, &segs[2..3]);
+        assert_eq!(third.len(), 1);
+        assert_eq!(parse(&third[0]).ack, parse(&segs[3]).seq);
+        assert!(deliver(&mut server, &segs[3..]).is_empty());
+        assert_eq!(delack_expired(&mut server).len(), 1);
+        let (_client, mut server, segs) = delack_pair(40691, 3);
+        server.cfg.middle_ack_three = true;
+        let gap = deliver(&mut server, &segs[1..2]);
+        assert_eq!(gap.len(), 1);
+        assert_eq!(parse(&gap[0]).ack, parse(&segs[0]).seq);
+        let fill = deliver(&mut server, &segs[..1]);
+        assert_eq!(fill.len(), 1);
+        assert_eq!(parse(&fill[0]).ack, parse(&segs[2]).seq);
     }
 
     /// Out of order: ACKed at once, and so is the segment filling the hole

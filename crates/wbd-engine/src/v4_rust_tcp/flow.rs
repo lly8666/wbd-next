@@ -5,8 +5,8 @@ use std::{io, io::{Read, Write}, net::{Shutdown, SocketAddr, TcpStream}, time::I
 use super::{Segments, transfer, ipv4::{self, Packet, Tuple}};
 use super::pktkit::vtcp::{Conn, ConnConfig, CongestionKind, MtuProbing};
 
-// Matched-CUBIC experimental SOURCE: both middle TCP endpoints use CUBIC.
-// The local Rust endpoint already used CUBIC; no other TCP or wire changes.
+// OS-facing endpoint retains CUBIC/default ACKs; paired middle endpoints
+// restore pktkit BBRv3 with a distinct cumulative ACK cadence.
 const TURN_BYTES: usize = 64 * 1024;
 type Packets = Vec<Vec<u8>>;
 
@@ -16,7 +16,7 @@ struct Endpoint {
     conn: Conn,
 }
 impl Endpoint {
-    fn new(tuple: Tuple, mtu: u16, cc: CongestionKind) -> io::Result<Self> {
+    fn new(tuple: Tuple, mtu: u16, cc: CongestionKind, middle: bool) -> io::Result<Self> {
         // IPv4/TCP options are subtracted from the MSS by pktkit itself.
         let mss = mtu.checked_sub(40).filter(|&v| v >= 64)
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "inner TCP MTU"))?;
@@ -28,6 +28,7 @@ impl Endpoint {
             mss,
             congestion: cc,
             nodelay: true,
+            middle_ack_three: middle,
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()
         });
@@ -98,8 +99,8 @@ impl ClientFlow {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "TCP open requires SYN"));
         }
         let mut flow = Self {
-            local: Endpoint::new(syn.tuple.reverse(), local_mtu, CongestionKind::Cubic)?,
-            middle: Endpoint::new(syn.tuple, middle_mtu, CongestionKind::Cubic)?,
+            local: Endpoint::new(syn.tuple.reverse(), local_mtu, CongestionKind::Cubic, false)?,
+            middle: Endpoint::new(syn.tuple, middle_mtu, CongestionKind::Bbr, true)?,
             local_fin_forwarded: false,
             middle_fin_forwarded: false,
         };
@@ -197,7 +198,7 @@ impl ServerFlow {
     fn with_socket(syn: &Packet, mtu: u16, stream: TcpStream, connected: bool)
         -> io::Result<(Self, Packets)>
     {
-        let mut middle = Endpoint::new(syn.tuple.reverse(), mtu, CongestionKind::Cubic)?;
+        let mut middle = Endpoint::new(syn.tuple.reverse(), mtu, CongestionKind::Bbr, true)?;
         let mut out = Vec::new();
         middle.accept(syn, &mut out)?;
         Ok((Self { middle, stream, connected, origin_eof: false, origin_write_closed: false }, out))
@@ -315,7 +316,7 @@ mod tests {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let SocketAddr::V4(dst) = listener.local_addr().unwrap() else { panic!() };
         let tuple = Tuple { src:"10.66.0.2:40201".parse().unwrap(), dst };
-        let mut app = Endpoint::new(tuple, 1280, CongestionKind::Cubic).unwrap();
+        let mut app = Endpoint::new(tuple, 1280, CongestionKind::Cubic, false).unwrap();
         let mut syn = Vec::new();
         app.open(&mut syn).unwrap();
         let (mut client, out) = ClientFlow::open(&parse(&syn[0]), 1280, 1100).unwrap();

@@ -14,6 +14,11 @@ elif COMPARE=="cubic-splice":
 elif COMPARE=="bbr-splice":
     ROOTS["B"]=pathlib.Path("bundles","BBR").resolve()
     SOURCES["B"]="f2fed3e6dafbcb3ff325599d9726811a293894e0"
+elif COMPARE in ("ack-splice","ack-bbr"):
+    SOURCES["B"]=os.environ["GITHUB_SHA"]
+    if COMPARE=="ack-bbr":
+        ROOTS["A"]=pathlib.Path("bundles","BBR").resolve()
+        SOURCES["A"]="f2fed3e6dafbcb3ff325599d9726811a293894e0"
 elif COMPARE=="tx-turn":
     SOURCES={"A":"86e3ec30010a59cbb60539b902cb96dc21e04d6a","B":os.environ["GITHUB_SHA"]}
 elif COMPARE=="profile":
@@ -107,7 +112,7 @@ def manifest(k):
 def leg(i,k):
     d=O/f"{i}-{k}";d.mkdir()
     root=ROOTS[k];port=5300+i;server=client=app=profile=None
-    splice=(k=="A" and COMPARE in ("splice","cubic-splice","bbr-splice"))
+    splice=(k=="A" and COMPARE in ("splice","cubic-splice","bbr-splice","ack-splice"))
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1460"]
     server_flags=["--tcp-proxy-cc",CC,"--tcp-proxy-port","46180"] if splice else ["--dual-rust-tcp"]
@@ -174,6 +179,11 @@ def leg(i,k):
         else:
             assert "WBD_TCP_SPLICE_READY" not in sl
             assert all("WBD_DUAL_RUST_TCP_OWNER_STOP" in log for log in (sl,cl))
+        if COMPARE in ("ack-splice","ack-bbr") and k=="B":
+            for label,log in (("client",cl),("server",sl)):
+                lines=[line for line in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in line]
+                assert lines, label+" missing TCP wire tally"
+                (d/(label+"-wire.txt")).write_text("\n".join(lines)+"\n")
         assert "TPROXY" not in ns(S,"iptables","-t","mangle","-S")
         row.update(end_monotonic_ns=time.monotonic_ns(),server_exit=server.returncode,client_exit=client.returncode,kernel_cc=CC,inner_cc=CC if splice or COMPARE=="cubic-splice" else "pktkit-bbrv3",sender_cc=data["end"].get("sender_tcp_congestion"),receiver_cc=data["end"].get("receiver_tcp_congestion"))
         save(d/"result.json",row);print(json.dumps(row),flush=True)
