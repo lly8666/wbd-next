@@ -8235,9 +8235,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             #[cfg(feature="fec2_product_record")]
             let mut rx_prev_loop_start=Instant::now();
             let mut rx_pending=Vec::<crate::memory::UniqueBuffer>::with_capacity(32);
+            let mut middle_offered=0u64;
+            let mut middle_full=0u64;
+            let mut middle_closed=0u64;
             let mut native_tcp_input=|bytes:&[u8]|->bool{
                 let Some((sender,wake))=&native_tcp_rx else{return false};
-                if sender.try_send(OriginalTunIngress::MiddleTcp(bytes.to_vec())).is_ok(){wake.signal();true}else{false}
+                middle_offered+=1;
+                match sender.try_send(OriginalTunIngress::MiddleTcp(bytes.to_vec())){
+                    Ok(())=>{wake.signal();true},
+                    Err(TrySendError::Full(_))=>{middle_full+=1;false},
+                    Err(TrySendError::Disconnected(_))=>{middle_closed+=1;false},
+                }
             };
             #[cfg(feature="fec2_product_record")]
             let mut rx_presentation_ack=OriginalPresentationAck::new(rx_anchor);
@@ -8351,6 +8359,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     c.refused_bytes,c.rejected_invalid,c.rejected_capacity,
                     c.rejected_conflict,c.rejected_codec);
             }
+            if native_tcp_rx.is_some(){
+                eprintln!("WBD_M0_TCP_INGRESS offered={} full={} disconnected={}",middle_offered,middle_full,middle_closed);
+            }
             // No outstanding kernel borrow after the synchronous call,
             // and STOP joins this thread before retiring original drivers.
             rx_pending.clear();
@@ -8447,13 +8458,22 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut deferred_shared=None::<SharedTunPacket>;
             let mut wakeup_shared=None::<OriginalTunIngress>;
             let mut tcp_out=VecDeque::<Vec<u8>>::new();
+            let mut publish_calls=0u64;
+            let mut local_batch_max=0usize;
+            let mut middle_batch_max=0usize;
+            let mut pending_peak=0usize;
+            let mut local_write_failed=0u64;
             // Actual local TCP replies use the existing generation TUN writer;
             // middle segments use the original M1 slab / M3 / RAW sender.
             let mut publish_tcp=|out:NativeTcpOutput,pending:&mut VecDeque<Vec<u8>>|{
+                publish_calls+=1;
+                local_batch_max=local_batch_max.max(out.local.len());
+                middle_batch_max=middle_batch_max.max(out.tunnel.len());
                 for frame in out.local{
-                    if tun.write_authenticated_ipv4(generation,&frame).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                    if tun.write_authenticated_ipv4(generation,&frame).is_err(){local_write_failed+=1;stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                 }
                 pending.extend(out.tunnel);
+                pending_peak=pending_peak.max(pending.len());
             };
             while !stop_tx.load(Ordering::Acquire){
                 #[cfg(feature="fec2_product_record")]
@@ -8847,6 +8867,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     socket_poll_writable,socket_poll_not_writable,
                     socket_outq_supported,socket_outq_high_water,
                     socket_snapshot_errors);
+            }
+            if native_tcp_owner.is_some(){
+                eprintln!("WBD_M0_TCP_PUBLISH calls={} local_batch_max={} middle_batch_max={} pending_peak={} local_write_failed={}",publish_calls,local_batch_max,middle_batch_max,pending_peak,local_write_failed);
             }
             stats.tx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);

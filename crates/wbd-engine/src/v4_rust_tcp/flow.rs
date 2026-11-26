@@ -40,6 +40,7 @@ impl Endpoint {
             // Temporary causal experiment: both variants use the same instrumented build.
             middle_ack_three: middle && std::env::var_os("WBD_M0_ACK_PROBE").as_deref() != Some(std::ffi::OsStr::new("2")),
             middle_sack_compress: middle && std::env::var_os("WBD_M0_SACK_COMPRESS").as_deref() == Some(std::ffi::OsStr::new("1")),
+            native_bounded_pacing: std::env::var_os("WBD_M0_BOUNDED_PACE").as_deref() == Some(std::ffi::OsStr::new("1")),
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()
         });

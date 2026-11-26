@@ -433,6 +433,8 @@ pub struct ConnConfig {
     pub(crate) middle_ack_three: bool,
     /// Experimental SACK compression on paired middle TCP only.
     pub(crate) middle_sack_compress: bool,
+    /// Native owner diagnostic: bounded packet pacing burst, no accumulated late catch-up.
+    pub(crate) native_bounded_pacing: bool,
     /// Explicit Congestion Notification (RFC 3168, and RFC 9768's
     /// AccECN): whether to ask for it in the handshake, and accept it. By
     /// default a peer's request is accepted, and none made, as on Linux.
@@ -531,6 +533,7 @@ impl Default for ConnConfig {
             nodelay: false,
             middle_ack_three: false,
             middle_sack_compress: false,
+            native_bounded_pacing: false,
             ecn: EcnMode::default(),
             mtu_probing: MtuProbing::default(),
             fast_open: false,
@@ -1205,8 +1208,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline));
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -4620,7 +4623,8 @@ impl Conn {
     /// the next quantum fires no sooner than a millisecond later (see the
     /// drivers' alarm), and a smaller quantum would cap the rate.
     fn pace_quantum(&self, rate: u64) -> f64 {
-        (rate as f64 / 1000.0).max(2.0 * f64::from(self.mss))
+        let quantum = (rate as f64 / 1000.0).max(2.0 * f64::from(self.mss));
+        if self.cfg.native_bounded_pacing { quantum.min(32.0 * f64::from(self.mss)) } else { quantum }
     }
 
     /// Whether pacing lets a segment go now. The credit grows at the
@@ -4636,7 +4640,7 @@ impl Conn {
         let late = self
             .pace_late
             .min(self.pace_srtt.unwrap_or_else(|| self.rto.srtt()));
-        let cap = 2.0 * self.pace_quantum(rate) + rate as f64 * late.as_secs_f64();
+        let cap = 2.0 * self.pace_quantum(rate) + if self.cfg.native_bounded_pacing {0.0} else {rate as f64 * late.as_secs_f64()};
         let dt = self.now.saturating_duration_since(self.pace_stamp);
         self.pace_stamp = self.now;
         self.pace_credit = (self.pace_credit + rate as f64 * dt.as_secs_f64()).min(cap);
@@ -10364,6 +10368,20 @@ mod tests {
         assert_eq!(server.delack_deadline, None);
         assert_eq!(server.sack_ack_pending, 0);
         assert_eq!(deliver(&mut server, &segs[0..1]).len(), 1);
+    }
+
+    #[test]
+    fn native_pacing_does_not_turn_late_timer_into_large_burst() {
+        let mut conn = Conn::new(big(40693, 80));
+        conn.cfg.native_bounded_pacing = true;
+        let mss = f64::from(conn.mss);
+        assert_eq!(conn.pace_quantum(1_000_000_000), 32.0*mss);
+        conn.pace_late=Duration::from_millis(400);
+        conn.pace_credit=1_000_000_000.0;
+        assert!(conn.pace_ready());
+        assert!(conn.pace_credit<=64.0*mss);
+        conn.cfg.native_bounded_pacing = false;
+        assert!(conn.pace_quantum(1_000_000_000)>32.0*mss);
     }
 
     /// The first segments of a connection are each ACKed at once, so
