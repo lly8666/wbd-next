@@ -19,6 +19,10 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Preflight harness syntax before acquiring three runners
+        run: python3 -m py_compile tools/m0_dual_tcp_arm_matched_cc.py
       - name: Wait for exact instrumented candidate functional qualification
         run: |
           set -euo pipefail

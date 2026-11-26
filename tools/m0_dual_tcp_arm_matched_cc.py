@@ -197,8 +197,10 @@ def delta(a,b,gib):
     return result
 def probe_receipt(log,leg,k,i):
     if k=="A":
-        # Actual kernel CC is checked via live ss and source socket receipts.
-        return {"kernel_cc":cc_for(i),"valid":True}
+        # Server accept is an actual socket receipt; live ss retained on both endpoints.
+        accepted=[s for s in log.splitlines() if "WBD_TCP_SPLICE_ACCEPT target=192.0.2.2:5400 " in s]
+        valid=leg!="server-middle" or any("cc="+cc_for(i) in s for s in accepted)
+        return {"kernel_cc":cc_for(i),"accepts":accepted,"valid":valid}
     rows=[s for s in log.splitlines() if "WBD_M0_TCP_INFO " in s and "leg="+leg+" " in s]
     expected='congestion: "'+rust_cc(i)+'"'
     return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s for s in rows),
@@ -207,7 +209,7 @@ def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()
     started=False;pre=post=before=after=None
-    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if k=="B" else None,"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400 if i>=0 else 0,"status":"INCOMPLETE"}
+    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if k=="B" else None,"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400 if i>=0 else 0,"status":"INCOMPLETE"}
     try:
         shape(0,0)
         set_cc(N,i)

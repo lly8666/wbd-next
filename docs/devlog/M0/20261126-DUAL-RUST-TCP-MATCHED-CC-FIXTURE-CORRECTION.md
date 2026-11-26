@@ -1,0 +1,2 @@
+# Matched CC harness correction
+Initial harness bfe8543 contained a malformed row key; corrected before any valid measurement. Product source649fe3b unchanged. Added syntax preflight before three-runner allocation and old splice server actual accept CC receipt; keep live ss and kernel source socket readback. Original triggered run must not be accepted as data; no replacement native build or repeated core test.
