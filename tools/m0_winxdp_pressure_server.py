@@ -37,7 +37,7 @@ if os.environ.get("WBD_H2458_TARGETED")=="1":
     DIRECT_RATES={-2:600}
 
 from m0_winxdp_ab_profile import cases,DIRECT,DIRECT_RATES,DIRECT_MSS,SECONDS,DIRECT_SECONDS,GUEST_PATH,clean,midpoint,drops,netem_active
-from m0_winxdp_pressure_profile import CASES,SECONDS
+from m0_winxdp_pressure_profile import CASES,SECONDS,PATH_MODE
 H2452=H2453=DIAG=False
 NODE=h.NODE;ORIGIN="h2442origin";procs={};logs={};current=None;folder=None
 def spawn(key,ns,args,folder):
@@ -68,8 +68,9 @@ def setup():
         for k,v in (("net.ipv4.tcp_rmem","4096 87380 67108864"),("net.ipv4.tcp_wmem","4096 65536 67108864"),("net.core.rmem_max","67108864"),("net.core.wmem_max","67108864")):h.ns(ns,"sysctl","-qw",k+"="+v)
     h.ns(ORIGIN,"sysctl","-qw","net.ipv4.tcp_congestion_control=cubic")
     h.ns(ORIGIN,"tc","qdisc","replace","dev","h2442app","root","fq")
-    h.root("modprobe","tcp_bbr",allow_fail=True)
-    if "bbr" not in h.root("sysctl","-n","net.ipv4.tcp_available_congestion_control").stdout.split():raise RuntimeError("WSL BBR unavailable; no fallback")
+    if PATH_MODE=="bbr":
+        h.root("modprobe","tcp_bbr",allow_fail=True)
+        if "bbr" not in h.root("sysctl","-n","net.ipv4.tcp_available_congestion_control").stdout.split():raise RuntimeError("WSL BBR unavailable; no fallback")
     subprocess.run(["openssl","req","-x509","-newkey","rsa:2048","-sha256","-days","1","-nodes","-keyout",str(TMP/"key.pem"),"-out",str(OUT/"cert.pem"),"-subj","/CN=wbd-h2228.example.test","-addext","subjectAltName=DNS:wbd-h2228.example.test"],check=True,capture_output=True)
     (TMP/"route-key.hex").write_text(hashlib.sha256(("H2442-TEST-ONLY/"+os.environ["GITHUB_RUN_ID"]+"/"+os.environ["GITHUB_SHA"]).encode()).hexdigest()+"\n")
     (TMP/"users.json").write_text(json.dumps({"bench":"H2442-ONLY"}));(TMP/"leases.json").write_text(json.dumps({"bench":"10.66.0.2/32"}))
@@ -89,8 +90,14 @@ def start(i):
         spawn("source",NODE,["env","H2479_BARE_MSS="+str(DIRECT_MSS[i]),sys.executable,ROOT/"tools/m0_h2479_tcp.py","source",PEER,5202,DIRECT_RATES.get(i,0),"bbr",DIRECT_SECONDS],folder);waitmark("source","SOURCE_READY")
     else:
         c=CASES[i];cap=c["rate"]*125000
-        spawn("server",NODE,["env","LD_LIBRARY_PATH="+str(BUNDLE),"WBD_SHARED_TUN_ROUTE_DIAG=1","WBD_M0_SPLICE_PACING_AB="+str(cap),BUNDLE/"wbd-v4-server","--raw-interface","eth0","--local-ip",PEER,"--local-port","443","--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--server-name","wbd-h2228.example.test","--route-key-hex-file",TMP/"route-key.hex","--users-file",TMP/"users.json","--lease-pool","10.66.0.128/25","--manual-client-leases-file",TMP/"leases.json","--tls-cert",OUT/"cert.pem","--tls-key",TMP/"key.pem","--mode","shared","--peer-persona","legacy" if os.environ.get("WBD_H2455_SEGMENTS")=="linux" else "windows11","--outer-repair","on","--outer-mtu",str(c["mtu"]),"--tun-fq-maxrate-mbps","0","--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"],folder)
-        waitmark("server","V4_PUBLIC_MIXED_MULTI_SERVER_READY");waitmark("server","WBD_TCP_SPLICE_READY")
+        proxy=["--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"] if PATH_MODE=="bbr" else []
+        spawn("server",NODE,["env","LD_LIBRARY_PATH="+str(BUNDLE),"WBD_SHARED_TUN_ROUTE_DIAG=1","WBD_M0_SPLICE_PACING_AB="+str(cap),BUNDLE/"wbd-v4-server","--raw-interface","eth0","--local-ip",PEER,"--local-port","443","--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--server-name","wbd-h2228.example.test","--route-key-hex-file",TMP/"route-key.hex","--users-file",TMP/"users.json","--lease-pool","10.66.0.128/25","--manual-client-leases-file",TMP/"leases.json","--tls-cert",OUT/"cert.pem","--tls-key",TMP/"key.pem","--mode","shared","--peer-persona","legacy" if os.environ.get("WBD_H2455_SEGMENTS")=="linux" else "windows11","--outer-repair","on","--outer-mtu",str(c["mtu"]),"--tun-fq-maxrate-mbps","0",*proxy],folder)
+        waitmark("server","V4_PUBLIC_MIXED_MULTI_SERVER_READY")
+        if PATH_MODE=="bbr":waitmark("server","WBD_TCP_SPLICE_READY")
+        else:
+            # Isolate only the owned test TUN's forwarding, not host traffic.
+            h.ns(NODE,"iptables","-I","FORWARD","1","-i","wbds0","!","-d","192.0.2.2/32","-j","DROP")
+            (folder/"fixture-forward-owner").write_text("1")
         h.ns(NODE,"tc","qdisc","replace","dev","wbds0","root","fq","flow_limit","256")
         h.save(folder/"origin-route.json",{"route":h.ns(NODE,"ip","route","get","192.0.2.2").stdout})
         spawn("probe",NODE,[sys.executable,APP,"probe","10.66.0.1",45901],folder);waitmark("probe","PROBE_READY")
@@ -104,13 +111,20 @@ def close():
     if p:
         try:p.wait(20)
         except subprocess.TimeoutExpired:pass
+    if (folder/"fixture-forward-owner").exists():
+        h.ns(NODE,"iptables","-D","FORWARD","-i","wbds0","!","-d","192.0.2.2/32","-j","DROP")
+        (folder/"fixture-forward-owner").unlink()
     rc={k:stop(k) for k in list(procs)}
     result={"case":current,"rc":rc}
     try:result["source"]=json.loads((folder/"source.log").read_text().splitlines()[-1])
     except Exception:result["source"]=None
     if current>=0:
         s=(folder/"server.log").read_text(errors="replace")
-        result.update(proxy_accept="WBD_TCP_SPLICE_ACCEPT target=192.0.2.2:5400 cc=bbr" in s,proxy_pacing="bytes_per_s="+str(CASES[current]["rate"]*125000) in s,stop="V4_PUBLIC_NATIVE_STOP_DRAINED" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s,panic="panicked at" in s,inbox1024="slots=1024 " in s)
+        result.update(path_mode=PATH_MODE,
+            path_ok=("WBD_TCP_SPLICE_ACCEPT target=192.0.2.2:5400 cc=bbr" in s if PATH_MODE=="bbr" else "V4_PUBLIC_SERVER_MASQUERADE_APPLIED" in s and "WBD_TCP_SPLICE_READY" not in s),
+            pacing_ok=(PATH_MODE=="nat" or "bytes_per_s="+str(CASES[current]["rate"]*125000) in s),
+            stop="V4_PUBLIC_NATIVE_STOP_DRAINED" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s,
+            panic="panicked at" in s,inbox1024="slots=1024 " in s)
     h.save(folder/"result.json",result);current=None;return result
 class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self,*args):pass
@@ -137,6 +151,8 @@ if __name__=="__main__":
             h.save(OUT/"server-ready.json",{"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"real_wbd_server_ready":True,"scope":"control_bound_before_native_case"})
             print("H2442_SERVER_CONTROL_READY",flush=True);s.serve_forever()
     finally:
+        if folder is not None and (folder/"fixture-forward-owner").exists():
+            h.ns(NODE,"iptables","-D","FORWARD","-i","wbds0","!","-d","192.0.2.2/32","-j","DROP",allow_fail=True)
         for k in list(procs):stop(k)
         h.root("ip","netns","del",ORIGIN,allow_fail=True)
         h.root("ip","link","del","h2442exit",allow_fail=True)

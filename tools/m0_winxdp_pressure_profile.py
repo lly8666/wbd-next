@@ -24,3 +24,14 @@ if os.environ.get("WBD_XDP_PRESSURE_LAB")=="1":
       ("base-last",16384,2048,32,"original"),
     ]
     CASES=[dict(base,name=name,rx_slots=rx,tx_slots=tx,quantum=q,policy=policy) for name,rx,tx,q,policy in variants]
+
+PATH_MODE=os.environ.get("WBD_XDP_PRESSURE_PATH","bbr")
+assert PATH_MODE in ("nat","bbr")
+CASES=[dict(c,path_mode=PATH_MODE) for c in CASES]
+if PATH_MODE=="nat" and os.environ.get("WBD_XDP_PRESSURE_LAB")=="1":
+    for c in (
+        dict(name="upload-max",rate=400,direction="up",streams=2,loss=5,delay=80,mtu=1400,profile=6),
+        dict(name="download-max",rate=400,direction="down",streams=2,loss=5,delay=80,mtu=1400,profile=6),
+        dict(name="duplex-burst",rate=300,direction="duplex",streams=4,loss=10,correlation=25,delay=20,mtu=1400,profile=6),
+    ):
+        CASES.append(dict(CASES[0],**c))

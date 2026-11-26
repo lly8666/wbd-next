@@ -203,7 +203,7 @@ def case(i):
         try:unpin_underlay(owned)
         except Exception as e:result["underlay_cleanup_error"]=repr(e)
         src=result.get("server",{}).get("source") or {}
-        if not result.get("underlay_cleanup_error") and not result.get("isolation_cleanup_error") and result["status"]=="RECEIVED" and result.get("bytes")==src.get("bytes") and src.get("end")=="deadline" and exact_flows(result,src) and (i<0 or (result.get("client_stop") and result.get("client_ready") and not result.get("client_panic") and result["server"].get("proxy_accept") and result["server"].get("proxy_pacing") and result["server"].get("stop") and not result["server"].get("panic"))):result["status"]="MEASURED_EXACT"
+        if not result.get("underlay_cleanup_error") and not result.get("isolation_cleanup_error") and result["status"]=="RECEIVED" and result.get("bytes")==src.get("bytes") and src.get("end")=="deadline" and exact_flows(result,src) and (i<0 or (result.get("client_stop") and result.get("client_ready") and not result.get("client_panic") and result["server"].get("path_ok") and result["server"].get("pacing_ok") and result["server"].get("stop") and not result["server"].get("panic"))):result["status"]="MEASURED_EXACT"
         else:result["status"]="INCOMPLETE"
         save(d/"result.json",result)
     return result
@@ -218,7 +218,7 @@ def main():
     global CURRENT
     rows=[]
     log=(OUT/"server-control.log").open("w")
-    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
+    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
     try:
         deadline=time.monotonic()+60
         while "H2442_SERVER_CONTROL_READY" not in (OUT/"server-control.log").read_text(errors="replace"):
@@ -243,6 +243,11 @@ def main():
             r["tx"]=receipt("WBD_XDP_TX_STOP ")
             r["rx"]=receipt("WBD_XDP_RX_STOP ")
             r["rx_queues"]=[l for l in s.splitlines() if "WBD_XDP_RX_QUEUE_STOP " in l]
+            r["server_rc"]=r.get("server",{}).get("rc")
+            r["server_stop"]=r.get("server",{}).get("stop")
+            r["server_path_ok"]=r.get("server",{}).get("path_ok")
+            r["server_rx_mbps"]=((r.get("server",{}).get("source") or {}).get("rx_mbps"))
+            r["flow_gaps_s"]=[f.get("max_rx_gap_s") for f in r.get("flows",[])]
             r["tx_lab"]=receipt("WBD_XDP_TX_LAB ")
             r["rx_lab"]=[{k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",l)} for l in s.splitlines() if "WBD_XDP_RX_LAB " in l]
             r["fec_receipts"]=[l for l in s.splitlines() if "WBD_WINDOWS_FEC2_INSTALLED" in l]
@@ -255,8 +260,13 @@ def main():
             r["pressure_valid"]=r["status"]=="MEASURED_EXACT" and r["exact_hash"] and all(v>0 for v in r.get("netem_packets",{}).values()) and len(r.get("netem_packets",{}))==2 and r["tx"].get("invalid")==0 and r["rx"].get("truncated")==0 and not r["fatal"] and r["fec_ok"] and r["traffic_ok"] and r["lab_ok"] and (r["loss"]==0 or r["loss_observed"]>0)
             rows.append(r);save(d/"measurement.json",r)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
-            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","tx","rx","rx_queues","tx_lab","rx_lab","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
-            if r.get("shape_clear_error") or not r.get("client_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):raise RuntimeError("owned cleanup failed; no next case")
+            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
+            if r.get("shape_clear_error") or not r.get("client_stop") or not r.get("server_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):
+                for pth in (SERVER/("case-"+str(i))/"server.log",SERVER/("case-"+str(i))/"source.log",d/"client.log"):
+                    if pth.exists():
+                        print("PRESSURE_FAILURE_TAIL "+str(pth),flush=True)
+                        print("\n".join(l[:650] for l in pth.read_text(errors="replace").splitlines()[-12:]),flush=True)
+                raise RuntimeError("owned cleanup failed; no next case")
         control("server","/finish")
         if p.wait(30)!=0:raise RuntimeError("local control exit")
         if not all(r["pressure_valid"] for r in rows):raise SystemExit(2)
