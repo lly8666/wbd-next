@@ -57,6 +57,9 @@ mod v4_protected_handoff;
 mod v4_mtu_budget_ffi;
 #[cfg(all(target_os="linux",feature="m0_v4_embedded_go",any(target_arch="x86_64",target_arch="aarch64")))]
 mod v4_linux_tcp_splice;
+// M0 dual native TCP WIP; no product route enabled yet.
+#[cfg(any(test, all(feature="m0_v4_embedded_go", any(target_os="linux", target_os="windows"))))]
+mod v4_rust_tcp;
 /// PLAN026 pure Make-Before-Break lane generation state for Windows NativeOwner.
 /// Unit-testable without Npcap, Wintun or Go; no new crypto owner.
 #[cfg(any(target_os="windows", test))]

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "dual-rust-tcp",
+  "name": "Dual native Rust TCP",
+  "summary": "Pinned pktkit TCP core for native dual-ended TCP; first WIP core only.",
+  "owner": "M0",
+  "stage": "experimental",
+  "development_branch": "experiment/m0-dual-rust-tcp",
+  "available_on": [
+    "experiment/m0-dual-rust-tcp"
+  ],
+  "defaults": {},
+  "usage": {
+    "cli": "Not exposed; core only",
+    "config": "No new configuration",
+    "gui": "Not exposed"
+  },
+  "code_refs": [
+    "crates/wbd-engine/src/v4_rust_tcp/mod.rs",
+    "crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs"
+  ],
+  "doc_refs": [
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-WIP.md",
+    "crates/wbd-engine/src/v4_rust_tcp/pktkit/UPSTREAM.md"
+  ],
+  "verification": [
+    {
+      "platform": "linux/x86_64",
+      "scope": "Native core build and unit tests; product path NOT_RUN",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "Native core build and unit tests; product path NOT_RUN",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "No native owner or origin socket route connected yet",
+    "No product TCP/UDP/Stop or performance qualification",
+    "Old splice remains unchanged"
+  ],
+  "promotion": null
+}
