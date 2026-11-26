@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "3e709e0c8577b56ca237a24e6d18fccf998e9965",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Native Rust TCP component tests on Linux x86_64 and aarch64; real kernel origin socket request/response and origin-to-virtual-app FIN; no product TUN, authenticated transport, UDP, generation Stop, or performance qualification",
+  "run_id": 45806924064,
+  "attempt": 1,
+  "rustc": "1.85.1",
+  "jobs": [
+    {
+      "isa": "aarch64",
+      "job_id": 139864515340,
+      "artifact_id": 15111105031,
+      "sha256": "ed6144d2b49e183ed61bff0d3c3fad1d8867770efbc97bb5d98a849bcb27132d",
+      "tests_passed": 329,
+      "tests_failed": 0
+    },
+    {
+      "isa": "x86_64",
+      "job_id": 139864515823,
+      "artifact_id": 15109044476,
+      "sha256": "bbd965bd4897f05dc46aa95def749df00b2898c979b214adb01cb4b839f2e1f6",
+      "tests_passed": 329,
+      "tests_failed": 0
+    }
+  ],
+  "artifact_review": "Both ZIP files downloaded; SHA256 matches GitHub artifact digest; source.txt, arch.txt, rustc.txt and test.log independently inspected; exact two new tests and 329 passed/0 failed/0 ignored on each native ISA.",
+  "prior": {
+    "source_sha": "105da799ad82b9423d778fd1850bf2503d9909a6",
+    "run_id": 45803683868,
+    "x86_job_id": 139853189678,
+    "arm_job_id": 139853190101,
+    "tests_passed_each": 327,
+    "result": "PASS_SCOPED_NATIVE_CORE_LOG_REVIEW"
+  },
+  "governance": [
+    {
+      "run_id": 45806923903,
+      "result": "FAIL",
+      "reason": "Feature-impact declaration format invalid; branch documentation follow-up fixes it without changing source."
+    },
+    {
+      "run_id": 45806923914,
+      "result": "FAIL",
+      "reason": "Inherited H2416 main-cursor snapshot references historical FUNCTIONAL_PASS rather than required reviewed PASS evidence; 832 tests, 2 failures, 2 errors. No old evidence rewrite or branch-local cursor."
+    }
+  ],
+  "product": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN"
+}
