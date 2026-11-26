@@ -1038,6 +1038,11 @@ fn stage_sources(
      // Genuine reverse ACK-only fallback, only when no piggybacked DATA
      // has settled current progress; never a periodic ACK/PTO generator.
      let mut last_pure_ack=None::<Instant>;
+     #[cfg(feature="winxdp_tx_trial")]
+     let lab_feedback_first=option_env!("WBD_XDP_PRESSURE_LAB")==Some("1")
+         &&std::env::var("WBD_XDP_LAB_POLICY").ok().as_deref()==Some("feedback");
+     #[cfg(feature="winxdp_tx_trial")]
+     let mut lab_pressure_turn=false;
      // Cache Auto next check in the worker. A full packet batch never
      // takes an extra owner mutex for a 2-second policy decision.
      let mut next_auto_check=m2_clock().0.saturating_add(2_000_000_000);
@@ -1186,6 +1191,33 @@ fn stage_sources(
                  if reverse_count==DIRECT_RETURN_QUANTUM{still_ready=true}
                  } // reverse work genuinely pending
              }
+             // Lab candidate: a constrained alternating turn gives feedback
+             // and one due parity quantum first access to the SAME credit.
+             // The remainder follows the original service order and bounds.
+             let mut early_control=false;
+             #[allow(unused_mut)]
+             let mut early_parity=false;
+             #[cfg(feature="winxdp_tx_trial")]
+             if lab_feedback_first{
+                 let credit=npf.credit(77).map_err(|_|BAD_STAGE)?;
+                 if credit<77&&credit>0{
+                     lab_pressure_turn=!lab_pressure_turn;
+                     if lab_pressure_turn{
+                         let next_ack=counters.ack.load(Ordering::Acquire);
+                         let pending=counters.sack_rev.load(Ordering::Acquire)!=counters.sack_sent_rev.load(Ordering::Acquire);
+                         if native_ack_only_due(sack_negotiated,pending,
+                             next_ack!=counters.ack_sent.load(Ordering::Acquire),true,
+                             last_pure_ack.is_none_or(|t|t.elapsed()>=Duration::from_millis(10))){
+                             send_presentation_ack(&cfg,&mut npf,&counters,&mut ip_id,sack_negotiated)?;
+                             last_pure_ack=Some(Instant::now());
+                             work+=1;
+                         }
+                         early_control=send_control(&cfg,&lane,&mut npf,&counters,&mut ip_id)?;
+                         #[cfg(feature="fec2_product_record")]
+                         if fixed{early_parity=send_fixed_parity(&cfg,&lane,&mut npf,&counters,&mut ip_id)?;}
+                     }
+                 }
+             }
              for _ in 0..RX_WAKE_BATCH/BATCH {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
                  let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
@@ -1257,8 +1289,8 @@ fn stage_sources(
              // Each original driver prefix settles before the next quantum.
              #[cfg(feature="fec2_product_record")]
              let parity=if fixed{
-                 let mut sent=false;
-                 for _ in 0..10{
+                 let mut sent=early_parity;
+                 for _ in 0..(10-usize::from(early_parity)){
                      if !send_fixed_parity(&cfg,&lane,&mut npf,&counters,&mut ip_id)?{break}
                      sent=true;
                  }
@@ -1269,8 +1301,8 @@ fn stage_sources(
              // One repair per 32 new packets would cap useful opportunities
              // near 3%, even at 30% real loss. Four ready-only control slots
              // per bounded fresh turn; v3 credit and 8192pps remain hard gates.
-             let mut control=false;
-             for _ in 0..4 {
+             let mut control=early_control;
+             for _ in 0..(4-usize::from(early_control)) {
                  if counters.stopping.load(Ordering::Acquire){break}
                  if !send_control(&cfg,&lane,&mut npf,&counters,&mut ip_id)?{break}
                  control=true;

@@ -22,6 +22,8 @@ def exchange(sock,seconds,rate,send,receive,windows):
                     if not n:raise RuntimeError("send returned zero")
                     result["sent"]+=n;h.update(BLOCK[:n])
                 result["tx_end"]="deadline"
+            if not send:
+                while result["rx_end"]=="inactive" and time.monotonic()<start+seconds+65:time.sleep(.02)
             sock.shutdown(socket.SHUT_WR)
         except Exception as e:errors.append("tx:"+repr(e));result["tx_end"]="error"
         finally:result["tx_sha256"]=h.hexdigest()

@@ -20,6 +20,17 @@ namespace {
 // 32 fresh + 40 parity + 4 controls + 1 ACK = 77. Power-of-two
 // ceil(1022+77)=2048, not a substitute for completion credit.
 constexpr UINT32 Slots=2048, Chunk=4096, Batch=16;
+#ifdef WBD_XDP_PRESSURE_LAB
+// Test DLL only. Resolve cold knobs once, no getenv or clock on each frame.
+UINT32 lab_value(const char* name,UINT32 fallback,UINT32 a,UINT32 b,UINT32 c){
+    char raw[16]{};
+    DWORD n=GetEnvironmentVariableA(name,raw,sizeof(raw));
+    if(!n||n>=sizeof(raw))return fallback;
+    UINT32 v=0;
+    for(DWORD i=0;i<n;++i){if(raw[i]<'0'||raw[i]>'9')return fallback;v=v*10+UINT32(raw[i]-'0');}
+    return v==a||v==b||v==c?v:fallback;
+}
+#endif
 struct TxOwner {
     HANDLE socket,completion_event;
     XDP_OVERLAPPED completion_ov;
@@ -30,6 +41,10 @@ struct TxOwner {
     UINT32 free_count,reserved_index,reserved_count;
     UINT64 published,completed,pokes,credit_limited,completion_waits;
     bool reported;
+#ifdef WBD_XDP_PRESSURE_LAB
+    UINT32 slots,peak_pending,peak_unreclaimed;
+    UINT64 samples,zero_credit,partial_credit,credit_calls;
+#endif
 };
 bool reclaim(TxOwner* o,bool poke=true) {
     UINT32 index;
@@ -100,6 +115,9 @@ static TxOwner* open_tx(DWORD ifindex,UINT32 slots,XSK_BIND_FLAGS mode,HRESULT* 
     XskRingInitialize(&o->tx,&info.Tx);XskRingInitialize(&o->completion,&info.Completion);
     for(UINT32 i=0;i<slots;++i)o->free_chunks[i]=UINT64(i)*Chunk;
     o->free_count=slots;
+#ifdef WBD_XDP_PRESSURE_LAB
+    o->slots=slots;
+#endif
     *result=S_OK;return o;
 fail:
     *result=status;close_owner(o);return nullptr;
@@ -126,6 +144,18 @@ extern "C" int wbd_xdp_tx_credit(void* raw,UINT32 wanted){
         ++o->credit_limited;
         if(XskRingError(&o->tx)||XskRingError(&o->completion))return -1;
     }
+#ifdef WBD_XDP_PRESSURE_LAB
+    if(!o->free_count)++o->zero_credit;
+    else if(o->free_count<wanted)++o->partial_credit;
+    if((++o->credit_calls&255)==0){
+        ++o->samples;
+        UINT32 ready=ReadUInt32Acquire(o->completion.SharedProducer)-*o->completion.SharedConsumer;
+        UINT32 outstanding=o->slots-o->free_count;
+        UINT32 pending=outstanding>ready?outstanding-ready:0;
+        if(pending>o->peak_pending)o->peak_pending=pending;
+        if(outstanding>o->peak_unreclaimed)o->peak_unreclaimed=outstanding;
+    }
+#endif
     return static_cast<int>(o->free_count<wanted?o->free_count:wanted);
 }
 // WAIT_TX signals available completion descriptors, not remote ACK.
@@ -198,6 +228,9 @@ extern "C" void wbd_xdp_tx_report(void* raw){
     if(o->reported)return;
     o->reported=true;
     reclaim(o,false);
+#ifdef WBD_XDP_PRESSURE_LAB
+    std::fprintf(stderr,"WBD_XDP_TX_LAB slots=%u samples=%llu peak_pending_sampled=%u peak_unreclaimed_sampled=%u credit_calls=%llu zero_credit=%llu partial_credit=%llu\n",o->slots,o->samples,o->peak_pending,o->peak_unreclaimed,o->credit_calls,o->zero_credit,o->partial_credit);
+#endif
     XSK_STATISTICS stats{};UINT32 size=sizeof(stats);
     HRESULT hr=XskGetSockopt(o->socket,XSK_SOCKOPT_STATISTICS,&stats,&size);
     std::fprintf(stderr,"WBD_XDP_TX_STOP published=%llu completed_before_close=%llu pokes=%llu invalid=%llu stats_hr=0x%08lx credit_limited=%llu completion_waits=%llu\n",o->published,o->completed,o->pokes,stats.TxInvalidDescriptors,(unsigned long)hr,o->credit_limited,o->completion_waits);
@@ -227,6 +260,12 @@ struct RxQueue {
     unsigned char* umem;
     XSK_RING rx,fill;
     UINT64 received,batches,waits,received_bytes;
+#ifdef WBD_XDP_PRESSURE_LAB
+    UINT64 samples,max_hold_ticks;
+    UINT32 peak_ready;
+    LARGE_INTEGER held_at;
+    bool sampled;
+#endif
 };
 struct RxOwner {
     HANDLE program,map;
@@ -236,6 +275,9 @@ struct RxOwner {
     RxQueue* queues;
     unsigned char* umem;
     UINT32 count,next,batch_queue,batch_index,batch_count;
+#ifdef WBD_XDP_PRESSURE_LAB
+    UINT32 quantum,slots;
+#endif
 };
 struct RxFrame { const unsigned char* data; size_t len; };
 void close_rx(RxOwner* o){
@@ -306,7 +348,12 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     if(!o){*result=E_OUTOFMEMORY;return nullptr;}
     o->port_count=port_count;
     for(UINT32 i=0;i<MaxPorts;++i)o->ports[i]=INVALID_SOCKET;
-    const UINT32 slots=udp?DnsSlots:RxSlots;
+    UINT32 slots=udp?DnsSlots:RxSlots;
+#ifdef WBD_XDP_PRESSURE_LAB
+    if(!udp)slots=lab_value("WBD_XDP_LAB_RX",RxSlots,4096,8192,16384);
+    o->slots=slots;
+    o->quantum=udp?1:lab_value("WBD_XDP_LAB_QUANTUM",32,16,32,32);
+#endif
     HRESULT hr=E_FAIL;
     WSADATA wd{};
     BOOL exclusive=TRUE;
@@ -376,7 +423,10 @@ static bool provider_unavailable(HRESULT hr){
            hr==static_cast<HRESULT>(0xD00000BBu);
 }
 extern "C" int wbd_xdp_open_carrier(DWORD index,const UINT16* ports,UINT32 count,BOOL udp,void** handles){
-    const UINT32 tx_slots=udp?DnsSlots:Slots;
+    UINT32 tx_slots=udp?DnsSlots:Slots;
+#ifdef WBD_XDP_PRESSURE_LAB
+    if(!udp)tx_slots=lab_value("WBD_XDP_LAB_TX",Slots,1024,2048,2048);
+#endif
     // Native when the actual interface supports both paths; Generic for
     // ordinary NIC/vEthernet. Never switch one half of an established pair.
     for(UINT32 attempt=0;attempt<2;++attempt){
@@ -388,7 +438,7 @@ extern "C" int wbd_xdp_open_carrier(DWORD index,const UINT16* ports,UINT32 count
             if(rx){
                 const char* provider=attempt==0?"native":"generic";
                 std::fprintf(stderr,"WBD_XDP_TX_READY ifindex=%lu queue=0 slots=%u chunk=%u provider=%s\n",index,tx_slots,Chunk,provider);
-                std::fprintf(stderr,"WBD_XDP_RX_READY ifindex=%lu queues=%u port=%u ports=%u slots_per_queue=%u chunk=%u udp=%u provider=%s\n",index,rx->count,ports[0],count,udp?DnsSlots:RxSlots,RxChunk,unsigned(udp!=0),provider);
+                std::fprintf(stderr,"WBD_XDP_RX_READY ifindex=%lu queues=%u port=%u ports=%u slots_per_queue=%u chunk=%u udp=%u provider=%s\n",index,rx->count,ports[0],count,rx->queues[0].rx.Size,RxChunk,unsigned(udp!=0),provider);
                 handles[0]=rx;handles[1]=tx;return 1;
             }
             close_owner(tx);
@@ -405,6 +455,9 @@ extern "C" int wbd_xdp_open_carrier(DWORD index,const UINT16* ports,UINT32 count
 extern "C" size_t wbd_xdp_rx_borrow(void* raw,RxFrame* frames,size_t max){
     auto* o=static_cast<RxOwner*>(raw);
     UINT32 id=o->next;
+#ifdef WBD_XDP_PRESSURE_LAB
+    if(max>o->quantum)max=o->quantum;
+#endif
     // One ready quantum per queue, no cross-queue copies or queued
     // intermediate packets. Empty queues cost only a ring index read.
     for(UINT32 scan=0;scan<o->count;++scan){
@@ -420,6 +473,15 @@ extern "C" size_t wbd_xdp_rx_borrow(void* raw,RxFrame* frames,size_t max){
                 frames[i]={q->umem+d->Address.BaseAddress+d->Address.Offset,d->Length};
             }
             q->received+=n;q->received_bytes+=bytes;++q->batches;
+#ifdef WBD_XDP_PRESSURE_LAB
+            q->sampled=(q->batches&255)==0;
+            if(q->sampled){
+                ++q->samples;
+                UINT32 ready=ReadUInt32Acquire(q->rx.SharedProducer)-*q->rx.SharedConsumer;
+                if(ready>q->peak_ready)q->peak_ready=ready;
+                QueryPerformanceCounter(&q->held_at);
+            }
+#endif
             return n;
         }
         if(++id==o->count)id=0;
@@ -437,6 +499,14 @@ extern "C" int wbd_xdp_rx_release(void* raw){
         *static_cast<UINT64*>(XskRingGetElement(&q->fill,fi+i))=d->Address.BaseAddress;
     }
     XskRingConsumerRelease(&q->rx,n);XskRingProducerSubmit(&q->fill,n);
+#ifdef WBD_XDP_PRESSURE_LAB
+    if(q->sampled){
+        LARGE_INTEGER now;QueryPerformanceCounter(&now);
+        UINT64 ticks=UINT64(now.QuadPart-q->held_at.QuadPart);
+        if(ticks>q->max_hold_ticks)q->max_hold_ticks=ticks;
+        q->sampled=false;
+    }
+#endif
     o->batch_count=0;
     return !XskRingProducerNeedPoke(&q->fill)||SUCCEEDED(rx_poke(q));
 }
@@ -481,6 +551,13 @@ extern "C" void wbd_xdp_rx_close(void* raw){
         if(FAILED(hr))result=hr;
         received+=q->received;batches+=q->batches;waits+=q->waits;received_bytes+=q->received_bytes;
         dropped+=s.RxDropped;truncated+=s.RxTruncated;
+#ifdef WBD_XDP_PRESSURE_LAB
+        if(q->received){
+            LARGE_INTEGER frequency;QueryPerformanceFrequency(&frequency);
+            UINT64 us=q->max_hold_ticks*1000000/frequency.QuadPart;
+            std::fprintf(stderr,"WBD_XDP_RX_LAB queue=%u slots=%u quantum=%u samples=%llu peak_ready_sampled=%u max_batch_hold_sampled_us=%llu\n",i,o->slots,o->quantum,q->samples,q->peak_ready,us);
+        }
+#endif
         if(q->received||s.RxDropped||s.RxTruncated)
             std::fprintf(stderr,"WBD_XDP_RX_QUEUE_STOP queue=%u received=%llu batches=%llu waits=%llu dropped=%llu truncated=%llu received_bytes=%llu\n",i,q->received,q->batches,q->waits,s.RxDropped,s.RxTruncated,q->received_bytes);
     }

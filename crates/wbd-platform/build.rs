@@ -2,6 +2,7 @@ use std::{env,path::PathBuf,process::Command};
 fn main(){
     println!("cargo:rerun-if-changed=native/winxdp_tx.cpp");
     println!("cargo:rerun-if-env-changed=WBD_XDP_SDK_INCLUDE");
+    println!("cargo:rerun-if-env-changed=WBD_XDP_PRESSURE_LAB");
     if env::var_os("CARGO_FEATURE_WINXDP_TX_TRIAL").is_none()||
        env::var("CARGO_CFG_TARGET_OS").as_deref()!=Ok("windows"){return}
     assert_eq!(env::var("CARGO_CFG_TARGET_ENV").as_deref(),Ok("msvc"));
@@ -13,6 +14,9 @@ fn main(){
     compiler.args(["/nologo","/c","/O2","/MD","/std:c++17"]);
     if env::var_os("CARGO_FEATURE_WINXDP_NATIVE_TRIAL").is_some(){
         compiler.arg("/DWBD_XDP_NATIVE_TRIAL=1");
+    }
+    if env::var("WBD_XDP_PRESSURE_LAB").as_deref()==Ok("1"){
+        compiler.arg("/DWBD_XDP_PRESSURE_LAB=1");
     }
     let ok=compiler.arg(format!("/I{sdk}")).arg(format!("/Fo{}",object.display()))
         .arg("native/winxdp_tx.cpp").status().expect("MSVC developer environment");
