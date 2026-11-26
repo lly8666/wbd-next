@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source": "7aafa40a0acd1ae18709c5c41d72befd9f1707c2",
+  "harness": "045068382cbf8af18b67c532687364c58ed693fa",
+  "run": 45849790442,
+  "native": 45849688305,
+  "core": {
+    "run": 45849790656,
+    "passed": 334,
+    "failed": 1,
+    "failure": "native_pacing_does_not_turn_late_timer_into_large_burst: test used big() with pacing disabled; pace_ready returns true without cap. Fix test setup, not assert relaxation."
+  },
+  "artifact_sha256": {
+    "15132604204": "918fec72c62eed4a5ebdfbdc087d0bee519b030581659ae0d6f69e8fa2cfa965",
+    "15133977519": "0b203717ff3273917b529bfc4083bf31d20139fafad3ab263b7f3eeec3d5bcc8",
+    "15133063918": "b103a29f02a7729a35b91af5e434c2ad60fde3ab9194ed65ececb73ebc61dd48"
+  },
+  "status": "INCOMPLETE_PROBE; diagnostic only",
+  "scope": "Eight actual application measurements and both joined Stop receipts; all INCOMPLETE_PROBE because WBD_M0_TCP_PUBLISH guard after native_tcp_owner.take(). Source/selected mode probes match, raw ZIP digests verified. Native default-path dual ISA pass. Same ARM triple CUBIC0 and BBR1-0 ABBA, 400ms added RTT, 45s reverse single stream, cap64/ACK3/SACK on, MTU1160, FEC off repair on; bare CUBIC253.22Mbps not absolute qualification. No new path-qualification claim; detailed path and qdisc receipts retained. A original pacing B bounded pacing.",
+  "conditions": [
+    {
+      "cc": "cubic",
+      "loss": 0,
+      "mbps_abba": [
+        176.555539195,
+        177.463410764,
+        152.483138044,
+        180.095335613
+      ],
+      "means": [
+        178.325437404,
+        164.973274404
+      ],
+      "client_cpu_s_per_gib": [
+        16.563474,
+        18.866555,
+        18.464548,
+        19.03588
+      ],
+      "server_cpu_s_per_gib": [
+        15.082275,
+        17.478992,
+        17.638337,
+        16.863077
+      ],
+      "client_hwm_kib": [
+        202504,
+        241652,
+        205300,
+        224504
+      ],
+      "server_hwm_kib": [
+        169812,
+        168784,
+        170656,
+        153628
+      ],
+      "client_middle_offered": [
+        1000886,
+        1066502,
+        902804,
+        1075760
+      ],
+      "client_middle_full": [
+        28512,
+        21467,
+        40360,
+        25506
+      ],
+      "server_middle_full": [
+        0,
+        4188,
+        3464,
+        1395
+      ],
+      "client_shared_full": [
+        37816,
+        37370,
+        44219,
+        33490
+      ],
+      "server_retrans_pct_third_last_sample": [
+        5.221389,
+        4.786709,
+        7.459977,
+        3.232202
+      ]
+    },
+    {
+      "cc": "bbr1",
+      "loss": 0,
+      "mbps_abba": [
+        142.556453824,
+        194.382062369,
+        226.908271334,
+        159.568543578
+      ],
+      "means": [
+        151.062498701,
+        210.645166852
+      ],
+      "client_cpu_s_per_gib": [
+        17.554286,
+        20.799156,
+        17.438916,
+        17.345794
+      ],
+      "server_cpu_s_per_gib": [
+        22.575534,
+        17.902201,
+        16.698624,
+        21.20972
+      ],
+      "client_hwm_kib": [
+        268596,
+        250804,
+        263960,
+        293528
+      ],
+      "server_hwm_kib": [
+        179716,
+        165652,
+        174924,
+        176748
+      ],
+      "client_middle_offered": [
+        885451,
+        1174289,
+        1360447,
+        994124
+      ],
+      "client_middle_full": [
+        19613,
+        34986,
+        39816,
+        29910
+      ],
+      "server_middle_full": [
+        16732,
+        0,
+        5854,
+        3551
+      ],
+      "client_shared_full": [
+        55967,
+        113452,
+        99520,
+        58570
+      ],
+      "server_retrans_pct_third_last_sample": [
+        18.511754,
+        3.531263,
+        5.742119,
+        16.971997
+      ]
+    }
+  ],
+  "decision": "Bounded pacing shows promising BBR1 improvement but not CUBIC, and internal drop pressure remains. No formal acceptance or production promotion. No repeat full Linux/Rust matrix yet. Fix measurement guard and active-controller unit setup; test ready ingress scheduling, same source both bounded pacing on. Existing shared inbox/output, no new queue/thread/capacity, retain existing M1 cap32. Soft pending watermark64 may be exceeded by one event; no claim hard bound. Compare actual queue loss/bytes retransmission/goodput/CPU/RSS; full matrix only after actual internal loss is controlled.",
+  "next": {
+    "source": "182bd73efbd159a52dba6f827be0bdd53ad0c874",
+    "harness": "40bfca1a8d327f155f20511f86b3ffa20ae8c83a",
+    "native": 45852507073,
+    "core": 45852603899,
+    "arm": 45852603912
+  }
+}

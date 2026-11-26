@@ -1,0 +1,5 @@
+# M0 bounded pacing result (not accepted) and ingress scheduling follow-up
+
+docs/evidence/M0/20261126-DUAL-RUST-TCP-BOUNDED-PACING-RESULT.json
+
+Run45849790442 eight application receipts/Stop but all INCOMPLETE_PROBE, publish guard placed after take; core334/1 failed because big() disabled pacing. Do not present as qualified ABBA. Native both ISA passed. Verified three raw ZIP hashes. CUBIC0 178.33→164.97Mbps; BBR1-0 151.06→210.65, third-last server flow2 snapshots retrans16.97–18.51→3.53–5.74%. Client admission full still tens of thousands, SharedTUN full reaches113452. BBR1 gain promising, not internal loss fix. New source182bd73 corrects unit configuration and probe guard; optional ready ingress before output staging below soft watermark64, up to32 input attempts; existing queues and M1 output cap32 retained. Both legs bounded pacing on, BBR1 zero loss only, same binary, ARM45852603912 core45852603899 native45852507073. Full Linux/Rust comparison conditional on verified loss repair (CUBIC0 and BBR1 0/1/5%, same runner ABBA, throughput CPU RSS); no default promotion, no main product merge. Governance unresolved.
