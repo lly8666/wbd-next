@@ -1,0 +1,1407 @@
+{
+  "run": 45776937603,
+  "source": "abf8b06cfc0344172f8405c1453db365fc2f5128",
+  "build_run": 45774715707,
+  "artifact": 15096021609,
+  "qualification": "FUNCTIONAL_PASS; high-load combination retained as candidate; no default promotion; 12/12 exact including bare; nonzero IFB drops; no sustained CPU saturation",
+  "rows": [
+    {
+      "runner": "F",
+      "job": 139762749491,
+      "rows": [
+        {
+          "case": -11,
+          "status": "MEASURED_EXACT",
+          "bytes": 3349656904,
+          "rx_mbps": 471.9872426666667,
+          "mode": "frozen",
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2294289,
+              "ifbwlm0": 57514
+            },
+            "both_used": true
+          },
+          "steady_cpu": null,
+          "rate_mbps": 500,
+          "comparable": true
+        },
+        {
+          "case": 4,
+          "status": "MEASURED_EXACT",
+          "bytes": 2767668512,
+          "rx_mbps": 378.96107075555557,
+          "client_stop": true,
+          "mode": "copy",
+          "rx_profile": {
+            "borrowed": 0,
+            "reads": 2773566,
+            "frames": 2677126,
+            "turns": 146265,
+            "full": 49825,
+            "read_samples": 10437,
+            "read_ns": 15595000,
+            "read_bytes": 12230930,
+            "open_samples": 10419,
+            "open_ns": 45596700,
+            "wintun_samples": 10419,
+            "wintun_ns": 5868900,
+            "continuation": 0,
+            "waits": 146266,
+            "bypass": 0,
+            "bypass_empty": 0,
+            "owner_offer_ns": 4630600,
+            "owner_drain_ns": 19152700,
+            "owner_finish_ns": 1624700,
+            "owner_samples": 10419
+          },
+          "mode_ok": true,
+          "owner_lock": {
+            "sample_every": 64,
+            "tx_samples": 20703,
+            "tx_wait_ns": 22710200,
+            "tx_max_ns": 2249500,
+            "rx_samples": 44031,
+            "rx_wait_ns": 30096400,
+            "rx_max_ns": 293500
+          },
+          "native_stop_receipts": [
+            "WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=296234710 repair_accepted_wire_bytes=961100 repair_uncertain_wire_bytes=0 control_wire_bytes=903657 repair_packets=6023 r_to_f_ppm=3244 r_to_total_ppm=3224 joined=true"
+          ],
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 1,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8002:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8002:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2677906,
+              "ifbwlm0": 2045579
+            },
+            "both_used": true
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.6152783170781837,
+            "workers": {
+              "tx": {
+                "coverage": 44,
+                "core_equiv": 0.43397820972567946,
+                "kernel_core": 0.3611726548045951
+              },
+              "rx": {
+                "coverage": 44,
+                "core_equiv": 0.1666676183732667,
+                "kernel_core": 0.06745220529453406
+              }
+            },
+            "estimated_cpu_s_per_gib": 13.946552581351005
+          },
+          "rate_mbps": 500,
+          "comparable": true,
+          "server_stop": true
+        },
+        {
+          "case": 3,
+          "status": "MEASURED_EXACT",
+          "bytes": 2658092320,
+          "rx_mbps": 367.5404008888889,
+          "client_stop": true,
+          "mode": "both",
+          "rx_profile": {
+            "borrowed": 1,
+            "reads": 2710602,
+            "frames": 2605581,
+            "turns": 150681,
+            "full": 45660,
+            "read_samples": 10144,
+            "read_ns": 10975400,
+            "read_bytes": 11878519,
+            "open_samples": 10123,
+            "open_ns": 47943700,
+            "wintun_samples": 10123,
+            "wintun_ns": 5863500,
+            "continuation": 1,
+            "waits": 105022,
+            "bypass": 45660,
+            "bypass_empty": 25109,
+            "owner_offer_ns": 4821300,
+            "owner_drain_ns": 20986900,
+            "owner_finish_ns": 1487600,
+            "owner_samples": 10123
+          },
+          "mode_ok": true,
+          "owner_lock": {
+            "sample_every": 64,
+            "tx_samples": 17473,
+            "tx_wait_ns": 16095000,
+            "tx_max_ns": 996200,
+            "rx_samples": 42897,
+            "rx_wait_ns": 30562000,
+            "rx_max_ns": 1159000
+          },
+          "native_stop_receipts": [
+            "WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=307071733 repair_accepted_wire_bytes=512865 repair_uncertain_wire_bytes=0 control_wire_bytes=712133 repair_packets=3221 r_to_f_ppm=1670 r_to_total_ppm=1663 joined=true"
+          ],
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 1,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8003:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8003:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2607751,
+              "ifbwlm0": 2087519
+            },
+            "both_used": true
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.6464071277490953,
+            "workers": {
+              "tx": {
+                "coverage": 44,
+                "core_equiv": 0.456287384293479,
+                "kernel_core": 0.3766858468466415
+              },
+              "rx": {
+                "coverage": 44,
+                "core_equiv": 0.17768200322954789,
+                "kernel_core": 0.0756925333757874
+              }
+            },
+            "estimated_cpu_s_per_gib": 15.107441069712282
+          },
+          "rate_mbps": 500,
+          "comparable": true,
+          "server_stop": true
+        },
+        {
+          "case": 2,
+          "status": "MEASURED_EXACT",
+          "bytes": 2381268256,
+          "rx_mbps": 326.2353148444445,
+          "client_stop": true,
+          "mode": "continue",
+          "rx_profile": {
+            "borrowed": 0,
+            "reads": 2364051,
+            "frames": 2301660,
+            "turns": 113141,
+            "full": 50750,
+            "read_samples": 8977,
+            "read_ns": 15231600,
+            "read_bytes": 10495886,
+            "open_samples": 8953,
+            "open_ns": 69314800,
+            "wintun_samples": 8953,
+            "wintun_ns": 11121000,
+            "continuation": 1,
+            "waits": 62392,
+            "bypass": 50750,
+            "bypass_empty": 19972,
+            "owner_offer_ns": 13301800,
+            "owner_drain_ns": 27029500,
+            "owner_finish_ns": 1830900,
+            "owner_samples": 8953
+          },
+          "mode_ok": true,
+          "owner_lock": {
+            "sample_every": 64,
+            "tx_samples": 12196,
+            "tx_wait_ns": 16331000,
+            "tx_max_ns": 1181000,
+            "rx_samples": 37592,
+            "rx_wait_ns": 24592600,
+            "rx_max_ns": 965400
+          },
+          "native_stop_receipts": [
+            "WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=261529240 repair_accepted_wire_bytes=250403 repair_uncertain_wire_bytes=0 control_wire_bytes=503280 repair_packets=1626 r_to_f_ppm=957 r_to_total_ppm=954 joined=true"
+          ],
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8004:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8004:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2303477,
+              "ifbwlm0": 1796168
+            },
+            "both_used": true
+          },
+          "steady_cpu": {
+            "samples": 43,
+            "core_equiv": 0.5398757419682654,
+            "workers": {
+              "tx": {
+                "coverage": 43,
+                "core_equiv": 0.40201977042289283,
+                "kernel_core": 0.3460834468900846
+              },
+              "rx": {
+                "coverage": 43,
+                "core_equiv": 0.1270295863454742,
+                "kernel_core": 0.05124488994618562
+              }
+            },
+            "estimated_cpu_s_per_gib": 14.215190999558466
+          },
+          "rate_mbps": 500,
+          "comparable": true,
+          "server_stop": true
+        },
+        {
+          "case": 1,
+          "status": "MEASURED_EXACT",
+          "bytes": 2727036192,
+          "rx_mbps": 371.85492373333335,
+          "client_stop": true,
+          "mode": "borrow",
+          "rx_profile": {
+            "borrowed": 1,
+            "reads": 2717113,
+            "frames": 2616846,
+            "turns": 148581,
+            "full": 48314,
+            "read_samples": 10226,
+            "read_ns": 13150700,
+            "read_bytes": 11972922,
+            "open_samples": 10210,
+            "open_ns": 48061400,
+            "wintun_samples": 10210,
+            "wintun_ns": 6413600,
+            "continuation": 0,
+            "waits": 148582,
+            "bypass": 0,
+            "bypass_empty": 0,
+            "owner_offer_ns": 4505800,
+            "owner_drain_ns": 20378000,
+            "owner_finish_ns": 1822000,
+            "owner_samples": 10210
+          },
+          "mode_ok": true,
+          "owner_lock": {
+            "sample_every": 64,
+            "tx_samples": 21648,
+            "tx_wait_ns": 26570100,
+            "tx_max_ns": 2748800,
+            "rx_samples": 43124,
+            "rx_wait_ns": 31040700,
+            "rx_max_ns": 768900
+          },
+          "native_stop_receipts": [
+            "WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=282055414 repair_accepted_wire_bytes=1424862 repair_uncertain_wire_bytes=0 control_wire_bytes=976080 repair_packets=9064 r_to_f_ppm=5051 r_to_total_ppm=5009 joined=true"
+          ],
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 1,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8005:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8005:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2617882,
+              "ifbwlm0": 1970842
+            },
+            "both_used": true
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.6278409090909091,
+            "workers": {
+              "tx": {
+                "coverage": 44,
+                "core_equiv": 0.4314630681818182,
+                "kernel_core": 0.3661221590909091
+              },
+              "rx": {
+                "coverage": 44,
+                "core_equiv": 0.18146306818181818,
+                "kernel_core": 0.08238636363636363
+              }
+            },
+            "estimated_cpu_s_per_gib": 14.50326995573216
+          },
+          "rate_mbps": 500,
+          "comparable": true,
+          "server_stop": true
+        },
+        {
+          "case": 0,
+          "status": "MEASURED_EXACT",
+          "bytes": 2636072224,
+          "rx_mbps": 351.9325564444444,
+          "client_stop": true,
+          "mode": "copy",
+          "rx_profile": {
+            "borrowed": 0,
+            "reads": 2676293,
+            "frames": 2592037,
+            "turns": 134911,
+            "full": 50655,
+            "read_samples": 10142,
+            "read_ns": 13230000,
+            "read_bytes": 11876032,
+            "open_samples": 10122,
+            "open_ns": 45009400,
+            "wintun_samples": 10122,
+            "wintun_ns": 5769900,
+            "continuation": 0,
+            "waits": 134912,
+            "bypass": 0,
+            "bypass_empty": 0,
+            "owner_offer_ns": 4505700,
+            "owner_drain_ns": 19342500,
+            "owner_finish_ns": 1813800,
+            "owner_samples": 10122
+          },
+          "mode_ok": true,
+          "owner_lock": {
+            "sample_every": 64,
+            "tx_samples": 17712,
+            "tx_wait_ns": 17468100,
+            "tx_max_ns": 908500,
+            "rx_samples": 42527,
+            "rx_wait_ns": 29766700,
+            "rx_max_ns": 796100
+          },
+          "native_stop_receipts": [
+            "WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=307328378 repair_accepted_wire_bytes=545867 repair_uncertain_wire_bytes=0 control_wire_bytes=732484 repair_packets=3534 r_to_f_ppm=1776 r_to_total_ppm=1768 joined=true"
+          ],
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 1,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8006:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8006:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2594063,
+              "ifbwlm0": 2088675
+            },
+            "both_used": true
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.6323879424224487,
+            "workers": {
+              "tx": {
+                "coverage": 44,
+                "core_equiv": 0.45053637316084416,
+                "kernel_core": 0.3889701863071111
+              },
+              "rx": {
+                "coverage": 44,
+                "core_equiv": 0.17010773015077685,
+                "kernel_core": 0.06548079989067561
+              }
+            },
+            "estimated_cpu_s_per_gib": 15.435261565622762
+          },
+          "rate_mbps": 500,
+          "comparable": true,
+          "server_stop": true
+        }
+      ]
+    },
+    {
+      "runner": "I",
+      "job": 139762749534,
+      "rows": [
+        {
+          "case": -11,
+          "status": "MEASURED_EXACT",
+          "bytes": 3353326920,
+          "rx_mbps": 472.3384213333333,
+          "mode": "frozen",
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2296804,
+              "ifbwlm0": 57684
+            },
+            "both_used": true
+          },
+          "steady_cpu": null,
+          "rate_mbps": 500,
+          "comparable": true
+        },
+        {
+          "case": 0,
+          "status": "MEASURED_EXACT",
+          "bytes": 3080930592,
+          "rx_mbps": 421.3723534222222,
+          "client_stop": true,
+          "mode": "copy",
+          "rx_profile": {
+            "borrowed": 0,
+            "reads": 3040511,
+            "frames": 2943097,
+            "turns": 149496,
+            "full": 52082,
+            "read_samples": 11486,
+            "read_ns": 15212900,
+            "read_bytes": 13449171,
+            "open_samples": 11457,
+            "open_ns": 37085600,
+            "wintun_samples": 11457,
+            "wintun_ns": 6496600,
+            "continuation": 0,
+            "waits": 149497,
+            "bypass": 0,
+            "bypass_empty": 0,
+            "owner_offer_ns": 3271600,
+            "owner_drain_ns": 15009700,
+            "owner_finish_ns": 1565300,
+            "owner_samples": 11457
+          },
+          "mode_ok": true,
+          "owner_lock": {
+            "sample_every": 64,
+            "tx_samples": 20601,
+            "tx_wait_ns": 6522400,
+            "tx_max_ns": 436000,
+            "rx_samples": 48232,
+            "rx_wait_ns": 23426800,
+            "rx_max_ns": 692100
+          },
+          "native_stop_receipts": [
+            "WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=246553433 repair_accepted_wire_bytes=645005 repair_uncertain_wire_bytes=0 control_wire_bytes=1074691 repair_packets=4164 r_to_f_ppm=2616 r_to_total_ppm=2597 joined=true"
+          ],
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 1,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8002:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8002:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2944159,
+              "ifbwlm0": 1835980
+            },
+            "both_used": true
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.5565497189157201,
+            "workers": {
+              "tx": {
+                "coverage": 44,
+                "core_equiv": 0.3734039647677355,
+                "kernel_core": 0.31792680428795767
+              },
+              "rx": {
+                "coverage": 44,
+                "core_equiv": 0.18101201720645466,
+                "kernel_core": 0.07219143318842887
+              }
+            },
+            "estimated_cpu_s_per_gib": 11.345608329200596
+          },
+          "rate_mbps": 500,
+          "comparable": true,
+          "server_stop": true
+        },
+        {
+          "case": 1,
+          "status": "MEASURED_EXACT",
+          "bytes": 2932294944,
+          "rx_mbps": 414.31865102222224,
+          "client_stop": true,
+          "mode": "borrow",
+          "rx_profile": {
+            "borrowed": 1,
+            "reads": 2924857,
+            "frames": 2827282,
+            "turns": 146657,
+            "full": 49082,
+            "read_samples": 11056,
+            "read_ns": 13297400,
+            "read_bytes": 12951509,
+            "open_samples": 11039,
+            "open_ns": 38924200,
+            "wintun_samples": 11039,
+            "wintun_ns": 6103200,
+            "continuation": 0,
+            "waits": 146658,
+            "bypass": 0,
+            "bypass_empty": 0,
+            "owner_offer_ns": 3499900,
+            "owner_drain_ns": 15747500,
+            "owner_finish_ns": 1300500,
+            "owner_samples": 11039
+          },
+          "mode_ok": true,
+          "owner_lock": {
+            "sample_every": 64,
+            "tx_samples": 19957,
+            "tx_wait_ns": 7578600,
+            "tx_max_ns": 537500,
+            "rx_samples": 46377,
+            "rx_wait_ns": 20313600,
+            "rx_max_ns": 333500
+          },
+          "native_stop_receipts": [
+            "WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=259379967 repair_accepted_wire_bytes=487437 repair_uncertain_wire_bytes=0 control_wire_bytes=1035999 repair_packets=3093 r_to_f_ppm=1879 r_to_total_ppm=1868 joined=true"
+          ],
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 1,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8003:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8003:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2828772,
+              "ifbwlm0": 1864268
+            },
+            "both_used": true
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.5894080040042776,
+            "workers": {
+              "rx": {
+                "coverage": 44,
+                "core_equiv": 0.1841455645803473,
+                "kernel_core": 0.07074318021522995
+              },
+              "tx": {
+                "coverage": 44,
+                "core_equiv": 0.3967305985939529,
+                "kernel_core": 0.3274093918503858
+              }
+            },
+            "estimated_cpu_s_per_gib": 12.220005519680221
+          },
+          "rate_mbps": 500,
+          "comparable": true,
+          "server_stop": true
+        },
+        {
+          "case": 2,
+          "status": "MEASURED_EXACT",
+          "bytes": 3181404088,
+          "rx_mbps": 438.40201404444446,
+          "client_stop": true,
+          "mode": "continue",
+          "rx_profile": {
+            "borrowed": 0,
+            "reads": 3166224,
+            "frames": 3040740,
+            "turns": 172855,
+            "full": 47371,
+            "read_samples": 11893,
+            "read_ns": 13534800,
+            "read_bytes": 13918334,
+            "open_samples": 11860,
+            "open_ns": 37452000,
+            "wintun_samples": 11860,
+            "wintun_ns": 6753400,
+            "continuation": 1,
+            "waits": 125485,
+            "bypass": 47371,
+            "bypass_empty": 33626,
+            "owner_offer_ns": 3331600,
+            "owner_drain_ns": 15125200,
+            "owner_finish_ns": 1704800,
+            "owner_samples": 11860
+          },
+          "mode_ok": true,
+          "owner_lock": {
+            "sample_every": 64,
+            "tx_samples": 19675,
+            "tx_wait_ns": 11562600,
+            "tx_max_ns": 1996300,
+            "rx_samples": 49998,
+            "rx_wait_ns": 24148700,
+            "rx_max_ns": 1756500
+          },
+          "native_stop_receipts": [
+            "WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=259084634 repair_accepted_wire_bytes=169861 repair_uncertain_wire_bytes=0 control_wire_bytes=1037235 repair_packets=1090 r_to_f_ppm=655 r_to_total_ppm=652 joined=true"
+          ],
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 1,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8004:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8004:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 3042257,
+              "ifbwlm0": 1905312
+            },
+            "both_used": true
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.590750694665877,
+            "workers": {
+              "tx": {
+                "coverage": 44,
+                "core_equiv": 0.3985787819432423,
+                "kernel_core": 0.3341656037899148
+              },
+              "rx": {
+                "coverage": 44,
+                "core_equiv": 0.1861220562109962,
+                "kernel_core": 0.07366589987700997
+              }
+            },
+            "estimated_cpu_s_per_gib": 11.575014860319511
+          },
+          "rate_mbps": 500,
+          "comparable": true,
+          "server_stop": true
+        },
+        {
+          "case": 3,
+          "status": "MEASURED_EXACT",
+          "bytes": 3062842656,
+          "rx_mbps": 430.4736115555556,
+          "client_stop": true,
+          "mode": "both",
+          "rx_profile": {
+            "borrowed": 1,
+            "reads": 3066444,
+            "frames": 2937643,
+            "turns": 171496,
+            "full": 42695,
+            "read_samples": 11458,
+            "read_ns": 12302600,
+            "read_bytes": 13427512,
+            "open_samples": 11441,
+            "open_ns": 37057100,
+            "wintun_samples": 11441,
+            "wintun_ns": 6377100,
+            "continuation": 1,
+            "waits": 128802,
+            "bypass": 42695,
+            "bypass_empty": 31622,
+            "owner_offer_ns": 3409100,
+            "owner_drain_ns": 15046000,
+            "owner_finish_ns": 1368600,
+            "owner_samples": 11441
+          },
+          "mode_ok": true,
+          "owner_lock": {
+            "sample_every": 64,
+            "tx_samples": 20436,
+            "tx_wait_ns": 6855400,
+            "tx_max_ns": 310800,
+            "rx_samples": 48374,
+            "rx_wait_ns": 24016900,
+            "rx_max_ns": 573500
+          },
+          "native_stop_receipts": [
+            "WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=247441143 repair_accepted_wire_bytes=257751 repair_uncertain_wire_bytes=0 control_wire_bytes=1029677 repair_packets=1652 r_to_f_ppm=1041 r_to_total_ppm=1036 joined=true"
+          ],
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8005:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 3,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8005:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 2938363,
+              "ifbwlm0": 1826030
+            },
+            "both_used": true
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.5647718990570757,
+            "workers": {
+              "tx": {
+                "coverage": 44,
+                "core_equiv": 0.3761587254589345,
+                "kernel_core": 0.31245729513050563
+              },
+              "rx": {
+                "coverage": 44,
+                "core_equiv": 0.17544583883751627,
+                "kernel_core": 0.06975128684006732
+              }
+            },
+            "estimated_cpu_s_per_gib": 11.269805028859025
+          },
+          "rate_mbps": 500,
+          "comparable": true,
+          "server_stop": true
+        },
+        {
+          "case": 4,
+          "status": "MEASURED_EXACT",
+          "bytes": 3103373560,
+          "rx_mbps": 431.5649822222222,
+          "client_stop": true,
+          "mode": "copy",
+          "rx_profile": {
+            "borrowed": 0,
+            "reads": 3104198,
+            "frames": 3007452,
+            "turns": 151007,
+            "full": 54261,
+            "read_samples": 11755,
+            "read_ns": 12810600,
+            "read_bytes": 13769539,
+            "open_samples": 11732,
+            "open_ns": 38463100,
+            "wintun_samples": 11732,
+            "wintun_ns": 7451700,
+            "continuation": 0,
+            "waits": 151008,
+            "bypass": 0,
+            "bypass_empty": 0,
+            "owner_offer_ns": 3408700,
+            "owner_drain_ns": 15271700,
+            "owner_finish_ns": 1474000,
+            "owner_samples": 11732
+          },
+          "mode_ok": true,
+          "owner_lock": {
+            "sample_every": 64,
+            "tx_samples": 19926,
+            "tx_wait_ns": 10849100,
+            "tx_max_ns": 1585800,
+            "rx_samples": 49261,
+            "rx_wait_ns": 30089300,
+            "rx_max_ns": 1708300
+          },
+          "native_stop_receipts": [
+            "WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=270775045 repair_accepted_wire_bytes=398305 repair_uncertain_wire_bytes=0 control_wire_bytes=1012703 repair_packets=2570 r_to_f_ppm=1470 r_to_total_ppm=1463 joined=true"
+          ],
+          "steady_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 2,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8006:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "business_drops": {
+            "available": true,
+            "zero": false,
+            "deltas": {
+              "eth0.rx.dropped": 0,
+              "eth0.rx.errors": 0,
+              "eth0.tx.dropped": 0,
+              "eth0.tx.errors": 0,
+              "h2442exit.rx.dropped": 0,
+              "h2442exit.rx.errors": 0,
+              "h2442exit.tx.dropped": 0,
+              "h2442exit.tx.errors": 0,
+              "wbds0.rx.dropped": 0,
+              "wbds0.rx.errors": 0,
+              "wbds0.tx.dropped": 0,
+              "wbds0.tx.errors": 0,
+              "ifbwlm0.rx.dropped": 4,
+              "ifbwlm0.rx.errors": 0,
+              "ifbwlm0.tx.dropped": 0,
+              "ifbwlm0.tx.errors": 0,
+              "qdisc.eth0|netem|20:||True": 0,
+              "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+              "qdisc.h2442exit|noqueue|0:||True": 0,
+              "qdisc.wbds0|fq|8006:||True": 0,
+              "qdisc.ifbwlm0|netem|10:||True": 0,
+              "guest_softnet_drops": 0
+            }
+          },
+          "netem_active": {
+            "packets": {
+              "eth0": 3008508,
+              "ifbwlm0": 1977096
+            },
+            "both_used": true
+          },
+          "steady_cpu": {
+            "samples": 44,
+            "core_equiv": 0.6203703703703703,
+            "workers": {
+              "rx": {
+                "coverage": 44,
+                "core_equiv": 0.18091168091168092,
+                "kernel_core": 0.07585470085470085
+              },
+              "tx": {
+                "coverage": 44,
+                "core_equiv": 0.4341168091168091,
+                "kernel_core": 0.36716524216524216
+              }
+            },
+            "estimated_cpu_s_per_gib": 12.347945555861408
+          },
+          "rate_mbps": 500,
+          "comparable": true,
+          "server_stop": true
+        }
+      ]
+    }
+  ]
+}
