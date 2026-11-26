@@ -148,7 +148,7 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'WSL prerequisites unavailable'}
           & wsl.exe -d Ubuntu -u root --exec modprobe tcp_bbr
           & wsl.exe -d Ubuntu -u root --exec sysctl -n net.ipv4.tcp_available_congestion_control
-      - name: Same-runner old vEthernet fixture: 0ms/400ms bare and 400ms single TCP WBD
+      - name: 'Same-runner old vEthernet fixture: 0ms/400ms bare and 400ms single TCP WBD'
         shell: pwsh
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
         timeout-minutes: 30
