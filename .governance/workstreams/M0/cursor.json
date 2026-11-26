@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2454,
-  "checkpoint_sha": "4c83cfced6b00c90496d8aefcae73e546713adf9",
+  "sequence": 2455,
+  "checkpoint_sha": "ef2c53e3d09da5b20a42dcfdbd906a84591251ac",
   "progress": "partial",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "先收client profile run45813155885（旧精确B 86e3ec3）与toolchain ABBA run45813155937（同源码 bbbe025，1.85.1/1.100.0）；按实测定位TX/ACK/复制/索引成本，不重复dispatch。性能差距解决后Linux ARM及受影响模式/多lease/换代；旧splice不退役。工具链未晋级。",
+  "next_action": "收修正后的client profile run45813361467（精确旧B二进制；首run45813155885夹具找perf失败，非产品失败）与toolchain ABBA run45813155937（同SOURCE bbbe025）；以实测定位并优化TX。禁止重复dispatch。",
   "unverified": true,
   "last_tested_source": "86e3ec30010a59cbb60539b902cb96dc21e04d6a",
   "evidence_refs": [
@@ -26,8 +26,9 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA-INTENT.md",
     "docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CLIENT-PROFILE-FIX.md"
   ],
   "open_requests": [],
-  "partial_summary": "PR80 branch bbbe02584685677c743b4c6522586c087cff5de0；旧splice/双Rust clean x86 ABBA 570.13/571.42Mbps，fq600限速下相当；client CPU/GiB +29.1%，host +12.4%，server +0.09%，TX线程成本上升且一轮有局部队列丢包。双ISA Normal功能PASS保持；profile与独立编译器实验运行中，main未合产品。用户授权工具链决策，默认1.85.1/MSRV保持。"
+  "partial_summary": "PR80 branch 6674e6ff26c2fe1ed255e7868f7728267bd5a7fa；双ISA Normal功能PASS；clean ABBA capped吞吐相当但客户端CPU +29.1%、整机+12.4%；已记录profile首轮夹具FAIL并修正、编译器对照独立执行。默认1.85.1/MSRV保持；未合入产品、未退役旧splice。"
 }
