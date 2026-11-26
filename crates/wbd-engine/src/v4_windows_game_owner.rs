@@ -404,9 +404,20 @@ pub(super) fn game_fec_poll_group(
 #[cfg(feature="fec2_product_record")]
 pub(super) fn game_m4_result_group(game:&mut WinGameGroup,h:u64,lane:u32,
     logical_id:u64,pn:u64,sent:bool)->i32{
-    if game.lanes.iter().any(|member|member.lock().ok().is_none_or(|e|
-        e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
-        !e.device.is_some_and(|d|!d.quiesced))){return BAD_STAGE}
+    if !game_m4_members_active(game,h){return BAD_STAGE}
+    game_m4_settle_row(game,lane,logical_id,pn,sent)
+}
+#[cfg(feature="fec2_product_record")]
+fn game_m4_members_active(game:&WinGameGroup,h:u64)->bool{
+    game.lanes.iter().all(|member|member.lock().ok().is_some_and(|e|
+        e.game_group==Some(h)&&e.phase==PH_ACTIVE&&
+        e.device.is_some_and(|d|!d.quiesced)))
+}
+// Same original staged-record removal, source/repair attribution and
+// last-row settlement; caller owns the same group mutex.
+#[cfg(feature="fec2_product_record")]
+fn game_m4_settle_row(game:&mut WinGameGroup,lane:u32,
+    logical_id:u64,pn:u64,sent:bool)->i32{
     let Some(pos)=game.staged.iter().position(|r|
         r.lane==lane&&r.id==logical_id&&r.pn==pn)else{return BAD_STAGE};
     let staged=game.staged.swap_remove(pos);
@@ -422,6 +433,20 @@ pub(super) fn game_m4_result_group(game:&mut WinGameGroup,h:u64,lane:u32,
         game.adapter.settle_windows_native_m4_batch();
     }
     OK
+}
+// Native XDP only: all rows were selected before the same driver publish.
+// Validate membership once under the group lock, then settle the exact
+// accepted prefix in original order, including every NotSent suffix row.
+#[cfg(all(feature="fec2_product_record",feature="winxdp_native_trial"))]
+pub(super) fn native_game_m4_result_batch(game:&mut WinGameGroup,h:u64,
+    rows:&[Option<&WbdWindowsGameRecordV4>],copied:usize)->Result<(),(usize,i32)>{
+    if !game_m4_members_active(game,h){return Err((0,BAD_STAGE))}
+    for (i,row) in rows.iter().enumerate(){
+        let row=row.ok_or((i,INVALID))?;
+        let rc=game_m4_settle_row(game,row.lane,row.logical_id,row.pn,i<copied);
+        if rc!=OK{return Err((i,rc))}
+    }
+    Ok(())
 }
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
@@ -832,6 +857,32 @@ mod tests{
         // A native parity frame can yield no IP payload, so zero is a
         // fully settled empty batch, without invented Wintun writes.
         assert_eq!(valid_fec_kernel_prefix(0,0),Ok(true));
+    }
+    #[cfg(feature="winxdp_native_trial")]
+    #[test]
+    fn winxdp_game_batch_settles_original_partial_prefix_and_siblings(){
+        let mut r=Registry{generation:305,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let clients=setup(&mut r,2,false);
+        let c=join(&mut r,&clients,false).unwrap();
+        let mut ipv4=[0x51u8;40];ipv4[0]=0x45;
+        ipv4[2..4].copy_from_slice(&40u16.to_be_bytes());
+        ipv4[8]=64;ipv4[9]=17;
+        let packets=offer_records(&mut r,c,&ipv4,2).unwrap();
+        assert_eq!(packets.len(),2);
+        {
+            let mut g=r.game_groups[&c].lock().unwrap();
+            assert_eq!(native_game_m4_result_batch(&mut g,c,
+                &[Some(&packets[0]),Some(&packets[1])],1),Ok(()));
+            assert!(g.staged.is_empty());
+            assert_eq!(native_game_m4_result_batch(&mut g,c,
+                &[Some(&packets[0])],1),Err((0,BAD_STAGE)));
+        }
+        for h in &clients{
+            let d=r.entries[h].lock().unwrap().device.unwrap();
+            assert_eq!(quiesce_wintun(&mut r,*h,[2;16],d.luid,d.ifindex),OK);
+        }
+        assert_eq!(stopped_group(&mut r,c),OK);
     }
     #[test]
     fn m0_game_off_native_wintun_failed_write_preserves_sibling_lane_first_copy(){

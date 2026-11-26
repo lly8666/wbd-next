@@ -247,12 +247,33 @@ fn game_send_failure(c:&GameCounters,stage:&str,rc:i32,
     }
     rc
 }
+#[cfg(feature="winxdp_native_trial")]
+fn settle_game_row_original(group:u64,cfg:&WbdWinNativeAttachV1,
+    owner:&Arc<Mutex<game::WinGameGroup>>,outer:&Arc<Mutex<outer::GameOuter>>,
+    c:&GameCounters,r:&game::WbdWindowsGameRecordV4,idx:usize,seq:u32,ack:u32,
+    copied:bool,origin:&str)->Result<(),i32>{
+    let rc={
+        let mut g=owner.lock().map_err(|_|game_send_failure(c,"m4_owner_lock",BAD_STAGE,r,cfg,origin))?;
+        game::game_m4_result_group(&mut g,group,r.lane,r.logical_id,r.pn,copied)
+    };
+    if rc!=OK{return Err(game_send_failure(c,"m4_receipt",rc,r,cfg,origin))}
+    if copied{
+        outer.lock().map_err(|_|BAD_STAGE)?
+            .on_firstsend(idx,r.pn,seq,&r.wire[..r.length as usize])
+            .map_err(|rc|game_send_failure(c,"on_firstsend",rc,r,cfg,origin))?;
+        c.tx_seq[idx].fetch_add(r.length,Ordering::Release);
+        c.ack_sent[idx].store(ack,Ordering::Release);
+        c.tx.fetch_add(1,Ordering::Relaxed);
+        if c.rx.load(Ordering::Acquire)>0{c.after.fetch_add(1,Ordering::Relaxed);}
+    }
+    Ok(())
+}
 fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
     owner:&Arc<Mutex<game::WinGameGroup>>,
     outer:&Arc<Mutex<outer::GameOuter>>,
     lanes:&[LaneConfig],npf:&mut GameTx,c:&GameCounters,
     records:Vec<game::WbdWindowsGameRecordV4>,ip_id:&mut u16,
-    active:&mut [bool],origin:&str,
+    active:&mut [bool],origin:&str,_lab_batch:bool,
 )->Result<usize,i32>{
     let total=records.len();
     if origin=="due" && !records.is_empty() &&
@@ -316,6 +337,37 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
                 Some(result)
             }else{None};
             let copied_prefix=outcome.as_ref().map_or(0,|x|x.accepted_prefix);
+            // Experimental same-publish batch: reduce lock acquisitions
+            // and repeated lane validation, without changing order, PN,
+            // shadow admission, or the original driver's definite prefix.
+            #[cfg(feature="winxdp_native_trial")]
+            if _lab_batch{
+                {
+                    let mut g=owner.lock().map_err(|_|BAD_STAGE)?;
+                    game::native_game_m4_result_batch(&mut g,group,&selected[..count],copied_prefix)
+                        .map_err(|(i,rc)|game_send_failure(c,"m4_batch_receipt",rc,selected[i].unwrap(),cfg,origin))?;
+                }
+                if copied_prefix>0{
+                    let mut m=outer.lock().map_err(|_|BAD_STAGE)?;
+                    for i in 0..copied_prefix{
+                        let r=selected[i].unwrap();
+                        m.on_firstsend(idx,r.pn,seqs[i],&r.wire[..r.length as usize])
+                            .map_err(|rc|game_send_failure(c,"on_firstsend_batch",rc,r,cfg,origin))?;
+                        c.tx_seq[idx].fetch_add(r.length,Ordering::Release);
+                    }
+                    c.ack_sent[idx].store(ack,Ordering::Release);
+                    c.tx.fetch_add(copied_prefix as u64,Ordering::Relaxed);
+                    if c.rx.load(Ordering::Acquire)>0{
+                        c.after.fetch_add(copied_prefix as u64,Ordering::Relaxed);
+                    }
+                }
+            }else{
+                for i in 0..count{
+                    settle_game_row_original(group,cfg,owner,outer,c,selected[i].unwrap(),
+                        idx,seqs[i],ack,i<copied_prefix,origin)?;
+                }
+            }
+            #[cfg(not(feature="winxdp_native_trial"))]
             for i in 0..count{
                 let r=selected[i].unwrap();
                 let copied=i<copied_prefix;
@@ -415,6 +467,11 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     split_clock:Instant,
 )->i32{
     let mut id=1u16;
+    // Resolve once at cold TX start; release defaults to original path.
+    let lab_batch=cfg!(feature="winxdp_native_trial") &&
+        option_env!("WBD_XDP_PRESSURE_LAB")==Some("1") &&
+        std::env::var("WBD_XDP_LAB_POLICY").ok().as_deref()==Some("game-batch");
+    if lab_batch{eprintln!("WBD_XDP_GAME_BATCH_RECEIPT enabled=1");}
     // TX and RX capture endpoints have distinct native failure lifetimes.
     // Retiring one local TX handle must never stop another lane's NPF send.
     let mut active=vec![true;lanes.len()];
@@ -536,7 +593,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             };
             if accepted<count{c.rejected.fetch_add((count-accepted) as u64,Ordering::Relaxed);}
             if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&outer,&lanes,&mut npf,
-                &c,rows,&mut id,&mut active,"offer"){return rc}
+                &c,rows,&mut id,&mut active,"offer",lab_batch){return rc}
             if accepted>0{health.on_local_business(health_origin.elapsed().as_nanos()
                 .min(u128::from(u64::MAX)) as u64);}
             did_work=true;
@@ -554,7 +611,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         match due{
             Ok(rows) if !rows.is_empty()=>{
                 if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&outer,&lanes,
-                    &mut npf,&c,rows,&mut id,&mut active,"due"){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_send_records rc={rc}");return rc}
+                    &mut npf,&c,rows,&mut id,&mut active,"due",lab_batch){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_send_records rc={rc}");return rc}
                 did_work=true;
             },
             Err(rc)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=game_native_due rc={rc}");return rc},
