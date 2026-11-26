@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Ready input accounting candidate scoped Linux Normal actual product functional dual ISA PASS; separate x86 same-VM clean ABBA performance neutral, not full qualification.",
+  "functional": {
+    "run_id": 45813936217,
+    "jobs": [
+      {
+        "isa": "x86_64",
+        "job_id": 139888647532,
+        "artifact_id": 15114253855,
+        "sha256": "84908ce823f9b23089efdc6d58f080d3f039fa30726fe2db380af1b13c8c24e3",
+        "first_response_ns_after_fin": 25414919
+      },
+      {
+        "isa": "aarch64",
+        "job_id": 139888648232,
+        "artifact_id": 15114468713,
+        "sha256": "394fe6206f0cfa673b01ea97783ef553f8268b5f79d2fb47921a2410d44bd2ee",
+        "first_response_ns_after_fin": 17382581
+      }
+    ],
+    "each": {
+      "upload_bytes": 4194304,
+      "download_bytes": 11534336,
+      "connections": 9,
+      "halfclose": true,
+      "udp": true,
+      "client_exit": 0,
+      "server_exit": 0
+    }
+  },
+  "performance": {
+    "run_id": 45813936389,
+    "job_id": 139890210612,
+    "artifact_id": 15114049186,
+    "sha256": "126a3e576c73acfa73278e117bd3b0c44f593ea85babef9354c4074b73ea602d",
+    "build_artifact_id": 15114024595,
+    "build_zip_sha256": "cef7f75e044b17109f6a6c686bc7c4a7050e09b55bee385b2dc24d30cf3726c5",
+    "source_A": "86e3ec30010a59cbb60539b902cb96dc21e04d6a",
+    "source_B": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
+    "order": "ABBA",
+    "rows": [
+      {
+        "leg": "A",
+        "mbps": 573.8052406562648,
+        "bytes": 1793196032,
+        "server": 8.502770265331481,
+        "client": 11.281140267524304,
+        "host": 23.137115707916088
+      },
+      {
+        "leg": "B",
+        "mbps": 573.5594631564657,
+        "bytes": 1792409600,
+        "server": 8.506500914076781,
+        "client": 11.322032906764168,
+        "host": 23.19519122486289
+      },
+      {
+        "leg": "B",
+        "mbps": 573.7712396465722,
+        "bytes": 1793064960,
+        "server": 8.56327485380117,
+        "client": 11.407719298245615,
+        "host": 22.881309941520467
+      },
+      {
+        "leg": "A",
+        "mbps": 573.5991339409586,
+        "bytes": 1792540672,
+        "server": 8.661620356829483,
+        "client": 11.470956420005848,
+        "host": 23.15156478502486
+      }
+    ],
+    "means": {
+      "A": {
+        "mbps": 573.7021872986118,
+        "server": 8.582195311080483,
+        "client": 11.376048343765076,
+        "host": 23.144340246470474
+      },
+      "B": {
+        "mbps": 573.6653514015189,
+        "server": 8.534887883938975,
+        "client": 11.36487610250489,
+        "host": 23.038250583191676
+      }
+    },
+    "all_stop": true,
+    "origin_retransmits": 0,
+    "shared_tun_full_drops": 0,
+    "cpu_unit": "CPU-s/GiB received"
+  },
+  "review": "All four downloaded ZIP digests match API. B actual three binaries independently SHA256 verified against manifest. Functional summary actual bytes/hash and exit receipts inspected, perf actual receiver and STOP logs. Functional ZIP has no binaries.",
+  "decision": "Keep correct accounting, no material CPU or throughput benefit. BBR version confound prompted matched CUBIC comparison; no old splice retirement."
+}
