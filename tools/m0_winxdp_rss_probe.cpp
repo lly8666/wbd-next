@@ -4,6 +4,7 @@
 #define XDP_INCLUDE_WINCOMMON
 #define NOMINMAX
 #include <xdpapi.h>
+#include <xdpapi_experimental.h>
 #include <afxdp_helper.h>
 #include <ws2tcpip.h>
 #include <cstdio>
@@ -124,23 +125,22 @@ int main(int argc,char**argv){
         o.accept_event=WSACreateEvent();
         if(WSAEventSelect(o.listener,o.accept_event,FD_ACCEPT))return 3;
         if(all)check("map",XdpMapCreate(&o.map,XDP_MAP_TYPE_XSKMAP));
-        // XDP Generic allocates queues from actual RSS capabilities. Probe
-        // contiguous queue IDs to the first real bind/activate rejection;
-        // OS advertised count is corroborating evidence, not a made-up ID.
-        const UINT32 limit=all?ProbeLimit:1;
+        // Use the same capability query that ALL_QUEUES uses internally.
+        // Bind/Activate success does not prove a live RSS queue exists.
+        HANDLE adapter=nullptr;
+        check("interface open",XdpInterfaceOpen(index,&adapter));
+        XDP_RSS_CAPABILITIES caps{};UINT32 capSize=sizeof(caps);
+        HRESULT capStatus=XdpRssGetCapabilities(adapter,&caps,&capSize);
+        CloseHandle(adapter);check("rss capabilities",capStatus);
+        UINT32 count=caps.NumberOfReceiveQueues?caps.NumberOfReceiveQueues:1;
+        std::printf("XDP_RSS_CAP_QUEUE_COUNT=%u os=%u hash_types=%u\n",count,expected,caps.HashTypes);
+        if(count>=ProbeLimit){std::fprintf(stderr,"wait set probe requires fewer than %u queues\n",ProbeLimit);return 4;}
+        const UINT32 limit=all?count:1;
         for(UINT32 q=0;q<limit;++q){
             auto v=std::make_unique<Queue>();
-            HRESULT hr=v->open(index,q);
-            if(FAILED(hr)){
-                std::printf("QUEUE_BOUNDARY id=%u hr=0x%08lx expected_os=%u\n",q,(unsigned long)hr,expected);
-                if(q==0)return 4;
-                break;
-            }
+            check("queue open",v->open(index,q));
             if(all)check("map insert",XdpMapInsert(o.map,&q,&v->socket));
             o.queues.push_back(std::move(v));
-        }
-        if(all&&(o.queues.size()==ProbeLimit||(expected&&o.queues.size()<expected))){
-            std::fprintf(stderr,"QUEUE_INVENTORY_INCOMPLETE actual=%zu os=%u\n",o.queues.size(),expected);return 4;
         }
         XDP_HOOK_ID hook{XDP_HOOK_L2,XDP_HOOK_RX,XDP_HOOK_INSPECT};
         XDP_RULE rule{};rule.Match=XDP_MATCH_TCP_DST;rule.Pattern.Port=htons(OwnedPort);
