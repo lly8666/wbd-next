@@ -485,7 +485,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      Ok(0)
  }
  fn packet_frame<'a>(cfg:&WbdWinNativeAttachV1,seq:u32,ack:u32,
-     wire:&[u8],ip_id:u16,frame:&'a mut [u8;MAX_LINK])
+     wire:&[u8],ip_id:u16,frame:&'a mut [u8])
      ->Result<&'a [u8],i32>{
      let bytes=build_bytes(Ipv4Tuple{
              src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
@@ -735,21 +735,35 @@ fn stage_sources(
      };
      let count=batch.count as usize;
      if count==0{return Ok(false)}
-     let mut frames=[[0u8;MAX_LINK];4];
      let mut lengths=[0usize;4];
      let ack=counters.ack.load(Ordering::Acquire);
-     for (i,row) in batch.rows[..count].iter().enumerate(){
-         let wire_len=row.used as usize;
-         let f=packet_frame(cfg,row.seq,ack,&row.wire[..wire_len],
-             *ip_id,&mut frames[i])?;
-         lengths[i]=f.len();
-         *ip_id=ip_id.wrapping_add(1);
-     }
-     let last=&batch.rows[count-1];
-     counters.tx_seq.store(last.seq.wrapping_add(last.used),Ordering::Release);
-     let mut packets:[&[u8];4]=[&[];4];
-     for i in 0..count{packets[i]=&frames[i][..lengths[i]]}
-     let outcome=npf.send_batch(&packets[..count]);
+     #[cfg(not(feature="winxdp_tx_trial"))]
+     let outcome={
+         let mut frames=[[0u8;MAX_LINK];4];
+         for (i,row) in batch.rows[..count].iter().enumerate(){
+             lengths[i]=packet_frame(cfg,row.seq,ack,&row.wire[..row.used as usize],
+                 *ip_id,&mut frames[i])?.len();
+             *ip_id=ip_id.wrapping_add(1);
+         }
+         let last=&batch.rows[count-1];
+         counters.tx_seq.store(last.seq.wrapping_add(last.used),Ordering::Release);
+         let packets:[&[u8];4]=std::array::from_fn(|i|&frames[i][..lengths[i]]);
+         npf.send_batch(&packets[..count])
+     };
+     #[cfg(feature="winxdp_tx_trial")]
+     let outcome=match npf.reserve(count){
+         Ok(mut loan)=>{
+             for (i,row) in batch.rows[..count].iter().enumerate(){
+                 lengths[i]=packet_frame(cfg,row.seq,ack,&row.wire[..row.used as usize],
+                     *ip_id,loan.frame(i))?.len();
+                 *ip_id=ip_id.wrapping_add(1);
+             }
+             let last=&batch.rows[count-1];
+             counters.tx_seq.store(last.seq.wrapping_add(last.used),Ordering::Release);
+             loan.submit(&lengths[..count])
+         },
+         Err(e)=>wbd_platform::TxBatchOutcome{accepted_prefix:0,uncertain_index:None,error:Some(e)},
+     };
      let mut copied=0u8;
      let mut uncertain=0u8;
      for i in 0..count{

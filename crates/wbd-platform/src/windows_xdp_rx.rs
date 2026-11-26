@@ -8,8 +8,7 @@ const BATCH:usize=32;
 #[derive(Clone,Copy)]
 struct Frame{data:*const u8,len:usize}
 extern "C"{
-    fn wbd_xdp_rx_open_ports(index:u32,ports:*const u16,count:u32,udp:i32)->*mut c_void;
-    fn wbd_xdp_tx_open_index(index:u32)->*mut c_void;
+    fn wbd_xdp_open_carrier(index:u32,ports:*const u16,count:u32,udp:i32,handles:*mut *mut c_void)->i32;
     fn wbd_xdp_rx_cold_read(raw:*mut c_void,dst:*mut u8,cap:usize)->i32;
     fn wbd_xdp_tx_cold_write(raw:*mut c_void,bytes:*const u8,len:usize)->i32;
     fn wbd_xdp_rx_close(raw:*mut c_void);
@@ -22,11 +21,11 @@ pub fn cold_open(index:u32,port:u16)->Result<(usize,usize),TxError>{
     cold_open_ports(index,&[port],false)
 }
 pub fn cold_open_ports(index:u32,ports:&[u16],udp:bool)->Result<(usize,usize),TxError>{
-    let rx=NonNull::new(unsafe{wbd_xdp_rx_open_ports(index,ports.as_ptr(),ports.len() as u32,udp as i32)}).ok_or(TxError::IoFailed)?;
-    let tx=match NonNull::new(unsafe{wbd_xdp_tx_open_index(index)}){
-        Some(v)=>v,None=>{unsafe{wbd_xdp_rx_close(rx.as_ptr())};return Err(TxError::IoFailed)}
-    };
-    Ok((rx.as_ptr() as usize,tx.as_ptr() as usize))
+    let mut handles=[std::ptr::null_mut();2];
+    if unsafe{wbd_xdp_open_carrier(index,ports.as_ptr(),ports.len() as u32,udp as i32,handles.as_mut_ptr())}==0{
+        return Err(TxError::IoFailed)
+    }
+    Ok((handles[0] as usize,handles[1] as usize))
 }
 pub unsafe fn cold_read(raw:usize,dst:*mut u8,cap:usize)->i32{
     unsafe{wbd_xdp_rx_cold_read(raw as *mut c_void,dst,cap)}

@@ -58,32 +58,37 @@ DWORD physical_index(const unsigned char* ip,const unsigned char* mac){
     return result;
 }
 }
-extern "C" void* wbd_xdp_tx_open_index(DWORD ifindex){
+static TxOwner* open_tx(DWORD ifindex,UINT32 slots,XSK_BIND_FLAGS mode,HRESULT* result){
     auto* o=static_cast<TxOwner*>(HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(TxOwner)));
-    if(!o)return nullptr;
+    if(!o){*result=E_OUTOFMEMORY;return nullptr;}
     HRESULT status=E_OUTOFMEMORY;
     XSK_UMEM_REG reg{};
     XSK_RING_INFO_SET info{};
     UINT32 size=sizeof(info);
-    o->umem=static_cast<unsigned char*>(VirtualAlloc(nullptr,Slots*Chunk,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE));
+    o->umem=static_cast<unsigned char*>(VirtualAlloc(nullptr,slots*Chunk,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE));
     if(!o->umem)goto fail;
     status=XskCreate(&o->socket);if(FAILED(status))goto fail;
-    reg.TotalSize=Slots*Chunk;reg.ChunkSize=Chunk;reg.Address=o->umem;
+    reg.TotalSize=slots*Chunk;reg.ChunkSize=Chunk;reg.Address=o->umem;
     status=XskSetSockopt(o->socket,XSK_SOCKOPT_UMEM_REG,&reg,sizeof(reg));if(FAILED(status))goto fail;
     // Generic is the explicit first comparison on WSL vEthernet.
-    status=XskBind(o->socket,ifindex,0,XSK_BIND_FLAG_TX|XSK_BIND_FLAG_GENERIC);if(FAILED(status))goto fail;
-    status=XskSetSockopt(o->socket,XSK_SOCKOPT_TX_RING_SIZE,&Slots,sizeof(Slots));if(FAILED(status))goto fail;
-    status=XskSetSockopt(o->socket,XSK_SOCKOPT_TX_COMPLETION_RING_SIZE,&Slots,sizeof(Slots));if(FAILED(status))goto fail;
+    status=XskBind(o->socket,ifindex,0,XSK_BIND_FLAG_TX|mode);if(FAILED(status))goto fail;
+    status=XskSetSockopt(o->socket,XSK_SOCKOPT_TX_RING_SIZE,&slots,sizeof(slots));if(FAILED(status))goto fail;
+    status=XskSetSockopt(o->socket,XSK_SOCKOPT_TX_COMPLETION_RING_SIZE,&slots,sizeof(slots));if(FAILED(status))goto fail;
     status=XskActivate(o->socket,XSK_ACTIVATE_FLAG_NONE);if(FAILED(status))goto fail;
     status=XskGetSockopt(o->socket,XSK_SOCKOPT_RING_INFO,&info,&size);if(FAILED(status))goto fail;
     XskRingInitialize(&o->tx,&info.Tx);XskRingInitialize(&o->completion,&info.Completion);
-    for(UINT32 i=0;i<Slots;++i)o->free_chunks[i]=UINT64(i)*Chunk;
-    o->free_count=Slots;
-    std::fprintf(stderr,"WBD_XDP_TX_READY ifindex=%lu queue=0 slots=%u chunk=%u\n",ifindex,Slots,Chunk);
-    return o;
+    for(UINT32 i=0;i<slots;++i)o->free_chunks[i]=UINT64(i)*Chunk;
+    o->free_count=slots;
+    *result=S_OK;return o;
 fail:
-    std::fprintf(stderr,"WBD_XDP_TX_OPEN_FAILED ifindex=%lu hr=0x%08lx\n",ifindex,(unsigned long)status);
-    close_owner(o);return nullptr;
+    *result=status;close_owner(o);return nullptr;
+}
+extern "C" void* wbd_xdp_tx_open_index(DWORD ifindex){
+    HRESULT status;
+    auto* o=open_tx(ifindex,Slots,XSK_BIND_FLAG_GENERIC,&status);
+    if(o)std::fprintf(stderr,"WBD_XDP_TX_READY ifindex=%lu queue=0 slots=%u chunk=%u provider=generic\n",ifindex,Slots,Chunk);
+    else std::fprintf(stderr,"WBD_XDP_TX_OPEN_FAILED ifindex=%lu hr=0x%08lx\n",ifindex,(unsigned long)status);
+    return o;
 }
 extern "C" void* wbd_xdp_tx_open(const unsigned char* ip,const unsigned char* mac){
     DWORD ifindex=physical_index(ip,mac);
@@ -183,7 +188,7 @@ HRESULT rx_poke(RxQueue* q){
     XSK_NOTIFY_RESULT_FLAGS flags{};
     return XskNotifySocket(q->socket,XSK_NOTIFY_FLAG_POKE_RX,0,&flags);
 }
-HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue,UINT32 slots){
+HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue,UINT32 slots,XSK_BIND_FLAGS mode){
     HRESULT hr;
     XSK_UMEM_REG reg{};
     XSK_RING_INFO_SET info{};
@@ -194,7 +199,7 @@ HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue,UINT32 slots){
     hr=XskCreate(&q->socket);if(FAILED(hr))return hr;
     reg.TotalSize=slots*RxChunk;reg.ChunkSize=RxChunk;reg.Address=q->umem;
     hr=XskSetSockopt(q->socket,XSK_SOCKOPT_UMEM_REG,&reg,sizeof(reg));if(FAILED(hr))return hr;
-    hr=XskBind(q->socket,index,queue,XSK_BIND_FLAG_RX|XSK_BIND_FLAG_GENERIC);if(FAILED(hr))return hr;
+    hr=XskBind(q->socket,index,queue,XSK_BIND_FLAG_RX|mode);if(FAILED(hr))return hr;
     hr=XskSetSockopt(q->socket,XSK_SOCKOPT_RX_RING_SIZE,&slots,sizeof(slots));if(FAILED(hr))return hr;
     hr=XskSetSockopt(q->socket,XSK_SOCKOPT_RX_FILL_RING_SIZE,&slots,sizeof(slots));if(FAILED(hr))return hr;
     hr=XskActivate(q->socket,XSK_ACTIVATE_FLAG_NONE);if(FAILED(hr))return hr;
@@ -222,9 +227,9 @@ HRESULT arm_queue(RxQueue* q){
     SetEvent(q->event);return S_OK;
 }
 }
-extern "C" void* wbd_xdp_rx_open_ports(DWORD index,const UINT16* ports,UINT32 port_count,BOOL udp){
+static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL udp,XSK_BIND_FLAGS mode,HRESULT* result){
     auto* o=static_cast<RxOwner*>(HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(RxOwner)));
-    if(!o)return nullptr;
+    if(!o){*result=E_OUTOFMEMORY;return nullptr;}
     o->port_count=port_count;
     for(UINT32 i=0;i<MaxPorts;++i)o->ports[i]=INVALID_SOCKET;
     const UINT32 slots=udp?DnsSlots:RxSlots;
@@ -237,7 +242,7 @@ extern "C" void* wbd_xdp_rx_open_ports(DWORD index,const UINT16* ports,UINT32 po
     XDP_RSS_CAPABILITIES caps{};UINT32 capSize=sizeof(caps);
     XDP_HOOK_ID hook{XDP_HOOK_L2,XDP_HOOK_RX,XDP_HOOK_INSPECT};
     XDP_RULE rules[MaxPorts]{};
-    XDP_CREATE_PROGRAM_FLAGS flags=XDP_CREATE_PROGRAM_FLAG_GENERIC;
+    XDP_CREATE_PROGRAM_FLAGS flags=mode==XSK_BIND_FLAG_NATIVE?XDP_CREATE_PROGRAM_FLAG_NATIVE:XDP_CREATE_PROGRAM_FLAG_GENERIC;
     // TCP_DST matches IPv4 and IPv6. One non-listening reservation owns
     // the port for the original cold generation on both families.
     if(WSAStartup(MAKEWORD(2,2),&wd))goto fail;
@@ -272,7 +277,7 @@ extern "C" void* wbd_xdp_rx_open_ports(DWORD index,const UINT16* ports,UINT32 po
     for(UINT32 i=0;i<o->count;++i){
         auto* q=&o->queues[i];
         q->umem=o->umem+size_t(i)*slots*RxChunk;
-        hr=open_queue(q,index,i,slots);if(FAILED(hr))goto fail;
+        hr=open_queue(q,index,i,slots,mode);if(FAILED(hr))goto fail;
         if(o->map){hr=XdpMapInsert(o->map,&i,&q->socket);if(FAILED(hr))goto fail;}
     }
     for(UINT32 i=0;i<port_count;++i){
@@ -284,11 +289,44 @@ extern "C" void* wbd_xdp_rx_open_ports(DWORD index,const UINT16* ports,UINT32 po
         rule.Redirect.Target=o->map?o->map:o->queues[0].socket;
     }
     hr=XdpCreateProgram(index,&hook,0,flags,rules,port_count,&o->program);if(FAILED(hr))goto fail;
-    std::fprintf(stderr,"WBD_XDP_RX_READY ifindex=%lu queues=%u port=%u ports=%u slots_per_queue=%u chunk=%u udp=%u\n",index,o->count,ports[0],port_count,slots,RxChunk,unsigned(udp!=0));
-    return o;
+    *result=S_OK;return o;
 fail:
-    std::fprintf(stderr,"WBD_XDP_RX_OPEN_FAILED ifindex=%lu port=%u queues=%u hr=0x%08lx\n",index,ports[0],o->count,(unsigned long)hr);
-    close_rx(o);return nullptr;
+    *result=hr;close_rx(o);return nullptr;
+}
+static bool provider_unavailable(HRESULT hr){
+    // Official driver XskBind returns STATUS_NOT_FOUND when no matching
+    // RX/TX hook provider exists, or STATUS_NOT_SUPPORTED for capabilities.
+    return hr==HRESULT_FROM_WIN32(ERROR_NOT_FOUND)||
+           hr==HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED)||
+           hr==static_cast<HRESULT>(0xD0000225u)||
+           hr==static_cast<HRESULT>(0xD00000BBu);
+}
+extern "C" int wbd_xdp_open_carrier(DWORD index,const UINT16* ports,UINT32 count,BOOL udp,void** handles){
+    const UINT32 tx_slots=udp?DnsSlots:Slots;
+    // Native when the actual interface supports both paths; Generic for
+    // ordinary NIC/vEthernet. Never switch one half of an established pair.
+    for(UINT32 attempt=0;attempt<2;++attempt){
+        const auto mode=attempt==0?XSK_BIND_FLAG_NATIVE:XSK_BIND_FLAG_GENERIC;
+        HRESULT status;
+        auto* tx=open_tx(index,tx_slots,mode,&status);
+        if(tx){
+            auto* rx=open_rx(index,ports,count,udp,mode,&status);
+            if(rx){
+                const char* provider=attempt==0?"native":"generic";
+                std::fprintf(stderr,"WBD_XDP_TX_READY ifindex=%lu queue=0 slots=%u chunk=%u provider=%s\n",index,tx_slots,Chunk,provider);
+                std::fprintf(stderr,"WBD_XDP_RX_READY ifindex=%lu queues=%u port=%u ports=%u slots_per_queue=%u chunk=%u udp=%u provider=%s\n",index,rx->count,ports[0],count,udp?DnsSlots:RxSlots,RxChunk,unsigned(udp!=0),provider);
+                handles[0]=rx;handles[1]=tx;return 1;
+            }
+            close_owner(tx);
+        }
+        if(attempt==0&&provider_unavailable(status)){
+            std::fprintf(stderr,"WBD_XDP_NATIVE_UNAVAILABLE ifindex=%lu hr=0x%08lx\n",index,(unsigned long)status);
+            continue;
+        }
+        std::fprintf(stderr,"WBD_XDP_CARRIER_OPEN_FAILED ifindex=%lu port=%u provider=%s hr=0x%08lx\n",index,ports[0],attempt==0?"native":"generic",(unsigned long)status);
+        return 0;
+    }
+    return 0;
 }
 extern "C" size_t wbd_xdp_rx_borrow(void* raw,RxFrame* frames,size_t max){
     auto* o=static_cast<RxOwner*>(raw);
