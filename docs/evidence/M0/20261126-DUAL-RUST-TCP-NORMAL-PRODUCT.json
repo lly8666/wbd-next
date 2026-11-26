@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "86e3ec30010a59cbb60539b902cb96dc21e04d6a",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Paired experimental Linux Normal/off actual original product Go TLS, native Rust RAW/TUN, client kernel TCP to real origin kernel TCP; nine client-initiated TCP connections, exact bidirectional application bytes, half-close, UDP echo, one delayed reader, client/server Stop, no TPROXY. Native x86_64 and aarch64; not throughput or full mode qualification.",
+  "run_id": 45809301919,
+  "attempt": 1,
+  "jobs": [
+    {
+      "isa": "x86_64",
+      "job_id": 139872660818,
+      "artifact_id": 15112375745,
+      "sha256": "3728f19376c37c18f64a22c20d9e683e7eb36576e74e8984ab193c9f69c957b7",
+      "first_response_after_request_fin_ns": 16547512,
+      "connect_to_response_ns": 31655281,
+      "client_tun_routed": 7368,
+      "server_tun_routed": 1,
+      "build_sha256": {
+        "client": "f4358b50a00de8d555da7c6f86cd2261091e41e4e03d570f27dc5492081cbccb",
+        "server": "38596d62a3723aa76c75c3a251de5e453aed5680e7fb1e7cd4e43c9d156839d2",
+        "library": "7e7a2eac6f2a9533229f6aac12ac81882aff9131be1854455e0b1a573f0dd793"
+      }
+    },
+    {
+      "isa": "aarch64",
+      "job_id": 139872660286,
+      "artifact_id": 15111311196,
+      "sha256": "4feec000c95ba3ea48b59ee94f6bbfcf586dcd5f873284f08706f9b3a9e2f687",
+      "first_response_after_request_fin_ns": 14646590,
+      "connect_to_response_ns": 31835464,
+      "client_tun_routed": 5246,
+      "server_tun_routed": 1,
+      "build_sha256": {
+        "client": "929eb2f0c1d1ee56e95b0ac21645f81fcbf9ea3f04690ea00bb7863158146545",
+        "server": "4fc62dd0ca82dea9d2ef365d163b06e383c7770b2fcc58bf01fe954f9b2a69b2",
+        "library": "f73f9b282268daad80d67f0c841ff6e30942a836978c0e5bd8822b6eb88eca2d"
+      }
+    }
+  ],
+  "each": {
+    "upload_bytes": 4194304,
+    "download_bytes": 11534336,
+    "connections": 9,
+    "concurrent_connections": 8,
+    "single_upload_sha256": "794ef28c10ca06191a3c7682e15668ab8c0dc13d3d11809535018667664f65d8",
+    "single_download_sha256": "c28e4d075c2da32b38414976bfe8c8a3f9b44c80341b246049afb3ee46eb4ac8",
+    "udp_echo": true,
+    "half_close": true,
+    "client_exit": 0,
+    "server_exit": 0,
+    "queue_drops": 0,
+    "backpressure": 0,
+    "owned_stop": true
+  },
+  "artifact_review": "Both downloaded ZIP SHA256 match GitHub digest; independently checked source/arch, build manifest vs SHA256SUMS, client and origin application receipts and deterministic SHAKE payload hashes, START/STOP and routing logs. Build binaries themselves not included in ZIP; binary SHA256 values are manifest claims, not independent rehashes. Observed timings are not paired performance evidence.",
+  "governance": [
+    {
+      "run_id": 45809301985,
+      "result": "FAIL",
+      "reason": "Feature declaration and 121 tests pass; inherited branch H2416 cursor structure failure."
+    },
+    {
+      "run_id": 45809301890,
+      "result": "FAIL",
+      "reason": "Same inherited cursor, 2 failures/2 errors; historical evidence unchanged."
+    },
+    {
+      "run_id": 45809609715,
+      "result": "PASS",
+      "scope": "main H2451 governance only"
+    }
+  ],
+  "product": "PASS_SCOPED_NORMAL",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "not_run": [
+    "Fixed/Auto/Game",
+    "server-local service and source-policy parity",
+    "generation handoff/reconnect",
+    "multiple leases",
+    "same-host performance",
+    "Windows"
+  ]
+}

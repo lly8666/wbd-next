@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Pinned pktkit TCP with paired original Linux Normal native owner integration; functional qualification pending.",
+  "summary": "Pinned pktkit TCP with paired original Linux Normal native owner integration; scoped real-product dual-ISA function PASS.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -30,7 +30,8 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-WIP.md",
     "crates/wbd-engine/src/v4_rust_tcp/pktkit/UPSTREAM.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-WIP.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-WIP.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-WIP.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md"
   ],
   "verification": [
     {
@@ -49,7 +50,21 @@
     },
     {
       "platform": "linux/x86_64",
-      "scope": "Original product TUN-to-origin TCP, UDP, Stop and same-host performance",
+      "scope": "Paired Normal actual product TCP bidirectional bytes, half-close, concurrency, UDP, owned Stop",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "86e3ec30010a59cbb60539b902cb96dc21e04d6a",
+      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-NORMAL-PRODUCT.json"
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "Same-host splice performance",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "Other affected modes, multiple leases and generation handoff",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
@@ -70,7 +85,21 @@
     },
     {
       "platform": "linux/aarch64",
-      "scope": "Original product TUN-to-origin TCP, UDP, Stop and same-host performance",
+      "scope": "Paired Normal actual product TCP bidirectional bytes, half-close, concurrency, UDP, owned Stop",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "86e3ec30010a59cbb60539b902cb96dc21e04d6a",
+      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-NORMAL-PRODUCT.json"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "Same-host splice performance",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "Other affected modes, multiple leases and generation handoff",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
@@ -78,7 +107,7 @@
   ],
   "limitations": [
     "Paired Linux Normal/off only; FEC and Game modes not integrated, not interoperable with old TCP peer",
-    "Actual product, multi-lease, generation handoff and performance unverified on this SOURCE",
+    "Normal scoped product PASS; server-local/source-policy parity, multi-lease, generation handoff and performance unverified.",
     "Old splice retained for same-host comparison; Windows unchanged"
   ],
   "promotion": null
