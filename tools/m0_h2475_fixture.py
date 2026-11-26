@@ -39,18 +39,31 @@ def shape(directory,delay):
             wsl("python3",wpath(ROOT/"tools/m0_wl_netem.py"),"snapshot",wpath(directory),"v2",wpath(ROOT/"scenarios/h2441-win-bbr-clean.json"),timeout=45)
         wsl(*args,timeout=60)
     return {"delay_ms":delay,"loss_pct":0}
+def cleanup_ok(receipt):
+    # This is a fresh dedicated CI guest. Deleting an owned root can
+    # regenerate kernel default qdiscs with new identities. Record both
+    # complete states and require absence of all test-owned objects.
+    allowed={"noqueue","pfifo_fast","fq_codel","mq"}
+    return (not receipt["ifb_present"] and not receipt["owner_present"]
+            and all(receipt[k] and all(q["kind"] in allowed and q.get("handle")!="ffff:" for q in receipt[k])
+                    for k in ("before","after")))
 def preflight(directory):
     directory.mkdir(parents=True,exist_ok=True)
     commands=wsl("sh","-c","command -v tc; command -v ip; command -v ss; command -v python3; command -v sudo")
     save(directory/"commands.json",{"path":GUEST_PATH,"commands":commands,"tc_version":wsl("tc","-V")})
-    before=wsl("tc","-j","qdisc","show","dev","eth0")
+    before=json.loads(wsl("tc","-j","qdisc","show","dev","eth0"))
+    save(directory/"default-qdisc-before.json",before)
     try:shape(directory,200)
     finally:shape(directory,0)
-    after=wsl("tc","-j","qdisc","show","dev","eth0")
-    def identity(raw):
-        return [{k:v for k,v in q.items() if k!="refcnt"} for q in json.loads(raw)]
-    if identity(before)!=identity(after):raise RuntimeError("preflight qdisc restore differs")
-    save(directory/"preflight.json",{"passed":True,"before":json.loads(before),"after":json.loads(after)})
+    after=json.loads(wsl("tc","-j","qdisc","show","dev","eth0"))
+    links=json.loads(wsl("ip","-j","link","show"))
+    receipt={"before":before,"after":after,"identical":before==after,
+             "ifb_present":any(x["ifname"]=="ifbwlm0" for x in links),
+             "owner_present":(directory/"wl-n0-netem-owned.json").exists()}
+    receipt["passed"]=cleanup_ok(receipt)
+    save(directory/"preflight.json",receipt)
+    print("H2475_NETEM_RESTORE "+json.dumps(receipt),flush=True)
+    if not receipt["passed"]:raise RuntimeError("default queue or owned netem cleanup check failed")
     print("H2475_REAL_NETEM_PREFLIGHT_PASS",flush=True)
 # Single WSL invocation for each boundary, no packet capture or payload retention.
 SNAPSHOT=r"""

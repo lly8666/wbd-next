@@ -19,6 +19,14 @@ class Test(unittest.TestCase):
         self.assertFalse(p.drops(a,b)["zero"])
         self.assertFalse(p.drops(b,a)["available"])
         self.assertFalse(p.drops(a,{})["available"])
+    def test_cleanup(self):
+        r={"before":[{"kind":"mq","handle":"0:"}],"after":[{"kind":"mq","handle":"8001:"}],
+           "ifb_present":False,"owner_present":False}
+        self.assertTrue(f.cleanup_ok(r))
+        r["after"].append({"kind":"ingress","handle":"ffff:"})
+        self.assertFalse(f.cleanup_ok(r))
+        r["after"].pop();r["ifb_present"]=True
+        self.assertFalse(f.cleanup_ok(r))
     def test_readback(self):
         x={"qdisc":{d:"qdisc netem 10: root limit 32768 delay 200ms" for d in ("eth0","ifbwlm0")},
            "filters":"match 000001bb/0000ffff at 20\nmirred\nmatch 00001452/0000ffff at 20\nmirred"}

@@ -269,3 +269,5 @@ jobs:
             result/h1706-ubuntu-*
           if-no-files-found: warn
           retention-days: 14
+
+# Recheck default qdisc state and owned resource cleanup after real preflight.
