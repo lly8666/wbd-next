@@ -1,6 +1,8 @@
 // M0 WinXDP carrier qualification. Not the WBD wire protocol or product path.
 // SDK header-only API; RX->TX reuses the exact same registered chunk.
 #define XDP_API_VERSION 3
+#define XDP_INCLUDE_WINCOMMON
+#define NOMINMAX
 #include <xdpapi.h>
 #include <afxdp_helper.h>
 #include <cstdio>
@@ -9,6 +11,7 @@
 #include <utility>
 #include <memory>
 #include <cstdint>
+#include <initializer_list>
 
 constexpr UINT32 RingSize=256, Chunk=2048, Target=64, Batch=16;
 struct Owner {
