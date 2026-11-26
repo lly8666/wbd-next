@@ -175,11 +175,42 @@ pub fn build_bytes<'b>(
 
     let options = authenticated_options.unwrap_or(&[]);
     let packet = &mut scratch[..plan.required];
-    let header_len = plan.overhead;
+    packet[plan.overhead..].copy_from_slice(wire);
+    finish_data_packet(tuple, presentation, seq64, options, packet);
+    Ok(packet)
+}
+
+/// Complete the envelope around a frozen record already staged at
+/// BASE_OVERHEAD; native TX needs no intermediate ciphertext slab.
+pub fn finish_bytes_in_place<'b>(
+    tuple: Ipv4Tuple<'_>, presentation: Presentation, seq64: u64,
+    wire_len: usize, mtu: usize, scratch: &'b mut [u8],
+) -> Result<&'b [u8], PacketError> {
+    check_tuple(tuple)?;
+    let plan = measure(wire_len, None)?;
+    if plan.required > mtu {
+        return Err(PacketError::MtuExceeded { required: plan.required, mtu });
+    }
+    if scratch.len() < plan.required {
+        return Err(PacketError::ScratchTooSmall {
+            required: plan.required, available: scratch.len(),
+        });
+    }
+    let packet = &mut scratch[..plan.required];
+    finish_data_packet(tuple, presentation, seq64, &[], packet);
+    Ok(packet)
+}
+
+fn finish_data_packet(
+    tuple: Ipv4Tuple<'_>, presentation: Presentation, seq64: u64,
+    options: &[u8], packet: &mut [u8],
+) {
+    let required = packet.len();
+    let header_len = BASE_OVERHEAD + options.len();
     packet[..header_len].fill(0);
     let (ip, tcp) = packet.split_at_mut(IPV4_HEADER_LEN);
     ip[0] = 0x45; // v4, IHL=5; original Go does not emit IPv4 options.
-    ip[2..4].copy_from_slice(&(plan.required as u16).to_be_bytes());
+    ip[2..4].copy_from_slice(&(required as u16).to_be_bytes());
     ip[4..6].copy_from_slice(&presentation.ip_id.to_be_bytes());
     ip[6..8].copy_from_slice(&0x4000u16.to_be_bytes()); // DF, no fragmentation.
     ip[8] = presentation.persona.ttl();
@@ -198,14 +229,12 @@ pub fn build_bytes<'b>(
     tcp[13] = TCP_DATA_FLAGS;
     tcp[14..16].copy_from_slice(&presentation.advertised_window.to_be_bytes());
     tcp[TCP_HEADER_LEN..TCP_HEADER_LEN + options.len()].copy_from_slice(options);
-    tcp[TCP_HEADER_LEN + options.len()..].copy_from_slice(wire);
 
     // TCP one’s-complement pseudoheader: IPv4 src/dst, 00 06, TCP length.
     // Works with odd record lengths and every negotiated option length.
     let sum = sum_words(tuple.src_ip) + sum_words(tuple.dst_ip)
         + u64::from(TCP_PROTOCOL) + tcp.len() as u64 + sum_words(tcp);
     tcp[16..18].copy_from_slice(&finish_checksum(sum).to_be_bytes());
-    Ok(&scratch[..plan.required])
 }
 
 
@@ -481,6 +510,22 @@ mod tests {
         assert_eq!(got.len(),46);
         assert_eq!(&out[46..],[0xa5;54]);
         check_packet(&want);
+    }
+
+    #[test]
+    fn native_in_place_data_matches_copy_builder_with_reused_scratch() {
+        let mut direct = [0xa5; 1500];
+        let mut old = [0x5a; 1500];
+        for n in [1460 - BASE_OVERHEAD, 1, 13, 1400, 2] {
+            let record: Vec<u8> = (0..n).map(|i| (i ^ n) as u8).collect();
+            direct[BASE_OVERHEAD..BASE_OVERHEAD+n].copy_from_slice(&record);
+            let a = build_bytes(packet_tuple(), state(), 0xffff_fffe,
+                &record, None, 1460, &mut old).unwrap();
+            let b = finish_bytes_in_place(packet_tuple(), state(), 0xffff_fffe,
+                n, 1460, &mut direct).unwrap();
+            assert_eq!(a, b);
+            check_packet(b);
+        }
     }
 
     #[test]

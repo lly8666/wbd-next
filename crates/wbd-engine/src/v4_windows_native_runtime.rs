@@ -19,7 +19,7 @@
      WintunRx, WintunTx, WakeEvent, ReadResult, WaitResult,
  };
  use wbd_platform::ipv4_tcp::{
-     build_bytes, build_presentation_ack, build_presentation_ack_sack,
+     build_bytes, finish_bytes_in_place, BASE_OVERHEAD, build_presentation_ack, build_presentation_ack_sack,
      SackRange32 as WireSack, Ipv4Tuple, PacketPersona, Presentation,
  };
  use wbd_platform::rx_ipv4_tcp::{parse_data_packet_fast,parse_ack_packet,extend_seq32,TrustedRx};
@@ -144,6 +144,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  }
  const MAX_IPV4:usize=2048;
  const MAX_LINK:usize=2304;
+ const FRAME_RECORD_OFFSET:usize=14+BASE_OVERHEAD;
  const MAX_NPF:usize=65535+64;
  const IDLE_WAIT:u32=u32::MAX;
  // Rust HealthClock only: never coalesce authenticated dead with BAD_STAGE=3.
@@ -488,11 +489,11 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      lane:&Arc<Mutex<Entry>>,tun:&mut WintunRx,npf:&mut NpcapTx,
      counters:&Counters,ip_id:&mut u16,fixed:bool,
      split:&mut Option<NativeSplitWorker>,now_ms:u64,
+     sources:&mut [[u8;MAX_IPV4];BATCH],frames:&mut [[u8;MAX_LINK];BATCH],
  )->Result<StageWork,i32>{
      // One bounded Wintun drain, ONE Entry lock to seal ALL ready sources,
      // ONE NPF ready-only queue and ONE lock to settle real driver receipts.
      // No Vec, Go call, thread pool or shared registry lookup per packet.
-     let mut sources=[[0u8;MAX_IPV4];BATCH];
      let mut source_len=[0usize;BATCH];
      let mut count=0;
      let mut captured=0usize;
@@ -551,58 +552,71 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          crate::v4_ingress_fair::ready_order(std::array::from_fn(|i|
              crate::v4_ingress_fair::flow_key(&sources[i][..source_len[i]])),count)
      }else{std::array::from_fn(|i|i)};
-     let mut wire=[[0u8;MAX_IPV4];BATCH];
      let mut meta=[(0u64,0u32,0usize);BATCH];
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
+     let mut native_off_loan=None;
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
-         // Compute the original M1 record ceiling ONCE per ready batch.
-         // OFF/Fixed never invoke the flow parser or derive a second
-         // budget. No kernel read, queue or per-DATA Go call is introduced.
-         let pad_wire_limit=if !fixed&&split.as_ref()
-             .is_some_and(|s|s.startup_padding_enabled()){
-             Some(normal_off_windows_budget(&e)?.record_wire_mtu.min(MAX_IPV4))
-         }else{None};
-         for i in 0..count {
-             let j=order[i];
-             let (used,seq,pn)=if fixed{
+         if fixed{
+             for i in 0..count{
+                 let j=order[i];
                  #[cfg(feature="fec2_product_record")]
                  {
-                     fec2::stage_fixed_source_entry(
+                     let (used,seq,pn)=fec2::stage_fixed_source_entry(
                          &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                         &sources[j][..source_len[j]],&mut wire[i]
-                     )?
+                         &sources[j][..source_len[j]],
+                         &mut frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+MAX_IPV4]
+                     )?;
+                     meta[i]=(pn,seq,used);
                  }
                  #[cfg(not(feature="fec2_product_record"))]
                  {return Err(BAD_STAGE)}
-             }else if let Some(max_record)=pad_wire_limit{
-                 let room=max_record.saturating_sub(
-                     source_len[j].saturating_add(FIXED_WIRE_OVERHEAD));
-                 let pad=split.as_mut().map(|s|s.propose_tunnel_padding(
-                     &sources[j][..source_len[j]],now_ms,room)).unwrap_or(0);
-                 let result=v3_seal_entry_with_padding(
-                     &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                     &sources[j][..source_len[j]],&mut wire[i],pad
-                 )?;
+             }
+         }else{
+             if !v3_ready(&e,cfg.epoch,cfg.luid,cfg.ifindex){return Err(INVALID)}
+             let budget=normal_off_windows_budget(&e)?;
+             let pad_enabled=split.as_ref().is_some_and(|s|s.startup_padding_enabled());
+             let now=m2_clock();
+             // Queue only the packets already captured by this turn. M1's
+             // 32-entry ready queue accommodates the existing 8/16 batch.
+             // No new delay, second queue, worker or PN allocator.
+             for i in 0..count{
+                 let j=order[i];
+                 let source=&sources[j][..source_len[j]];
+                 let pad=if pad_enabled{
+                     let room=budget.record_wire_mtu.min(MAX_IPV4).saturating_sub(
+                         source.len().saturating_add(FIXED_WIRE_OVERHEAD));
+                     split.as_mut().map(|s|s.propose_tunnel_padding(source,now_ms,room))
+                         .unwrap_or(0)
+                 }else{0};
                  staged_pad[i]=pad;
-                 result
-             }else{
-                 v3_seal_entry(
-                     &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                     &sources[j][..source_len[j]],&mut wire[i]
-                 )?
-             };
-             meta[i]=(pn,seq,used);
+                 meta[i]=v3_queue_source(&mut e,source,budget,now,pad,MAX_IPV4)?;
+             }
+             let keep_pending=!v3_native_off_loan(&e);
+             let loan=v3_drain_source_loan(&mut e,now,&meta[..count],keep_pending,|i,wire|{
+                 frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
+                     .copy_from_slice(wire);
+             })?;
+             if keep_pending{e.tx_scratch=loan.recycle();}
+             else{native_off_loan=Some(loan);}
+
          }
      }
-     let mut frames=[[0u8;MAX_LINK];BATCH];
      let mut lens=[0usize;BATCH];
      let ack=counters.ack.load(Ordering::Acquire);
      for i in 0..count {
          let (_,seq,used)=meta[i];
-         let f=packet_frame(cfg,seq,ack,&wire[i][..used],
-             *ip_id,&mut frames[i])?;
-         lens[i]=f.len();
+         let bytes=finish_bytes_in_place(Ipv4Tuple{
+             src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
+             src_port:cfg.local_port,dst_port:cfg.peer_port,
+         },Presentation{ack32:ack,advertised_window:65535,
+             ip_id:*ip_id,persona:PacketPersona::Windows11},
+             u64::from(seq),used,cfg.path_mtu as usize,&mut frames[i][14..])
+             .map_err(|_|INVALID)?;
+         lens[i]=14+bytes.len();
+         frames[i][..6].copy_from_slice(&cfg.next_hop_mac);
+         frames[i][6..12].copy_from_slice(&cfg.source_mac);
+         frames[i][12..14].copy_from_slice(&0x0800u16.to_be_bytes());
          *ip_id=ip_id.wrapping_add(1);
      }
      let (_,last_seq,last_used)=meta[count-1];
@@ -615,11 +629,17 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      }
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
+         let settled_native_off=if let Some(loan)=native_off_loan{
+             v3_finish_native_off_loan(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,loan)?;
+             true
+         }else{false};
          let mut fresh_bytes=0u64;
          for (i,&(pn,seq,used)) in meta[..count].iter().enumerate(){
              let status=kernel_result(result,count,i)?;
-             m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                 pn,seq,used,status)?;
+             if !settled_native_off{
+                 m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
+                     pn,seq,used,status)?;
+             }
              if status==1{
                  fresh_bytes+=lens[i] as u64;
                  counters.tx_copied.fetch_add(1,Ordering::Relaxed);
@@ -951,6 +971,10 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      // existing WAIT_ANY group; Stop always keeps absolute priority.
      let mut socket_wait_head=0u8;
      let mut boundary_tx=BoundaryQpcTrace::new("TX_MAILBOX");
+     // Reuse ready-only source and final frame slabs for the TX owner.
+     // Only the written prefix reaches the driver.
+     let mut sources=[[0u8;MAX_IPV4];BATCH];
+     let mut frames=[[0u8;MAX_LINK];BATCH];
      // Signed-only original normal small TCP: no product-default change.
      let same_turn_direct=cfg!(feature="m0_v4_probe") &&
          std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
@@ -1085,7 +1109,8 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              for _ in 0..RX_WAKE_BATCH/BATCH {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
                  let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
-                     &counters,&mut ip_id,fixed,&mut split,now_ms)?;
+                     &counters,&mut ip_id,fixed,&mut split,now_ms,
+                     &mut sources,&mut frames)?;
                  work+=staged.tunnel;
                  fresh_direct_ingress|=staged.direct>0;
                  direct_progress|=staged.direct>0;

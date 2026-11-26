@@ -26,6 +26,7 @@ use crate::v4_owner_crypto::ProtectedScopedOwner;
 use crate::memory::{Arena,FrozenRecord};
 use crate::runtime::early_rx::EarlyAccepted;
 use crate::runtime::{TxDispatch,RxPacket};
+use crate::runtime::generation::LoanBatch;
 use wbd_types::{MonoNs,RecordPn};
 use wbd_recovery::quality_window::{ReceiveWindows,WindowKey,QualityError,WireReport,
     SendWindowSampler,SendHistory,ClosedWindow,FirstSendStatus};
@@ -1021,7 +1022,7 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         rx_boundary:handoff.rx_boundary,
         rx_unwrapped_high:u64::from(handoff.rx_boundary),
         limit:rx_limit,count:0,bytes:0,
-        owner,arena,tx_scratch:Vec::with_capacity(8),rx_scratch:Vec::with_capacity(8),
+        owner,arena,tx_scratch:Vec::with_capacity(16),rx_scratch:Vec::with_capacity(8),
         authenticated_kind1:VecDeque::with_capacity(MAX_AUTHENTICATED_KIND1),m2:None,
         authenticated_epoch:identity.logical_epoch,
         peer_mss:handoff.peer_mss,
@@ -1480,57 +1481,100 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 fn v3_seal_entry_with_padding(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,ipv4:&[u8],out:&mut [u8],padding:usize
 )->Result<(usize,u32,u64),i32>{
-    if padding>500||!v3_ready(e,epoch,luid,ifindex)||ipv4.len()<20||
-        ipv4[0]>>4!=4 || ipv4.len()>2048 ||
-        ipv4.len().saturating_add(FIXED_WIRE_OVERHEAD).saturating_add(padding)>out.len(){
+    if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
+    let budget=normal_off_windows_budget(e)?;
+    let now=m2_clock();
+    let (pn,seq,used)=v3_queue_source(e,ipv4,budget,now,padding,out.len())?;
+    v3_drain_sources(e,now,&[(pn,seq,used)],|_,wire|{
+        out[..wire.len()].copy_from_slice(wire);
+    })?;
+    Ok((used,seq,pn))
+}
+
+// Native TX holds the same Entry throughout a ready source batch. The
+// budget, generation and monotonic timestamp belong to that entire turn.
+// Each packet still uses the original M1 PN/Seq allocator and AEAD.
+fn v3_queue_source(e:&mut Entry,ipv4:&[u8],budget:FrameBudget,
+    now:MonoNs,padding:usize,out_capacity:usize
+)->Result<(u64,u32,usize),i32>{
+    if padding>500||ipv4.len()<20||ipv4.len()>2048||
+        ipv4[0]>>4!=4||ipv4[0]&15<5||
+        ipv4.len()>budget.single_business_payload_mtu||
+        ipv4.len().saturating_add(FIXED_WIRE_OVERHEAD).saturating_add(padding)>out_capacity{
         return Err(INVALID)
     }
-    let budget=normal_off_windows_budget(e)?;
-    if ipv4.len()>budget.single_business_payload_mtu ||
-        ipv4[0]&15<5{return Err(INVALID)}
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[14..14+ipv4.len()].copy_from_slice(ipv4);
-    // The same original M1 TX owner also seals M2 kind1 controls at
-    // m2_clock(): stale zero time after a genuine control deadline can
-    // reverse its clock and reject an otherwise valid first DATA packet.
-    let now=m2_clock();
-    // OFF calls the original unchanged M1 method; nonzero padding uses
-    // the existing authenticated LINK pad marker, not an IPv4 suffix.
-    // Original PN, stream Seq, immutable repair shadow and kernel loan
-    // are spent once after the size preflight, not by a second sealer.
-    let (pn,seq,used)=if padding==0{
-        e.owner.seal_normal_off_one(
-            slab,ipv4.len(),budget,0,now)
+    if padding==0{
+        e.owner.seal_normal_off_one(slab,ipv4.len(),budget,0,now)
     }else{
-        e.owner.seal_normal_off_one_padded(
-            slab,ipv4.len(),budget,0,now,padding)
-    }.map_err(|_|BAD_STAGE)?;
-    // Copy only the SAME M1 immutable FrozenRecord into the caller's bounded
-    // carrier buffer while its genuine LoanBatch remains borrowed; recycle
-    // generation-scoped loans on *every* path, including rejected batches.
-    let tx_storage=std::mem::take(&mut e.tx_scratch);
-    let batch=match e.owner.drain_tx(now,tx_storage){
+        e.owner.seal_normal_off_one_padded(slab,ipv4.len(),budget,0,now,padding)
+    }.map_err(|_|BAD_STAGE)
+}
+
+// Drain already-ready original records once, not one LoanBatch per packet.
+// The caller writes each immutable wire prefix into its final carrier slot.
+// Driver receipt and optional shadow admission remain after actual NPF TX.
+fn v3_drain_sources(e:&mut Entry,now:MonoNs,meta:&[(u64,u32,usize)],
+    copy_wire:impl FnMut(usize,&[u8])
+)->Result<(),i32>{
+    let batch=v3_drain_source_loan(e,now,meta,true,copy_wire)?;
+    e.tx_scratch=batch.recycle();
+    Ok(())
+}
+
+// Native synchronous Normal OFF has no repair shadow or Auto sender
+// window to settle. Its original M1 loan itself can span the driver
+// call. The Go ABI and repair/Fixed paths still require pending handles.
+fn v3_native_off_loan(e:&Entry)->bool {
+    !e.feature7 && e.m2.as_ref().is_some_and(|m|
+        !m.outer_repair_enabled && !m.auto_low_rate_mode &&
+        m.quality_sender.is_none())
+}
+fn v3_drain_source_loan(e:&mut Entry,now:MonoNs,meta:&[(u64,u32,usize)],
+    keep_pending:bool,mut copy_wire:impl FnMut(usize,&[u8])
+)->Result<LoanBatch<TxDispatch>,i32>{
+    let storage=std::mem::take(&mut e.tx_scratch);
+    let batch=match e.owner.drain_tx(now,storage){
         Ok(batch)=>batch,
         Err((_,storage))=>{e.tx_scratch=storage;return Err(BAD_STAGE)}
     };
-    let accepted=(||{
+    let result=(||{
         let ready=e.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
-        if ready.len()!=1 || ready[0].record.bytes().len()!=used {
-            return Err(BAD_STAGE)
-        }
-        if let Some(m)=e.m2.as_mut(){
-            let original=&ready[0].record;
-            if original.metadata().pn!=RecordPn(pn) ||
-                original.metadata().seq.0 as u32!=seq ||
-                m.pending.insert(RecordPn(pn),original.clone()).is_some() {
+        if ready.len()!=meta.len(){return Err(BAD_STAGE)}
+        for (i,(row,&(pn,seq,used))) in ready.iter().zip(meta).enumerate(){
+            let original=&row.record;
+            if original.bytes().len()!=used||
+                original.metadata().pn!=RecordPn(pn)||
+                original.metadata().seq.0 as u32!=seq{
                 return Err(BAD_STAGE)
             }
+            if keep_pending{
+                if let Some(m)=e.m2.as_mut(){
+                    if m.pending.insert(RecordPn(pn),original.clone()).is_some(){
+                        return Err(BAD_STAGE)
+                    }
+                }
+            }
+            copy_wire(i,original.bytes());
         }
-        out[..used].copy_from_slice(ready[0].record.bytes());
-        Ok((used,seq,pn))
+        Ok(())
     })();
+    if let Err(err)=result{
+        e.tx_scratch=batch.recycle();
+        return Err(err)
+    }
+    Ok(batch)
+}
+// The driver has returned; the exact same checked original M1 batch is
+// now finished. OFF records have no M2 per-record state. A short or
+// uncertain send still burns the original PN and is never resubmitted.
+fn v3_finish_native_off_loan(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
+    batch:LoanBatch<TxDispatch>
+)->Result<(),i32>{
+    let current=v3_ready(e,epoch,luid,ifindex)&&v3_native_off_loan(e);
     e.tx_scratch=batch.recycle();
-    accepted
+    if current{Ok(())}else{Err(BAD_STAGE)}
 }
 // One bounded zero-wait staged SOURCE batch (not a kernel submission).
 // Native Go captures a maximum of four actually ready Wintun frames and
@@ -2830,6 +2874,107 @@ mod tests {
         }
         assert!(e.m2.as_ref().unwrap().pending.is_empty());
         assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
+        drop(e);
+        assert_eq!(quiesce_wintun(&mut r,h,ep,81,18),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
+    fn m0_windows_native_m1_ready_batch_sixteen_then_sparse(){
+        let mut r=Registry{generation:612,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let ep=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,ep,81,18),OK);
+        assert!(set_path_mtu(&mut r,h,ep,81,18,1400).is_ok());
+        let mut e=r.entries[&h].lock().unwrap();
+        m2_arm_entry(&mut e,ep,81,18).unwrap();
+        let budget=normal_off_windows_budget(&e).unwrap();
+        let mut next_seq=None;
+        let mut next_pn=None;
+        for count in [16usize,1,8]{
+            let now=m2_clock();
+            let mut meta=[(0u64,0u32,0usize);16];
+            let mut wire=[[0u8;2048];16];
+            for (i,slot) in meta[..count].iter_mut().enumerate(){
+                let mut ipv4=[0u8;90];
+                ipv4[0]=0x45;
+                ipv4[2..4].copy_from_slice(&90u16.to_be_bytes());
+                ipv4[8]=64;ipv4[9]=17;ipv4[20]=i as u8;
+                let pad=if i%2==0{0}else{11};
+                *slot=v3_queue_source(&mut e,&ipv4,budget,now,pad,2048).unwrap();
+                let (pn,seq,used)=*slot;
+                if let Some(p)=next_pn{assert_eq!(pn,p)}
+                if let Some(s)=next_seq{assert_eq!(seq,s)}
+                assert_eq!(used,90+FIXED_WIRE_OVERHEAD+pad);
+                next_pn=Some(pn+1);
+                next_seq=Some(seq.wrapping_add(used as u32));
+            }
+            assert!(e.m2.as_ref().unwrap().pending.is_empty());
+            v3_drain_sources(&mut e,now,&meta[..count],|i,bytes|{
+                wire[i][..bytes.len()].copy_from_slice(bytes);
+            }).unwrap();
+            assert_eq!(e.m2.as_ref().unwrap().pending.len(),count);
+            assert!(e.tx_scratch.is_empty());
+            assert!(e.tx_scratch.capacity()>=16);
+            for (i,&(pn,seq,used)) in meta[..count].iter().enumerate(){
+                assert_eq!(e.m2.as_ref().unwrap().pending[&RecordPn(pn)].bytes(),&wire[i][..used]);
+                m2_kernel_firstsend_entry(&mut e,ep,81,18,pn,seq,used,2).unwrap();
+            }
+            assert!(e.m2.as_ref().unwrap().pending.is_empty());
+        }
+        drop(e);
+        assert_eq!(quiesce_wintun(&mut r,h,ep,81,18),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+
+    #[test]
+    fn m0_windows_native_off_loan_spans_driver_without_pending_clones(){
+        let mut r=Registry{generation:614,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let ep=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,ep,81,18),OK);
+        assert!(set_path_mtu(&mut r,h,ep,81,18,1400).is_ok());
+        let mut e=r.entries[&h].lock().unwrap();
+        m2_arm_entry(&mut e,ep,81,18).unwrap();
+        assert!(!v3_native_off_loan(&e));
+        m2_set_outer_repair_entry(&mut e,ep,81,18,false).unwrap();
+        assert!(v3_native_off_loan(&e));
+        let budget=normal_off_windows_budget(&e).unwrap();
+        let mut frame=[0u8;90];frame[0]=0x45;
+        frame[2..4].copy_from_slice(&90u16.to_be_bytes());
+        frame[8]=64;frame[9]=17;
+        for count in [16usize,1,8]{
+            let now=m2_clock();
+            let mut meta=[(0u64,0u32,0usize);16];
+            let mut wire=[[0u8;2048];16];
+            for (i,row) in meta[..count].iter_mut().enumerate(){
+                frame[20]=i as u8;
+                *row=v3_queue_source(&mut e,&frame,budget,now,0,2048).unwrap();
+            }
+            let loan=v3_drain_source_loan(&mut e,now,&meta[..count],false,|i,bytes|{
+                wire[i][..bytes.len()].copy_from_slice(bytes);
+            }).unwrap();
+            assert!(e.m2.as_ref().unwrap().pending.is_empty());
+            assert!(e.tx_scratch.is_empty());
+            // The real original dispatch owns the frozen bytes until the
+            // synchronous driver's return; no extra shadow/pending handle.
+            let ready=e.owner.checked_tx_ready(&loan).unwrap();
+            for (i,row) in ready.iter().enumerate(){
+                assert_eq!(row.record.bytes(),&wire[i][..meta[i].2]);
+            }
+            v3_finish_native_off_loan(&mut e,ep,81,18,loan).unwrap();
+            assert!(e.m2.as_ref().unwrap().pending.is_empty());
+            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
+            assert!(e.tx_scratch.capacity()>=16);
+            // FFI cannot re-report a synchronous native loan as new DATA.
+            let (pn,seq,used)=meta[0];
+            assert_eq!(m2_kernel_firstsend_entry(&mut e,ep,81,18,pn,seq,used,1),Err(INVALID));
+        }
         drop(e);
         assert_eq!(quiesce_wintun(&mut r,h,ep,81,18),OK);
         assert_eq!(stop(&mut r,h),OK);
