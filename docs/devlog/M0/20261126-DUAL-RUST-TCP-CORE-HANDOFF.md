@@ -1,0 +1,5 @@
+# M0-DUAL-RUST-TCP core WIP handoff
+
+Work branch: experiment/m0-dual-rust-tcp; exact WIP source 105da799ad82b9423d778fd1850bf2503d9909a6, Draft PR #80. First core increment has been pushed; branch ancestry remains experimental and must not be merged wholesale. Source-side implementation and feature card are on that branch, not main. Core source uses fixed pktkit v0.1.12 at 836ae122e150de50a309c7f1703adb364e13d4c9 and retains Rust 1.85.1; product route is not connected. Initial source qualification is in flight: Actions 45803683868 (native core x86_64/ARM64), 45803683724 (governance), 45803683656 (maintenance). No conclusions or product/performance PASS yet. On resume inspect exact runs/jobs/artifacts before dispatch. Previous baseline H2480 run 45791400655 had no valid intervention; initial branch governance 45801138238 failed. Preserve both histories.
+
+Next: fix any actual core build/test failures, complete Linux Normal TUN to origin through original native owner using shared TCP core, then real UDP/Stop and paired splice comparison on both native ISAs. No outer protocol changes; original splice retained. No physical deployment.
