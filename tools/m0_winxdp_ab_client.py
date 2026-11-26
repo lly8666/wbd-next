@@ -397,7 +397,8 @@ def main():
         ready=[l for l in text.splitlines() if "WBD_XDP_TX_READY " in l]
         stop=[l for l in text.splitlines() if "WBD_XDP_TX_STOP " in l]
         row["xdp_ready"]=ready
-        row["xdp_stop"]={k:int(v) for k,v in re.findall(r"(published|completed_before_close|pokes|invalid)=(\\d+)",stop[-1])} if stop else None
+        row["xdp_stop_raw"]=stop
+        row["xdp_stop"]={k:int(v) for k,v in re.findall(r"(published|completed_before_close|pokes|invalid)=(\d+)",stop[-1])} if stop else None
         q=row["xdp_stop"] or {}
         row["mode_ok"]=(len(ready)==1 and len(stop)==1 and q.get("published",0)>0 and q.get("completed_before_close",0)>0 and q.get("invalid")==0 and "WBD_XDP_TX_RING_FULL" not in text and "WBD_XDP_TX_POKE_FAILED" not in text) if mode_for(i)=="B" else not ready and not stop
         row["native_stop_receipts"]=[l for l in text.splitlines() if "WBD_WINDOWS_NATIVE_OUTER_REPAIR " in l or "WBD_WINDOWS_RUST_NATIVE_RX" in l]
@@ -467,7 +468,7 @@ def main():
             if "sink_before" not in r or "sink_after" not in r:raise RuntimeError("business boundary missing; stop infrastructure failure")
             if i<0 and (r.get("connect_elapsed_s",0)<.32 or not r["netem_active"]["both_used"]):
                 raise RuntimeError("400ms bare TCP handshake or bidirectional netem traffic not demonstrated")
-            if i>=0 and (not r["netem_active"]["both_used"] or not r["mode_ok"]):raise RuntimeError("actual netem or RX mode identity not demonstrated")
+            if i>=0 and (not r["netem_active"]["both_used"] or not r["mode_ok"]):raise RuntimeError("actual netem or TX mode identity not demonstrated")
         control("server","/finish")
         if p.wait(30)!=0:raise RuntimeError("local control exit")
         save(OUT/"h2476-windows-post-probe.json",probe.run("windows"))

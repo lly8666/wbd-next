@@ -44,6 +44,8 @@ jobs:
         run: |
           python -m py_compile tools/m0_winxdp_ab_client.py tools/m0_winxdp_ab_server.py tools/m0_h2479_tcp.py tools/m0_winxdp_ab_profile.py tools/m0_h2476_gate.py tools/m0_h2475_fixture.py tools/m0_h2478_profile.py tools/m0_h2470_probe.py tools/m0_h2476_import_wsl.py
           if($LASTEXITCODE -ne 0){throw 'syntax check'}
+          python -c "import re; assert re.findall(r'published=(\d+)', 'published=123') == ['123']"
+          if($LASTEXITCODE -ne 0){throw 'receipt regex test'}
           python tools/test_m0_h2478_profile.py
           if($LASTEXITCODE -ne 0){throw 'profile roundtrip test'}
       - name: Reuse exact completed ISA-L A/B build (15110473153)
