@@ -1,0 +1,1 @@
+H2472 first nine all normal skips: 6 EPYC 7763 (C/D/E/G/H/I), 2 Xeon 8573C (B/F), 1 EPYC 9V74 (A). Runs A45753031386 B45753031347 C45753031464 D45753031369 E45753031580 F45753031648 G45753031506 H45753031392 I45753031481. No business measured. Second bounded nine attempts under same strict flexible model gate, user explicitly requests actual match. No product change.

@@ -477,3 +477,5 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with: {name: h2472-qualification, path: h2472-qualification.json, if-no-files-found: warn, retention-days: 14}
+
+# Second bounded CPU allocation batch: first nine were normal skips.
