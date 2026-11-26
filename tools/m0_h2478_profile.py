@@ -8,7 +8,7 @@ SECONDS=DIRECT_SECONDS=60
 GUEST_PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 def cases(root):
     template=json.loads((root/"tools/m0_h2442_matrix.json").read_text())[0]
-    return [dict(template,budget=r,rate=r,loss=0,profile=-1,isolate=False,rcvbuf=67108864) for r in RATES]
+    return [dict(template,budget=r,rate=r,loss=0,profile=-1,isolate=True,rcvbuf=67108864) for r in RATES]
 def drops(before,after):
     try:
         if set(before["counters"])!=set(after["counters"]):raise ValueError("counter identity changed")

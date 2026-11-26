@@ -132,7 +132,7 @@ def case(i):
             c=CASES[i];prof=c["profile"]
             route=d/"route-key.hex";route.write_text(hashlib.sha256(("H2442-TEST-ONLY/"+os.environ["GITHUB_RUN_ID"]+"/"+os.environ["GITHUB_SHA"]).encode()).hexdigest()+"\n")
             args=[str(BIN/"wbd-client-embedded.exe"),"--native-v4-product","--control-stdin","--server-ip",PEER,"--server-port","443","--source-port",str(41031+2*i),"--server-name","wbd-h2228.example.test","--route-key-hex-file",str(route),"--tls-ca-pem",str(SERVER/"cert.pem"),"--username","bench","--password","H2442-ONLY","--tunnel-id","102030405060708090a0b0c0d0e0f001","--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDH2442","--state-path",str(d/"owned-wal.json"),"--mtu","1160","--lanes","1","--fec-mode","fixed" if prof>=0 else "off","--fec-parity","4" if prof>=0 else "0","--fec.mode","fixed" if prof>=0 else "off","--fec.profile",["light","mild","medium","balanced","high","strong","maximum"][max(0,prof)],"--route-mode","all","--outer-repair","on"]
-            physical=route_for("192.0.2.2") if DIAG else None
+            physical=route_for("192.0.2.2") if c["isolate"] else None
             expected=pin_underlay(d,owned)
             f=(d/"client.log").open("w");p=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=f,stderr=subprocess.STDOUT,text=True,cwd=BIN)
             worker=threading.Thread(target=sample_windows_original_process,args=(p,d/"windows-cpu.jsonl",event),daemon=True);worker.start()
@@ -141,7 +141,7 @@ def case(i):
                 if p.poll() is not None or time.monotonic()>t:raise RuntimeError("actual Windows native READY absent")
                 time.sleep(.2)
             check_underlay(d,expected)
-            if DIAG and c['isolate']:isolate_background(d,physical,isolated)
+            if c['isolate']:isolate_background(d,physical,isolated)
             probe()
             print("H2448_NATIVE_COLD_PROBE_PASS case="+str(i),flush=True)
             save(d/"shape.json",shape(c["loss"],200));time.sleep(1)
@@ -165,7 +165,8 @@ def case(i):
                     (d/name).write_bytes(src.read_bytes());src.unlink()
         except Exception as e:result["shape_clear_error"]=repr(e)
         for sample in samples:sample.join(3)
-        try:unpin_underlay(isolated)
+        # Keep physical /2s through native Stop: do not reopen background routes.
+        try:unpin_underlay([r for r in isolated if r[0].endswith('/32')])
         except Exception as e:result['isolation_cleanup_error']=repr(e)
         if p:
             if p.poll() is None:
@@ -177,6 +178,8 @@ def case(i):
             cl=(d/"client.log").read_text(errors="replace")
             result.update(client_stop=p.returncode==0 and "WBD_WINDOWS_NATIVE_DISCONNECTED_V1" in cl,client_ready="WBD_WINDOWS_CLIENT_READY" in cl,client_panic="panicked at" in cl)
             (d/"route-key.hex").unlink(missing_ok=True)
+        try:unpin_underlay([r for r in isolated if r[0].endswith("/2")])
+        except Exception as e:result["isolation_cleanup_error"]=repr(e)
         try:result["server"]=control("server","/stop")
         except Exception as e:result["server_error"]=repr(e)
         try:unpin_underlay(owned)
@@ -303,6 +306,10 @@ def main():
             before=json.loads(wsl("ip","-s","-j","link","show","dev","eth0"))[0]
             r=case(i)
             r.update(clock)
+            ss_lines=(r.get("active_ss") or "").splitlines()
+            tcp_lines=[line for line in ss_lines if "cwnd:" in line]
+            r["ss_tcp_rows"]=len(tcp_lines)
+            r["ss_backoff_rows"]=sum("backoff:" in line for line in tcp_lines)
             r["mode"]=mode;r["dll_sha256"]=dll_sha
             diag(i,r)
             r["steady_drops"]=drops(clock.get("steady_before",{}),clock.get("steady_after",{}))
