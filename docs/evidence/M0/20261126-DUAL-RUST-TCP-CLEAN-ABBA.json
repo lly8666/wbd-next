@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "a8a15c6a6125cdc9c7166bdb516da6c0e1aa5c3b",
+  "result": "MEASURED_NOT_PROMOTED",
+  "artifact_verified": true,
+  "scope": "One x86_64 VM, four kernel netns, clean single stream 25s download, Normal/off, repair on, MTU1460, origin fq600; sequential ABBA. Throughput parity at configured cap, not CPU parity or uncapped capacity.",
+  "run_id": 45810506381,
+  "attempt": 1,
+  "job_id": 139878647717,
+  "artifacts": [
+    {
+      "id": 15113366246,
+      "sha256": "7816a7004448cdb8d10ac5c899ef349cda723973a3b3c2c0cbeff18b7e2d1255"
+    },
+    {
+      "id": 15113365713,
+      "sha256": "32135e9bf8229977f5bf87d89c9a1562ceb4f4dc9d5ad4b1d92e26270b13f49f"
+    },
+    {
+      "id": 15112597057,
+      "sha256": "7c1eb57588c35746dff56ceda6e16db09eba5c2c6c4b5abf06c52081776533f1"
+    }
+  ],
+  "sources": {
+    "A": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "B": "86e3ec30010a59cbb60539b902cb96dc21e04d6a"
+  },
+  "manifest_sha256": {
+    "A": "eee5c3b559e4d61c4acb880b32fd845f2fdf82eb6e314c3b64694a1241aa45c4",
+    "B": "9dbcc735b2053bea7f32e98c0175d27fdcb19f34b40ec5c638fd6719ab02b9d8"
+  },
+  "artifact_review": "All 3 ZIP digests independently verified; both build archives actual binary SHA256 match each manifest. Measurement summary and native Stop logs inspected.",
+  "order": "ABBA",
+  "rows": [
+    {
+      "leg": "A",
+      "mbps": 570.6160234494577,
+      "bytes": 1783234560,
+      "server": 14.914798970966556,
+      "client": 13.048191106210952,
+      "host": 32.18393237780228,
+      "client_rx_cpu_ns": 10862486986,
+      "client_tx_cpu_ns": 7729444869,
+      "client_tun_routed": 519435
+    },
+    {
+      "leg": "B",
+      "mbps": 570.0878613812714,
+      "bytes": 1781530624,
+      "server": 14.814549735138316,
+      "client": 17.074702766333136,
+      "host": 36.132313125367865,
+      "client_rx_cpu_ns": 7662864279,
+      "client_tx_cpu_ns": 17659863010,
+      "client_tun_routed": 813072,
+      "middle_admission_fail": 39,
+      "shared_tun_full_drop": 11
+    },
+    {
+      "leg": "B",
+      "mbps": 572.7546347620473,
+      "bytes": 1789919232,
+      "server": 14.523163444639719,
+      "client": 16.78472173403632,
+      "host": 35.11114235500879,
+      "client_rx_cpu_ns": 7652128548,
+      "client_tx_cpu_ns": 17296718079,
+      "client_tun_routed": 834712
+    },
+    {
+      "leg": "A",
+      "mbps": 569.6511150723105,
+      "bytes": 1780219904,
+      "server": 14.397219849801209,
+      "client": 13.178854366072745,
+      "host": 31.21910764246797,
+      "client_rx_cpu_ns": 10763733099,
+      "client_tx_cpu_ns": 7864448624,
+      "client_tun_routed": 544621
+    }
+  ],
+  "means": {
+    "A": {
+      "mbps": 570.1335692608841,
+      "server": 14.656009410383882,
+      "client": 13.11352273614185,
+      "host": 31.701520010135127
+    },
+    "B": {
+      "mbps": 571.4212480716594,
+      "server": 14.668856589889018,
+      "client": 16.92971225018473,
+      "host": 35.62172774018833
+    }
+  },
+  "cpu_unit": "CPU-s/GiB actual received",
+  "all_stop": true,
+  "host_steal_ticks": 0,
+  "decision": "Client TX is extra cost; profile actual old B first; same-source Rust toolchain candidate independent. No promotion or old splice retirement."
+}
