@@ -1505,6 +1505,10 @@ fn stage_sources(
      let mut boundary_rx=BoundaryQpcTrace::new("RX_WINTUN_SEND");
      loop{
          if counters.stopping.load(Ordering::Acquire){return OK}
+         // Fast ready XDP turns may skip the kernel wait; the existing TX
+         // worker-error state is the other producer of the shared Stop event.
+         #[cfg(feature="winxdp_native_trial")]
+         if counters.worker_error.load(Ordering::Acquire)!=0{return OK}
          // Both Tunnel and Direct packets have ONE native Wintun TX owner.
          // A TCP ACK/window-update or DATA must survive a transient full
          // Wintun ring; discarding it here incurs real kernel RTO stalls.
@@ -1581,7 +1585,13 @@ fn stage_sources(
          let wait_ms=direct_rx_wait_timeout_ms(
              deferred_direct_tcp.is_some(),direct_processed);
          #[cfg(feature="winxdp_native_trial")]
-         let event=match npf.arm(){Ok(e)=>e,Err(_)=>return BAD_STAGE};
+         let batch=match npf.next_turn(stop.handle(),early_notify.handle(),wait_ms){
+             Ok(wbd_platform::windows_xdp_rx::RxTurn::Ready(b))=>b,
+             Ok(wbd_platform::windows_xdp_rx::RxTurn::Stop)=>return OK,
+             Ok(wbd_platform::windows_xdp_rx::RxTurn::Idle)=>continue,
+             Err(_)=>return BAD_STAGE,
+         };
+         #[cfg(not(feature="winxdp_native_trial"))]
          match io::wait_ready(&[stop.handle(),event,early_notify.handle()],wait_ms){
              Ok(WaitResult::Ready(0))=>return OK,
              Ok(WaitResult::Ready(1|2))=>{},
@@ -1592,8 +1602,6 @@ fn stage_sources(
          let mut npf_wakes=TxWakeBatch::default();
          let mut verified_batch=false;
          let mut last_outer_ack=None::<(u32,[WireSack;4],usize)>;
-         #[cfg(feature="winxdp_native_trial")]
-         let batch=npf.borrow();
          #[cfg(feature="winxdp_native_trial")]
          let ready=batch.len();
          #[cfg(not(feature="winxdp_native_trial"))]

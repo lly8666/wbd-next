@@ -2,6 +2,7 @@
 //! Native Go calls exist only before the authenticated Rust handoff.
 use std::{ffi::c_void,ptr::NonNull,slice};
 use crate::TxError;
+use crate::windows_native_io::{wait_ready,WaitResult};
 const BATCH:usize=32;
 #[repr(C)]
 #[derive(Clone,Copy)]
@@ -46,11 +47,30 @@ impl XdpRx{
         NonNull::new(unsafe{wbd_xdp_rx_arm(self.owner.as_ptr())})
             .map(|v|v.as_ptr() as usize).ok_or(TxError::IoFailed)
     }
-    pub fn borrow(&mut self)->RxBatch<'_>{
+    /// Service ready descriptors before arming a driver wait. Under load
+    /// this avoids one notify IOCTL + wait syscall for every RX quantum.
+    /// Empty rings still use the original event/deadline wait, never poll.
+    pub fn next_turn(&mut self,stop:usize,early:usize,wait_ms:u32)->Result<RxTurn<'_>,TxError>{
+        if self.failed{return Err(TxError::IoFailed)}
         let mut frames=[Frame{data:std::ptr::null(),len:0};BATCH];
-        let count=unsafe{wbd_xdp_rx_borrow(self.owner.as_ptr(),frames.as_mut_ptr(),BATCH)};
-        RxBatch{owner:self,frames,count}
+        let mut count=unsafe{wbd_xdp_rx_borrow(self.owner.as_ptr(),frames.as_mut_ptr(),BATCH)};
+        if count==0{
+            let event=self.arm()?;
+            match wait_ready(&[stop,event,early],wait_ms){
+                Ok(WaitResult::Ready(0))=>return Ok(RxTurn::Stop),
+                Ok(WaitResult::Ready(1|2))=>{},
+                Ok(WaitResult::Timeout)=>return Ok(RxTurn::Idle),
+                _=>return Err(TxError::IoFailed),
+            }
+            count=unsafe{wbd_xdp_rx_borrow(self.owner.as_ptr(),frames.as_mut_ptr(),BATCH)};
+        }
+        Ok(RxTurn::Ready(RxBatch{owner:self,frames,count}))
     }
+}
+pub enum RxTurn<'a>{
+    Ready(RxBatch<'a>),
+    Stop,
+    Idle,
 }
 /// RX descriptor loan. One release/fill publication for a ready batch,
 /// including all early returns, not one C call or packet copy per frame.
