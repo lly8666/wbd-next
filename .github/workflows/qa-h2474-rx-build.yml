@@ -1,0 +1,79 @@
+name: H2474 Windows RX continuation build once
+run-name: "H2474 RX DLL build | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2474-rx-build.yml']
+permissions: {contents: read}
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Frozen product and exact experimental RX patch
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          git diff --exit-code db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141 HEAD -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'frozen product differs'}
+          python tools/m0_h2474_rx_patch.py h2474-build/patch.json
+          if($LASTEXITCODE -ne 0){throw 'RX experiment patch failed'}
+          $delta=@(git diff --name-only -- crates r0 Cargo.toml Cargo.lock)
+          if($delta.Count -ne 1 -or $delta[0] -ne 'crates/wbd-engine/src/v4_windows_native_runtime.rs'){throw 'unexpected product change'}
+      - name: H1394 pin official ISA-L Win64 static prerequisite
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          choco install nasm -y --no-progress
+          if($LASTEXITCODE -ne 0){throw 'native ISA-L NASM prerequisite failed'}
+          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin') |
+            Where-Object {Test-Path (Join-Path $_ 'nasm.exe')} | Select-Object -First 1
+          if(-not $nasm){throw 'ISA-L NASM missing after install'}
+          Add-Content -Path $env:GITHUB_PATH -Value $nasm
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          if($LASTEXITCODE -ne 0){throw 'official ISA-L clone failed'}
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if((git -C isa-l rev-parse HEAD).Trim() -ne 'c387163fcbca62701d646149564c550c78a4f985'){throw 'official pinned ISA-L source mismatch'}
+      - name: H1394 build official static ISA-L for real MSVC release DLL
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          # The actual Windows native runner can have a different VS edition/year.
+          # Require the installed x64 MSVC tools, not a hard-coded Enterprise path.
+          $vswhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if(-not (Test-Path -LiteralPath $vswhere)){throw 'VS installer vswhere missing: cannot build pinned native ISA-L'}
+          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath |
+            Select-Object -First 1
+          if([string]::IsNullOrWhiteSpace($vsroot)){throw 'No installed native MSVC x64 toolchain'}
+          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          if(-not (Test-Path -LiteralPath $vcvars)){throw 'Installed MSVC lacks vcvars64.bat'}
+          $nativeBuild='call "'+$vcvars+'" && where nmake && cd isa-l && nmake /f Makefile.nmake'
+          & cmd.exe /d /s /c $nativeBuild
+          if($LASTEXITCODE -ne 0){throw 'Native ISA-L MSVC static build failed'}
+          Write-Output 'H1396_WIN_NATIVE_ISAL_VSWHERE_MSVC_BUILD_PASS'
+      - name: Compile one exact-source experimental Windows DLL and owner regression
+        shell: pwsh
+        timeout-minutes: 20
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust toolchain'}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if($LASTEXITCODE -ne 0){throw 'Rust MSVC target'}
+          $archive=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File | Select-Object -First 1
+          if(-not $archive){throw 'ISA-L archive missing'}
+          $env:WBD_ISAL_PREFIX=$archive.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
+          cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'RX experimental DLL build failed'}
+          cargo +1.85.1 test --locked --release -p wbd-engine --features $features --lib v4_windows_owner -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'Windows owner regression failed'}
+          Copy-Item target/release/wbd_engine.dll h2474-build/wbd_engine.dll
+          python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("h2474-build/wbd_engine.dll")); getattr(d,"wbd_m0_win_native_v3_start")'
+          if($LASTEXITCODE -ne 0){throw 'native V3 ABI missing'}
+          [ordered]@{source_sha=$env:GITHUB_SHA;build_run_id=$env:GITHUB_RUN_ID;base_source='db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141';features=$features;isa_l_source=$env:WBD_ISAL_SOURCE_SHA;isa_l_archive_sha256=(Get-FileHash $archive.FullName).Hash.ToLowerInvariant();dll_sha256=(Get-FileHash h2474-build/wbd_engine.dll).Hash.ToLowerInvariant();patch_receipt_sha256=(Get-FileHash h2474-build/patch.json).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content h2474-build/manifest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2474-rx-dll, path: h2474-build/, if-no-files-found: error, retention-days: 14}
