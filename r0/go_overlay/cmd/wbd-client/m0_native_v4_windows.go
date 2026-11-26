@@ -745,11 +745,11 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   fmt.Printf("WBD_PLAN024_NATIVE_ORIGINAL_NPCAP_NEXT_HOP_BOUND ifindex=%d guest_ip=%s mac=%s source=verified_WSL2_eth0\\n",idx,guestIP,guestMAC)
  }
  if o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4{
-  open:=func(local,remote uint16)(*faketcp.NpcapEndpoint,error){
+  configure:=func(local,remote uint16)(faketcp.NpcapConfig,error){
    config,e:=underlay.NpcapConfig(local,remote,1,faketcp.PacketPersonaWindows11)
-   if e!=nil{return nil,e}
+   if e!=nil{return faketcp.NpcapConfig{},e}
    config.NextHopMAC=ncfg.NextHopMAC
-   return faketcp.OpenNpcapEndpoint(config)
+   return config,nil
   }
   planForGame:=func(verifiedLease netip.Prefix)(windowsclient.NetworkPlan,error){
    physical,e:=underlay.PhysicalPath()
@@ -773,7 +773,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
    })
   }
   o.SourcePort=coldSourcePort
-  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,selected.ifindex,open,planForGame,pathChanged,applied)
+  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,selected.ifindex,configure,planForGame,pathChanged,applied)
  }
  // Select once by the exact native DLL's cold capability; no live fallback.
  goSteadyAB:=o.Mode==m0WinModeNormal&&os.Getenv("GITHUB_ACTIONS")=="true"&&

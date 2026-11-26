@@ -21,6 +21,8 @@ type XdpEndpoint struct {
  gate *npcapCallGate
  sendMu sync.Mutex
  ipID uint16
+ gameIDs [4]uint16
+ gameCfgs []NpcapConfig
 }
 
 // Only a deliberately built native-XDP DLL exposes this cold entry. Missing
@@ -96,4 +98,78 @@ func(e *XdpEndpoint) CloseAfterRustJoin()error{
  err:=e.dll.Release()
  e.dll=nil
  return err
+}
+
+// One interface-owned pair for the original Game group, not one pair per lane.
+// Only this single cold reader calls RX; per-lane association callbacks are
+// serialized by the existing cold TX mutex. Rust borrows after all join.
+func OpenXdpGameEndpoint(path string,index uint32,cfgs []NpcapConfig)(*XdpEndpoint,bool,error){
+ var ports [4]uint16
+ for i,cfg:=range cfgs{
+  if err:=cfg.Validate();err!=nil{return nil,true,err}
+  ports[i]=cfg.Flow.LocalPort
+ }
+ e,available,err:=openXdpPorts(path,index,ports[:len(cfgs)],false)
+ if err!=nil||!available{return e,available,err}
+ e.cfg=cfgs[0];e.gameCfgs=cfgs
+ for i:=range cfgs{e.gameIDs[i]=1}
+ return e,true,nil
+}
+func openXdpPorts(path string,index uint32,ports []uint16,udp bool)(*XdpEndpoint,bool,error){
+ dll,err:=syscall.LoadDLL(path)
+ if err!=nil{return nil,false,err}
+ open,err:=dll.FindProc("wbd_m0_win_xdp_open_ports")
+ if err!=nil{_ = dll.Release();return nil,false,nil}
+ read,err:=dll.FindProc("wbd_m0_win_xdp_read")
+ if err!=nil{_ = dll.Release();return nil,true,err}
+ write,err:=dll.FindProc("wbd_m0_win_xdp_write")
+ if err!=nil{_ = dll.Release();return nil,true,err}
+ closeProc,err:=dll.FindProc("wbd_m0_win_xdp_close")
+ if err!=nil{_ = dll.Release();return nil,true,err}
+ e:=&XdpEndpoint{dll:dll,read:read,write:write,close:closeProc,gate:newNpcapCallGate(1),ipID:1}
+ var protocol uintptr
+ if udp{protocol=1}
+ rc,_,_:=open.Call(uintptr(index),uintptr(unsafe.Pointer(&ports[0])),uintptr(len(ports)),protocol,uintptr(unsafe.Pointer(&e.handles[0])))
+ runtime.KeepAlive(ports);runtime.KeepAlive(e)
+ if int32(rc)!=0{_ = dll.Release();return nil,true,fmt.Errorf("WinXDP ports open rc=%d",int32(rc))}
+ fmt.Printf("WBD_XDP_COLD_OWNER_READY ifindex=%d ports=%d udp=%t\n",index,len(ports),udp)
+ return e,true,nil
+}
+func(e *XdpEndpoint) ReadGameSegmentUntil(stop <-chan struct{})(int,Segment,error){
+ if err:=e.gate.begin(1);err!=nil{return 0,Segment{},err}
+ defer e.gate.end()
+ var frame [4096]byte
+ for !e.gate.isClosed(){
+  select{case <-stop:return 0,Segment{},ErrNpcapClosed;default:}
+  n,err:=e.readRaw(frame[:])
+  if err!=nil{return 0,Segment{},err}
+  if n==0{continue}
+  for i,cfg:=range e.gameCfgs{
+   seg,_,ok,err:=decodeNpcapInbound(frame[:n],cfg.Flow)
+   if err!=nil{return 0,Segment{},err}
+   if ok{return i,seg,nil}
+  }
+ }
+ return 0,Segment{},ErrNpcapClosed
+}
+func(e *XdpEndpoint) WriteGameSegment(i int,seg Segment)([]byte,error){
+ if err:=e.gate.begin(1);err!=nil{return nil,err}
+ defer e.gate.end()
+ e.sendMu.Lock();defer e.sendMu.Unlock()
+ packet,frame,err:=encodeNpcapOutbound(seg,e.gameCfgs[i],e.gameIDs[i])
+ if err!=nil{return nil,err}
+ e.gameIDs[i]++
+ return packet,e.writeRaw(frame)
+}
+func(e *XdpEndpoint) readRaw(frame []byte)(int,error){
+ rc,_,_:=e.read.Call(e.handles[0],uintptr(unsafe.Pointer(&frame[0])),uintptr(len(frame)))
+ runtime.KeepAlive(frame)
+ if int32(rc)<0{return 0,fmt.Errorf("WinXDP cold read rc=%d",int32(rc))}
+ return int(int32(rc)),nil
+}
+func(e *XdpEndpoint) writeRaw(frame []byte)error{
+ rc,_,_:=e.write.Call(e.handles[1],uintptr(unsafe.Pointer(&frame[0])),uintptr(len(frame)))
+ runtime.KeepAlive(frame)
+ if int32(rc)!=1{return fmt.Errorf("WinXDP cold write rc=%d",int32(rc))}
+ return nil
 }

@@ -17,6 +17,8 @@ import (
  "math/bits"
  "net"
  "net/netip"
+ "os"
+ "path/filepath"
  "strings"
  "syscall"
  "time"
@@ -234,6 +236,30 @@ func LookupPhysicalServerA(ctx context.Context,c PhysicalDNSConfig,host string)(
  frame,e:=physicalDNSFrame(c,port,query,id)
  if e!=nil{return nil,e}
 
+ if executable,exeErr:=os.Executable();exeErr==nil{
+  path:=filepath.Join(filepath.Dir(executable),"wbd_engine.dll")
+  if _,statErr:=os.Stat(path);statErr==nil{
+   carrier,available,openErr:=openXdpPorts(path,c.InterfaceIndex,[]uint16{port},true)
+   if openErr!=nil{return nil,openErr}
+   if available{
+    defer carrier.Close()
+    if e=carrier.writeRaw(frame);e!=nil{return nil,e}
+    deadline:=time.Now().Add(1500*time.Millisecond)
+    var raw [2048]byte
+    for time.Now().Before(deadline){
+     if e=ctx.Err();e!=nil{return nil,e}
+     n,readErr:=carrier.readRaw(raw[:]);if readErr!=nil{return nil,readErr}
+     if n==0{continue}
+     ips,valid,truncated:=physicalDNSReplyState(raw[:n],c,port,id,name)
+     if truncated{_ = carrier.Close();return physicalBootstrapTCPSameEndpoint(ctx,c,query,id,name)}
+     if !valid{continue}
+     if len(ips)==0{return nil,fmt.Errorf("%w: no usable A answer",ErrPhysicalDNS)}
+     return ips,nil
+    }
+    return nil,fmt.Errorf("%w: bounded physical A query timeout",ErrPhysicalDNS)
+   }
+  }
+ }
  dll,e:=loadNpcapDLL()
  if e!=nil{return nil,fmt.Errorf("%w: verified Npcap DLL: %v",ErrPhysicalDNS,e)}
  defer dll.Release()

@@ -83,7 +83,7 @@ func m0WindowsGameOriginalClientFlow(
 func runM0NativeV4WindowsGame(
  ctx context.Context,o m0NativeV4Options,localIP [4]byte,
  physicalMTU uint32,physicalIfIndex uint32,
- open func(uint16,uint16)(*faketcp.NpcapEndpoint,error),
+ configure func(uint16,uint16)(faketcp.NpcapConfig,error),
  makePlan func(netip.Prefix)(windowsclient.NetworkPlan,error),
  pathChanged <-chan struct{},applied *bool,
 )error{
@@ -91,6 +91,8 @@ func runM0NativeV4WindowsGame(
  assocs:=make([]*faketcp.ClientAssociation,0,count)
  endpoints:=make([]*faketcp.NpcapEndpoint,0,count)
  flows:=make([]faketcp.ClientFlow,0,count)
+ cfgs:=make([]faketcp.NpcapConfig,0,count)
+ var shared *faketcp.XdpEndpoint
  // Native M3 authenticates the finite real pre-handoff NPF backlog.
  inbound:=make(chan m0GameInbound,256)
  handoff:=make(chan struct{})
@@ -105,16 +107,26 @@ func runM0NativeV4WindowsGame(
   readers.Wait()
   fmt.Println("M0_GAME_COLD_STAGE DEFER_NPF_JOIN_DONE")
   for _,ep:=range endpoints{_ = ep.Close()}
+  if shared!=nil{_ = shared.Close()}
   for _,assoc:=range assocs{assoc.Close()}
  }()
  for i:=0;i<count;i++{
   flow,err:=m0WindowsGameOriginalClientFlow(o,localIP,i)
   if err!=nil{return err}
-  // Each Npcap receive filter and the SYN emitter now target this exact
-  // independent client source port AND the same remote server 443.
-  ep,err:=open(flow.LocalPort,flow.PeerPort)
+  cfg,err:=configure(flow.LocalPort,flow.PeerPort)
   if err!=nil{return err}
-  endpoints=append(endpoints,ep)
+  flows=append(flows,flow);cfgs=append(cfgs,cfg)
+ }
+ xdp,available,err:=faketcp.OpenXdpGameEndpoint(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),physicalIfIndex,cfgs)
+ if err!=nil{return err}
+ if available{shared=xdp}
+ for i,flow:=range flows{
+  var ep *faketcp.NpcapEndpoint
+  if shared==nil{
+   ep,err=faketcp.OpenNpcapEndpoint(cfgs[i])
+   if err!=nil{return err}
+   endpoints=append(endpoints,ep)
+  }
   var seed [4]byte
   if _,err=rand.Read(seed[:]);err!=nil{return err}
   assoc,err:=faketcp.NewClientAssociation(flow,binary.BigEndian.Uint32(seed[:]),
@@ -126,44 +138,61 @@ func runM0NativeV4WindowsGame(
      fmt.Printf("WBD_WINDOWS_GAME_ACTUAL_SYN_MSS_V1 side=client lane=%d local_advertised_mss=%d tcp_option_bytes=%x\n",
       i,decoded.MSS,wire[40:44])
     }
+    if shared!=nil{_,e:=shared.WriteGameSegment(i,seg);return e}
     _,e:=ep.WriteSegment(1,seg);return e
    })
   if err!=nil{return err}
   assocs=append(assocs,assoc)
-  flows=append(flows,flow)
+ }
+ // One handling function keeps original TLS detach/early semantics for both
+ // cold carriers. Shared XDP dispatches directly; no lane mailbox or copy.
+ handle:=func(index int,seg faketcp.Segment)error{
+  a:=assocs[index]
+  if a.State()==faketcp.ClientAssociationDetached{
+   if handled,_:=a.RepeatGameColdFinalACK(&seg);handled{return nil}
+   if len(seg.Payload)==0||seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{return nil}
+   _=offerGameColdInbound(inbound,m0GameInbound{lane:index,segment:seg})
+   return nil
+  }
+  err:=a.HandleSegment(seg,time.Now())
+  if errors.Is(err,faketcp.ErrClientDetached){
+   if handled,_:=a.RepeatGameColdFinalACK(&seg);handled{return nil}
+   if len(seg.Payload)==0||seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{return nil}
+   _=offerGameColdInbound(inbound,m0GameInbound{lane:index,segment:seg});return nil
+  }
+  if errors.Is(err,faketcp.ErrClientHandshake)&&a.State()==faketcp.ClientAssociationSYNSent{return nil}
+  if err!=nil{a.Close()}
+  return err
+ }
+ report:=func(err error){
+  select{case <-handoff:return;default:}
+  if ctx.Err()==nil{select{case failed<-err:default:}}
+ }
+ if shared!=nil{
   readers.Add(1)
-  go func(index int,endpoint *faketcp.NpcapEndpoint,a *faketcp.ClientAssociation){
+  go func(){
    defer readers.Done()
    for{
-    select{case <-handoff:return;default:}
-    seg,_,err:=endpoint.ReadSegmentUntil(1,handoff)
-    if err!=nil{
-     select{case <-handoff:return;default:}
-     if ctx.Err()==nil{select{case failed<-err:default:}}
-     return
-    }
-    if a.State()==faketcp.ClientAssociationDetached{
-     if handled,_:=a.RepeatGameColdFinalACK(&seg);handled{continue}
-     if len(seg.Payload)==0||seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{continue}
-     _=offerGameColdInbound(inbound,m0GameInbound{lane:index,segment:seg})
-    }else if err=a.HandleSegment(seg,time.Now());err!=nil{
-     // Detach may win after the reader's State snapshot. Treat the
-     // already-read segment as early native input, not a failed reader.
-     if errors.Is(err,faketcp.ErrClientDetached){
-      if handled,_:=a.RepeatGameColdFinalACK(&seg);handled{continue}
-      if len(seg.Payload)==0||seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{continue}
-      _=offerGameColdInbound(inbound,m0GameInbound{lane:index,segment:seg})
-      continue
-     }
-     if errors.Is(err,faketcp.ErrClientHandshake)&&a.State()==faketcp.ClientAssociationSYNSent{continue}
-     if ctx.Err()==nil{select{case failed<-err:default:}}
-     a.Close() // unblock a TLS read if this cold association really died
-     return
-    }
+    index,seg,err:=shared.ReadGameSegmentUntil(handoff)
+    if err!=nil{report(err);return}
+    if err=handle(index,seg);err!=nil{report(err);return}
    }
-  }(i,ep,assoc)
-  if err=assoc.Start(time.Now());err!=nil{return err}
+  }()
+ }else{
+  for i,endpoint:=range endpoints{
+   readers.Add(1)
+   go func(index int,endpoint *faketcp.NpcapEndpoint){
+    defer readers.Done()
+    for{
+     select{case <-handoff:return;default:}
+     seg,_,err:=endpoint.ReadSegmentUntil(1,handoff)
+     if err!=nil{report(err);return}
+     if err=handle(index,seg);err!=nil{report(err);return}
+    }
+   }(i,endpoint)
+  }
  }
+ for _,assoc:=range assocs{if err=assoc.Start(time.Now());err!=nil{return err}}
  // Start all independent original FakeTCP SYNs before waiting for any
  // particular lane. Under real 15–30% loss, serial 20s lane waits could
  // burn the entire Windows public Ready deadline without ever attempting
@@ -285,7 +314,7 @@ func runM0NativeV4WindowsGame(
  fmt.Println("M0_GAME_COLD_STAGE PLAN_MAKE_DONE")
  packet:=&m0WinRustGamePeer{
   group:group,first:group.FirstOriginalOwner(),tun:tun,
-  endpoints:endpoints,flows:flows,inbound:inbound,handoff:handoff,
+  endpoints:endpoints,xdp:shared,cfgs:cfgs,flows:flows,inbound:inbound,handoff:handoff,
   stopColdReaders:stopColdReaders,readers:&readers,errorSource:failed,
   pathMTU:o.ConnectionMTU, // NPF outer IPv4/TCP, never derived Wintun inner MTU
   disableOuterRepair:o.DisableOuterRepair,

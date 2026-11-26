@@ -21,6 +21,9 @@ type m0WinRustGamePeer struct{
  first *realityfront.V4WindowsAuthenticatedClientOwner
  tun *windowsclient.TUN
  endpoints []*faketcp.NpcapEndpoint
+ xdp *faketcp.XdpEndpoint
+ cfgs []faketcp.NpcapConfig
+ xdpMoved bool
  flows []faketcp.ClientFlow
  inbound <-chan m0GameInbound
  handoff chan struct{}
@@ -45,8 +48,8 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
  id windowsclient.N4UnifiedIdentity,
 )(err error){
  if p==nil||ring==nil||p.group==nil||p.first==nil||p.tun==nil||
-  p.live||p.moved||(len(p.endpoints)!=2&&len(p.endpoints)!=4)||
-  len(p.flows)!=len(p.endpoints)||p.handoff==nil||p.stopColdReaders==nil||p.readers==nil{
+  p.live||p.moved||(len(p.flows)!=2&&len(p.flows)!=4)||
+  (p.xdp==nil&&len(p.endpoints)!=len(p.flows))||p.handoff==nil||p.stopColdReaders==nil||p.readers==nil{
   return windowsclient.ErrN4NativeGuard
  }
  // Any partial cold capture handoff must first Join Rust if Start succeeded,
@@ -66,12 +69,8 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
  max,err:=p.group.EffectiveGamePayloadMTU()
  if err!=nil||max<20{return windowsclient.ErrN4NativeGuard}
  boundaries,err:=p.group.OriginalGameTCPBoundaries()
- if err!=nil||len(boundaries)!=len(p.endpoints){return windowsclient.ErrN4NativeGuard}
- cfgs:=make([]faketcp.NpcapConfig,len(p.endpoints))
- for i,endpoint:=range p.endpoints{
-  cfgs[i],err=endpoint.NativeCaptureConfig()
-  if err!=nil{return err}
- }
+ if err!=nil||len(boundaries)!=len(p.flows){return windowsclient.ErrN4NativeGuard}
+ cfgs:=p.cfgs
  // Stop ALL post-TLS Go NPF readers and join them before moving ANY native
  // pcap_t. Their already-read bounded ciphertext is offered to Rust M3
  // for normal authenticated opening and never written into Wintun by Go.
@@ -85,6 +84,11 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
  default:}
  nativeRX:=make([]faketcp.NpcapNativeCaptureV1,len(cfgs))
  nativeTX:=make([]faketcp.NpcapNativeCaptureV1,len(cfgs))
+ if p.xdp!=nil{
+  handles,e:=p.xdp.TakeNative(cfgs[0].Generation);if e!=nil{return e}
+  p.xdpMoved=true
+  for i:=range cfgs{nativeRX[i].Handle=handles[0];nativeTX[i].Handle=handles[1]}
+ }else{
  for i,endpoint:=range p.endpoints{
   loan,e:=endpoint.TakeNativeCaptureAfterReadersJoined(cfgs[i].Generation)
   if e!=nil{return e}
@@ -97,6 +101,7 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
   if e!=nil{_ =tx.Close();return e}
   p.senders=append(p.senders,send)
   nativeTX[i],err=send.Native();if err!=nil{return err}
+ }
  }
  fmt.Println("M0_GAME_COLD_STAGE NPF_CAPTURE_MOVED")
  p.loan,err=ring.BorrowRustNativeRing(ctx)
@@ -128,7 +133,7 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
  }
  // Per-lane original-Go TCP boundaries stay separate, never overwritten
  // by group ACK; each true copied game record advances only its NPF lane.
- for i:=1;i<len(p.endpoints);i++{
+ for i:=1;i<len(p.flows);i++{
   v:=&cfg.Extra[i-1]
   v.InitialTXSeq=boundaries[i][0];v.InitialRXSeq=boundaries[i][1]
   v.LocalPort=p.flows[i].LocalPort;v.PeerPort=p.flows[i].PeerPort
@@ -155,7 +160,7 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
  for{
   select{
   case rec:=<-p.inbound:
-   if rec.lane<0||rec.lane>=len(p.endpoints){return windowsclient.ErrN4NativeGuard}
+   if rec.lane<0||rec.lane>=len(p.flows){return windowsclient.ErrN4NativeGuard}
    // A late pure cold TCP control is not an authenticated native failure.
    if len(rec.segment.Payload)==0||rec.segment.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{continue}
    if err=p.group.OfferNativeGameEarly(ctx,uint32(rec.lane+1),
@@ -184,7 +189,7 @@ func(p *m0WinRustGamePeer) VerifyPeerFirstAndReverse(
  p.last=v
  if e=m0WindowsRustNativeStartupVerdict(v);e!=nil{return e}
  fmt.Printf("WBD_WINDOWS_GAME_NATIVE_STARTUP_READY lanes=%d workers=%d tx_copied=%d rx_delivered=%d tx_after_rx=%d application_reverse_required=0\n",
-  len(p.endpoints),v.Workers,v.TXCopied,v.RXDelivered,v.TXAfterRX)
+  len(p.flows),v.Workers,v.TXCopied,v.RXDelivered,v.TXAfterRX)
  return nil
 }
 func(p *m0WinRustGamePeer) DrainPeerAndKernelLoans(
@@ -205,6 +210,7 @@ func(p *m0WinRustGamePeer) DrainPeerAndKernelLoans(
  for _,l:=range p.captures{err=errors.Join(err,l.CloseAfterRustJoin())}
  for _,l:=range p.senders{err=errors.Join(err,l.CloseAfterRustJoin())}
  p.captures=nil;p.senders=nil
+ if p.xdpMoved{err=errors.Join(err,p.xdp.CloseAfterRustJoin());p.xdpMoved=false}
  return err
 }
 func(p *m0WinRustGamePeer) HealthError(ctx context.Context)error{
@@ -224,7 +230,7 @@ func(p *m0WinRustGamePeer) HealthError(ctx context.Context)error{
 }
 func(p *m0WinRustGamePeer) Stats()string{
  s:=map[string]any{
-  "mode":fmt.Sprintf("game%d",len(p.endpoints)),
+  "mode":fmt.Sprintf("game%d",len(p.flows)),
   "native_rust_workers":2,
   "tx_records":p.last.TXCopied,"rx_first_delivered_ipv4":p.last.RXDelivered,
   "tx_after_reverse":p.last.TXAfterRX,"rejected_auth":p.last.Rejected,
