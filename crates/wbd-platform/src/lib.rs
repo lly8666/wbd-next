@@ -20,6 +20,9 @@ pub mod rx_ipv4_tcp;
 #[cfg(target_os = "windows")]
 #[allow(unsafe_code)]
 pub mod windows_native_io;
+#[cfg(all(target_os="windows",feature="winxdp_tx_trial"))]
+#[allow(unsafe_code)]
+pub mod windows_xdp_tx;
 // PLAN029: real Windows physical-source/ifindex-bound nonblocking UDP socket
 // and pure exact IPv4/UDP response bytes. No new packet reader or product
 // activation until the original Rust Wintun ingress/owner composes it.

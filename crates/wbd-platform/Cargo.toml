@@ -11,3 +11,6 @@ wbd-types = { path = "../wbd-types" }
 # H2397: compatibility alias; native NPF16/64KiB is always enabled.
 [features]
 h2291_windows_tx_service = []
+
+# Isolated Windows TX carrier experiment; requires official SDK at build time.
+winxdp_tx_trial = []

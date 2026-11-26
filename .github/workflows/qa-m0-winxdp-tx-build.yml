@@ -1,0 +1,30 @@
+name: M0 WinXDP TX product build
+run-name: "M0 WinXDP TX A/B source-locked build | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-winxdp']
+    paths: ['crates/wbd-platform/**','crates/wbd-engine/**','.github/workflows/qa-m0-winxdp-tx-build.yml']
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Build A (NPF) and B (WinXDP TX) exact checkout
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          nuget install Microsoft.XDP-for-Windows.Sdk -Version 1.3.0 -OutputDirectory xdp-packages -NonInteractive
+          if($LASTEXITCODE -ne 0){throw 'official XDP SDK unavailable'}
+          $env:WBD_XDP_SDK_INCLUDE=(Get-ChildItem xdp-packages -Recurse -Filter xdpapi.h | Where-Object {$_.Directory.Name -eq 'include'} | Select-Object -First 1).Directory.FullName
+          $vs=& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          New-Item -ItemType Directory -Force xdp-build | Out-Null
+          $cmd='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo build --locked -p wbd-engine --release --features m0_v4_embedded_go,fec2_product_record && copy /Y target\release\wbd_engine.dll xdp-build\A.dll && cargo build --locked -p wbd-engine --release --features m0_v4_embedded_go,fec2_product_record,winxdp_tx_trial && copy /Y target\release\wbd_engine.dll xdp-build\B.dll'
+          cmd.exe /d /s /c $cmd
+          if($LASTEXITCODE -ne 0){throw 'A/B build failed'}
+          [ordered]@{source_sha=$env:GITHUB_SHA;scope='TX-only compile, portable FEC';A=(Get-FileHash xdp-build/A.dll).Hash;B=(Get-FileHash xdp-build/B.dll).Hash} | ConvertTo-Json | Set-Content xdp-build/manifest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: winxdp-tx-ab-build, path: xdp-build/, if-no-files-found: error, retention-days: 14}

@@ -15,10 +15,14 @@
  use std::time::Duration;
  use std::ffi::c_void;
  use wbd_platform::windows_native_io::{
-     self as io, NpcapFns, NpcapRx, NpcapTx, WintunFns,
+     self as io, NpcapFns, NpcapRx, WintunFns,
      WintunRx, WintunTx, WakeEvent, ReadResult, WaitResult,
  };
- use wbd_platform::ipv4_tcp::{
+ #[cfg(not(feature="winxdp_tx_trial"))]
+use wbd_platform::windows_native_io::NpcapTx as NativeTx;
+#[cfg(feature="winxdp_tx_trial")]
+use wbd_platform::windows_xdp_tx::XdpTx as NativeTx;
+use wbd_platform::ipv4_tcp::{
      build_bytes, finish_bytes_in_place, BASE_OVERHEAD, build_presentation_ack, build_presentation_ack_sack,
      SackRange32 as WireSack, Ipv4Tuple, PacketPersona, Presentation,
  };
@@ -484,9 +488,31 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  #[derive(Clone,Copy,Debug,Default,Eq,PartialEq)]
  struct StageWork{tunnel:usize,captured:usize,direct:usize}
  impl StageWork{fn quantum_full(self)->bool{self.captured==BATCH}}
- fn stage_sources(
+ // Only the NPF comparator needs the existing final-frame scratch slab.
+// B writes the identical frame layout into registered UMEM chunks.
+#[cfg(not(feature="winxdp_tx_trial"))]
+struct NpfSourceBatch<'a>{
+    tx:&'a mut NativeTx,frames:&'a mut [[u8;MAX_LINK];BATCH],
+}
+#[cfg(not(feature="winxdp_tx_trial"))]
+impl NpfSourceBatch<'_>{
+    #[inline] fn frame(&mut self,i:usize)->&mut [u8]{&mut self.frames[i]}
+    #[inline] fn submit(self,lens:&[usize])->wbd_platform::TxBatchOutcome{
+        let mut ready:[&[u8];BATCH]=[&[];BATCH];
+        for (i,n) in lens.iter().enumerate(){ready[i]=&self.frames[i][..*n];}
+        self.tx.send_batch(&ready[..lens.len()])
+    }
+}
+#[inline]
+fn native_tx_failed(_tx:&NativeTx)->bool{
+    #[cfg(feature="winxdp_tx_trial")]
+    { _tx.failed() }
+    #[cfg(not(feature="winxdp_tx_trial"))]
+    { false }
+}
+fn stage_sources(
      cfg:&WbdWinNativeAttachV1,
-     lane:&Arc<Mutex<Entry>>,tun:&mut WintunRx,npf:&mut NpcapTx,
+     lane:&Arc<Mutex<Entry>>,tun:&mut WintunRx,npf:&mut NativeTx,
      counters:&Counters,ip_id:&mut u16,fixed:bool,
      split:&mut Option<NativeSplitWorker>,now_ms:u64,
      sources:&mut [[u8;MAX_IPV4];BATCH],frames:&mut [[u8;MAX_LINK];BATCH],
@@ -548,6 +574,10 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          }
      }
      if count==0{return Ok(StageWork{tunnel:0,captured,direct})}
+     #[cfg(not(feature="winxdp_tx_trial"))]
+     let mut batch=NpfSourceBatch{tx:npf,frames};
+     #[cfg(feature="winxdp_tx_trial")]
+     let mut batch={let _=frames;npf.reserve(count).map_err(|_|BAD_STAGE)?};
      let order:[usize;BATCH]=if count==BATCH{
          crate::v4_ingress_fair::ready_order(std::array::from_fn(|i|
              crate::v4_ingress_fair::flow_key(&sources[i][..source_len[i]])),count)
@@ -565,7 +595,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                      let (used,seq,pn)=fec2::stage_fixed_source_entry(
                          &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
                          &sources[j][..source_len[j]],
-                         &mut frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+MAX_IPV4]
+                         &mut batch.frame(i)[FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+MAX_IPV4]
                      )?;
                      meta[i]=(pn,seq,used);
                  }
@@ -594,7 +624,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              }
              let keep_pending=!v3_native_off_loan(&e);
              let loan=v3_drain_source_loan(&mut e,now,&meta[..count],keep_pending,|i,wire|{
-                 frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
+                 batch.frame(i)[FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
                      .copy_from_slice(wire);
              })?;
              if keep_pending{e.tx_scratch=loan.recycle();}
@@ -606,24 +636,23 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      let ack=counters.ack.load(Ordering::Acquire);
      for i in 0..count {
          let (_,seq,used)=meta[i];
+         let frame=batch.frame(i);
          let bytes=finish_bytes_in_place(Ipv4Tuple{
              src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
              src_port:cfg.local_port,dst_port:cfg.peer_port,
          },Presentation{ack32:ack,advertised_window:65535,
              ip_id:*ip_id,persona:PacketPersona::Windows11},
-             u64::from(seq),used,cfg.path_mtu as usize,&mut frames[i][14..])
+             u64::from(seq),used,cfg.path_mtu as usize,&mut frame[14..MAX_LINK])
              .map_err(|_|INVALID)?;
          lens[i]=14+bytes.len();
-         frames[i][..6].copy_from_slice(&cfg.next_hop_mac);
-         frames[i][6..12].copy_from_slice(&cfg.source_mac);
-         frames[i][12..14].copy_from_slice(&0x0800u16.to_be_bytes());
+         frame[..6].copy_from_slice(&cfg.next_hop_mac);
+         frame[6..12].copy_from_slice(&cfg.source_mac);
+         frame[12..14].copy_from_slice(&0x0800u16.to_be_bytes());
          *ip_id=ip_id.wrapping_add(1);
      }
      let (_,last_seq,last_used)=meta[count-1];
      counters.tx_seq.store(last_seq.wrapping_add(last_used as u32),Ordering::Release);
-     let mut ready:[&[u8];BATCH]=[&[];BATCH];
-     for i in 0..count {ready[i]=&frames[i][..lens[i]];}
-     let result=npf.send_batch(&ready[..count]);
+     let result=batch.submit(&lens[..count]);
      if result.accepted_prefix>0{
          counters.ack_sent.store(ack,Ordering::Release);
      }
@@ -665,7 +694,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              }
          }
      }
-     if result.error.is_some(){return Err(BAD_STAGE)}
+     if result.error.is_some()||native_tx_failed(npf){return Err(BAD_STAGE)}
      Ok(StageWork{tunnel:count,captured,direct})
  }
 
@@ -675,7 +704,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  #[cfg(feature="fec2_product_record")]
  fn send_fixed_parity(
      cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
-     npf:&mut NpcapTx,counters:&Counters,ip_id:&mut u16,
+     npf:&mut NativeTx,counters:&Counters,ip_id:&mut u16,
  )->Result<bool,i32>{
      let batch={
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
@@ -725,12 +754,12 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              counters.ack_sent.store(ack,Ordering::Release);
          }
      }
-     if outcome.error.is_some(){return Err(BAD_STAGE)}
+     if outcome.error.is_some()||native_tx_failed(npf){return Err(BAD_STAGE)}
      Ok(true)
  }
  fn send_control(
      cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
-     npf:&mut NpcapTx,counters:&Counters,ip_id:&mut u16,
+     npf:&mut NativeTx,counters:&Counters,ip_id:&mut u16,
  )->Result<bool,i32>{
      let mut wire=[0u8;MAX_IPV4];
      let ack=counters.ack.load(Ordering::Acquire);
@@ -753,7 +782,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          m2_finish_feedback_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
              pn,u32::from(accepted))?;
-         if outcome.error.is_some(){return Err(BAD_STAGE)}
+         if outcome.error.is_some()||native_tx_failed(npf){return Err(BAD_STAGE)}
          return Ok(true)
      }
      let repair={
@@ -777,13 +806,13 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          m2_complete_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
              pn,kernel)?;
-         if outcome.error.is_some(){return Err(BAD_STAGE)}
+         if outcome.error.is_some()||native_tx_failed(npf){return Err(BAD_STAGE)}
          return Ok(true)
      }
      Ok(false)
  }
  fn send_presentation_ack(cfg:&WbdWinNativeAttachV1,
-     npf:&mut NpcapTx,counters:&Counters,ip_id:&mut u16,
+     npf:&mut NativeTx,counters:&Counters,ip_id:&mut u16,
      sack_negotiated:bool,
  )->Result<(),i32>{
      // Build pure TCP-looking ACK directly at Ethernet L3 offset.
@@ -818,6 +847,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      counters.ack_sent.store(ack,Ordering::Release);
      counters.sack_sent_rev.store(rev,Ordering::Release);
      counters.pure_ack_outer_bytes.fetch_add((14+n) as u64,Ordering::Relaxed);
+     if native_tx_failed(npf){return Err(BAD_STAGE)}
      Ok(())
  }
   /// Exact event-driven M2 wake. Both deadlines use the same Rust
@@ -951,7 +981,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      }
  }
  fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
-     mut tun:WintunRx,mut npf:NpcapTx,stop:Arc<WakeEvent>,
+     mut tun:WintunRx,mut npf:NativeTx,stop:Arc<WakeEvent>,
      notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool,auto:bool,
      sack_negotiated:bool,mut split:Option<NativeSplitWorker>,
      direct_return:Option<SyncSender<Vec<u8>>>,
@@ -1764,8 +1794,15 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          Ok(v)=>v,Err(_)=>return INVALID
      };
      if capture.event().is_err(){return BAD_STAGE}
-     let sender=match unsafe{NpcapTx::from_borrowed(config.tx_capture,config.npcap)}{
+     #[cfg(not(feature="winxdp_tx_trial"))]
+     let sender=match unsafe{NativeTx::from_borrowed(config.tx_capture,config.npcap)}{
          Ok(v)=>v,Err(_)=>return INVALID
+     };
+     // The attach ifindex identifies Wintun, NOT the physical carrier.
+     // Resolve the original authenticated physical IP/MAC once at cold attach.
+     #[cfg(feature="winxdp_tx_trial")]
+     let sender=match NativeTx::open(config.local_ip,config.source_mac){
+         Ok(v)=>v,Err(_)=>return BAD_STAGE
      };
      let stop=match WakeEvent::new(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
      let notify=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
