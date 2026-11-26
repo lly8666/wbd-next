@@ -9,7 +9,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         expected = {i.to_bytes(4,"big") + bytes([i])*1020 for i in range(base,base+16)}
         for packet in expected:
             s.send(packet)
+        print(f"SENT={base+16}",flush=True)
         while expected:
-            packet=s.recv(2048)
+            try:
+                packet=s.recv(2048)
+            except TimeoutError:
+                print(f"RECEIVED={base+16-len(expected)}",flush=True)
+                raise
             expected.remove(packet)
 print("REAL_GUEST_RECEIPT=64/64")

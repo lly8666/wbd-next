@@ -78,7 +78,7 @@ int main(int argc,char** argv) {
         check("initial fill poke",XskNotifySocket(o.socket,XSK_NOTIFY_FLAG_POKE_RX,0,&flags));
         std::printf("READY ifindex=%u queue=%u generic=1 chunk=%u ring=%u\n",ifindex,queue,Chunk,RingSize);std::fflush(stdout);
         UINT32 received=0, completed=0, rx_batches=0, tx_pokes=0;
-        ULONGLONG deadline=GetTickCount64()+30000;
+        ULONGLONG deadline=GetTickCount64()+12000;
         while(completed<Target && GetTickCount64()<deadline){
             UINT32 ci,fi,ri,ti;
             UINT32 cn=XskRingConsumerReserve(&o.completion,Batch,&ci);
@@ -86,6 +86,7 @@ int main(int argc,char** argv) {
                 cn=XskRingProducerReserve(&o.fill,cn,&fi);
                 for(UINT32 i=0;i<cn;++i)*static_cast<UINT64*>(XskRingGetElement(&o.fill,fi+i))=*static_cast<UINT64*>(XskRingGetElement(&o.completion,ci+i));
                 XskRingConsumerRelease(&o.completion,cn);XskRingProducerSubmit(&o.fill,cn);completed+=cn;
+                std::printf("COMPLETION_PROGRESS=%u\n",completed);std::fflush(stdout);
                 if(XskRingProducerNeedPoke(&o.fill))check("fill poke",XskNotifySocket(o.socket,XSK_NOTIFY_FLAG_POKE_RX,0,&flags));
             }
             UINT32 rn=XskRingConsumerReserve(&o.rx,(std::min)(Batch,Target-received),&ri);
@@ -99,7 +100,8 @@ int main(int argc,char** argv) {
                 }
                 XskRingConsumerRelease(&o.rx,rn);XskRingProducerSubmit(&o.tx,rn);
                 received+=rn;++rx_batches;
-                if(XskRingProducerNeedPoke(&o.tx)){check("TX poke",XskNotifySocket(o.socket,XSK_NOTIFY_FLAG_POKE_TX,0,&flags));++tx_pokes;}
+                std::printf("RX_PROGRESS=%u\n",received);std::fflush(stdout);
+                {check("TX poke",XskNotifySocket(o.socket,XSK_NOTIFY_FLAG_POKE_TX,0,&flags));++tx_pokes;}
             }
             if(!rn&&!cn&&completed<Target){
                 XSK_NOTIFY_FLAGS wait=received==Target?XSK_NOTIFY_FLAG_WAIT_TX:XSK_NOTIFY_FLAG_WAIT_RX;

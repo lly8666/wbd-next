@@ -93,6 +93,32 @@ jobs:
           $nic=Get-NetIPAddress -AddressFamily IPv4 -IPAddress $hostIP
           $nic | ConvertTo-Json -Depth 4 | Set-Content h2442-out/interface.json
           Get-NetAdapter -InterfaceIndex $nic.InterfaceIndex | Format-List * | Out-File h2442-out/adapter.txt
+          Get-NetAdapterRss -Name $nic.InterfaceAlias -ErrorAction SilentlyContinue | Format-List * | Out-File h2442-out/rss.txt
+          Get-NetAdapterBinding -Name $nic.InterfaceAlias | Format-Table -AutoSize | Out-File h2442-out/bindings.txt
+          $guestScript=(wsl.exe -d Ubuntu -u root --exec wslpath -a "$PWD/tools/m0_winxdp_guest.py" | Out-String).Trim()
+          # Same real guest/host IP and port, OS UDP before XDP redirect.
+          $echo=Start-Job -ArgumentList $hostIP -ScriptBlock {
+            param($ip)
+            $s=[Net.Sockets.UdpClient]::new([Net.IPEndPoint]::new([Net.IPAddress]::Parse($ip),39461))
+            $s.Client.ReceiveTimeout=10000
+            try {
+              Write-Output 'UDP_BASELINE_READY'
+              $peer=[Net.IPEndPoint]::new([Net.IPAddress]::Any,0)
+              for($i=0;$i -lt 64;$i++){
+                $bytes=$s.Receive([ref]$peer)
+                [void]$s.Send($bytes,$bytes.Length,$peer)
+              }
+            } finally {$s.Dispose()}
+          }
+          try {
+            for($i=0;$i -lt 50;$i++){
+              if((Receive-Job $echo -Keep | Out-String) -match 'UDP_BASELINE_READY'){break}
+              Start-Sleep -Milliseconds 100
+            }
+            wsl.exe -d Ubuntu -u root --exec python3 $guestScript $hostIP 39461 | Tee-Object h2442-out/baseline.log
+            $baselineRC=$LASTEXITCODE
+          } finally {Stop-Job $echo;Receive-Job $echo;Remove-Job $echo}
+          Write-Output "BASELINE_RC=$baselineRC"
           $p=Start-Process -FilePath "$PWD/h2442-out/winxdp-probe.exe" -ArgumentList @($nic.InterfaceIndex,'0','39461') -RedirectStandardOutput "$PWD/h2442-out/probe.log" -RedirectStandardError "$PWD/h2442-out/probe.err" -PassThru
           try {
             for($i=0;$i -lt 100;$i++){
@@ -101,11 +127,11 @@ jobs:
               Start-Sleep -Milliseconds 100
             }
             if((Get-Content h2442-out/probe.log -Raw) -notmatch 'READY'){throw 'native probe not ready'}
-            $guestScript=(wsl.exe -d Ubuntu -u root --exec wslpath -a "$PWD/tools/m0_winxdp_guest.py" | Out-String).Trim()
             wsl.exe -d Ubuntu -u root --exec python3 $guestScript $hostIP 39461 | Tee-Object h2442-out/guest.log
-            if($LASTEXITCODE -ne 0){throw 'real guest UDP receipt failed'}
+            $guestRC=$LASTEXITCODE
             if(-not $p.WaitForExit(20000)){throw 'probe completion timeout'}
-            if($p.ExitCode -ne 0){throw 'native ring qualification failed'}
+            Write-Output "GUEST_RC=$guestRC PROBE_RC=$($p.ExitCode)"
+            if($guestRC -ne 0 -or $p.ExitCode -ne 0){throw 'native carrier qualification failed'}
           } finally {
             if(-not $p.HasExited){Stop-Process -Id $p.Id -Force}
             Get-Content h2442-out/probe.log,h2442-out/probe.err
