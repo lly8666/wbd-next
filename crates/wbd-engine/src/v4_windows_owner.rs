@@ -1007,8 +1007,14 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
     // M1 records. Linux v3 detaches only sampled repair ciphertext; M1
     // retains the proven bounded 2048 slots/5MB (Arena hard cap 8192).
     let normal=handoff.negotiated_features==3;
-    let slots=if normal||handoff.negotiated_features==7{2048}else{64};
-    let bytes=if normal||handoff.negotiated_features==7{5_000_000}else{3_000_000};
+    // Actual Windows feature7 owner: up to 1536 original frozen repair
+    // slabs plus <= floor(2MiB/(2048+48))=1000 FEC source slabs, staged
+    // seals, transient RX/control and returned slab headroom.
+    // Arena need not be a power of two. Keep original ciphertext loans
+    // and existing repair/FEC policies, not a second copy or queue.
+    let (slots,bytes)=if handoff.negotiated_features==7{
+        (3072,7_500_000)
+    }else if normal{(2048,5_000_000)}else{(64,3_000_000)};
     let arena=Arena::new(generation,slots,2048,64,bytes)
         .map_err(|_|FULL)?;
     let rx_limit=if server{parsed.identity().server_limit}
