@@ -4,22 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2449,
-  "checkpoint_sha": "53e996812cfe33b3d138e47d4e5b17c5978cfbf5",
+  "sequence": 2450,
+  "checkpoint_sha": "cb0be4a34caa0eef6ab0e9b3dc85f3d209ab9cf0",
   "progress": "partial",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "先收精确105da799ad82b9423d778fd1850bf2503d9909a6的Actions 45803683868/45803683724/45803683656结果，按实际失败修复；接Linux Normal原生TUN到origin完整双端TCP、UDP/Stop，再双ISA同机splice对照。",
+  "next_action": "在唯一分支实现Linux Normal原有owner中的每generation流表、事件/期限及实际TUN→Rust TCP→认证传输→对端Rust TCP→origin，保留source/lease/MTU/UDP/Stop；双ISA真应用bytes/hash/首到及同机splice性能对照。先收45807286675，不重复组件测试。",
   "unverified": true,
-  "last_tested_source": null,
-  "evidence_refs": [],
+  "last_tested_source": "3e709e0c8577b56ca237a24e6d18fccf998e9965",
+  "evidence_refs": [
+    "docs/evidence/M0/20261126-DUAL-RUST-TCP-ENDPOINT-CORE.json"
+  ],
   "context_refs": [
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-REGISTRATION.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-HANDOFF.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-HANDOFF.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "唯一施工分支首实质WIP 105da799ad82b9423d778fd1850bf2503d9909a6已推送，Draft PR80，固定pktkit核心移植及容量约束的双段transfer；核心验证在途，真实Linux链路尚未接通，性能NOT_RUN，不合并历史祖先；旧splice保留。"
+  "partial_summary": "分支 7b15225ee208c1478a9475c779e7eb0f0c08724b / Draft PR80；精确源码 3e709e0c8577b56ca237a24e6d18fccf998e9965 run45806924064 双原生ISA各329测试PASS，真实内核origin socket组件双向bytes/回程FIN及校验，两个artifact下载哈希及source/arch/rustc/test.log复核。原产品TUN/认证owner尚未接通，真实应用/UDP/Stop/性能NOT_RUN，旧splice不动。历史分支治理cursor问题保留，功能声明已修，后续治理45807286675。未合产品源码。"
 }
