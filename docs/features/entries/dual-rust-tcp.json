@@ -32,7 +32,8 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-WIP.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-WIP.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-TX-TURN-INTENT.md"
   ],
   "verification": [
     {
@@ -110,7 +111,8 @@
     "Paired Linux Normal/off only; FEC and Game modes not integrated, not interoperable with old TCP peer",
     "Normal scoped product PASS; server-local/source-policy parity, multi-lease, generation handoff and performance unverified.",
     "Old splice retained for same-host comparison; Windows unchanged",
-    "Clean x86 ABBA measured capped goodput parity, but client CPU +29.1%; full performance qualification NOT_RUN. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json"
+    "Clean x86 ABBA measured capped goodput parity, but client CPU +29.1%; full performance qualification NOT_RUN. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json",
+    "Ready ingress turn accounting candidate unqualified on current SOURCE; earlier scoped PASS refers to 86e3ec3 only."
   ],
   "promotion": null
 }

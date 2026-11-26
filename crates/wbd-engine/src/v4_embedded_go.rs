@@ -8502,7 +8502,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if split_ingress {
                     // The per-client TX remains the SOLE consumer of its
                     // source ingress; shared packets take original M1 loans.
-                    for turn in 0..32 {
+                    // Ingress budget counts actual dequeues, not staging
+                    // generated TCP output. M1 still has the same 32
+                    // packet cap; drain only already-ready work.
+                    let mut input_turns=0;
+                    loop {
                         if tx_pending.len()+jumbo_queue.len()>=32 ||
                             jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
                         if let Some(frame)=tcp_out.front(){
@@ -8519,12 +8523,16 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             slab.writable()[14..14+n].copy_from_slice(frame);
                             tcp_out.pop_front();tx_pending.push((slab,n));continue
                         }
+                        if input_turns==32{
+                            tcp_input_exhausted=native_tcp_owner.is_some();
+                            break
+                        }
                         let next=if let Some(buf)=deferred_shared.take(){
                             Ok(OriginalTunIngress::Shared(buf))
                         }else if let Some(packet)=wakeup_shared.take(){
                             Ok(packet)
                         }else{ingress_recv.try_recv()};
-                        if turn==31&&next.is_ok()&&native_tcp_owner.is_some(){tcp_input_exhausted=true;}
+                        input_turns+=1;
                         match next{
                             Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n)),
                             Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),

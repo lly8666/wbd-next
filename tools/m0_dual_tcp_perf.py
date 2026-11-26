@@ -8,6 +8,8 @@ COMPARE=os.environ.get("DUAL_TCP_COMPARE","splice")
 ARCH=os.environ.get("DUAL_TCP_ARCH","x86_64")
 if COMPARE=="toolchain":
     SOURCES={k:os.environ["GITHUB_SHA"] for k in ROOTS}
+elif COMPARE=="tx-turn":
+    SOURCES={"A":"86e3ec30010a59cbb60539b902cb96dc21e04d6a","B":os.environ["GITHUB_SHA"]}
 elif COMPARE=="profile":
     ROOTS={"B":ROOTS["B"]}; SOURCES={"B":SOURCES["B"]}
 C,R,S,T="h21client","h21router","h21server","h21origin"
@@ -85,6 +87,7 @@ def manifest(k):
     m=json.loads((root/"manifest.json").read_text())
     assert m["source_sha"]==SOURCES[k] and m["architecture"]==ARCH
     if COMPARE=="toolchain":assert m["rust"]=={"A":"1.85.1","B":"1.100.0"}[k]
+    if COMPARE=="tx-turn":assert m["rust"]=="1.85.1"
     for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
         assert hashlib.sha256((root/name).read_bytes()).hexdigest()==m["sha256"][name]
     return {"manifest":m,"manifest_sha256":hashlib.sha256((root/"manifest.json").read_bytes()).hexdigest()}
