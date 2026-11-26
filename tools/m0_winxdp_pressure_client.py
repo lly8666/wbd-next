@@ -162,7 +162,16 @@ def case(i):
             save(d/"origin-route.json",origin_route)
             print("H2449_ORIGIN_ROUTE "+json.dumps(origin_route),flush=True)
             before=snapshot()
-            result.update(pressure_client("192.0.2.2",5400,"10.66.0.2",SECONDS,c,None))
+            business={}
+            def connected():
+                business["start"]=time.monotonic()
+                def observe():
+                    time.sleep(20)
+                    try:save(d/"origin-tcp-steady.json",{"ss":wsl("ip","netns","exec","h2442origin","ss","-tinm","( sport = :5400 )")})
+                    except Exception as e:save(d/"origin-tcp-steady.json",{"error":repr(e)})
+                t=threading.Thread(target=observe,daemon=True);samples.append(t);t.start()
+            result.update(pressure_client("192.0.2.2",5400,"10.66.0.2",SECONDS,c,connected))
+            result["business_start_mono"]=business.get("start")
             after=snapshot()
             result["netem_packets"]={k:after["netem_packets"][k]-before["netem_packets"][k] for k in ("eth0","ifbwlm0")}
             result["kernel_counter_delta"]={k:v-before["counters"].get(k,v) for k,v in after["counters"].items()}
@@ -218,7 +227,7 @@ def main():
     global CURRENT
     rows=[]
     log=(OUT/"server-control.log").open("w")
-    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
+    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"WBD_XDP_STRESS_PHASE="+os.environ.get("WBD_XDP_STRESS_PHASE",""),"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
     try:
         deadline=time.monotonic()+60
         while "H2442_SERVER_CONTROL_READY" not in (OUT/"server-control.log").read_text(errors="replace"):
@@ -226,7 +235,7 @@ def main():
             time.sleep(.2)
         order=list(range(len(CASES)))
         if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
-        if os.environ["H2478_REPLICA"]=="S":order=[0,5] if os.environ.get("WBD_XDP_PRESSURE_LAB")=="1" else [0,2]
+        if os.environ["H2478_REPLICA"]=="S":order=[0,1,4] if os.environ.get("WBD_XDP_STRESS_PHASE")=="upload" else [0,5] if os.environ.get("WBD_XDP_PRESSURE_LAB")=="1" else [0,2]
         for i in order:
             CURRENT=i
             if os.environ.get("WBD_XDP_PRESSURE_LAB")=="1":
@@ -248,6 +257,18 @@ def main():
             r["server_path_ok"]=r.get("server",{}).get("path_ok")
             r["server_rx_mbps"]=((r.get("server",{}).get("source") or {}).get("rx_mbps"))
             r["flow_gaps_s"]=[f.get("max_rx_gap_s") for f in r.get("flows",[])]
+            r["socket_sendbufs"]=[f.get("socket_sndbuf") for f in r.get("flows",[])]
+            r["socket_send_timeouts"]=[f.get("send_timeouts") for f in r.get("flows",[])]
+            r["steady_process_cpu_cores"]=None
+            if r.get("business_start_mono") and (d/"windows-cpu.jsonl").exists():
+                try:
+                    start=r["business_start_mono"]
+                    cpu=[json.loads(l) for l in (d/"windows-cpu.jsonl").read_text().splitlines() if l.strip()]
+                    cpu=[v for v in cpu if start+10<=v["monotonic_s"]<=start+SECONDS-5]
+                    if len(cpu)>=2:
+                        dt=cpu[-1]["monotonic_s"]-cpu[0]["monotonic_s"]
+                        if dt>0:r["steady_process_cpu_cores"]=(cpu[-1]["cpu_total_s"]-cpu[0]["cpu_total_s"])/dt
+                except Exception as e:r["cpu_sample_error"]=repr(e)
             r["tx_lab"]=receipt("WBD_XDP_TX_LAB ")
             r["rx_lab"]=[{k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",l)} for l in s.splitlines() if "WBD_XDP_RX_LAB " in l]
             r["fec_receipts"]=[l for l in s.splitlines() if "WBD_WINDOWS_FEC2_INSTALLED" in l]
@@ -260,7 +281,7 @@ def main():
             r["pressure_valid"]=r["status"]=="MEASURED_EXACT" and r["exact_hash"] and all(v>0 for v in r.get("netem_packets",{}).values()) and len(r.get("netem_packets",{}))==2 and r["tx"].get("invalid")==0 and r["rx"].get("truncated")==0 and not r["fatal"] and r["fec_ok"] and r["traffic_ok"] and r["lab_ok"] and (r["loss"]==0 or r["loss_observed"]>0)
             rows.append(r);save(d/"measurement.json",r)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
-            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
+            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
             if r.get("shape_clear_error") or not r.get("client_stop") or not r.get("server_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):
                 for pth in (SERVER/("case-"+str(i))/"server.log",SERVER/("case-"+str(i))/"source.log",d/"client.log"):
                     if pth.exists():

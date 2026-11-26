@@ -35,3 +35,16 @@ if PATH_MODE=="nat" and os.environ.get("WBD_XDP_PRESSURE_LAB")=="1":
         dict(name="duplex-burst",rate=300,direction="duplex",streams=4,loss=10,correlation=25,delay=20,mtu=1400,profile=6),
     ):
         CASES.append(dict(CASES[0],**c))
+
+if os.environ.get("WBD_XDP_STRESS_PHASE")=="upload":
+    assert PATH_MODE=="nat" and os.environ.get("WBD_XDP_PRESSURE_LAB")=="1"
+    base=dict(CASES[0],direction="up",rate=400,loss=5,profile=6,delay=80,streams=2)
+    CASES=[dict(base,name=name,streams=streams,sndbuf=buf,delay=delay,loss=loss) for name,streams,buf,delay,loss in (
+      ("default-sendbuf-first",2,0,80,5),
+      ("sendbuf4m",2,4194304,80,5),
+      ("sendbuf16m",2,16777216,80,5),
+      ("eight-streams",8,4194304,80,5),
+      ("eight-streams-low-rtt",8,4194304,20,5),
+      ("eight-streams-clean",8,4194304,20,0),
+      ("default-sendbuf-last",2,0,80,5),
+    )]

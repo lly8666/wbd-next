@@ -4,6 +4,9 @@ BLOCK=bytes(range(256))*256
 def exchange(sock,seconds,rate,send,receive,windows):
     sock.settimeout(.5)
     result={"sent":0,"received":0,"tx_sha256":"","rx_sha256":"","tx_end":"inactive","rx_end":"inactive","steady_rx_bytes":0,"max_rx_gap_s":0}
+    result["socket_sndbuf"]=sock.getsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF)
+    result["socket_rcvbuf"]=sock.getsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF)
+    result["send_timeouts"]=0
     start=time.monotonic();errors=[]
     def tx():
         h=hashlib.sha256()
@@ -18,7 +21,7 @@ def exchange(sock,seconds,rate,send,receive,windows):
                         due=start+result["sent"]/(rate*125000)
                         if due>time.monotonic():time.sleep(min(due-time.monotonic(),.02));continue
                     try:n=sock.send(BLOCK)
-                    except socket.timeout:continue
+                    except socket.timeout:result["send_timeouts"]+=1;continue
                     if not n:raise RuntimeError("send returned zero")
                     result["sent"]+=n;h.update(BLOCK[:n])
                 result["tx_end"]="deadline"
@@ -74,7 +77,10 @@ def client(host,port,local,seconds,case,connected):
     n=case["streams"];rows=[None]*n;threads=[];socks=[]
     try:
         for i in range(n):
-            sock=socket.socket();sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,case["rcvbuf"]);sock.settimeout(35);sock.bind((local,0));sock.connect((host,port));socks.append(sock)
+            sock=socket.socket()
+            sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,case["rcvbuf"])
+            if case.get("sndbuf"):sock.setsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF,case["sndbuf"])
+            sock.settimeout(35);sock.bind((local,0));sock.connect((host,port));socks.append(sock)
         if connected:connected()
         def work(i,sock):
             with sock:
