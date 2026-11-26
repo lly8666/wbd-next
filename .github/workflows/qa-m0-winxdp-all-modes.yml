@@ -1,5 +1,5 @@
-name: M0 WinXDP all-mode original functional
-run-name: "M0 WinXDP 1.4 XDP-only functional | ${{ github.sha }}"
+name: M0 Windows WinXDP full installed product
+run-name: "M0 Windows installed release all modes + original WinForms | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
@@ -86,14 +86,19 @@ jobs:
           cmd.exe /d /s /c $cmd
           if($LASTEXITCODE -ne 0){throw 'native ISA-L A/B build failed'}
           [ordered]@{source_sha=$env:GITHUB_SHA;go_source_sha=$env:GITHUB_SHA;xdp_sdk='1.4.0';features=$features;native_fec_acceleration=$true;exe=(Get-FileHash xdp-build/wbd-client-embedded.exe).Hash.ToLowerInvariant();dll=(Get-FileHash xdp-build/wbd_engine.dll).Hash.ToLowerInvariant();isa_l_source=$env:WBD_ISAL_SOURCE_SHA;isa_l_archive_sha256=(Get-FileHash $archive.FullName).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content xdp-build/manifest.json
+      - name: Build original WinForms and official complete portable package
+        shell: pwsh
+        run: |
+          & ./tools/m0_winxdp_release_package.ps1 -SourceSHA $env:GITHUB_SHA
+          if($LASTEXITCODE -ne 0){throw 'portable assembly failed'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with: {name: winxdp-release, path: xdp-build/, if-no-files-found: error, retention-days: 14}
+        with: {name: winxdp-release, path: 'xdp-build/WBD-Windows-amd64-WinXDP.zip', if-no-files-found: error, retention-days: 14}
   functional:
     needs: build
     strategy:
       fail-fast: false
       matrix:
-        mode: [normal, fixed, auto, game2, game4, game2-fec, game4-fec, dns-tc]
+        mode: [normal, fixed, auto, game2, game4, game2-fec, game4-fec, dns-tc, gui]
     runs-on: windows-2025
     timeout-minutes: 35
     env:
@@ -179,52 +184,41 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'WSL prerequisites unavailable'}
           & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root --exec sh -c 'command -v tcpdump && command -v ethtool || (apt-get update -qq && apt-get install -y -qq tcpdump ethtool)'
           if($LASTEXITCODE -ne 0){throw 'H2480 ethtool/tcpdump prerequisites unavailable'}
-      - name: Deploy exact newly built client
+      - name: Extract final portable package and run the real bundled installer
         shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force result/wl-public | Out-Null
-          $m=Get-Content xdp-build/manifest.json -Raw | ConvertFrom-Json
-          if($m.source_sha -ne $env:GITHUB_SHA -or (Get-FileHash xdp-build/wbd_engine.dll).Hash.ToLowerInvariant() -ne $m.dll -or (Get-FileHash xdp-build/wbd-client-embedded.exe).Hash.ToLowerInvariant() -ne $m.exe){throw 'build identity mismatch'}
-          Copy-Item xdp-build/wbd-client-embedded.exe,xdp-build/wbd_engine.dll result/wl-public/
-      - name: Install original signed Wintun only (no Npcap)
-        shell: pwsh
-        timeout-minutes: 8
+        timeout-minutes: 10
         run: |
           $ErrorActionPreference='Stop'
-          $root=Join-Path $env:RUNNER_TEMP 'wl-public-real'
-          New-Item -ItemType Directory -Force $root,result/wl-public | Out-Null
-          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'runner already has Npcap; cannot prove XDP-only product'}
-          function Get-PinnedPublicNativeDriverPackage([string]$Uri,[string]$Destination){
-            for($attempt=1;$attempt -le 5;$attempt++){
-              try {
-                Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Destination -TimeoutSec 65 -ErrorAction Stop
-                if(-not (Test-Path -LiteralPath $Destination)){throw 'signed package download absent'}
-                return
-              }catch{
-                Remove-Item -LiteralPath $Destination -Force -ErrorAction SilentlyContinue
-                Write-Output ('PLAN028_EXTERNAL_SIGNED_DRIVER_DOWNLOAD_RETRY attempt='+$attempt+' status='+$_.Exception.GetType().Name)
-                if($attempt -eq 5){throw}
-                Start-Sleep -Seconds ([Math]::Min(24,4*$attempt))
-              }
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'runner already has Npcap; no clean XDP-only proof'}
+          $dir=Join-Path $PWD 'result/wl-public'
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Expand-Archive xdp-build/WBD-Windows-amd64-WinXDP.zip $dir -Force
+          $m=Get-Content "$dir/package-manifest.json" -Raw | ConvertFrom-Json -AsHashtable
+          if($m.source_sha -ne $env:GITHUB_SHA){throw 'package source mismatch'}
+          foreach($key in $m.files.Keys){
+            if((Get-FileHash (Join-Path $dir $key)).Hash.ToLowerInvariant() -ne $m.files[$key]){throw "package bytes mismatch: $key"}
+          }
+          $p=Start-Process "$dir/WBD.exe" -ArgumentList '--install-drivers' -WorkingDirectory $dir -Wait -PassThru
+          Get-Content "$dir/driver-install-result.txt"
+          if($p.ExitCode -ne 0){throw 'bundled GUI driver setup failed'}
+          Copy-Item "$dir/driver-install-result.txt" result/driver-first-install.txt
+          $p=Start-Process "$dir/WBD.exe" -ArgumentList '--install-drivers' -WorkingDirectory $dir -Wait -PassThru
+          Get-Content "$dir/driver-install-result.txt"
+          if($p.ExitCode -ne 0){throw 'bundled driver repeat setup failed'}
+          Copy-Item "$dir/driver-install-result.txt" result/driver-repeat-install.txt
+          # Original test harness expects the historical filename; same bytes.
+          Copy-Item "$dir/wbd-client.exe" "$dir/wbd-client-embedded.exe"
+          if($env:WBD_WL_PUBLIC_MODE -eq 'gui'){
+            # Exercise actual compiled original GUI controls and original Go check-config.
+            $p=Start-Process "$dir/WBD.exe" -ArgumentList '--self-test' -WorkingDirectory $dir -Wait -PassThru
+            $v=Get-Content "$dir/gui-test-result.json" -Raw | ConvertFrom-Json
+            Write-Output ('GUI_RECEIPT_STATUS='+$v.result+' checks='+@($v.checks).Count+' exit='+$p.ExitCode)
+            if($p.ExitCode -ne 0 -or $v.result -ne 'PASS'){
+              Write-Output ($v | ConvertTo-Json -Depth 5 -Compress)
+              throw 'actual WinForms self-test failed'
             }
           }
-          $wzip=Join-Path $root 'wintun.zip'
-          $wdir=Join-Path $root 'wintun'
-          Get-PinnedPublicNativeDriverPackage 'https://www.wintun.net/builds/wintun-0.14.1.zip' $wzip
-          if((Get-FileHash $wzip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'official Wintun archive hash changed'}
-          Expand-Archive $wzip $wdir -Force
-          $dll=Join-Path $wdir 'wintun/bin/amd64/wintun.dll'
-          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun DLL unsigned'}
-          Copy-Item $dll result/wl-public/wintun.dll
-      - name: Install official WinXDP runtime
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          nuget install Microsoft.XDP-for-Windows.Runtime.x64 -Version 1.4.0 -OutputDirectory xdp-packages -NonInteractive
-          if($LASTEXITCODE -ne 0){throw 'XDP runtime unavailable'}
-          $runtime=(Get-ChildItem xdp-packages -Recurse -Filter xdp-setup.ps1 | Select-Object -First 1).Directory.FullName
-          & "$runtime/xdp-setup.ps1" -Install xdp
-          if($LASTEXITCODE -ne 0){throw 'XDP install failed'}
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'unexpected Npcap dependency'}
       - name: Real original product functional mode (no throughput benchmark)
         shell: pwsh
         timeout-minutes: 45
@@ -289,6 +283,13 @@ jobs:
                 New-NetFirewallHyperVRule -Name ($name+'-dns-'+$proto) -DisplayName ($name+'-dns-'+$proto) -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol $proto -LocalAddresses $guestIP -RemoteAddresses $hostIP[0].IPAddress -LocalPorts @('53','46112') | Out-Null
               }
             }
+            if($env:WBD_WL_PUBLIC_MODE -eq 'gui'){
+              $env:WBD_WL_PUBLIC_MODE='normal'
+              $env:WBD_PLAN029_GUI_REAL_SCENE='1'
+              $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE='1'
+              $env:WBD_PLAN029_V3_DIRECT_SCENE='1'
+              $env:WBD_WINXDP_PACKAGED_GUI='1'
+            }
             $env:WBD_WL_PUBLIC_MODES=$env:WBD_WL_PUBLIC_MODE
             $env:WBD_WL_BINARY_SOURCE=$env:GITHUB_SHA
             & python -u tools/m0_wl_public_modes_e2e.py
@@ -319,6 +320,10 @@ jobs:
             result/wl-public/plan029-bootstrap-tc-guest.log
             result/wl-public/mode-evidence/
             result/h2476-*.txt
-            xdp-build/manifest.json
+            result/wl-public/package-manifest.json
+            result/wl-public/gui-test-result.json
+            result/driver-first-install.txt
+            result/driver-repeat-install.txt
+            result/wl-public/gui/data/plan029-gui-real-receipt.json
           if-no-files-found: warn
           retention-days: 14

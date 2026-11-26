@@ -6,12 +6,21 @@ import hashlib,json,os,pathlib,shutil,subprocess
 
 def prepare(root,out,client,rust,original_args,rules):
  gui=out/"gui"
- subprocess.run(["pwsh","-NoProfile","-File",
-   str(root/"tools"/"m0_plan028_h1640_win_gui_compile.ps1"),
-   "-LegacyRoot",str(root/"legacy"),"-OutputDirectory",str(gui),
-   "-SourceSHA",os.environ["GITHUB_SHA"],"-Version","plan029-native-gui"],
-   cwd=root,check=True,timeout=130)
- csc=(gui/"roslyn-path.txt").read_text().strip()
+ if os.environ.get("WBD_WINXDP_PACKAGED_GUI")=="1":
+  gui.mkdir(parents=True,exist_ok=True)
+  for name in ("WBD.exe","WBD.exe.config","gui-fields.json","PARAMETERS.json","gui-overlay-source.json"):
+   shutil.copy2(out/name,gui/name)
+  # Resolve compiler for the test harness only; WBD.exe is from the actual package.
+  vswhere=pathlib.Path(os.environ["ProgramFiles(x86)"])/"Microsoft Visual Studio/Installer/vswhere.exe"
+  vs=subprocess.check_output([str(vswhere),"-latest","-products","*","-property","installationPath"],text=True).strip()
+  csc=str(pathlib.Path(vs)/"MSBuild/Current/Bin/Roslyn/csc.exe")
+ else:
+  subprocess.run(["pwsh","-NoProfile","-File",
+    str(root/"tools"/"m0_plan028_h1640_win_gui_compile.ps1"),
+    "-LegacyRoot",str(root/"legacy"),"-OutputDirectory",str(gui),
+    "-SourceSHA",os.environ["GITHUB_SHA"],"-Version","plan029-native-gui"],
+    cwd=root,check=True,timeout=130)
+  csc=(gui/"roslyn-path.txt").read_text().strip()
  fx=pathlib.Path(os.environ.get("ProgramFiles(x86)","C:/Program Files (x86)"))/"Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8"
  refs=["/reference:"+str(fx/(n+".dll")) for n in
    ("mscorlib","System","System.Core","System.Drawing","System.Windows.Forms",
@@ -22,14 +31,9 @@ def prepare(root,out,client,rust,original_args,rules):
    "/reference:"+str(gui/"WBD.exe"),*refs,
    str(root/"tools"/("m0_plan029b_b4_real_gui.cs" if os.environ.get("WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE")=="1" else "m0_plan029_gui_real_network_harness.cs"))],
    cwd=root,check=True,timeout=60)
- # The real legacy Npcap loader resolves wpcap.dll relative to the ORIGINAL
- # Go child EXE. GUI has a distinct portable working directory; never borrow
- # a global PATH or a stale test-only fake DLL. These came from the exact
- # already-verified official signed Npcap 1.88 install in this runner.
+ # Same actual WinXDP DLL and installed original Wintun; no pcap files.
  for src,dst in ((client,gui/"wbd-client.exe"),(rust,gui/"wbd_engine.dll"),
-                 (out/"wintun.dll",gui/"wintun.dll"),
-                 (out/"wpcap.dll",gui/"wpcap.dll"),
-                 (out/"Packet.dll",gui/"Packet.dll")):
+                 (out/"wintun.dll",gui/"wintun.dll")):
   if not src.is_file() or src.stat().st_size<10000:
    raise RuntimeError("missing exact installed original driver/user DLL "+src.name)
   shutil.copy2(src,dst)
@@ -88,7 +92,7 @@ def prepare(root,out,client,rust,original_args,rules):
  gui_flows=os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1"
  seed["startup-padding"]="flows" if gui_flows else "off"
  (data/"gui-seed.json").write_text(json.dumps(seed,separators=(",",":")),encoding="utf-8")
- print("PLAN029_GUI_EXACT_GO_RUST_WINFORMS_BUILD_SOURCE_AND_SIGNED_NPCAP_DLLS_PASS",flush=True)
+ print("PLAN029_GUI_EXACT_GO_RUST_WINFORMS_WINXDP_WINTUN_PASS",flush=True)
  return [str(gui/"GuiReal.exe"),str(gui),str(data/"gui-seed.json")],gui
 
 def receipt_and_cleanup(gui):
