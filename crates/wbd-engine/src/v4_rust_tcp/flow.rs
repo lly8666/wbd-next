@@ -5,6 +5,8 @@ use std::{io, io::{Read, Write}, net::{Shutdown, SocketAddr, TcpStream}, time::I
 use super::{Segments, transfer, ipv4::{self, Packet, Tuple}};
 use super::pktkit::vtcp::{Conn, ConnConfig, CongestionKind, MtuProbing};
 
+// Matched-CUBIC experimental SOURCE: both middle TCP endpoints use CUBIC.
+// The local Rust endpoint already used CUBIC; no other TCP or wire changes.
 const TURN_BYTES: usize = 64 * 1024;
 type Packets = Vec<Vec<u8>>;
 
@@ -97,7 +99,7 @@ impl ClientFlow {
         }
         let mut flow = Self {
             local: Endpoint::new(syn.tuple.reverse(), local_mtu, CongestionKind::Cubic)?,
-            middle: Endpoint::new(syn.tuple, middle_mtu, CongestionKind::Bbr)?,
+            middle: Endpoint::new(syn.tuple, middle_mtu, CongestionKind::Cubic)?,
             local_fin_forwarded: false,
             middle_fin_forwarded: false,
         };
@@ -195,7 +197,7 @@ impl ServerFlow {
     fn with_socket(syn: &Packet, mtu: u16, stream: TcpStream, connected: bool)
         -> io::Result<(Self, Packets)>
     {
-        let mut middle = Endpoint::new(syn.tuple.reverse(), mtu, CongestionKind::Bbr)?;
+        let mut middle = Endpoint::new(syn.tuple.reverse(), mtu, CongestionKind::Cubic)?;
         let mut out = Vec::new();
         middle.accept(syn, &mut out)?;
         Ok((Self { middle, stream, connected, origin_eof: false, origin_write_closed: false }, out))

@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 """Native original-product same-VM A/B benchmark; one clean download scene."""
 import hashlib,json,os,pathlib,re,signal,subprocess,sys,time,statistics
-O=pathlib.Path("dual-tcp-perf-out").resolve(); O.mkdir(exist_ok=True)
+O=pathlib.Path(os.environ.get("DUAL_TCP_PERF_OUT","dual-tcp-perf-out")).resolve(); O.mkdir(parents=True,exist_ok=True)
 ROOTS={k:pathlib.Path("bundles",k).resolve() for k in ("A","B")}
 SOURCES={"A":"26b11e2da236e909b73f461964c52d5a86d42dca","B":"86e3ec30010a59cbb60539b902cb96dc21e04d6a"}
 COMPARE=os.environ.get("DUAL_TCP_COMPARE","splice")
 ARCH=os.environ.get("DUAL_TCP_ARCH","x86_64")
+CC="cubic" if COMPARE=="cubic-splice" else "bbr"
 if COMPARE=="toolchain":
     SOURCES={k:os.environ["GITHUB_SHA"] for k in ROOTS}
+elif COMPARE=="cubic-splice":
+    SOURCES["B"]=os.environ["GITHUB_SHA"]
+elif COMPARE=="bbr-splice":
+    ROOTS["B"]=pathlib.Path("bundles","BBR").resolve()
+    SOURCES["B"]="f2fed3e6dafbcb3ff325599d9726811a293894e0"
 elif COMPARE=="tx-turn":
     SOURCES={"A":"86e3ec30010a59cbb60539b902cb96dc21e04d6a","B":os.environ["GITHUB_SHA"]}
 elif COMPARE=="profile":
@@ -48,10 +54,16 @@ def stats(p):
 def host():
     return [int(x) for x in pathlib.Path("/proc/stat").read_text().splitlines()[0].split()[1:9]]
 def make():
-    run("modprobe","tcp_bbr")
+    if CC=="bbr":run("modprobe","tcp_bbr")
+    # Capture the running module identity; name alone does not identify BBR generation.
+    if CC=="bbr" and pathlib.Path("/sys/module/tcp_bbr").exists():
+        info=subprocess.run(["modinfo","tcp_bbr"],text=True,capture_output=True)
+        (O/"kernel-bbr-modinfo.txt").write_text(info.stdout+info.stderr)
+        modpath=subprocess.run(["modinfo","-n","tcp_bbr"],text=True,capture_output=True).stdout.strip()
+        if pathlib.Path(modpath).is_file():save(O/"kernel-bbr-module.json",{"path":modpath,"sha256":hashlib.sha256(pathlib.Path(modpath).read_bytes()).hexdigest()})
     for n in N:
         run("ip","netns","add",n);ns(n,"ip","link","set","lo","up")
-        for key in ("net.ipv4.conf.all.rp_filter=0","net.ipv4.conf.default.rp_filter=0","net.ipv4.tcp_congestion_control=bbr","net.ipv4.tcp_rmem=4096 87380 67108864","net.ipv4.tcp_wmem=4096 65536 67108864","net.core.rmem_max=67108864","net.core.wmem_max=67108864"):
+        for key in ("net.ipv4.conf.all.rp_filter=0","net.ipv4.conf.default.rp_filter=0","net.ipv4.tcp_congestion_control="+CC,"net.ipv4.tcp_rmem=4096 87380 67108864","net.ipv4.tcp_wmem=4096 65536 67108864","net.core.rmem_max=67108864","net.core.wmem_max=67108864"):
             ns(n,"sysctl","-qw",key)
     for n,a,ip,m,b,jp in [(C,"wan0","10.248.81.2/24",R,"rc0","10.248.81.1/24"),(S,"wan0","10.248.82.2/24",R,"rs0","10.248.82.1/24"),(S,"exit0","198.18.77.1/24",T,"app0","198.18.77.2/24")]:
         run("ip","link","add","h21v1","type","veth","peer","name","h21v2")
@@ -87,7 +99,7 @@ def manifest(k):
     m=json.loads((root/"manifest.json").read_text())
     assert m["source_sha"]==SOURCES[k] and m["architecture"]==ARCH
     if COMPARE=="toolchain":assert m["rust"]=={"A":"1.85.1","B":"1.100.0"}[k]
-    if COMPARE=="tx-turn":assert m["rust"]=="1.85.1"
+    if COMPARE in ("tx-turn","cubic-splice","bbr-splice"):assert m["rust"]=="1.85.1"
     for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
         assert hashlib.sha256((root/name).read_bytes()).hexdigest()==m["sha256"][name]
     return {"manifest":m,"manifest_sha256":hashlib.sha256((root/"manifest.json").read_bytes()).hexdigest()}
@@ -95,10 +107,10 @@ def manifest(k):
 def leg(i,k):
     d=O/f"{i}-{k}";d.mkdir()
     root=ROOTS[k];port=5300+i;server=client=app=profile=None
-    splice=(k=="A" and COMPARE=="splice")
+    splice=(k=="A" and COMPARE in ("splice","cubic-splice","bbr-splice"))
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1460"]
-    server_flags=["--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"] if splice else ["--dual-rust-tcp"]
+    server_flags=["--tcp-proxy-cc",CC,"--tcp-proxy-port","46180"] if splice else ["--dual-rust-tcp"]
     client_flags=[] if splice else ["--dual-rust-tcp"]
     begin=time.monotonic_ns()
     try:
@@ -113,7 +125,7 @@ def leg(i,k):
             "--username","bench","--password","DUAL-TCP-PERF","--auto-ip","--installation-id-file",d/"install",*common,*client_flags)
         until(client,lambda:"V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client" in (d/"client.log").read_text())
         if splice:
-            assert "WBD_TCP_SPLICE_READY tun=wbds0 port=46180 cc=bbr" in (d/"server.log").read_text()
+            assert f"WBD_TCP_SPLICE_READY tun=wbds0 port=46180 cc={CC}" in (d/"server.log").read_text()
         else:
             until(server,lambda:"WBD_DUAL_RUST_TCP_OWNER_START" in (d/"server.log").read_text())
             assert "WBD_DUAL_RUST_TCP_OWNER_START" in (d/"client.log").read_text()
@@ -130,7 +142,7 @@ def leg(i,k):
             time.sleep(.25)
         pre=[stats(server),stats(client)];h0=host();tick=os.sysconf("SC_CLK_TCK");t=time.monotonic_ns()
         with (d/"iperf.json").open("w") as out,(d/"iperf.err").open("w") as err:
-            p=subprocess.run(["ip","netns","exec",C,"iperf3","-J","-c","198.18.77.2","-p",str(port),"-C","bbr","-P","1","-R","-t","25"],stdout=out,stderr=err,timeout=90)
+            p=subprocess.run(["ip","netns","exec",C,"iperf3","-J","-c","198.18.77.2","-p",str(port),"-C",CC,"-P","1","-R","-t","25"],stdout=out,stderr=err,timeout=90)
         end=time.monotonic_ns();h1=host();post=[stats(server),stats(client)]
         if profile:
             if profile.poll() is None:profile.send_signal(signal.SIGINT)
@@ -140,6 +152,8 @@ def leg(i,k):
             save(d/"profile-status.json",{"record_rc":profile.returncode,"report_rc":report.returncode,"scope":"DIAGNOSTIC_ONLY"})
         data=json.loads((d/"iperf.json").read_text());assert p.returncode==0 and not data.get("error"),data.get("error")
         received=data["end"]["sum_received"];sent=data["end"]["sum_sent"]
+        if COMPARE in ("cubic-splice","bbr-splice"):
+            assert data["end"]["sender_tcp_congestion"]==CC and data["end"]["receiver_tcp_congestion"]==CC
         assert received["bytes"]>0 and received["seconds"]>=24
         app.wait(15);assert app.returncode==0
         gib=received["bytes"]/2**30
@@ -153,7 +167,7 @@ def leg(i,k):
         assert server.returncode==0 and client.returncode==0
         if splice:
             assert "WBD_TCP_SPLICE_STOP error=<nil>" in sl
-            assert f"target=198.18.77.2:{port} cc=bbr" in sl
+            assert f"target=198.18.77.2:{port} cc={CC}" in sl
             copies=[int(x) for x in re.findall(r"WBD_TCP_SPLICE_DONE .*?down=(\d+)",sl)]
             assert max(copies,default=0)>=received["bytes"]
             row["splice_down_bytes"]=copies
@@ -161,7 +175,7 @@ def leg(i,k):
             assert "WBD_TCP_SPLICE_READY" not in sl
             assert all("WBD_DUAL_RUST_TCP_OWNER_STOP" in log for log in (sl,cl))
         assert "TPROXY" not in ns(S,"iptables","-t","mangle","-S")
-        row.update(end_monotonic_ns=time.monotonic_ns(),server_exit=server.returncode,client_exit=client.returncode)
+        row.update(end_monotonic_ns=time.monotonic_ns(),server_exit=server.returncode,client_exit=client.returncode,kernel_cc=CC,inner_cc=CC if splice or COMPARE=="cubic-splice" else "pktkit-bbrv3",sender_cc=data["end"].get("sender_tcp_congestion"),receiver_cc=data["end"].get("receiver_tcp_congestion"))
         save(d/"result.json",row);print(json.dumps(row),flush=True)
         return row
     finally:

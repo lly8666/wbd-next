@@ -33,7 +33,8 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-WIP.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-TX-TURN-INTENT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-TX-TURN-INTENT.md",
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-INTENT.md"
   ],
   "verification": [
     {
@@ -54,8 +55,8 @@
       "platform": "linux/x86_64",
       "scope": "Paired Normal actual product TCP bidirectional bytes, half-close, concurrency, UDP, owned Stop",
       "status": "FUNCTIONAL_PASS",
-      "source_sha": "86e3ec30010a59cbb60539b902cb96dc21e04d6a",
-      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-NORMAL-PRODUCT.json"
+      "source_sha": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
+      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-TX-TURN-RESULT.json"
     },
     {
       "platform": "linux/x86_64",
@@ -89,8 +90,8 @@
       "platform": "linux/aarch64",
       "scope": "Paired Normal actual product TCP bidirectional bytes, half-close, concurrency, UDP, owned Stop",
       "status": "FUNCTIONAL_PASS",
-      "source_sha": "86e3ec30010a59cbb60539b902cb96dc21e04d6a",
-      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-NORMAL-PRODUCT.json"
+      "source_sha": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
+      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-TX-TURN-RESULT.json"
     },
     {
       "platform": "linux/aarch64",
@@ -112,7 +113,7 @@
     "Normal scoped product PASS; server-local/source-policy parity, multi-lease, generation handoff and performance unverified.",
     "Old splice retained for same-host comparison; Windows unchanged",
     "Clean x86 ABBA measured capped goodput parity, but client CPU +29.1%; full performance qualification NOT_RUN. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json",
-    "Ready ingress turn accounting candidate unqualified on current SOURCE; earlier scoped PASS refers to 86e3ec3 only."
+    "Ready turn accounting function PASS and neutral performance; matched CUBIC test source changes both middle endpoints only. New SOURCE unqualified."
   ],
   "promotion": null
 }
