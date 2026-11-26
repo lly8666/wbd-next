@@ -65,7 +65,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y -qq qemu-system-x86 qemu-utils iproute2 iptables tcpdump socat openssl
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils iproute2 iptables tcpdump socat openssl gcc
           if test -e /dev/kvm; then sudo chmod a+rw /dev/kvm; fi
           bun install -g @tikoci/quickchr@0.7.0
           echo "$HOME/.bun/bin" >>"$GITHUB_PATH"

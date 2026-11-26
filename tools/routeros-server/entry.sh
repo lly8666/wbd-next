@@ -6,16 +6,32 @@ echo WBD_ROS_CONTAINER_PREFLIGHT
 uname -a
 ip -br addr
 ip -4 route
-cat /proc/sys/net/ipv4/tcp_available_congestion_control
-test -c /dev/net/tun
-dev=$(ip -o -4 addr show | awk '$4=="10.248.82.2/24"{print $2}')
-test -n "$dev"
-if [ "$(cat /proc/sys/net/ipv4/ip_forward)" != 1 ]; then
-  sysctl -w net.ipv4.ip_forward=1
+# ROS may hide proc sysctls. Readback is diagnostic; actual kernel operations
+# and end-to-end forwarded bytes determine qualification.
+ls -ld /proc /proc/sys /proc/sys/net /proc/sys/net/ipv4 /dev/net/tun 2>&1 || :
+if [ -r /proc/sys/net/ipv4/tcp_available_congestion_control ]; then
+  cat /proc/sys/net/ipv4/tcp_available_congestion_control
+else
+  echo WBD_ROS_CC_PROC_UNAVAILABLE
 fi
-test "$(cat /proc/sys/net/ipv4/ip_forward)" = 1
-ip tuntap add dev wbprobe mode tun
+dev=$(ip -o -4 addr show | awk '$4=="10.248.82.2/24"{sub(/@.*/, "", $2); print $2}')
+test -n "$dev"
+echo "WBD_ROS_UNDERLAY=$dev"
+./cap-probe
+if [ -r /proc/sys/net/ipv4/ip_forward ]; then
+  if [ "$(cat /proc/sys/net/ipv4/ip_forward)" != 1 ]; then
+    sysctl -w net.ipv4.ip_forward=1 || echo WBD_ROS_IP_FORWARD_WRITE_FAILED
+  fi
+  echo "WBD_ROS_IP_FORWARD=$(cat /proc/sys/net/ipv4/ip_forward)"
+else
+  echo WBD_ROS_IP_FORWARD_PROC_UNAVAILABLE
+fi
+if ! ip tuntap add dev wbprobe mode tun; then
+  echo WBD_ROS_TUN_UNAVAILABLE
+  exit 2
+fi
 ip link set wbprobe up
+echo WBD_ROS_TUN_AVAILABLE
 fq=600
 if tc qdisc replace dev wbprobe root fq maxrate 600mbit flow_limit 256; then
   tc -d qdisc show dev wbprobe
@@ -49,7 +65,11 @@ fi
 ip link del wbprobe
 # Existing original native lab semantics: the host TCP stack must not reset the
 # raw carrier's port. Only this container and only the WBD port.
-iptables -w 3 -A OUTPUT -o "$dev" -p tcp --sport 443 --tcp-flags RST RST -j DROP
+if ! iptables -w 3 -A OUTPUT -o "$dev" -p tcp --sport 443 --tcp-flags RST RST -j DROP; then
+  echo WBD_ROS_RST_RULE_UNAVAILABLE
+  exit 2
+fi
+echo WBD_ROS_RST_RULE_APPLIED
 set -- --raw-interface "$dev" --local-ip 10.248.82.2 --local-port 443 --tun-name wbds0 --tun-ipv4 10.66.0.1/24 --server-name wbd-h2228.example.test --route-key-hex-file fixture/route-key.hex --users-file fixture/users.json --lease-pool 10.66.0.128/25 --tls-cert fixture/cert.pem --tls-key fixture/key.pem --outer-mtu 1460 --mode shared --outer-repair on --tun-fq-maxrate-mbps "$fq"
 if [ -n "$WBD_CC" ]; then
   set -- "$@" --tcp-proxy-cc "$WBD_CC" --tcp-proxy-port 46180

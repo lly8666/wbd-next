@@ -94,6 +94,7 @@ fi
 # Fresh run-only test credentials are never committed or uploaded.
 mkdir -p "$work/image/fixture" "$work/http"
 cp tools/routeros-server/{Dockerfile,entry.sh} "$work/image/"
+cc -O2 -Wall -Wextra -o "$work/image/cap-probe" tools/routeros-server/cap-probe.c
 cp "$bundle"/{wbd-v4-server,libwbd_engine.so} "$work/image/"
 fixture="$work/image/fixture"
 openssl rand -hex 32 >"$fixture/route-key.hex"
@@ -121,8 +122,13 @@ ros '/container/start [find where name=wbd]'
 for i in $(seq 1 90); do
   ros '/log/print where topics~"container"' >"$out/ros-container-log.txt"
   if grep -q 'V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443' "$out/ros-container-log.txt"; then break; fi
+  if grep -q 'exited with status' "$out/ros-container-log.txt"; then
+    cat "$out/ros-container-log.txt"
+    exit 2
+  fi
   sleep 2
 done
+cat "$out/ros-container-log.txt"
 grep -q 'V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443' "$out/ros-container-log.txt"
 if [ -n "$cc" ]; then grep -q 'WBD_TCP_SPLICE_READY tun=wbds0 port=46180 cc=cubic' "$out/ros-container-log.txt"; fi
 # Verify the actual application with the H2429 finite duplex+half-close, scaled for CHR free,
