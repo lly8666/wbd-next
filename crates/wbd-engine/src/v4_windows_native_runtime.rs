@@ -1999,6 +1999,7 @@ fn stage_sources(
              split,direct_sender,Arc::clone(&rx_notify_for_tx),
              tcp_receiver);
          if rc!=OK{
+             eprintln!("WBD_WINDOWS_NATIVE_WORKER_FAILURE role=TX rc={}",rc);
              tx_counters.worker_error.store(rc,Ordering::Release);
              let _=tx_stop.wake();
          }
@@ -2014,6 +2015,7 @@ fn stage_sources(
              rx_event,rx_early,Arc::clone(&rx_counters),fixed,sack_negotiated,
              direct_receiver,tunnel_dns_map);
          if rc!=OK{
+             eprintln!("WBD_WINDOWS_NATIVE_WORKER_FAILURE role=RX rc={}",rc);
              rx_counters.worker_error.store(rc,Ordering::Release);
              let _=rx_stop.wake();
          }

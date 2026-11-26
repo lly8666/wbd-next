@@ -48,7 +48,14 @@ fn seal_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
         _=>false,
     };
     if !valid{return Err(INVALID)}
-    let mut slab=e.arena.allocate().map_err(|_|FULL)?;
+    let mut slab=match e.arena.allocate(){
+        Ok(v)=>v,
+        Err(_)=>{
+            let a=e.arena.report();
+            eprintln!("WBD_WINDOWS_FEC_ARENA_FULL site=seal capacity={} loaned={} free={} peak={}",e.arena.capacity(),a.loaned,a.free,e.arena.peak_loaned());
+            return Err(FULL)
+        }
+    };
     slab.writable()[14..14+frame.len()].copy_from_slice(frame);
     // Coherently advance the shared M1 owner clock used by DATA, parity
     // and original Rust M2 control; never offer source at synthetic t=0.
@@ -103,7 +110,14 @@ pub(super) fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
         e.fec2_rx=Some(Fec2LiveRx::from_authenticated_scope(scope,limit)
             .map_err(|_|INVALID)?);
     }
-    let mut slab=e.arena.allocate().map_err(|_|FULL)?;
+    let mut slab=match e.arena.allocate(){
+        Ok(v)=>v,
+        Err(_)=>{
+            let a=e.arena.report();
+            eprintln!("WBD_WINDOWS_FEC_ARENA_FULL site=open capacity={} loaned={} free={} peak={}",e.arena.capacity(),a.loaned,a.free,e.arena.peak_loaned());
+            return Err(FULL)
+        }
+    };
     slab.writable()[..wire.len()].copy_from_slice(wire);
     let unfolded=m0_tcp_unwrap(&e,seq,wire.len())?;
     // Linux M1 uses a single monotonic timestamp for offer and drain.
@@ -344,7 +358,14 @@ pub(super) fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         out.len()<frame.len()+41{return Err(INVALID)}
     // Fallible Arena allocation MUST precede taking the only FEC stream:
     // capacity errors cannot discard profile/revision for this generation.
-    let mut input=e.arena.allocate().map_err(|_|FULL)?;
+    let mut input=match e.arena.allocate(){
+        Ok(v)=>v,
+        Err(_)=>{
+            let a=e.arena.report();
+            eprintln!("WBD_WINDOWS_FEC_ARENA_FULL site=source capacity={} loaned={} free={} peak={}",e.arena.capacity(),a.loaned,a.free,e.arena.peak_loaned());
+            return Err(FULL)
+        }
+    };
     input.writable()[14..14+frame.len()].copy_from_slice(frame);
     let mut stream=e.fec2_tx.take().ok_or(BAD_STAGE)?;
     // Linux FixedStream is the sole revision source of truth. The old
@@ -1003,6 +1024,31 @@ mod tests{
                 .expect("actual first-send settlement on recovered owner");
         }
         assert_eq!(quiesce_wintun(&mut r,h,ep,911,91),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
+    fn winxdp_fixed_product_arena_retains_original_fec_budget_and_rx_headroom(){
+        let mut r=Registry{generation:232,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut r,false,991,99);
+        let ep=[2;16];
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,991,99).unwrap();
+            assert_eq!(e.arena.capacity(),2048);
+            // The previous 128-slot backing fails before a source can
+            // allocate. Hold the equivalent old capacity while staging
+            // a real Fixed source and settling its real accepted prefix.
+            let retained:Vec<_>=(0..128).map(|_|e.arena.allocate().unwrap()).collect();
+            let (used,seq,pn)=stage_fixed_source_entry(
+                &mut e,ep,991,99,&data(9),&mut [0u8;2048]).unwrap();
+            m2_kernel_firstsend_entry(&mut e,ep,991,99,pn,seq,used,1).unwrap();
+            let a=e.arena.report();
+            assert!(a.free>1024);
+            drop(retained);
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,991,99),OK);
         assert_eq!(stop(&mut r,h),OK);
         assert_eq!(release(&mut r,h),OK);
     }

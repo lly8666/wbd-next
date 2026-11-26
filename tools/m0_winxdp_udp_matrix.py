@@ -7,10 +7,12 @@ ROOT=pathlib.Path.cwd()
 OUT=ROOT/"result/wl-public"; E=ROOT/"result/winxdp-udp-matrix"; E.mkdir(parents=True,exist_ok=True)
 CASES=[["fixed-base-first","fixed",16384,2048,32,"original",350,5,20,1200],["fixed-rx8192","fixed",8192,2048,32,"original",350,5,20,1200],["fixed-rx4096","fixed",4096,2048,32,"original",350,5,20,1200],["fixed-rx4096-small","fixed",4096,2048,32,"original",350,5,20,288],["fixed-tx1024","fixed",16384,1024,32,"original",350,5,20,1200],["fixed-feedback","fixed",16384,2048,32,"feedback",350,5,20,1200],["fixed-base-last","fixed",16384,2048,32,"original",350,5,20,1200],["normal-clean","normal",16384,2048,32,"original",350,0,20,1200],["game2-fec","game2-fec",16384,2048,32,"original",250,5,20,1200],["game4-fec","game4-fec",16384,2048,32,"original",250,5,20,1200],["auto","auto",16384,2048,32,"original",250,5,80,1200]]
 def main():
+    global CASES
+    if os.environ.get("WBD_XDP_UDP_PHASE")=="small-pps":CASES=[["fixed-rx4096-small","fixed",4096,2048,32,"original",350,5,20,288],["fixed-small8192","fixed",8192,2048,32,"original",350,5,20,288],["fixed-small16384","fixed",16384,2048,32,"original",350,5,20,288],["fixed-small16384-150","fixed",16384,2048,32,"original",150,5,20,288],["fixed-small16384-feedback","fixed",16384,2048,32,"feedback",350,5,20,288]]
     rows=[]
     order=list(range(len(CASES)))
     if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
-    if os.environ["H2478_REPLICA"]=="S":order=[0,8,9,10]
+    if os.environ["H2478_REPLICA"]=="S":order=[0,2,3] if os.environ.get("WBD_XDP_UDP_PHASE")=="small-pps" else [0,8,9,10]
     for i in order:
         name,mode,rx,tx,q,policy,rate,loss,delay,size=CASES[i]
         case=E/name;case.mkdir(exist_ok=False)
@@ -39,7 +41,7 @@ def main():
         row={"name":name,"mode":mode,"rc":rc,"stop":r.get("stop"),"scenario_identity":v.get("scenario_sha256")==expected,
              "status":v.get("status"),"offered":v.get("offered_mbps"),"delivered":v.get("first_delivered_mbps"),"first":v.get("first_delivery_fraction"),
              "tx":receipts("WBD_XDP_TX_STOP "),"rx":receipts("WBD_XDP_RX_STOP "),"tx_lab":receipts("WBD_XDP_TX_LAB "),"rx_lab":receipts("WBD_XDP_RX_LAB "),
-             "stats":stats,"tun_fq":r.get("linux_tun_fq_kernel"),"tun_link":r.get("linux_tun_link_kernel")}
+             "fatal":[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC_ARENA_FULL" in l or "WBD_WINDOWS_NATIVE_WORKER_FAILURE" in l],"stats":stats,"tun_fq":r.get("linux_tun_fq_kernel"),"tun_link":r.get("linux_tun_link_kernel")}
         rows.append(row)
         (E/"summary.json").write_text(json.dumps(rows,indent=2))
         print("WINXDP_UDP_CASE "+json.dumps(row),flush=True)

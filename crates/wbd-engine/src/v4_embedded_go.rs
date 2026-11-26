@@ -1198,7 +1198,14 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     // Keep all frozen W168 Linux FEC/Game/TUN allocations unchanged.
     let windows_normal_off_pool=cfg!(target_os="windows") &&
         handoff.negotiated_features==3;
-    let (slots,bytes)=if windows_normal_off_pool {
+    // Windows feature7 originally fell through to the 128-slot cold
+    // arena. FixedStream may retain 2MiB of source slabs while parity
+    // is backpressured; the same arena also serves authenticated RX,
+    // staged source seals and control. Match the already-qualified
+    // 2048-slot product backing, not the size of the AF_XDP ring.
+    let windows_fec2_product_pool=cfg!(target_os="windows") &&
+        cfg!(feature="fec2_product_record") && handoff.negotiated_features==7;
+    let (slots,bytes)=if windows_normal_off_pool || windows_fec2_product_pool {
         (2048,5_000_000)
     }else if fec2_product_pool || public_normal_pool {
         (2048,4_800_000)
