@@ -2768,7 +2768,6 @@ impl Conn {
             }
             let rb = self.recv_buf.as_ref().unwrap();
             let (nxt, had_holes) = (rb.nxt(), rb.has_ooo());
-            let received_before = self.stats.bytes_received;
             self.process_data(seg);
             let dup = self.recv_buf.as_mut().unwrap().take_dup();
             if self.sack_ok && dup.is_some() {
@@ -2795,7 +2794,7 @@ impl Conn {
             // exhaustion keep their existing immediate path.
             sack_only = self.cfg.middle_sack_compress && self.sack_ok
                 && seq_after(seg.seq, nxt) && rb.nxt() == nxt && rb.has_ooo()
-                && self.stats.bytes_received - received_before == seg.payload.len() as u64
+                && rb.sack_block_around(seg.seq, end).is_some()
                 && dup.is_none() && self.dsack_out.is_none()
                 && self.rcv_wnd_bytes() >= self.rcv_mss.max(seg.payload.len() as u32);
             if duplicate {
