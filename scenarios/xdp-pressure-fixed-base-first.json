@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "scenario_id": "xdp-fixed-base-first",
+  "duration_s": 60,
+  "warmup_s": 5,
+  "drain_s": 10,
+  "tun_mtu": 1460,
+  "seed": 20261126,
+  "public_mode": "fixed",
+  "windows_to_linux": {
+    "offered_mbps": 350,
+    "delay_ms": 20,
+    "loss_pct": 5,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 1
+      }
+    ]
+  },
+  "linux_to_windows": {
+    "offered_mbps": 350,
+    "delay_ms": 20,
+    "loss_pct": 5,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 1
+      }
+    ]
+  }
+}
