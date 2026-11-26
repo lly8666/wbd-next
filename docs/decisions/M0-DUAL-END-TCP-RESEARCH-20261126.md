@@ -34,3 +34,13 @@ C 长期候选：本地 app TCP 端点 <-> 双端按业务流分开的字节传�
 4. 若中间 TCP/IP 开销或重复恢复确为主要瓶颈，才研究 C；先明确新内层语义、协议红线、失败模型与可回退边界。无直接实施授权，不改现有协议及默认值。
 
 未运行 pktkit/WBD 实验，未实现双端 TCP；本次只有研究记录。原分支/main 未修改。
+
+## Windows 下载反向 ACK 与架构选择（同日补记）
+
+只读复核 experiment/m0-linux-tcp-splice HEAD 26b11e2da236e909b73f461964c52d5a86d42dca。H2479 run45787098527 已有验收 JSON，H/I 两台9V45，MSS1049；裸250M ACK/segment 3.458/3.455%，WBD250 49.988/50.671%，实际237.34/225.97Mbps，6000样本除首个外全推进，无SACK。裸650M 1.695%/1.695%，WBD650 70.951/75.908%，实际243.98/317.53Mbps，H 5999相等ACK，I 5999推进，均6000 SACK，+25s重传111.6/126MB。ACK比值基于sender ss segment delta，不是严格线包比例；采样仅server存活ACK，非逐包因果链。所有clean_candidate=false。RSC ON/OFF/恢复未改变裸ACK比例，RSC统计缺失，发送TSO/GSO、虚拟化/其他聚合仍待证。H2480 run45791400655 八台CPU跳过，唯一E 9V45 WSL准备失败，无有效TSO/GSO干预；不声称阴性。H2478记录TX kernel约80–86% TX CPU，D copy source_wire 287528941B vs control 726534B、repair893172B，支持主要反向业务源记录而非外层ACK洪泛，但字节不能代替包数或CPU归因。此次查分支已验收文档、源码与H2480 job logs，未独立复算H2479原始artifact。参考 https://github.com/lly8666/wbd-next/blob/26b11e2da236e909b73f461964c52d5a86d42dca/docs/devlog/M0/20261126-H2479-H2480-ACK-OFFLOAD-DRIVER-RESEARCH.md ; https://github.com/lly8666/wbd-next/actions/runs/45791400655 。
+
+现状：Windows NPF RX -> Rust鉴权/解密/FEC -> Wintun TX写入Windows TCP -> Windows产生内层ACK -> Wintun RX/TX worker -> Rust业务封装 -> NPF TX。外层TCP-like ACK/SACK另行处理，不能混为内层TCP ACK。v4_windows_native_runtime.rs 当前一Wintun、一NPF RX、一NPF TX，Wintun writer属RX、read属TX；原TX batch/ready fairness/repair仍有效。正常每2 MSS ACK不等于错误，650M高压真实缺口/乱序须另外定位。仅替换server BBR无权改变Windows接收ACK；仅双端采用默认TCP delayed ACK也未必减少中间ACK PPS。不能删/假造内层ACK、丢SACK或通过延时凑批掩盖丢失；外层确认仍只作既有提示。
+
+结构候选：先服务端原生pktkit，随后客户端TUN透明分段：Windows本地app TCP <-> Rust本地端点（Windows ACK在本地消费）<-> 自有middle TCP双端（仍沿原inner IP/FEC）<-> server出口socket。把Windows ACK与远程ACK解耦；middle ACK由我们真正接收数据后生成。默认RFC delayed ACK为首轮基线；优化仅凭同状态、真实累计确认、准确窗口/时间戳/缺口与SACK语义，先利用已就绪处理、合法piggyback等，不人为等待。若要独立更稀疏反馈或ACK批量载体，需两端明确约定与新内层语义研究，不是普通TCP透明ACK过滤；不能恢复旧M2/外层持续ARQ。B方案保留Wintun本地TCP交互，尚有内核成本，但本地ACK不再经加密/FEC/NPF TX，middle ACK还存在，实际降幅待测。C方案WFP ALE连接重定向到本地原生socket（现有WFP过滤不代表具备重定向），通过IOCP/批量socket I/O接入自有middle TCP，可让选定TCP绕开Wintun包级往返；UDP及其他IP仍Wintun。需要验证应用覆盖、原目的地址、连接关闭、环路、驱动权限/签名/许可，不自行部署或更换驱动。现有标准签名Wintun保留为近期基线；已有H2479研究的NBL就绪批量和真正RSC作为独立对照，不假造超MTU IP包或NDIS元数据。物理NPF收发仍有下限；即使自有TCP也不能免除外层反馈或驱动内核开销。
+
+数量级计算：假设实际600/800Mbps业务、MSS1049、满段且每2段ACK，约35748/47664 ACK/s；若可达到裸250 ACK比3.45%则约2467/3289 ACK/s，仅是假设量级，不是可用策略/性能承诺；裸低比可能来自卸载单位，不能照搬。优先直接测同runner 250M健康和650M压力两点，逐边界统计Windows本地TCP ACK、middle TCP ACK、外层ACK-only、NPF实际accepted PPS、FEC/repair、源有效字节、前向首次交付/残余缺口、TX/RX kernel/user CPU/GiB和真实小流P99。用相同内层CC/MTU/源供应、已验证的对照，区分分段/ACK变化与前向RX瓶颈；后续再测WFP架构是否值得。没有性能PASS或新施工授权，本次仅研究记录，未改splice原分支或main，不抢其在途H2480。
