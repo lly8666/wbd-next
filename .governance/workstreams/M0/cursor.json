@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2420,
-  "checkpoint_sha": "7d4f65bf6d366250a0acb6e575e09794ebe985d2",
+  "sequence": 2421,
+  "checkpoint_sha": "3ace4400ad63817b6ef7f313a955f21e711ed5dd",
   "progress": "partial",
   "task_id": "M0-ROUTEROS-SERVER",
   "current_task": "RouterOS真实BBR TCP端点：原WBD数据面不变，独立TCP分段参考实现接入；最终Rust性能设计待证。",
   "why_now": "用户授权独立RouterOS服务器分支并检查红色Actions。",
   "done_when": "真实客户端经原WBD与RouterOS DNAT，BBR隧道侧TCP真实窗口与交付速率、完整TCP/UDP业务、Stop；后续独立性能资格。",
-  "next_action": "待用户选择下一步：独立性能资格与低CPU原生化；先保留已验收参考路径，不提升默认。",
+  "next_action": "已记录 pktkit 源码/CI及双端TCP研究；待明确下一步施工，优先单侧Rust候选真实同环境对照，不改wire/default。",
   "unverified": true,
   "last_tested_source": "7d4f65bf6d366250a0acb6e575e09794ebe985d2",
   "evidence_refs": [
@@ -19,8 +19,9 @@
   ],
   "context_refs": [
     "docs/decisions/M0-ROUTEROS-SERVER-20261126.md",
-    "docs/decisions/M0-ROUTEROS-BBR-20261126.md"
+    "docs/decisions/M0-ROUTEROS-BBR-20261126.md",
+    "docs/decisions/M0-DUAL-END-TCP-RESEARCH-20261126.md"
   ],
   "open_requests": [],
-  "partial_summary": "7d4f65b：实际WBD Normal+DNAT+BBRv3 clean/loss与同栈CUBIC loss三组九TCP、UDP、Stop完整通过；NAT loss两连接reset无完整收据。已独立核验原产品/sidecar二进制及场景原始证据；无吞吐/CPU与Rust原生BBR资格。"
+  "partial_summary": "7d4f65b：实际WBD Normal+DNAT+BBRv3 clean/loss与同栈CUBIC loss三组九TCP、UDP、Stop完整通过；NAT loss两连接reset无完整收据。已独立核验原产品/sidecar二进制及场景原始证据；无吞吐/CPU与Rust原生BBR资格。 已记录pktkit 0.1.12 vtcp源码/CI、Rust MSRV/复制缺口与双端split/内层流传输候选，未施工或性能验收。"
 }
