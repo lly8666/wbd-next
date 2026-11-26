@@ -1,0 +1,1049 @@
+{
+  "schema": "m0-local-rx-cost-v1",
+  "gate": {
+    "source_sha": "79407a34e43e6baa3611b7402441bbb599b57d6d",
+    "run_id": "45766295462",
+    "names": [
+      "AMD EPYC 9V45 96-Core Processor                "
+    ],
+    "eligible": true,
+    "status": "MATCHED_9V45"
+  },
+  "artifact_id": 15092692173,
+  "job_id": 139728821402,
+  "observations": [
+    {
+      "case": -11,
+      "mode": "frozen",
+      "rate_mbps": 800,
+      "rx_mbps": 756.2068053333334,
+      "status": "MEASURED_EXACT",
+      "bytes": 5233685832,
+      "source": {
+        "bytes": 5233685832,
+        "end": "deadline",
+        "actual_cc": "bbr",
+        "pacing_bytes_per_s": 100000000
+      },
+      "dll_sha256": "83da40d0636cee00f8de580cd3601d1306ce9c5c38c43e256463a0e26aa1b0e7",
+      "original_comparable": true,
+      "steady_cpu": null,
+      "netem_active": {
+        "packets": {
+          "eth0": 3584720,
+          "ifbwlm0": 86932
+        },
+        "both_used": true
+      },
+      "steady_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 2,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "business_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 4,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      }
+    },
+    {
+      "case": 0,
+      "mode": "frozen",
+      "rate_mbps": 400,
+      "rx_mbps": 376.87707395555555,
+      "status": "MEASURED_EXACT",
+      "bytes": 2713928992,
+      "source": {
+        "bytes": 2713928992,
+        "end": "deadline",
+        "actual_cc": "cubic",
+        "pacing_bytes_per_s": 50000000
+      },
+      "client_stop": true,
+      "server_stop": true,
+      "dll_sha256": "83da40d0636cee00f8de580cd3601d1306ce9c5c38c43e256463a0e26aa1b0e7",
+      "original_mode_ok": true,
+      "original_comparable": true,
+      "steady_cpu": {
+        "samples": 44,
+        "core_equiv": 0.5483579134234605,
+        "estimated_cpu_s_per_gib": 12.498395192562466
+      },
+      "netem_active": {
+        "packets": {
+          "eth0": 2594555,
+          "ifbwlm0": 1357287
+        },
+        "both_used": true
+      },
+      "steady_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 1,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8002:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "business_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 3,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8002:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "owner_lock": null,
+      "thread_core_rounded": {
+        "tx": 0.3464,
+        "tx_kernel": 0.2774,
+        "rx": 0.1906,
+        "rx_kernel": 0.0878
+      },
+      "packet_telemetry_first_last": {
+        "tx_records": 1336967,
+        "rx_first_delivered_ipv4": 2587914,
+        "npcap_ingress_local_drops": 0
+      }
+    },
+    {
+      "case": 1,
+      "mode": "copy",
+      "rate_mbps": 250,
+      "rx_mbps": 240.9826206222222,
+      "status": "MEASURED_EXACT",
+      "bytes": 1777172528,
+      "source": {
+        "bytes": 1777172528,
+        "end": "deadline",
+        "actual_cc": "cubic",
+        "pacing_bytes_per_s": 31250000
+      },
+      "client_stop": true,
+      "server_stop": true,
+      "dll_sha256": "8bed46c23b9fcea0a2d480735130a0562548c664a96c64eca2d9b39b6a7f3256",
+      "original_mode_ok": false,
+      "original_comparable": false,
+      "steady_cpu": {
+        "samples": 44,
+        "core_equiv": 0.37962962962962965,
+        "estimated_cpu_s_per_gib": 13.53206998614153
+      },
+      "netem_active": {
+        "packets": {
+          "eth0": 1702243,
+          "ifbwlm0": 856789
+        },
+        "both_used": true
+      },
+      "steady_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 2,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8003:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "business_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 4,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8003:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "owner_lock": {
+        "sample_every": 64,
+        "tx_samples": 24108,
+        "tx_wait_ns": 14660600,
+        "tx_max_ns": 219600,
+        "rx_samples": 28096,
+        "rx_wait_ns": 14203900,
+        "rx_max_ns": 183900
+      },
+      "thread_core_rounded": {
+        "tx": 0.2361,
+        "tx_kernel": 0.1848,
+        "rx": 0.1293,
+        "rx_kernel": 0.0595
+      },
+      "packet_telemetry_first_last": {
+        "tx_records": 848620,
+        "rx_first_delivered_ipv4": 1695115,
+        "npcap_ingress_local_drops": 0
+      },
+      "raw_nonzero_rx_cost": {
+        "borrowed": 0,
+        "reads": 1803580,
+        "frames": 1701180,
+        "turns": 102708,
+        "full": 308,
+        "read_samples": 6651,
+        "read_ns": 9726200,
+        "read_bytes": 7769798,
+        "open_samples": 6621,
+        "open_ns": 26214100,
+        "wintun_samples": 6621,
+        "wintun_ns": 6048100
+      },
+      "raw_zero_receipts": 1,
+      "raw_mode_marker": 0,
+      "mode_verified_from_artifact": true
+    },
+    {
+      "case": 2,
+      "mode": "borrow",
+      "rate_mbps": 250,
+      "rx_mbps": 236.36739359999999,
+      "status": "MEASURED_EXACT",
+      "bytes": 1756463152,
+      "source": {
+        "bytes": 1756463152,
+        "end": "deadline",
+        "actual_cc": "cubic",
+        "pacing_bytes_per_s": 31250000
+      },
+      "client_stop": true,
+      "server_stop": true,
+      "dll_sha256": "8bed46c23b9fcea0a2d480735130a0562548c664a96c64eca2d9b39b6a7f3256",
+      "original_mode_ok": false,
+      "original_comparable": false,
+      "steady_cpu": {
+        "samples": 44,
+        "core_equiv": 0.36217948717948717,
+        "estimated_cpu_s_per_gib": 13.162128913181439
+      },
+      "netem_active": {
+        "packets": {
+          "eth0": 1682396,
+          "ifbwlm0": 846069
+        },
+        "both_used": true
+      },
+      "steady_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 1,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8004:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "business_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 3,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8004:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "owner_lock": {
+        "sample_every": 64,
+        "tx_samples": 23290,
+        "tx_wait_ns": 13972300,
+        "tx_max_ns": 242600,
+        "rx_samples": 27767,
+        "rx_wait_ns": 14997600,
+        "rx_max_ns": 107300
+      },
+      "thread_core_rounded": {
+        "tx": 0.2204,
+        "tx_kernel": 0.1713,
+        "rx": 0.1339,
+        "rx_kernel": 0.0573
+      },
+      "packet_telemetry_first_last": {
+        "tx_records": 836530,
+        "rx_first_delivered_ipv4": 1670922,
+        "npcap_ingress_local_drops": 0
+      },
+      "raw_nonzero_rx_cost": {
+        "borrowed": 1,
+        "reads": 1782417,
+        "frames": 1681313,
+        "turns": 101403,
+        "full": 299,
+        "read_samples": 6552,
+        "read_ns": 8549700,
+        "read_bytes": 7656691,
+        "open_samples": 6524,
+        "open_ns": 24979900,
+        "wintun_samples": 6524,
+        "wintun_ns": 5240500
+      },
+      "raw_zero_receipts": 1,
+      "raw_mode_marker": 1,
+      "mode_verified_from_artifact": true
+    },
+    {
+      "case": 3,
+      "mode": "copy",
+      "rate_mbps": 250,
+      "rx_mbps": 236.5467959111111,
+      "status": "MEASURED_EXACT",
+      "bytes": 1753492688,
+      "source": {
+        "bytes": 1753492688,
+        "end": "deadline",
+        "actual_cc": "cubic",
+        "pacing_bytes_per_s": 31250000
+      },
+      "client_stop": true,
+      "server_stop": true,
+      "dll_sha256": "8bed46c23b9fcea0a2d480735130a0562548c664a96c64eca2d9b39b6a7f3256",
+      "original_mode_ok": false,
+      "original_comparable": false,
+      "steady_cpu": {
+        "samples": 44,
+        "core_equiv": 0.3726430151166234,
+        "estimated_cpu_s_per_gib": 13.532117878359752
+      },
+      "netem_active": {
+        "packets": {
+          "eth0": 1680067,
+          "ifbwlm0": 845318
+        },
+        "both_used": true
+      },
+      "steady_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 1,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8005:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "business_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 4,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8005:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "owner_lock": {
+        "sample_every": 64,
+        "tx_samples": 23415,
+        "tx_wait_ns": 14758500,
+        "tx_max_ns": 257700,
+        "rx_samples": 27705,
+        "rx_wait_ns": 14559800,
+        "rx_max_ns": 118800
+      },
+      "thread_core_rounded": {
+        "tx": 0.233,
+        "tx_kernel": 0.1749,
+        "rx": 0.1293,
+        "rx_kernel": 0.0545
+      },
+      "packet_telemetry_first_last": {
+        "tx_records": 837560,
+        "rx_first_delivered_ipv4": 1672803,
+        "npcap_ingress_local_drops": 0
+      },
+      "raw_nonzero_rx_cost": {
+        "borrowed": 0,
+        "reads": 1778338,
+        "frames": 1678745,
+        "turns": 100038,
+        "full": 445,
+        "read_samples": 6559,
+        "read_ns": 9491400,
+        "read_bytes": 7667444,
+        "open_samples": 6537,
+        "open_ns": 26396900,
+        "wintun_samples": 6536,
+        "wintun_ns": 5905300
+      },
+      "raw_zero_receipts": 1,
+      "raw_mode_marker": 0,
+      "mode_verified_from_artifact": true
+    },
+    {
+      "case": 4,
+      "mode": "copy",
+      "rate_mbps": 400,
+      "rx_mbps": 361.81585831111107,
+      "status": "MEASURED_EXACT",
+      "bytes": 2613003552,
+      "source": {
+        "bytes": 2613003552,
+        "end": "deadline",
+        "actual_cc": "cubic",
+        "pacing_bytes_per_s": 50000000
+      },
+      "client_stop": true,
+      "server_stop": true,
+      "dll_sha256": "8bed46c23b9fcea0a2d480735130a0562548c664a96c64eca2d9b39b6a7f3256",
+      "original_mode_ok": false,
+      "original_comparable": false,
+      "steady_cpu": {
+        "samples": 44,
+        "core_equiv": 0.49095284582377885,
+        "estimated_cpu_s_per_gib": 11.655798762021847
+      },
+      "netem_active": {
+        "packets": {
+          "eth0": 2501274,
+          "ifbwlm0": 1379063
+        },
+        "both_used": true
+      },
+      "steady_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 1,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8006:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "business_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 4,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8006:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "owner_lock": {
+        "sample_every": 64,
+        "tx_samples": 17848,
+        "tx_wait_ns": 28168300,
+        "tx_max_ns": 2072800,
+        "rx_samples": 40802,
+        "rx_wait_ns": 33046700,
+        "rx_max_ns": 1659300
+      },
+      "thread_core_rounded": {
+        "tx": 0.332,
+        "tx_kernel": 0.2749,
+        "rx": 0.1504,
+        "rx_kernel": 0.0596
+      },
+      "packet_telemetry_first_last": {
+        "tx_records": 1368090,
+        "rx_first_delivered_ipv4": 2493336,
+        "npcap_ingress_local_drops": 0
+      },
+      "raw_nonzero_rx_cost": {
+        "borrowed": 0,
+        "reads": 2563881,
+        "frames": 2499435,
+        "turns": 117416,
+        "full": 52970,
+        "read_samples": 9742,
+        "read_ns": 13449500,
+        "read_bytes": 11405878,
+        "open_samples": 9726,
+        "open_ns": 49504600,
+        "wintun_samples": 9726,
+        "wintun_ns": 8233300
+      },
+      "raw_zero_receipts": 1,
+      "raw_mode_marker": 0,
+      "mode_verified_from_artifact": true
+    },
+    {
+      "case": 5,
+      "mode": "borrow",
+      "rate_mbps": 400,
+      "rx_mbps": 370.01460373333333,
+      "status": "MEASURED_EXACT",
+      "bytes": 2665956640,
+      "source": {
+        "bytes": 2665956640,
+        "end": "deadline",
+        "actual_cc": "cubic",
+        "pacing_bytes_per_s": 50000000
+      },
+      "client_stop": true,
+      "server_stop": true,
+      "dll_sha256": "8bed46c23b9fcea0a2d480735130a0562548c664a96c64eca2d9b39b6a7f3256",
+      "original_mode_ok": false,
+      "original_comparable": false,
+      "steady_cpu": {
+        "samples": 44,
+        "core_equiv": 0.5456405592815731,
+        "estimated_cpu_s_per_gib": 12.667112777929455
+      },
+      "netem_active": {
+        "packets": {
+          "eth0": 2553791,
+          "ifbwlm0": 1467260
+        },
+        "both_used": true
+      },
+      "steady_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 1,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8007:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "business_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 3,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8007:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "owner_lock": {
+        "sample_every": 64,
+        "tx_samples": 25620,
+        "tx_wait_ns": 23720700,
+        "tx_max_ns": 474300,
+        "rx_samples": 42078,
+        "rx_wait_ns": 27685300,
+        "rx_max_ns": 320400
+      },
+      "thread_core_rounded": {
+        "tx": 0.3712,
+        "tx_kernel": 0.2924,
+        "rx": 0.1641,
+        "rx_kernel": 0.0753
+      },
+      "packet_telemetry_first_last": {
+        "tx_records": 1446515,
+        "rx_first_delivered_ipv4": 2538515,
+        "npcap_ingress_local_drops": 0
+      },
+      "raw_nonzero_rx_cost": {
+        "borrowed": 1,
+        "reads": 2661199,
+        "frames": 2551197,
+        "turns": 147495,
+        "full": 37493,
+        "read_samples": 9967,
+        "read_ns": 14744500,
+        "read_bytes": 11664219,
+        "open_samples": 9945,
+        "open_ns": 42726400,
+        "wintun_samples": 9945,
+        "wintun_ns": 7585500
+      },
+      "raw_zero_receipts": 1,
+      "raw_mode_marker": 1,
+      "mode_verified_from_artifact": true
+    },
+    {
+      "case": 6,
+      "mode": "copy",
+      "rate_mbps": 400,
+      "rx_mbps": 377.3244608,
+      "status": "MEASURED_EXACT",
+      "bytes": 2709472544,
+      "source": {
+        "bytes": 2709472544,
+        "end": "deadline",
+        "actual_cc": "cubic",
+        "pacing_bytes_per_s": 50000000
+      },
+      "client_stop": true,
+      "server_stop": true,
+      "dll_sha256": "8bed46c23b9fcea0a2d480735130a0562548c664a96c64eca2d9b39b6a7f3256",
+      "original_mode_ok": false,
+      "original_comparable": false,
+      "steady_cpu": {
+        "samples": 44,
+        "core_equiv": 0.5493607954545454,
+        "estimated_cpu_s_per_gib": 12.506407059745108
+      },
+      "netem_active": {
+        "packets": {
+          "eth0": 2592195,
+          "ifbwlm0": 1351912
+        },
+        "both_used": true
+      },
+      "steady_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 1,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8008:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "business_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "wbds0.rx.dropped": 0,
+          "wbds0.rx.errors": 0,
+          "wbds0.tx.dropped": 0,
+          "wbds0.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 3,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.wbds0|fq|8008:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "owner_lock": {
+        "sample_every": 64,
+        "tx_samples": 26265,
+        "tx_wait_ns": 18553600,
+        "tx_max_ns": 315000,
+        "rx_samples": 42708,
+        "rx_wait_ns": 30221400,
+        "rx_max_ns": 432900
+      },
+      "thread_core_rounded": {
+        "tx": 0.3548,
+        "tx_kernel": 0.283,
+        "rx": 0.1875,
+        "rx_kernel": 0.0788
+      },
+      "packet_telemetry_first_last": {
+        "tx_records": 1332184,
+        "rx_first_delivered_ipv4": 2584574,
+        "npcap_ingress_local_drops": 0
+      },
+      "raw_nonzero_rx_cost": {
+        "borrowed": 0,
+        "reads": 2700738,
+        "frames": 2590660,
+        "turns": 148268,
+        "full": 38190,
+        "read_samples": 10125,
+        "read_ns": 14691600,
+        "read_bytes": 11857299,
+        "open_samples": 10106,
+        "open_ns": 46447000,
+        "wintun_samples": 10106,
+        "wintun_ns": 8256500
+      },
+      "raw_zero_receipts": 1,
+      "raw_mode_marker": 0,
+      "mode_verified_from_artifact": true
+    },
+    {
+      "case": -12,
+      "mode": "frozen",
+      "rate_mbps": 800,
+      "rx_mbps": 756.0432853333334,
+      "status": "MEASURED_EXACT",
+      "bytes": 5318096200,
+      "source": {
+        "bytes": 5318096200,
+        "end": "deadline",
+        "actual_cc": "bbr",
+        "pacing_bytes_per_s": 100000000
+      },
+      "dll_sha256": "83da40d0636cee00f8de580cd3601d1306ce9c5c38c43e256463a0e26aa1b0e7",
+      "original_comparable": true,
+      "steady_cpu": null,
+      "netem_active": {
+        "packets": {
+          "eth0": 3644745,
+          "ifbwlm0": 88319
+        },
+        "both_used": true
+      },
+      "steady_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 2,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      },
+      "business_drops": {
+        "available": true,
+        "zero": false,
+        "deltas": {
+          "eth0.rx.dropped": 0,
+          "eth0.rx.errors": 0,
+          "eth0.tx.dropped": 0,
+          "eth0.tx.errors": 0,
+          "h2442exit.rx.dropped": 0,
+          "h2442exit.rx.errors": 0,
+          "h2442exit.tx.dropped": 0,
+          "h2442exit.tx.errors": 0,
+          "ifbwlm0.rx.dropped": 3,
+          "ifbwlm0.rx.errors": 0,
+          "ifbwlm0.tx.dropped": 0,
+          "ifbwlm0.tx.errors": 0,
+          "qdisc.eth0|netem|20:||True": 0,
+          "qdisc.eth0|ingress|ffff:|ffff:fff1|": 0,
+          "qdisc.h2442exit|noqueue|0:||True": 0,
+          "qdisc.ifbwlm0|netem|10:||True": 0,
+          "guest_softnet_drops": 0
+        }
+      }
+    }
+  ],
+  "historical_h2475_tid_cpu_percent": {
+    "columns": [
+      "replica",
+      "rate_mbps",
+      "tx",
+      "rx"
+    ],
+    "rows": [
+      [
+        "A",
+        250,
+        24.62,
+        12.59
+      ],
+      [
+        "A",
+        400,
+        32.05,
+        14.54
+      ],
+      [
+        "A",
+        600,
+        48.01,
+        16.49
+      ],
+      [
+        "C",
+        250,
+        26.36,
+        13.95
+      ],
+      [
+        "C",
+        400,
+        37.27,
+        18.49
+      ],
+      [
+        "C",
+        600,
+        47.19,
+        18.76
+      ]
+    ],
+    "artifact_ids": [
+      15091571988,
+      15091712153
+    ]
+  }
+}
