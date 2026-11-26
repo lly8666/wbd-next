@@ -89,7 +89,6 @@ func runM0NativeV4WindowsGame(
 )error{
  count:=2;if o.Mode==m0WinModeGame4{count=4}
  assocs:=make([]*faketcp.ClientAssociation,0,count)
- endpoints:=make([]*faketcp.NpcapEndpoint,0,count)
  flows:=make([]faketcp.ClientFlow,0,count)
  cfgs:=make([]faketcp.NpcapConfig,0,count)
  var shared *faketcp.XdpEndpoint
@@ -106,7 +105,6 @@ func runM0NativeV4WindowsGame(
   stopColdReaders()
   readers.Wait()
   fmt.Println("M0_GAME_COLD_STAGE DEFER_NPF_JOIN_DONE")
-  for _,ep:=range endpoints{_ = ep.Close()}
   if shared!=nil{_ = shared.Close()}
   for _,assoc:=range assocs{assoc.Close()}
  }()
@@ -119,14 +117,9 @@ func runM0NativeV4WindowsGame(
  }
  xdp,available,err:=faketcp.OpenXdpGameEndpoint(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),physicalIfIndex,cfgs)
  if err!=nil{return err}
- if available{shared=xdp}
+ if !available{return fmt.Errorf("WinXDP Game entry missing from wbd_engine.dll")}
+ shared=xdp
  for i,flow:=range flows{
-  var ep *faketcp.NpcapEndpoint
-  if shared==nil{
-   ep,err=faketcp.OpenNpcapEndpoint(cfgs[i])
-   if err!=nil{return err}
-   endpoints=append(endpoints,ep)
-  }
   var seed [4]byte
   if _,err=rand.Read(seed[:]);err!=nil{return err}
   assoc,err:=faketcp.NewClientAssociation(flow,binary.BigEndian.Uint32(seed[:]),
@@ -138,8 +131,7 @@ func runM0NativeV4WindowsGame(
      fmt.Printf("WBD_WINDOWS_GAME_ACTUAL_SYN_MSS_V1 side=client lane=%d local_advertised_mss=%d tcp_option_bytes=%x\n",
       i,decoded.MSS,wire[40:44])
     }
-    if shared!=nil{_,e:=shared.WriteGameSegment(i,seg);return e}
-    _,e:=ep.WriteSegment(1,seg);return e
+    _,e:=shared.WriteGameSegment(i,seg);return e
    })
   if err!=nil{return err}
   assocs=append(assocs,assoc)
@@ -168,7 +160,7 @@ func runM0NativeV4WindowsGame(
   select{case <-handoff:return;default:}
   if ctx.Err()==nil{select{case failed<-err:default:}}
  }
- if shared!=nil{
+ {
   readers.Add(1)
   go func(){
    defer readers.Done()
@@ -178,19 +170,6 @@ func runM0NativeV4WindowsGame(
     if err=handle(index,seg);err!=nil{report(err);return}
    }
   }()
- }else{
-  for i,endpoint:=range endpoints{
-   readers.Add(1)
-   go func(index int,endpoint *faketcp.NpcapEndpoint){
-    defer readers.Done()
-    for{
-     select{case <-handoff:return;default:}
-     seg,_,err:=endpoint.ReadSegmentUntil(1,handoff)
-     if err!=nil{report(err);return}
-     if err=handle(index,seg);err!=nil{report(err);return}
-    }
-   }(i,endpoint)
-  }
  }
  for _,assoc:=range assocs{if err=assoc.Start(time.Now());err!=nil{return err}}
  // Start all independent original FakeTCP SYNs before waiting for any
@@ -314,7 +293,7 @@ func runM0NativeV4WindowsGame(
  fmt.Println("M0_GAME_COLD_STAGE PLAN_MAKE_DONE")
  packet:=&m0WinRustGamePeer{
   group:group,first:group.FirstOriginalOwner(),tun:tun,
-  endpoints:endpoints,xdp:shared,cfgs:cfgs,flows:flows,inbound:inbound,handoff:handoff,
+  xdp:shared,cfgs:cfgs,flows:flows,inbound:inbound,handoff:handoff,
   stopColdReaders:stopColdReaders,readers:&readers,errorSource:failed,
   pathMTU:o.ConnectionMTU, // NPF outer IPv4/TCP, never derived Wintun inner MTU
   disableOuterRepair:o.DisableOuterRepair,

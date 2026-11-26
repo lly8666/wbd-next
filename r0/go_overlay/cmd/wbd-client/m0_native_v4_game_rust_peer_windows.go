@@ -20,7 +20,6 @@ type m0WinRustGamePeer struct{
  group *realityfront.V4WindowsAuthenticatedGameGroup
  first *realityfront.V4WindowsAuthenticatedClientOwner
  tun *windowsclient.TUN
- endpoints []*faketcp.NpcapEndpoint
  xdp *faketcp.XdpEndpoint
  cfgs []faketcp.NpcapConfig
  xdpMoved bool
@@ -31,8 +30,6 @@ type m0WinRustGamePeer struct{
  readers *sync.WaitGroup
  errorSource <-chan error
  loan *windowsclient.N4RustWintunLoan
- captures []*faketcp.NpcapNativeCaptureLease
- senders []*faketcp.NpcapNativeCaptureLease
  identity windowsclient.N4UnifiedIdentity
  maxIPv4 int
  pathMTU uint32
@@ -49,7 +46,7 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
 )(err error){
  if p==nil||ring==nil||p.group==nil||p.first==nil||p.tun==nil||
   p.live||p.moved||(len(p.flows)!=2&&len(p.flows)!=4)||
-  (p.xdp==nil&&len(p.endpoints)!=len(p.flows))||p.handoff==nil||p.stopColdReaders==nil||p.readers==nil{
+  p.xdp==nil||p.handoff==nil||p.stopColdReaders==nil||p.readers==nil{
   return windowsclient.ErrN4NativeGuard
  }
  // Any partial cold capture handoff must first Join Rust if Start succeeded,
@@ -82,27 +79,8 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
  // inherit an unconsumed pcap_breakloop (-2) from the old Go handoff.
  select{case e:=<-p.errorSource:return fmt.Errorf("original Game capture handoff: %w",e)
  default:}
- nativeRX:=make([]faketcp.NpcapNativeCaptureV1,len(cfgs))
- nativeTX:=make([]faketcp.NpcapNativeCaptureV1,len(cfgs))
- if p.xdp!=nil{
-  handles,e:=p.xdp.TakeNative(cfgs[0].Generation);if e!=nil{return e}
-  p.xdpMoved=true
-  for i:=range cfgs{nativeRX[i].Handle=handles[0];nativeTX[i].Handle=handles[1]}
- }else{
- for i,endpoint:=range p.endpoints{
-  loan,e:=endpoint.TakeNativeCaptureAfterReadersJoined(cfgs[i].Generation)
-  if e!=nil{return e}
-  p.captures=append(p.captures,loan)
-  nativeRX[i],err=loan.Native();if err!=nil{return err}
-  tx,e:=faketcp.OpenNpcapEndpoint(cfgs[i])
-  if e!=nil{return e}
-  if e=tx.DisableReceiveForNativeTX();e!=nil{_ =tx.Close();return e}
-  send,e:=tx.TakeNativeCaptureAfterReadersJoined(cfgs[i].Generation)
-  if e!=nil{_ =tx.Close();return e}
-  p.senders=append(p.senders,send)
-  nativeTX[i],err=send.Native();if err!=nil{return err}
- }
- }
+ handles,e:=p.xdp.TakeNative(cfgs[0].Generation);if e!=nil{return e}
+ p.xdpMoved=true
  fmt.Println("M0_GAME_COLD_STAGE NPF_CAPTURE_MOVED")
  p.loan,err=ring.BorrowRustNativeRing(ctx)
  if err!=nil{return err}
@@ -117,14 +95,8 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
    LocalIP:first.LocalIP,PeerIP:first.PeerIP,
    LocalPort:first.LocalPort,PeerPort:first.PeerPort,
    SourceMAC:cfgs[0].SourceMAC,NextHopMAC:cfgs[0].NextHopMAC,
-   RXCapture:nativeRX[0].Handle,TXCapture:nativeTX[0].Handle,
+   RXCapture:handles[0],TXCapture:handles[1],
    WintunSession:native.Session,WintunReadEvent:native.ReadEvent,
-   Npcap:realityfront.V4WindowsNpcapNativeFnsV1{
-    NextEx:nativeRX[0].Fns.NextEx,SendPacket:nativeTX[0].Fns.SendPacket,
-    GetEvent:nativeRX[0].Fns.GetEvent,QueueAlloc:nativeTX[0].Fns.QueueAlloc,
-    QueueTransmit:nativeTX[0].Fns.QueueTransmit,
-    QueueDestroy:nativeTX[0].Fns.QueueDestroy,
-   },
    Wintun:realityfront.V4WindowsWintunNativeFnsV1{
     Receive:native.Fns.Receive,Release:native.Fns.Release,
     Allocate:native.Fns.Allocate,Send:native.Fns.Send,
@@ -137,13 +109,7 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
   v:=&cfg.Extra[i-1]
   v.InitialTXSeq=boundaries[i][0];v.InitialRXSeq=boundaries[i][1]
   v.LocalPort=p.flows[i].LocalPort;v.PeerPort=p.flows[i].PeerPort
-  v.RXCapture=nativeRX[i].Handle;v.TXCapture=nativeTX[i].Handle
-  v.Npcap=realityfront.V4WindowsNpcapNativeFnsV1{
-   NextEx:nativeRX[i].Fns.NextEx,SendPacket:nativeTX[i].Fns.SendPacket,
-   GetEvent:nativeRX[i].Fns.GetEvent,QueueAlloc:nativeTX[i].Fns.QueueAlloc,
-   QueueTransmit:nativeTX[i].Fns.QueueTransmit,
-   QueueDestroy:nativeTX[i].Fns.QueueDestroy,
-  }
+  v.RXCapture=handles[0];v.TXCapture=handles[1]
  }
  if p.disableOuterRepair{cfg.DisableOuterRepair=1}
  fmt.Println("M0_GAME_COLD_STAGE RUST_GAME_START_ENTER")
@@ -207,9 +173,6 @@ func(p *m0WinRustGamePeer) DrainPeerAndKernelLoans(
  }
  var err error
  if p.loan!=nil{err=errors.Join(err,p.loan.ReleaseAfterRustJoin());p.loan=nil}
- for _,l:=range p.captures{err=errors.Join(err,l.CloseAfterRustJoin())}
- for _,l:=range p.senders{err=errors.Join(err,l.CloseAfterRustJoin())}
- p.captures=nil;p.senders=nil
  if p.xdpMoved{err=errors.Join(err,p.xdp.CloseAfterRustJoin());p.xdpMoved=false}
  return err
 }

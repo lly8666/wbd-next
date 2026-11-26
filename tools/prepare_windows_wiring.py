@@ -166,7 +166,7 @@ def prepare(root, legacy, output, source, spec):
     subprocess.run([os.sys.executable, str(root / "r0/go_overlay/assembly/assemble.py"),
                     "--legacy-root", str(legacy), "--overlay-root", str(root),
                     "--manifest", str(root / MANIFEST), "--receipt", str(output / "assembly.json")], check=True)
-    install_pinned_npcap_kernel_capture_buffer(root, legacy, output, source)
+    # WinXDP does not create a pcap capture buffer. Historical helper is not invoked.
     # H2210: the single manifest now installs the H2208 KDF into both
     # original-Go Windows and Linux checkouts. Verify rather than copying
     # a second, source-unlocked KDF or shadowing the assembled package.

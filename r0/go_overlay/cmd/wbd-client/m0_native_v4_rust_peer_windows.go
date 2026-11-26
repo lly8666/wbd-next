@@ -13,22 +13,15 @@ import (
  "github.com/lly8666/wobuzhidao/internal/realityfront"
  "github.com/lly8666/wobuzhidao/internal/windowsclient"
 )
-// Cold transport seam only: the steady owner never invokes this interface.
-type m0NormalColdEndpoint interface{
- ReadSegment(uint64)(faketcp.Segment,[]byte,error)
- WriteSegment(uint64,faketcp.Segment)([]byte,error)
- Close()error
-}
 type m0WinRustNativePeer struct{
  owner *realityfront.V4WindowsAuthenticatedClientOwner
- endpoint m0NormalColdEndpoint
+ endpoint *faketcp.XdpEndpoint
  cfg faketcp.NpcapConfig
  flow faketcp.ClientFlow
  early <-chan faketcp.Segment
  handoff chan struct{}
  readers *sync.WaitGroup
  wintun *windowsclient.N4RustWintunLoan
- rx,tx *faketcp.NpcapNativeCaptureLease
  xdp *faketcp.XdpEndpoint
  active bool
  last realityfront.V4WindowsNativeWorkerStatsV1
@@ -54,7 +47,7 @@ type m0WinRustNativePeer struct{
  lowRateLossUpperTenthsPct uint32
 }
 func newM0WinRustNativePeer(owner *realityfront.V4WindowsAuthenticatedClientOwner,
- endpoint m0NormalColdEndpoint,cfg faketcp.NpcapConfig,flow faketcp.ClientFlow,
+ endpoint *faketcp.XdpEndpoint,cfg faketcp.NpcapConfig,flow faketcp.ClientFlow,
  early <-chan faketcp.Segment,handoff chan struct{},readers *sync.WaitGroup,
  mode m0WindowsV4Mode,initialProfile,autoStartProfile realityfront.FecV2Profile,
  autoPolicy realityfront.FecV2AutoPolicy,
@@ -106,32 +99,10 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
   (p.effective.V3Enabled==0)!=p.disableOuterRepair{return windowsclient.ErrN4NativeGuard}
  // Reader sees the expected transfer close and exits without fatal error.
  close(p.handoff)
- var rxHandle,txHandle uintptr
- var fns realityfront.V4WindowsNpcapNativeFnsV1
- switch endpoint:=p.endpoint.(type){
- case *faketcp.XdpEndpoint:
-  handles,e:=endpoint.TakeNative(p.cfg.Generation);if e!=nil{return e}
-  p.xdp=endpoint
-  p.readers.Wait()
-  rxHandle,txHandle=handles[0],handles[1]
-  // No Npcap callback table in the XDP build; same original attach layout.
- case *faketcp.NpcapEndpoint:
-  p.rx,err=endpoint.TakeNativeCapture(p.cfg.Generation);if err!=nil{return err}
-  p.readers.Wait()
-  sender,e:=faketcp.OpenNpcapEndpoint(p.cfg);if e!=nil{return e}
-  if err=sender.DisableReceiveForNativeTX();err!=nil{_ = sender.Close();return err}
-  p.tx,err=sender.TakeNativeCapture(p.cfg.Generation)
-  if err!=nil{_ = sender.Close();return err}
-  rx,e:=p.rx.Native();if e!=nil{return e}
-  tx,e:=p.tx.Native();if e!=nil{return e}
-  rxHandle,txHandle=rx.Handle,tx.Handle
-  fns=realityfront.V4WindowsNpcapNativeFnsV1{
-   NextEx:rx.Fns.NextEx,SendPacket:tx.Fns.SendPacket,
-   GetEvent:rx.Fns.GetEvent,QueueAlloc:tx.Fns.QueueAlloc,
-   QueueTransmit:tx.Fns.QueueTransmit,QueueDestroy:tx.Fns.QueueDestroy,
-  }
- default:return windowsclient.ErrN4NativeGuard
- }
+ handles,e:=p.endpoint.TakeNative(p.cfg.Generation);if e!=nil{return e}
+ p.xdp=p.endpoint
+ p.readers.Wait()
+ rxHandle,txHandle:=handles[0],handles[1]
  p.wintun,err=ring.BorrowRustNativeRing(ctx);if err!=nil{return err}
  native,err:=p.wintun.Native();if err!=nil{return err}
  if native.WintunLUID!=id.WintunLUID||native.WintunIndex!=id.WintunIndex{
@@ -145,7 +116,6 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
   SourceMAC:p.cfg.SourceMAC,NextHopMAC:p.cfg.NextHopMAC,
   RXCapture:rxHandle,TXCapture:txHandle,
   WintunSession:native.Session,WintunReadEvent:native.ReadEvent,
-  Npcap:fns,
   Wintun:realityfront.V4WindowsWintunNativeFnsV1{
    Receive:native.Fns.Receive,Release:native.Fns.Release,
    Allocate:native.Fns.Allocate,Send:native.Fns.Send,
@@ -194,7 +164,7 @@ func(p *m0WinRustNativePeer) VerifyPeerFirstAndReverse(ctx context.Context,
  owner *realityfront.V4WindowsAuthenticatedClientOwner,
  tun *windowsclient.TUN,id windowsclient.N4UnifiedIdentity)error{
  if ctx==nil||p.owner!=owner||!p.active||tun==nil||
-  p.wintun==nil||(p.xdp==nil&&(p.rx==nil||p.tx==nil)){return windowsclient.ErrN4NativeGuard}
+  p.wintun==nil||p.xdp==nil{return windowsclient.ErrN4NativeGuard}
  if err:=ctx.Err();err!=nil{return err}
  state,err:=owner.NativeIOStats(ctx)
  if err!=nil{return err}
@@ -222,8 +192,6 @@ func(p *m0WinRustNativePeer) DrainPeerAndKernelLoans(ctx context.Context,
  }
  var err error
  if p.wintun!=nil{err=errors.Join(err,p.wintun.ReleaseAfterRustJoin());p.wintun=nil}
- if p.rx!=nil{err=errors.Join(err,p.rx.CloseAfterRustJoin());p.rx=nil}
- if p.tx!=nil{err=errors.Join(err,p.tx.CloseAfterRustJoin());p.tx=nil}
  if p.xdp!=nil{err=errors.Join(err,p.xdp.CloseAfterRustJoin());p.xdp=nil}
  return err
 }

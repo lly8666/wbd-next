@@ -1444,7 +1444,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "e4bc4d8e1d964832e44bca653d8304040f11296d"
+      "result_blob": "7c6246c0c96369f2a85862eed9f97a6ae5137c2d"
     },
     {
       "kind": "create",
@@ -1522,7 +1522,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "10597dc4b4c8e9fe6939e862d23924262746dd27"
+      "result_blob": "e72ebac8f494cc1b983a33006abd6d4af25008ae"
     },
     {
       "kind": "create",
@@ -1624,7 +1624,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
-      "result_blob": "66f731379627eb9ecdf18c8cc0c910c0366abc7b"
+      "result_blob": "261e2b2125cf2069f00e7a42b6aa0d6f98c8f981"
     },
     {
       "kind": "create",
@@ -1636,7 +1636,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
-      "result_blob": "ea264affbb82189fecffc54c1920c3f799c768d4"
+      "result_blob": "fa19c1bdf6d9b8fcbcbe664396fb2bf0720ca413"
     },
     {
       "kind": "create",
@@ -1881,7 +1881,7 @@
       "kind": "create",
       "path": "internal/faketcp/native_dns_bootstrap_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows.go",
-      "result_blob": "b7011a27b2cab9162f2f720685a83f0a97c5084a"
+      "result_blob": "ed26fbbb457081939b9b758af1bffe9ae0ea6188"
     },
     {
       "kind": "create",
@@ -2137,7 +2137,7 @@
       "kind": "create",
       "path": "internal/faketcp/xdp_native_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/xdp_native_windows.go",
-      "result_blob": "dc40cfc0f7280a0a3c5800b2d0450365fb9fd53b"
+      "result_blob": "8fc9c193bde566731413db661f0cdd04e4d47714"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

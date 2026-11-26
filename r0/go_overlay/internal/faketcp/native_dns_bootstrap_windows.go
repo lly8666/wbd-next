@@ -2,7 +2,7 @@
 
 package faketcp
 
-// PLAN029: one cold physical-Npcap UDP A lookup. A validated TC=1 response
+// PLAN029: one cold physical WinXDP UDP A lookup. A validated TC=1 response
 // permits only TCP/53 on the SAME dns.direct endpoint, with explicit physical
 // source/interface binding and a shared deadline. No system resolver, Wintun,
 // cross-direction fallback or persistent worker. Server bootstrap only.
@@ -22,7 +22,6 @@ import (
  "strings"
  "syscall"
  "time"
- "unsafe"
 
  "golang.org/x/net/dns/dnsmessage"
 )
@@ -39,7 +38,7 @@ type PhysicalDNSConfig struct {
 }
 
 func (c PhysicalDNSConfig) valid() bool {
- return canonicalNpcapDevice(c.Device) &&
+ return c.InterfaceIndex!=0 &&
   c.SourceMAC!=([6]byte{}) && c.NextHopMAC!=([6]byte{}) &&
   c.Source4.Is4() && !c.Source4.IsUnspecified() &&
   c.Resolver4.Is4() && !c.Resolver4.IsUnspecified() &&
@@ -236,89 +235,20 @@ func LookupPhysicalServerA(ctx context.Context,c PhysicalDNSConfig,host string)(
  frame,e:=physicalDNSFrame(c,port,query,id)
  if e!=nil{return nil,e}
 
- if executable,exeErr:=os.Executable();exeErr==nil{
-  path:=filepath.Join(filepath.Dir(executable),"wbd_engine.dll")
-  if _,statErr:=os.Stat(path);statErr==nil{
-   carrier,available,openErr:=openXdpPorts(path,c.InterfaceIndex,[]uint16{port},true)
-   if openErr!=nil{return nil,openErr}
-   if available{
-    defer carrier.Close()
-    if e=carrier.writeRaw(frame);e!=nil{return nil,e}
-    deadline:=time.Now().Add(1500*time.Millisecond)
-    var raw [2048]byte
-    for time.Now().Before(deadline){
-     if e=ctx.Err();e!=nil{return nil,e}
-     n,readErr:=carrier.readRaw(raw[:]);if readErr!=nil{return nil,readErr}
-     if n==0{continue}
-     ips,valid,truncated:=physicalDNSReplyState(raw[:n],c,port,id,name)
-     if truncated{_ = carrier.Close();return physicalBootstrapTCPSameEndpoint(ctx,c,query,id,name)}
-     if !valid{continue}
-     if len(ips)==0{return nil,fmt.Errorf("%w: no usable A answer",ErrPhysicalDNS)}
-     return ips,nil
-    }
-    return nil,fmt.Errorf("%w: bounded physical A query timeout",ErrPhysicalDNS)
-   }
-  }
- }
- dll,e:=loadNpcapDLL()
- if e!=nil{return nil,fmt.Errorf("%w: verified Npcap DLL: %v",ErrPhysicalDNS,e)}
- defer dll.Release()
- procs:=make(map[string]*syscall.Proc,10)
- for _,key:=range []string{"pcap_open_live","pcap_datalink","pcap_setmode","pcap_compile","pcap_setfilter","pcap_freecode","pcap_sendpacket","pcap_next_ex","pcap_close","pcap_geterr"}{
-  p,err:=dll.FindProc(key);if err!=nil{return nil,fmt.Errorf("%w: Npcap export %s",ErrPhysicalDNS,key)}
-  procs[key]=p
- }
- device,e:=syscall.BytePtrFromString(c.Device);if e!=nil{return nil,ErrPhysicalDNS}
- var errorBuffer [pcapErrbufSize]byte
- handle,_,_:=procs["pcap_open_live"].Call(
-  uintptr(unsafe.Pointer(device)),2048,0,pcapReadTimeoutMS,uintptr(unsafe.Pointer(&errorBuffer[0])))
- if handle==0{return nil,fmt.Errorf("%w: Npcap open physical device: %s",ErrPhysicalDNS,cString(errorBuffer[:]))}
- defer procs["pcap_close"].Call(handle)
- if typ,_,_:=procs["pcap_datalink"].Call(handle);int32(typ)!=pcapDLTEthernet{
-  return nil,fmt.Errorf("%w: physical device must be Ethernet",ErrPhysicalDNS)
- }
- // Small DNS replies must wake the NPF capture ring immediately; reuse
- // the exact legacy Npcap low-latency receive setting. No polling worker.
- if setMin,e:=dll.FindProc("pcap_setmintocopy");e==nil{
-  if rc,_,_:=setMin.Call(handle,1);int32(rc)!=0{
-   return nil,fmt.Errorf("%w: Npcap minimum RX copy: %s",ErrPhysicalDNS,pcapError(procs["pcap_geterr"],handle))
-  }
- }
- if ret,_,_:=procs["pcap_setmode"].Call(handle,npcapModeSendToRxClear);int32(ret)!=0{
-  return nil,fmt.Errorf("%w: Npcap receive policy: %s",ErrPhysicalDNS,pcapError(procs["pcap_geterr"],handle))
- }
- filter:=fmt.Sprintf("udp and src host %s and dst host %s and src port 53 and dst port %d and (ip[6:2] & 0x3fff = 0)",
-  c.Resolver4,c.Source4,port)
- f,e:=syscall.BytePtrFromString(filter);if e!=nil{return nil,ErrPhysicalDNS}
- var program pcapBPFProgram
- if ret,_,_:=procs["pcap_compile"].Call(handle,uintptr(unsafe.Pointer(&program)),
-  uintptr(unsafe.Pointer(f)),1,pcapNetmaskUnknown);int32(ret)!=0{
-  return nil,fmt.Errorf("%w: Npcap DNS filter: %s",ErrPhysicalDNS,pcapError(procs["pcap_geterr"],handle))
- }
- defer procs["pcap_freecode"].Call(uintptr(unsafe.Pointer(&program)))
- if ret,_,_:=procs["pcap_setfilter"].Call(handle,uintptr(unsafe.Pointer(&program)));int32(ret)!=0{
-  return nil,fmt.Errorf("%w: Npcap exact DNS filter: %s",ErrPhysicalDNS,pcapError(procs["pcap_geterr"],handle))
- }
- if ctx.Err()!=nil{return nil,ctx.Err()}
- if ret,_,_:=procs["pcap_sendpacket"].Call(handle,uintptr(unsafe.Pointer(&frame[0])),uintptr(len(frame)));int32(ret)!=0{
-  return nil,fmt.Errorf("%w: Npcap DNS TX: %s",ErrPhysicalDNS,pcapError(procs["pcap_geterr"],handle))
- }
+ executable,exeErr:=os.Executable();if exeErr!=nil{return nil,exeErr}
+ carrier,available,openErr:=openXdpPorts(filepath.Join(filepath.Dir(executable),"wbd_engine.dll"),c.InterfaceIndex,[]uint16{port},true)
+ if openErr!=nil{return nil,openErr}
+ if !available{return nil,fmt.Errorf("%w: WinXDP entry absent",ErrPhysicalDNS)}
+ defer carrier.Close()
+ if e=carrier.writeRaw(frame);e!=nil{return nil,e}
  deadline:=time.Now().Add(1500*time.Millisecond)
+ var raw [2048]byte
  for time.Now().Before(deadline){
-  if e:=ctx.Err();e!=nil{return nil,e}
-  var header,packet uintptr
-  ret,_,_:=procs["pcap_next_ex"].Call(handle,uintptr(unsafe.Pointer(&header)),uintptr(unsafe.Pointer(&packet)))
-  if int32(ret)==0 {continue}
-  if int32(ret)!=1{return nil,fmt.Errorf("%w: Npcap DNS RX code %d",ErrPhysicalDNS,int32(ret))}
-  if header==0||packet==0{continue}
-  h:=(*pcapHeader)(unsafe.Pointer(header))
-  if h.Caplen<42||h.Caplen>2048||h.Caplen!=h.Len{continue}
-  wire:=unsafe.Slice((*byte)(unsafe.Pointer(packet)),int(h.Caplen))
-  ips,valid,truncated:=physicalDNSReplyState(wire,c,port,id,name)
-  if truncated{
-   // No extra UDP, no alternate endpoint, and no system DNS on failure.
-   return physicalBootstrapTCPSameEndpoint(ctx,c,query,id,name)
-  }
+  if e=ctx.Err();e!=nil{return nil,e}
+  n,readErr:=carrier.readRaw(raw[:]);if readErr!=nil{return nil,readErr}
+  if n==0{continue}
+  ips,valid,truncated:=physicalDNSReplyState(raw[:n],c,port,id,name)
+  if truncated{_ = carrier.Close();return physicalBootstrapTCPSameEndpoint(ctx,c,query,id,name)}
   if !valid{continue}
   if len(ips)==0{return nil,fmt.Errorf("%w: no usable A answer",ErrPhysicalDNS)}
   return ips,nil

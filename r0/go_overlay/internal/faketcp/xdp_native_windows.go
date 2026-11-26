@@ -25,9 +25,7 @@ type XdpEndpoint struct {
  gameCfgs []NpcapConfig
 }
 
-// Only a deliberately built native-XDP DLL exposes this cold entry. Missing
-// symbol selects the original product's Npcap carrier, not a runtime
-// fallback after XDP activation failed.
+// The production DLL must export this WinXDP cold entry.
 func OpenXdpEndpoint(path string,index uint32,cfg NpcapConfig)(*XdpEndpoint,bool,error){
  dll,err:=syscall.LoadDLL(path)
  if err!=nil{return nil,false,err}

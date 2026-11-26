@@ -515,7 +515,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  // No silent Normal fallback or pre-OS "not wired" rejection.
  // The per-Game policy is prepared once after real TLS authentication,
  // before the one owned Wintun/OS Apply.
- // Mode-specific original Rust capability is queried before Npcap,
+ // Mode-specific original Rust capability is queried before WinXDP,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
  // own 2/4-lane original TLS socket group; do not run Normal by mistake.
  if err:=m0CheckWindowsV4NativeMode(o.Mode,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"));err!=nil{return err}
@@ -557,7 +557,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
     resolved,e:=windowsclient.ResolveServerAFromOriginalPhysical(ctx,o.ServerHost,o.AdapterAlias,o.DirectDNS4)
     if e!=nil{return fmt.Errorf("PLAN029 physical DNS server address: %w",e)}
     o.ServerIP=resolved.Selected4
-    fmt.Printf("WBD_PLAN029_BOOTSTRAP_DNS_SELECTED generation=%d host=%s selected4=%s physical_source4=%s physical_ifindex=%d resolver4=%s candidates=%d source=physical_Npcap_dns_A\n",
+    fmt.Printf("WBD_PLAN029_BOOTSTRAP_DNS_SELECTED generation=%d host=%s selected4=%s physical_source4=%s physical_ifindex=%d resolver4=%s candidates=%d source=physical_WinXDP_dns_A\n",
      generation,o.ServerHost,o.ServerIP,resolved.PhysicalSource4,resolved.PhysicalIfIndex,resolved.Resolver4,len(resolved.Candidate4))
    }
    var e error
@@ -721,7 +721,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
    len(parsedMAC)!=6||uint32(idx)!=underlay.InterfaceIndex||
    guestIP!=o.ServerIP||(!onLinkGuest&&!verifiedHostSelfNextHop&&!ownedGuestOnLink)||
    !source4Verified{
-    return fmt.Errorf("%w: refused unscoped Windows original Npcap guest MAC override verified_ifindex=%d original_ifindex=%d verified_guest=%s original_peer=%s original_next_hop=%s verified_source=%s original_source=%s verified_mac=%s parse_if=%v parse_mac=%v parse_guest=%v parse_source=%v",
+    return fmt.Errorf("%w: refused unscoped Windows original physical guest MAC override verified_ifindex=%d original_ifindex=%d verified_guest=%s original_peer=%s original_next_hop=%s verified_source=%s original_source=%s verified_mac=%s parse_if=%v parse_mac=%v parse_guest=%v parse_source=%v",
      windowsclient.ErrN4NativeGuard,idx,underlay.InterfaceIndex,
      guestIP,o.ServerIP,underlay.NextHop4,sourceIP,underlay.Source4,
      guestMAC,parseErr,macErr,ipErr,srcErr)
@@ -736,7 +736,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   // host-self defect and an already correct same-guest resolution are
   // acceptable. Any third, unverified Ethernet next hop remains denied.
   if ncfg.NextHopMAC!=ncfg.SourceMAC&&ncfg.NextHopMAC!=actual&&!ownedGuestOnLink{
-   return fmt.Errorf("%w: original Npcap next-hop differs from verified WSL guest",windowsclient.ErrN4NativeGuard)
+   return fmt.Errorf("%w: original physical next-hop differs from verified WSL guest",windowsclient.ErrN4NativeGuard)
   }
   if verifiedHostSelfNextHop&&!onLinkGuest{
    fmt.Printf("WBD_PLAN024_NATIVE_WSL_GUEST_MAC_OVER_HOST_SELF_NEXTHOP_VERIFIED ifindex=%d guest=%s host_gateway=%s original_self_mac=%x\\n",idx,guestIP,underlay.NextHop4,ncfg.SourceMAC)
@@ -775,21 +775,10 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   o.SourcePort=coldSourcePort
   return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,selected.ifindex,configure,planForGame,pathChanged,applied)
  }
- // Select once by the exact native DLL's cold capability; no live fallback.
- goSteadyAB:=o.Mode==m0WinModeNormal&&os.Getenv("GITHUB_ACTIONS")=="true"&&
-  os.Getenv("WBD_WL_PERF_AB_GO_STEADY")=="1"
- var endpoint m0NormalColdEndpoint
- var legacyEndpoint *faketcp.NpcapEndpoint
- if !goSteadyAB{
-  xdp,available,openErr:=faketcp.OpenXdpEndpoint(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),underlay.InterfaceIndex,ncfg)
-  if openErr!=nil{return openErr}
-  if available{endpoint=xdp}
- }
- if endpoint==nil{
-  legacyEndpoint,err=faketcp.OpenNpcapEndpoint(ncfg)
-  if err!=nil{return err}
-  endpoint=legacyEndpoint
- }
+ // The Windows product uses the XDP carrier exclusively.
+ endpoint,available,err:=faketcp.OpenXdpEndpoint(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),underlay.InterfaceIndex,ncfg)
+ if err!=nil{return err}
+ if !available{return fmt.Errorf("WinXDP runtime entry missing from wbd_engine.dll")}
  defer endpoint.Close()
  flow:=faketcp.ClientFlow{
   LocalIP:underlay.Source4.As4(),PeerIP:o.ServerIP.As4(),
@@ -1032,7 +1021,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  // handoff above has already proved real guest IP, source, ifindex and L2
  // identity. For THIS verified route only, use the real guest's IPv4
  // for the Windows persistent underlay /32 escape; never install a route
- // with Windows' own source IP as its gateway. The actual Npcap original
+ // with Windows' own source IP as its gateway. The actual physical original
  // link already emits genuine authenticated TCP443 frames to the guest.
  if guestMAC!="" && (physicalPath.NextHop4==underlay.Source4||ownedGuestOnLink){
   physicalPath.NextHop4=o.ServerIP
@@ -1060,10 +1049,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  var transport m0NativeV4ProductPeer
  var tcpSynthetic netip.Addr
  var tcpDNSOnly bool
- // Only explicit CI measurement chooses the retained original Go packet pump.
- // The steady product remains the same Rust owner in both carrier builds.
- if goSteadyAB{fmt.Println("WL_PERF_V2_AB_PATH_GO_STEADY_SOURCE_LOCKED")}
- if !goSteadyAB{
+ {
   initial:=realityfront.FecV2Maximum
   autoStart:=realityfront.FecV2Strong
   autoPolicy:=realityfront.FecV2Conservative
@@ -1101,12 +1087,6 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
     trial.DirectDNS,trial.TunnelDNS,len(trial.CN),len(trial.Domains),trial.InnerMTU)
   }
   transport=nativePeer
- }else{
-  // Explicit source-locked A/B only. Never a product Fixed/Auto fallback.
-  legacy,legacyErr:=newM0NativeV4PeerForMode(
-   owner,legacyEndpoint,flow,nativeFrames,m0WinModeNormal)
-  if legacyErr!=nil{return legacyErr}
-  transport=legacy
  }
  var product *windowsownerlease.OriginalTLSNativeProductSession
  if tcpSynthetic.IsValid(){
