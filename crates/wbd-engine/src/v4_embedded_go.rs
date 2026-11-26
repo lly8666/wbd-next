@@ -8458,6 +8458,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut deferred_shared=None::<SharedTunPacket>;
             let mut wakeup_shared=None::<OriginalTunIngress>;
             let mut tcp_out=VecDeque::<Vec<u8>>::new();
+            let fair_native_turn=native_tcp_owner.is_some() && std::env::var_os("WBD_M0_NATIVE_INGRESS_FIRST").as_deref()==Some(std::ffi::OsStr::new("1"));
+            let mut ingress_turn_peak=0usize;
+            let mut ingress_with_pending=0u64;
             let mut publish_calls=0u64;
             let mut local_batch_max=0usize;
             let mut middle_batch_max=0usize;
@@ -8526,10 +8529,18 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     // generated TCP output. M1 still has the same 32
                     // packet cap; drain only already-ready work.
                     let mut input_turns=0;
+                    let mut input_empty=false;
                     loop {
                         if tx_pending.len()+jumbo_queue.len()>=32 ||
                             jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
-                        if let Some(frame)=tcp_out.front(){
+                        // Existing owner queue only. Give already-ready ingress a
+                        // bounded chance before staging more generated output.
+                        // Above the soft watermark, drain output first; one
+                        // normal owner event may exceed it, never drop frames.
+                        // A failed try_recv immediately falls through to output.
+                        let output_first = !fair_native_turn || input_empty ||
+                            input_turns>=32 || tcp_out.len()>=64;
+                        if let Some(frame)=tcp_out.front().filter(|_|output_first){
                             let loan={let Ok(mut e)=tx_cell.lock()else{break};
                                 if e.phase!=PH_ACTIVE{break}
                                 #[cfg(feature="fec2_product_record")]
@@ -8553,6 +8564,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             Ok(packet)
                         }else{ingress_recv.try_recv()};
                         input_turns+=1;
+                        if next.is_ok(){
+                            ingress_turn_peak=ingress_turn_peak.max(input_turns);
+                            ingress_with_pending+=u64::from(!tcp_out.is_empty());
+                        }
                         match next{
                             Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n)),
                             Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),
@@ -8594,7 +8609,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                     }
                                 }
                             },
-                            Err(_)=>break,
+                            Err(_)=>{
+                                if fair_native_turn&&!tcp_out.is_empty()&&!input_empty{
+                                    input_empty=true;continue
+                                }
+                                break
+                            },
                         }
                     }
                 }
@@ -8856,6 +8876,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             }
             active_jumbo.take();
             jumbo_queue.clear();
+            if native_tcp_owner.is_some(){
+                eprintln!("WBD_M0_TCP_PUBLISH calls={} local_batch_max={} middle_batch_max={} pending_peak={} local_write_failed={} ingress_first={} ingress_turn_peak={} ingress_with_pending={}",publish_calls,local_batch_max,middle_batch_max,pending_peak,local_write_failed,fair_native_turn,ingress_turn_peak,ingress_with_pending);
+            }
             if native_tcp_owner.take().is_some(){eprintln!("WBD_DUAL_RUST_TCP_OWNER_STOP generation={} flows_and_sockets_dropped=1",generation);}
             #[cfg(feature="fec2_product_record")]
             if raw_socket_diag_enabled{
@@ -8867,9 +8890,6 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     socket_poll_writable,socket_poll_not_writable,
                     socket_outq_supported,socket_outq_high_water,
                     socket_snapshot_errors);
-            }
-            if native_tcp_owner.is_some(){
-                eprintln!("WBD_M0_TCP_PUBLISH calls={} local_batch_max={} middle_batch_max={} pending_peak={} local_write_failed={}",publish_calls,local_batch_max,middle_batch_max,pending_peak,local_write_failed);
             }
             stats.tx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);

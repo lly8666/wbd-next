@@ -10372,8 +10372,12 @@ mod tests {
 
     #[test]
     fn native_pacing_does_not_turn_late_timer_into_large_burst() {
-        let mut conn = Conn::new(big(40693, 80));
-        conn.cfg.native_bounded_pacing = true;
+        let mut cfg = big(40693, 80);
+        cfg.congestion = CongestionKind::Bbr1;
+        cfg.pacing = true;
+        cfg.native_bounded_pacing = true;
+        let mut conn = Conn::new(cfg);
+        assert!(conn.pace_rate().is_some());
         let mss = f64::from(conn.mss);
         assert_eq!(conn.pace_quantum(1_000_000_000), 32.0*mss);
         conn.pace_late=Duration::from_millis(400);
