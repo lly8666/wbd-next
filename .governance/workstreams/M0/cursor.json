@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2459,
-  "checkpoint_sha": "4c96b7276004840639480e79270f7be719ebb43b",
+  "sequence": 2460,
+  "checkpoint_sha": "4455561d9ac47e95bab56ba64dfeb2cc20e57ff8",
   "progress": "partial",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "收run45815349231同VM matched CUBIC ABBA与mixed BBR ABBA、run45815349281双ISA功能；核对CC实际读回、精确二进制、真实交付/CPU/Stop；根据差距选择控制器及后续弱网/ARM、Windows阶段，不重复dispatch。",
+  "next_action": "同机CC已排除为主因；下一实质候选恢复pktkit BBRv3中间端点，分别确定本地与中间ACK-only及segment sizes、owner成本，减少真实反向包/wake而不损交付/流控/SACK；再同机弱网及ARM、受影响模式，旧splice不退役。",
   "unverified": true,
-  "last_tested_source": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
+  "last_tested_source": "f2b88695d062556fdb804c69041705beb5b64280",
   "evidence_refs": [
-    "docs/evidence/M0/20261126-DUAL-RUST-TCP-TX-TURN-RESULT.json"
+    "docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
   ],
   "context_refs": [
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
-    "docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json",
+    "docs/evidence/M0/20261126-DUAL-RUST-TCP-TX-TURN-RESULT.json",
     "docs/evidence/M0/20261126-DUAL-RUST-TCP-CLIENT-PROFILE.json",
     "docs/evidence/M0/20261126-DUAL-RUST-TCP-TOOLCHAIN-ABBA.json",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-INTENT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-RESULT.md"
   ],
   "open_requests": [],
-  "partial_summary": "PR80 branch f2b88695d062556fdb804c69041705beb5b64280；f2fed3e双ISA Normal功能PASS，TX turn同机ABBA中性(+/-1%)保留正确计数。用户要求统一CC：旧kernel BBR与pktkit BBRv3并非同版，CUBIC匹配实验仅改中间两端，旧A/原B二进制复用，same-VM CUBIC与原BBR对照在途。Rust默认1.85.1不变，未合产品、未退役旧splice。"
+  "partial_summary": "PR80 branch 9cc5ed60bd77d9459fc8b8f4ff40f0098ea0cc4a；run45815349231同VM CUBIC ABBA与mixed BBR ABBA八轮PASS：吞吐均约571–574M(fq600)，client CPU/GiB gap +47.45%/+50.05%，host +15.19%/+17.04%。CUBIC outer first copy +53.1%、本地TUN反向包+128%，非直接ACK-only分类；CC不是主要原因。CUBIC中间SOURCE双ISA原功能夹具(内核BBR)PASS；全CUBIC ARM性能未验。CUBIC实验不晋级，下一实质源码恢复BBRv3；Rust1.85.1不变，main未合产品、旧splice保留。"
 }
