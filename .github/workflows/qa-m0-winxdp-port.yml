@@ -83,7 +83,7 @@ jobs:
           if($ip -match '^(127\.|0\.)'){throw 'guest source is not a networked Linux kernel'}
           $ip | Set-Content -Encoding ascii result/h1706-ubuntu-guest-ip.txt
           Write-Output "H2476_WSL_BOOT_DONE ip=$ip"
-      - name: Real TCP destination ownership and unrelated TCP delivery
+      - name: Compare stock TCP destination matchers on same actual WSL interface
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
@@ -92,26 +92,37 @@ jobs:
           $nic=Get-NetIPAddress -AddressFamily IPv4 -IPAddress $hostIP
           $guest=(Get-Content result/h1706-ubuntu-guest-ip.txt -Raw).Trim()
           $rule="M0-XDP-PORT-FIXTURE-"+$env:GITHUB_RUN_ID
-          New-NetFirewallRule -Name $rule -DisplayName $rule -Direction Inbound -Action Allow -Protocol TCP -LocalAddress $hostIP -RemoteAddress $guest -LocalPort 39462 | Out-Null
-          $p=$null
+          # Allow both fixture destinations, not only the ordinary listener.
+          New-NetFirewallRule -Name $rule -DisplayName $rule -Direction Inbound -Action Allow -Protocol TCP -LocalAddress $hostIP -RemoteAddress $guest -LocalPort 39461,39462,39463,39464 | Out-Null
+          $rows=@()
           try{
-            $p=Start-Process -FilePath "$PWD/h2442-out/winxdp-probe.exe" -ArgumentList @($nic.InterfaceIndex,$hostIP) -RedirectStandardOutput "$PWD/h2442-out/probe.log" -RedirectStandardError "$PWD/h2442-out/probe.err" -PassThru
-            for($i=0;$i -lt 100;$i++){
-              if($p.HasExited){throw 'TCP ownership probe exited before ready'}
-              if((Get-Content h2442-out/probe.log -Raw) -match 'READY'){break}
-              Start-Sleep -Milliseconds 100
+            foreach($mode in @('ip-port-set','tcp-dst')){
+              $port=if($mode -eq 'ip-port-set'){39461}else{39463}
+              $out="h2442-out/$mode"
+              New-Item -ItemType Directory -Force $out | Out-Null
+              $p=Start-Process -FilePath "$PWD/h2442-out/winxdp-probe.exe" -ArgumentList @($nic.InterfaceIndex,$hostIP,$mode,$port) -RedirectStandardOutput "$PWD/$out/probe.log" -RedirectStandardError "$PWD/$out/probe.err" -PassThru
+              try{
+                for($i=0;$i -lt 100;$i++){
+                  if($p.HasExited){break}
+                  if((Get-Content "$out/probe.log" -Raw) -match 'READY'){break}
+                  Start-Sleep -Milliseconds 100
+                }
+                $guestRC=-1
+                if(-not $p.HasExited -and (Get-Content "$out/probe.log" -Raw) -match 'READY'){
+                  $script=(wsl.exe -d Ubuntu -u root --exec wslpath -a "$PWD/tools/m0_winxdp_port_guest.py" | Out-String).Trim()
+                  wsl.exe -d Ubuntu -u root --exec python3 $script $hostIP $port | Tee-Object "$out/guest.log"
+                  $guestRC=$LASTEXITCODE
+                }
+                if(-not $p.WaitForExit(22000)){Stop-Process -Id $p.Id -Force;$p.WaitForExit()}
+                $rows+=@{mode=$mode;guest=$guestRC;probe=$p.ExitCode}
+              }finally{
+                if(-not $p.HasExited){Stop-Process -Id $p.Id -Force}
+                Get-Content "$out/probe.log","$out/probe.err" -ErrorAction SilentlyContinue
+              }
             }
-            if((Get-Content h2442-out/probe.log -Raw) -notmatch 'READY'){throw 'probe not ready'}
-            $script=(wsl.exe -d Ubuntu -u root --exec wslpath -a "$PWD/tools/m0_winxdp_port_guest.py" | Out-String).Trim()
-            wsl.exe -d Ubuntu -u root --exec python3 $script $hostIP | Tee-Object h2442-out/guest.log
-            $guestRC=$LASTEXITCODE
-            if(-not $p.WaitForExit(22000)){throw 'probe join timeout'}
-            if($guestRC -ne 0 -or $p.ExitCode -ne 0){throw "guest=$guestRC probe=$($p.ExitCode)"}
-          } finally {
-            if($p -and -not $p.HasExited){Stop-Process -Id $p.Id -Force}
-            Get-Content h2442-out/probe.log,h2442-out/probe.err -ErrorAction SilentlyContinue
-            Remove-NetFirewallRule -Name $rule
-          }
+          } finally {Remove-NetFirewallRule -Name $rule}
+          ConvertTo-Json -InputObject $rows | Tee-Object h2442-out/matcher-comparison.json
+          if(-not @($rows | Where-Object {$_.guest -eq 0 -and $_.probe -eq 0}).Count){throw 'neither stock matcher qualified'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with: {name: winxdp-port-qualification, path: 'h2442-out/', retention-days: 14}

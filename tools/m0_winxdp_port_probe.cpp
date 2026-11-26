@@ -12,7 +12,7 @@
 #include <set>
 
 constexpr UINT32 RingSize=256, Chunk=2048;
-constexpr UINT16 OwnedPort=39461, OtherPort=39462;
+UINT16 OwnedPort=39461, OtherPort=39462;
 struct Owner{
     HANDLE xsk=nullptr,prog=nullptr;
     SOCKET owned=INVALID_SOCKET,listener=INVALID_SOCKET;
@@ -40,14 +40,17 @@ static SOCKET bind_tcp(sockaddr_in address){
     return s;
 }
 int main(int argc,char** argv){
-    if(argc!=3)return 2;
+    if(argc!=5)return 2;
+    const bool dstOnly=std::strcmp(argv[3],"tcp-dst")==0;
+    OwnedPort=static_cast<UINT16>(std::strtoul(argv[4],nullptr,10));OtherPort=OwnedPort+1;
     WSADATA w{};if(WSAStartup(MAKEWORD(2,2),&w))return 2;
     try{
         Owner o;
         UINT32 index=std::strtoul(argv[1],nullptr,10);
         sockaddr_in local{};local.sin_family=AF_INET;local.sin_port=htons(OwnedPort);
         if(InetPtonA(AF_INET,argv[2],&local.sin_addr)!=1)return 3;
-        o.owned=bind_tcp(local);
+        sockaddr_in reservation=local;if(dstOnly)reservation.sin_addr.s_addr=INADDR_ANY;
+        o.owned=bind_tcp(reservation);
         SOCKET conflict=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
         if(conflict==INVALID_SOCKET)throw 2;
         int rc=bind(conflict,reinterpret_cast<sockaddr*>(&local),sizeof(local));
@@ -77,15 +80,15 @@ int main(int argc,char** argv){
         // 16-bit destination value directly against the port bitmap.
         UINT16 bit=htons(OwnedPort);o.bitmap[bit/8]|=UINT8(1u<<(bit%8));
         XDP_HOOK_ID hook{XDP_HOOK_L2,XDP_HOOK_RX,XDP_HOOK_INSPECT};
-        XDP_RULE rule{};rule.Match=XDP_MATCH_IPV4_TCP_PORT_SET;
-        rule.Pattern.IpPortSet.Address.Ipv4=local.sin_addr;
-        rule.Pattern.IpPortSet.PortSet.PortSet=o.bitmap;
+        XDP_RULE rule{};
+        if(dstOnly){rule.Match=XDP_MATCH_TCP_DST;rule.Pattern.Port=htons(OwnedPort);}
+        else{rule.Match=XDP_MATCH_IPV4_TCP_PORT_SET;rule.Pattern.IpPortSet.Address.Ipv4=local.sin_addr;rule.Pattern.IpPortSet.PortSet.PortSet=o.bitmap;}
         rule.Action=XDP_PROGRAM_ACTION_REDIRECT;
         rule.Redirect.TargetType=XDP_REDIRECT_TARGET_TYPE_XSK;rule.Redirect.Target=o.xsk;
         check("redirect",XdpCreateProgram(index,&hook,0,XDP_CREATE_PROGRAM_FLAG_GENERIC,&rule,1,&o.prog));
         XSK_NOTIFY_RESULT_FLAGS flags{};
         check("fill poke",XskNotifySocket(o.xsk,XSK_NOTIFY_FLAG_POKE_RX,0,&flags));
-        std::printf("READY owned=%u ordinary=%u ifindex=%u\n",OwnedPort,OtherPort,index);std::fflush(stdout);
+        std::printf("READY owned=%u ordinary=%u ifindex=%u mode=%s\n",OwnedPort,OtherPort,index,argv[3]);std::fflush(stdout);
         std::set<UINT16> sources;
         UINT32 total=0,foreign=0,ordinary=0;
         ULONGLONG deadline=GetTickCount64()+16000;
