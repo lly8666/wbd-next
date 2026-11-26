@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "bbbe02584685677c743b4c6522586c087cff5de0",
+  "result": "MEASURED_NOT_PROMOTED",
+  "artifact_verified": true,
+  "scope": "One x86_64 VM sequential ABBA, exact same source/config/lock, paired dual Rust TCP, clean 25s download, only rustc version changed. Both builds pass old glibc2.31 build environment and included tests; no independent full ARM/Windows qualification.",
+  "run_id": 45813155937,
+  "attempt": 1,
+  "job_id": 139887757723,
+  "artifacts": [
+    {
+      "id": 15113928839,
+      "sha256": "ebff45d8f6336c225609ffb4cfdacab6894c5b6194f9635c42d1f9c122f445ce"
+    },
+    {
+      "id": 15113413574,
+      "sha256": "6d01fff35ae751cf2ae623d726f789afb9c40dae236df51884355224f4d75db9"
+    },
+    {
+      "id": 15113939154,
+      "sha256": "b87c6d13df22c03b993fc269162c067f13fa871b909822a7c2c245cb4bcb2600"
+    }
+  ],
+  "builds": {
+    "A": {
+      "rust": "1.85.1",
+      "llvm": "19.1.7",
+      "max_glibc_library": "2.29",
+      "manifest_sha256": "471139fdc7fef2a745321daeaf94a0400dff9a6580149427fd48f1550626070a"
+    },
+    "B": {
+      "rust": "1.100.0",
+      "llvm": "23.1.5",
+      "max_glibc_library": "2.30",
+      "manifest_sha256": "b5010fddab08f8db633f46d7aa610ab134da1317ad4a5da7b849e12bfa4d9c15"
+    }
+  },
+  "order": "ABBA",
+  "rows": [
+    {
+      "leg": "A",
+      "mbps": 464.17209364519385,
+      "bytes": 1450573824,
+      "server": 22.169549109966567,
+      "client": 26.79591578566911,
+      "host": 54.7243661335502
+    },
+    {
+      "leg": "B",
+      "mbps": 465.72538197568815,
+      "bytes": 1455423488,
+      "server": 22.014524495677232,
+      "client": 26.58121037463977,
+      "host": 54.18789625360231
+    },
+    {
+      "leg": "B",
+      "mbps": 465.47196045669074,
+      "bytes": 1454637056,
+      "server": 22.255253198774554,
+      "client": 27.378021265092812,
+      "host": 54.50507118399712
+    },
+    {
+      "leg": "A",
+      "mbps": 463.71032361047673,
+      "bytes": 1449132032,
+      "server": 22.39907380607815,
+      "client": 27.40793053545586,
+      "host": 54.319421128798844
+    }
+  ],
+  "means": {
+    "A": {
+      "mbps": 463.9412086278353,
+      "server": 22.28431145802236,
+      "client": 27.101923160562485,
+      "host": 54.52189363117452
+    },
+    "B": {
+      "mbps": 465.5986712161895,
+      "server": 22.134888847225895,
+      "client": 26.97961581986629,
+      "host": 54.34648371879972
+    }
+  },
+  "cpu_unit": "CPU-s/GiB received",
+  "all_stop": true,
+  "all_origin_sender_retransmits": 0,
+  "all_client_middle_admission_fail": 0,
+  "all_client_shared_tun_drops": 0,
+  "host_steal_ticks": 0,
+  "artifact_review": "All three downloaded ZIP SHA256 match API digest. Rehashed all 3 binaries per build against manifests; rustc -vV and manifest digests match measurement. Checked iperf actual receiver byte counts and client worker/queue logs. Different VM from earlier splice ABBA, no cross-run comparison.",
+  "decision": "Keep default and workspace MSRV 1.85.1. Explicit 1.100.0 build override remains experimental; build compatible and near-neutral performance on this scope. No meaningful improvement; do not mix into in-flight TX candidate. Consider independent cross-platform qualification when an actual maintenance or codegen benefit justifies migration."
+}
