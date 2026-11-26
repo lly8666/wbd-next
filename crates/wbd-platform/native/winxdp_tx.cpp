@@ -140,7 +140,7 @@ extern "C" void wbd_xdp_tx_close(void* raw){
 // Queue-local registered slices of one preallocated region keep each
 // producer/consumer ownership independent without copying frames.
 namespace {
-constexpr UINT32 RxSlots=1024,RxBatch=32,MaxRxQueues=62;
+constexpr UINT32 RxSlots=1024,DnsSlots=16,MaxRxQueues=62,MaxPorts=4,RxChunk=2048;
 struct RxQueue {
     HANDLE socket,event;
     bool pending;
@@ -151,7 +151,8 @@ struct RxQueue {
 };
 struct RxOwner {
     HANDLE program,map;
-    SOCKET port;
+    SOCKET ports[MaxPorts];
+    UINT32 port_count;
     bool wsa;
     RxQueue* queues;
     unsigned char* umem;
@@ -174,7 +175,7 @@ void close_rx(RxOwner* o){
         HeapFree(GetProcessHeap(),0,o->queues);
     }
     if(o->umem)VirtualFree(o->umem,0,MEM_RELEASE);
-    if(o->port!=INVALID_SOCKET)closesocket(o->port);
+    for(UINT32 i=0;i<o->port_count;++i)if(o->ports[i]!=INVALID_SOCKET)closesocket(o->ports[i]);
     if(o->wsa)WSACleanup();
     HeapFree(GetProcessHeap(),0,o);
 }
@@ -182,7 +183,7 @@ HRESULT rx_poke(RxQueue* q){
     XSK_NOTIFY_RESULT_FLAGS flags{};
     return XskNotifySocket(q->socket,XSK_NOTIFY_FLAG_POKE_RX,0,&flags);
 }
-HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue){
+HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue,UINT32 slots){
     HRESULT hr;
     XSK_UMEM_REG reg{};
     XSK_RING_INFO_SET info{};
@@ -191,17 +192,17 @@ HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue){
     if(!q->event)return HRESULT_FROM_WIN32(GetLastError());
     q->ov.hEvent=q->event;
     hr=XskCreate(&q->socket);if(FAILED(hr))return hr;
-    reg.TotalSize=RxSlots*Chunk;reg.ChunkSize=Chunk;reg.Address=q->umem;
+    reg.TotalSize=slots*RxChunk;reg.ChunkSize=RxChunk;reg.Address=q->umem;
     hr=XskSetSockopt(q->socket,XSK_SOCKOPT_UMEM_REG,&reg,sizeof(reg));if(FAILED(hr))return hr;
     hr=XskBind(q->socket,index,queue,XSK_BIND_FLAG_RX|XSK_BIND_FLAG_GENERIC);if(FAILED(hr))return hr;
-    hr=XskSetSockopt(q->socket,XSK_SOCKOPT_RX_RING_SIZE,&RxSlots,sizeof(RxSlots));if(FAILED(hr))return hr;
-    hr=XskSetSockopt(q->socket,XSK_SOCKOPT_RX_FILL_RING_SIZE,&RxSlots,sizeof(RxSlots));if(FAILED(hr))return hr;
+    hr=XskSetSockopt(q->socket,XSK_SOCKOPT_RX_RING_SIZE,&slots,sizeof(slots));if(FAILED(hr))return hr;
+    hr=XskSetSockopt(q->socket,XSK_SOCKOPT_RX_FILL_RING_SIZE,&slots,sizeof(slots));if(FAILED(hr))return hr;
     hr=XskActivate(q->socket,XSK_ACTIVATE_FLAG_NONE);if(FAILED(hr))return hr;
     hr=XskGetSockopt(q->socket,XSK_SOCKOPT_RING_INFO,&info,&size);if(FAILED(hr))return hr;
     XskRingInitialize(&q->rx,&info.Rx);XskRingInitialize(&q->fill,&info.Fill);
-    if(XskRingProducerReserve(&q->fill,RxSlots,&fi)!=RxSlots)return E_FAIL;
-    for(UINT32 i=0;i<RxSlots;++i)*static_cast<UINT64*>(XskRingGetElement(&q->fill,fi+i))=UINT64(i)*Chunk;
-    XskRingProducerSubmit(&q->fill,RxSlots);
+    if(XskRingProducerReserve(&q->fill,slots,&fi)!=slots)return E_FAIL;
+    for(UINT32 i=0;i<slots;++i)*static_cast<UINT64*>(XskRingGetElement(&q->fill,fi+i))=UINT64(i)*RxChunk;
+    XskRingProducerSubmit(&q->fill,slots);
     return rx_poke(q);
 }
 HRESULT arm_queue(RxQueue* q){
@@ -221,30 +222,36 @@ HRESULT arm_queue(RxQueue* q){
     SetEvent(q->event);return S_OK;
 }
 }
-extern "C" void* wbd_xdp_rx_open(DWORD index,UINT16 port){
+extern "C" void* wbd_xdp_rx_open_ports(DWORD index,const UINT16* ports,UINT32 port_count,BOOL udp){
     auto* o=static_cast<RxOwner*>(HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(RxOwner)));
     if(!o)return nullptr;
-    o->port=INVALID_SOCKET;
+    o->port_count=port_count;
+    for(UINT32 i=0;i<MaxPorts;++i)o->ports[i]=INVALID_SOCKET;
+    const UINT32 slots=udp?DnsSlots:RxSlots;
     HRESULT hr=E_FAIL;
     WSADATA wd{};
     BOOL exclusive=TRUE;
     DWORD dual=0;
-    sockaddr_in6 address{};address.sin6_family=AF_INET6;address.sin6_port=htons(port);
+    sockaddr_in6 address{};address.sin6_family=AF_INET6;
     HANDLE adapter=nullptr;
     XDP_RSS_CAPABILITIES caps{};UINT32 capSize=sizeof(caps);
     XDP_HOOK_ID hook{XDP_HOOK_L2,XDP_HOOK_RX,XDP_HOOK_INSPECT};
-    XDP_RULE rule{};
+    XDP_RULE rules[MaxPorts]{};
     XDP_CREATE_PROGRAM_FLAGS flags=XDP_CREATE_PROGRAM_FLAG_GENERIC;
     // TCP_DST matches IPv4 and IPv6. One non-listening reservation owns
     // the port for the original cold generation on both families.
     if(WSAStartup(MAKEWORD(2,2),&wd))goto fail;
     o->wsa=true;
-    o->port=socket(AF_INET6,SOCK_STREAM,IPPROTO_TCP);
-    if(o->port==INVALID_SOCKET)goto fail;
-    if(setsockopt(o->port,IPPROTO_IPV6,IPV6_V6ONLY,reinterpret_cast<const char*>(&dual),sizeof(dual))||
-       setsockopt(o->port,SOL_SOCKET,SO_EXCLUSIVEADDRUSE,reinterpret_cast<const char*>(&exclusive),sizeof(exclusive))||
-       bind(o->port,reinterpret_cast<sockaddr*>(&address),sizeof(address))){
-        std::fprintf(stderr,"WBD_XDP_PORT_BIND_FAILED port=%u wsa=%d\n",port,WSAGetLastError());goto fail;
+    for(UINT32 i=0;i<port_count;++i){
+        address.sin6_port=htons(ports[i]);
+        SOCKET p=socket(AF_INET6,udp?SOCK_DGRAM:SOCK_STREAM,udp?IPPROTO_UDP:IPPROTO_TCP);
+        o->ports[i]=p;
+        if(p==INVALID_SOCKET)goto fail;
+        if(setsockopt(p,IPPROTO_IPV6,IPV6_V6ONLY,reinterpret_cast<const char*>(&dual),sizeof(dual))||
+           setsockopt(p,SOL_SOCKET,SO_EXCLUSIVEADDRUSE,reinterpret_cast<const char*>(&exclusive),sizeof(exclusive))||
+           bind(p,reinterpret_cast<sockaddr*>(&address),sizeof(address))){
+            std::fprintf(stderr,"WBD_XDP_PORT_BIND_FAILED port=%u wsa=%d\n",ports[i],WSAGetLastError());goto fail;
+        }
     }
     // This is the same RSS capability source used by ALL_QUEUES in the
     // official driver. Socket bind success alone is NOT queue inventory.
@@ -256,7 +263,7 @@ extern "C" void* wbd_xdp_rx_open(DWORD index,UINT16 port){
     // Explicit scope of this candidate; never silently omit real queues.
     if(o->count>MaxRxQueues){hr=HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);goto fail;}
     o->queues=static_cast<RxQueue*>(HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(RxQueue)*o->count));
-    o->umem=static_cast<unsigned char*>(VirtualAlloc(nullptr,size_t(o->count)*RxSlots*Chunk,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE));
+    o->umem=static_cast<unsigned char*>(VirtualAlloc(nullptr,size_t(o->count)*slots*RxChunk,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE));
     if(!o->queues||!o->umem){hr=E_OUTOFMEMORY;goto fail;}
     if(o->count>1){
         hr=XdpMapCreate(&o->map,XDP_MAP_TYPE_XSKMAP);if(FAILED(hr))goto fail;
@@ -264,19 +271,23 @@ extern "C" void* wbd_xdp_rx_open(DWORD index,UINT16 port){
     }
     for(UINT32 i=0;i<o->count;++i){
         auto* q=&o->queues[i];
-        q->umem=o->umem+size_t(i)*RxSlots*Chunk;
-        hr=open_queue(q,index,i);if(FAILED(hr))goto fail;
+        q->umem=o->umem+size_t(i)*slots*RxChunk;
+        hr=open_queue(q,index,i,slots);if(FAILED(hr))goto fail;
         if(o->map){hr=XdpMapInsert(o->map,&i,&q->socket);if(FAILED(hr))goto fail;}
     }
-    rule.Match=XDP_MATCH_TCP_DST;rule.Pattern.Port=htons(port);
-    rule.Action=XDP_PROGRAM_ACTION_REDIRECT;
-    rule.Redirect.TargetType=o->map?XDP_REDIRECT_TARGET_TYPE_XSKMAP_BY_QUEUEID:XDP_REDIRECT_TARGET_TYPE_XSK;
-    rule.Redirect.Target=o->map?o->map:o->queues[0].socket;
-    hr=XdpCreateProgram(index,&hook,0,flags,&rule,1,&o->program);if(FAILED(hr))goto fail;
-    std::fprintf(stderr,"WBD_XDP_RX_READY ifindex=%lu queues=%u port=%u slots_per_queue=%u chunk=%u\n",index,o->count,port,RxSlots,Chunk);
+    for(UINT32 i=0;i<port_count;++i){
+        auto& rule=rules[i];
+        rule.Match=udp?XDP_MATCH_UDP_DST:XDP_MATCH_TCP_DST;
+        rule.Pattern.Port=htons(ports[i]);
+        rule.Action=XDP_PROGRAM_ACTION_REDIRECT;
+        rule.Redirect.TargetType=o->map?XDP_REDIRECT_TARGET_TYPE_XSKMAP_BY_QUEUEID:XDP_REDIRECT_TARGET_TYPE_XSK;
+        rule.Redirect.Target=o->map?o->map:o->queues[0].socket;
+    }
+    hr=XdpCreateProgram(index,&hook,0,flags,rules,port_count,&o->program);if(FAILED(hr))goto fail;
+    std::fprintf(stderr,"WBD_XDP_RX_READY ifindex=%lu queues=%u port=%u ports=%u slots_per_queue=%u chunk=%u udp=%u\n",index,o->count,ports[0],port_count,slots,RxChunk,unsigned(udp!=0));
     return o;
 fail:
-    std::fprintf(stderr,"WBD_XDP_RX_OPEN_FAILED ifindex=%lu port=%u queues=%u hr=0x%08lx\n",index,port,o->count,(unsigned long)hr);
+    std::fprintf(stderr,"WBD_XDP_RX_OPEN_FAILED ifindex=%lu port=%u queues=%u hr=0x%08lx\n",index,ports[0],o->count,(unsigned long)hr);
     close_rx(o);return nullptr;
 }
 extern "C" size_t wbd_xdp_rx_borrow(void* raw,RxFrame* frames,size_t max){

@@ -1,9 +1,7 @@
 name: M0 WinXDP full Normal carrier functional
 run-name: "M0 WinXDP 1.4 all-queue cold and steady real Normal carrier | ${{ github.sha }}"
 on:
-  push:
-    branches: ['experiment/m0-winxdp']
-    paths: ['.github/workflows/qa-m0-winxdp-full-smoke.yml', 'tools/m0_winxdp_full_client.py', 'tools/m0_winxdp_fixture.py']
+  workflow_dispatch:
 permissions: {contents: read, actions: read}
 concurrency:
   group: winxdp-full-smoke-${{ github.ref }}

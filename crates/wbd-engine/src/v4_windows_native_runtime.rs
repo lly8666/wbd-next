@@ -2498,3 +2498,14 @@ pub unsafe extern "C" fn wbd_m0_win_xdp_write(tx:usize,src:*const u8,len:usize)-
 pub unsafe extern "C" fn wbd_m0_win_xdp_close(rx:usize,tx:usize)->i32{
     unsafe{wbd_platform::windows_xdp_rx::close_after_join(rx,tx)};0
 }
+
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_xdp_open_ports(index:u32,ports:*const u16,count:u32,udp:u32,handles:*mut usize)->i32{
+    if !matches!(count,1|2|4)||udp>1||(udp==1&&count!=1){return INVALID}
+    let ports=unsafe{std::slice::from_raw_parts(ports,count as usize)};
+    match wbd_platform::windows_xdp_rx::cold_open_ports(index,ports,udp==1){
+        Ok((rx,tx))=>{unsafe{handles.write(rx);handles.add(1).write(tx)};0},
+        Err(_)=>BAD_STAGE,
+    }
+}

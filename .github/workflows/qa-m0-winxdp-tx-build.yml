@@ -1,9 +1,6 @@
 name: M0 WinXDP TX product build
 run-name: "M0 WinXDP TX A/B source-locked build | ${{ github.sha }}"
 on:
-  push:
-    branches: ['experiment/m0-winxdp']
-    paths: ['crates/wbd-platform/**','crates/wbd-engine/**','.github/workflows/qa-m0-winxdp-tx-build.yml']
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
