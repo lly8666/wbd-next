@@ -40,10 +40,17 @@ jobs:
           python3 -m py_compile tools/m0_dual_rust_tcp_local.py tools/m0_dual_rust_tcp_app.py
           bash tools/m0_plan029_linux_dual_native_build.sh >dual-tcp-build.log 2>&1 || { tail -n 180 dual-tcp-build.log; exit 2; }
           cp linux-plan029-public-bundle/{manifest.json,SHA256SUMS} dual-tcp-out/
+      - name: Native complete Rust TCP core (unchanged complexity limit)
+        run: |
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --lib v4_rust_tcp
       - name: Original TUN to native origin, exact duplex bytes, concurrent flows, UDP and joined Stop
         shell: bash
         run: |
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out python3 -u tools/m0_dual_rust_tcp_local.py
+      - name: Exercise opt-in parity profile on actual native TUN
+        run: |
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/parity WBD_M0_LINUX_PARITY=1 WBD_M0_MIDDLE_CC=cubic python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Retain exact native binary for performance jobs
         run: |
           (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)

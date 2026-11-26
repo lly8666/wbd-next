@@ -302,9 +302,10 @@ fn make_cc(
     mss: u32,
     paced: bool,
     now: Instant,
+    linux_parity: bool,
 ) -> Box<dyn CongestionController> {
     let mut cc: Box<dyn CongestionController> = match kind {
-        CongestionKind::Cubic => Box::new(Cubic::new(mss)),
+        CongestionKind::Cubic => Box::new(Cubic::new(mss).with_linux_parity(linux_parity)),
         CongestionKind::NewReno => Box::new(NewReno::new(mss)),
         CongestionKind::HighSpeed => Box::new(HighSpeed::new(mss)),
         CongestionKind::Bbr => Box::new(Bbr::new(mss, now)),
@@ -435,6 +436,8 @@ pub struct ConnConfig {
     pub(crate) middle_sack_compress: bool,
     /// Native owner diagnostic: bounded packet pacing burst, no accumulated late catch-up.
     pub(crate) native_bounded_pacing: bool,
+    /// Opt-in M0 behavior-alignment profile; not a claim of Linux equivalence.
+    pub(crate) linux_parity: bool,
     /// Explicit Congestion Notification (RFC 3168, and RFC 9768's
     /// AccECN): whether to ask for it in the handshake, and accept it. By
     /// default a peer's request is accepted, and none made, as on Linux.
@@ -534,6 +537,7 @@ impl Default for ConnConfig {
             middle_ack_three: false,
             middle_sack_compress: false,
             native_bounded_pacing: false,
+            linux_parity: false,
             ecn: EcnMode::default(),
             mtu_probing: MtuProbing::default(),
             fast_open: false,
@@ -715,6 +719,7 @@ pub struct Conn {
     /// When the ACK held back for data received goes out on its own,
     /// unless something we send first carries it.
     delack_deadline: std::option::Option<Instant>,
+    ack_timeout: Duration,
     sack_ack_base: Option<u32>,
     sack_ack_immediate: u8,
     sack_ack_pending: u8,
@@ -898,7 +903,7 @@ impl Conn {
         let now = wall_clock();
         let rcv_shift = cfg.rcv_wscale();
         let mss = cfg.mss.max(1);
-        let cc = make_cc(cfg.congestion, mss as u32, cfg.pacing, now);
+        let cc = make_cc(cfg.congestion, mss as u32, cfg.pacing, now, cfg.linux_parity);
         let ts_offset = super::secret::keyed_hash((
             "tsval",
             cfg.local_addr.map(|a| a.ip()),
@@ -931,7 +936,7 @@ impl Conn {
             mtu_probe: None,
             black_hole_undo: false,
             cc,
-            rto: RtoState::new(now),
+            rto: RtoState::new(now).with_linux_parity(cfg.linux_parity),
             rto_deadline: None,
             retries: 0,
             score: Scoreboard::new(0, now),
@@ -965,6 +970,7 @@ impl Conn {
             pace_srtt: None,
             pace_late: Duration::ZERO,
             delack_deadline: None,
+            ack_timeout: DELAYED_ACK,
             sack_ack_base: None,
             sack_ack_immediate: 0,
             sack_ack_pending: 0,
@@ -1208,8 +1214,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline));
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -1893,6 +1899,7 @@ impl Conn {
             self.mss as u32,
             self.cfg.pacing,
             self.now,
+            self.cfg.linux_parity,
         );
     }
 
@@ -2861,8 +2868,12 @@ impl Conn {
         }
         // Prefer the receiver RTT estimate; at 400ms the 1ms cap dominates.
         let (rx_rtt, _) = self.rcv_space.snapshot();
-        let rtt = rx_rtt.unwrap_or_else(|| self.rto.srtt());
-        let delay = (rtt / 20).min(Duration::from_millis(1));
+        let srtt = self.rto.srtt();
+        let rtt = if self.cfg.linux_parity {
+            rx_rtt.map_or(srtt, |r| if srtt.is_zero() { r } else { r.min(srtt) })
+        } else { rx_rtt.unwrap_or(srtt) };
+        let delay = if self.cfg.linux_parity { rtt * 33 / 100 } else { rtt / 20 }
+            .min(Duration::from_millis(1));
         if delay.is_zero() {
             return false;
         }
@@ -2885,6 +2896,19 @@ impl Conn {
             .is_none_or(|t| now.saturating_duration_since(t) > self.rto.rto())
         {
             self.incr_quickack();
+        }
+        if self.cfg.linux_parity {
+            self.ack_timeout = match self.last_data_recv {
+                None => DELAYED_ACK,
+                Some(prev) => {
+                    let gap = now.saturating_duration_since(prev);
+                    if gap <= DELAYED_ACK / 2 {
+                        (self.ack_timeout / 2 + DELAYED_ACK / 2).max(DELAYED_ACK)
+                    } else if gap < self.ack_timeout {
+                        (self.ack_timeout / 2 + gap).min(self.rto.rto()).max(DELAYED_ACK)
+                    } else { self.ack_timeout }
+                }
+            };
         }
         self.last_data_recv = Some(now);
         let len = u32::try_from(len).unwrap_or(u32::MAX);
@@ -2932,7 +2956,10 @@ impl Conn {
             }
             self.queue_ack();
         } else if self.delack_deadline.is_none() {
-            self.delack_deadline = Some(self.now + DELAYED_ACK);
+            let delay = if self.cfg.linux_parity {
+                self.ack_timeout.min(Duration::from_millis(200))
+            } else { DELAYED_ACK };
+            self.delack_deadline = Some(self.now + delay);
         }
     }
 
@@ -3216,7 +3243,8 @@ impl Conn {
         {
             return;
         }
-        let want = autotune::sndbuf_target(cwnd, self.mss as u32).min(self.cfg.send_max());
+        let factor = if self.cfg.linux_parity && self.cc.as_bbr1().is_some() { 3 } else { 2 };
+        let want = autotune::sndbuf_target_with_factor(cwnd, self.mss as u32, factor).min(self.cfg.send_max());
         let cur = sb.capacity();
         if want <= cur {
             return;
@@ -4099,7 +4127,7 @@ impl Conn {
         let rtt = timed.or_else(|| self.ts_echo_rtt(seg))?;
         // RFC 7323 Appendix G: a window of timestamps gives about one
         // sample per two segments, the ACKs of a delayed-ACK receiver.
-        let per_window = if self.ts_ok {
+        let per_window = if self.ts_ok && !self.cfg.linux_parity {
             flight.div_ceil(2 * self.mss as u32).max(1)
         } else {
             1
@@ -4877,6 +4905,10 @@ impl Conn {
             // The answer the ACK was waiting to ride on did not come in
             // time: not a request/response exchange after all (Linux's
             // tcp_delack_timer_handler).
+            if self.cfg.linux_parity && self.sack_ack_pending == 0 {
+                self.ack_timeout = if self.pingpong { DELAYED_ACK }
+                    else { (self.ack_timeout * 2).min(self.rto.rto()).max(DELAYED_ACK) };
+            }
             self.pingpong = false;
             self.m0_ack_causes[3] += 1;
             self.queue_ack();

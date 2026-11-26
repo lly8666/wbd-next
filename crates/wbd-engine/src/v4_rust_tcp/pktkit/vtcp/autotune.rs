@@ -218,7 +218,11 @@ impl RcvSpace {
 pub(crate) fn sndbuf_target(cwnd: u32, mss: u32) -> usize {
     // Never below the initial window, as Linux counts at least
     // TCP_INIT_CWND segments.
-    (cwnd.max(mss.saturating_mul(10)) as usize).saturating_mul(2)
+    sndbuf_target_with_factor(cwnd, mss, 2)
+}
+
+pub(crate) fn sndbuf_target_with_factor(cwnd: u32, mss: u32, factor: usize) -> usize {
+    (cwnd.max(mss.saturating_mul(10)) as usize).saturating_mul(factor)
 }
 
 #[cfg(test)]

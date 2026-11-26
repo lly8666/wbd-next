@@ -107,6 +107,11 @@ pub struct Cubic {
     paced: bool,
     /// Times HyStart++ entered Conservative Slow Start, for `TcpInfo`.
     css_entries: u32,
+    linux_parity: bool,
+    legacy_round: Option<(u32, Instant)>,
+    legacy_last_ack: Option<Instant>,
+    legacy_round_min: Option<Duration>,
+    legacy_samples: u32,
 }
 
 impl Cubic {
@@ -128,7 +133,39 @@ impl Cubic {
             saved: None,
             paced: false,
             css_entries: 0,
+            linux_parity: false,
+            legacy_round: None,
+            legacy_last_ack: None,
+            legacy_round_min: None,
+            legacy_samples: 0,
         }
+    }
+
+    pub(crate) fn with_linux_parity(mut self, enabled: bool) -> Self {
+        self.linux_parity = enabled;
+        self
+    }
+
+    // Legacy HyStart-style detection for the Linux comparison; packet-level
+    // accounting and kernel ACK-train scheduling still require trace parity.
+    fn legacy_hystart(&mut self, a: &Ack) -> bool {
+        if self.legacy_round.is_none_or(|(end, _)| seq_after_eq(a.ack, end)) {
+            self.legacy_round = Some((a.snd_nxt, a.now));
+            self.legacy_last_ack = Some(a.now);
+            self.legacy_round_min = None;
+            self.legacy_samples = 0;
+        }
+        if self.cwnd < self.mss.saturating_mul(16) { return false; }
+        let Some(rtt) = ack_rtt(a) else { return false };
+        let min = self.delay_min.unwrap_or(rtt);
+        let train = self.legacy_last_ack.is_some_and(|t| a.now.saturating_duration_since(t) <= Duration::from_millis(2));
+        if train { self.legacy_last_ack = Some(a.now); }
+        self.legacy_round_min = Some(self.legacy_round_min.map_or(rtt, |old| old.min(rtt)));
+        self.legacy_samples = self.legacy_samples.saturating_add(1);
+        let threshold = (min / 8).clamp(MIN_RTT_THRESH, MAX_RTT_THRESH);
+        let delay = self.legacy_samples >= 8 && self.legacy_round_min.is_some_and(|r| r > min + threshold);
+        let train = train && self.legacy_round.is_some_and(|(_, t)| a.now.saturating_duration_since(t) > if self.paced { min } else { min / 2 });
+        delay || train
     }
 
     /// C, scaled to bytes per second cubed.
@@ -223,7 +260,7 @@ impl Cubic {
             _ => w,
         });
         self.cwnd_prior = w;
-        self.ssthresh = self.decreased_by(flight, beta);
+        self.ssthresh = self.decreased_by(if self.linux_parity { self.cwnd } else { flight }, beta);
         self.epoch = None;
         self.credit = 0.0;
         self.hystart.finish();
@@ -269,7 +306,9 @@ impl CongestionController for Cubic {
 
         if self.cwnd < self.ssthresh {
             let was_css = self.hystart.in_css();
-            let (divisor, exit) = self.hystart.on_ack(a, self.ssthresh == u32::MAX);
+            let (divisor, exit) = if self.linux_parity {
+                (1, self.ssthresh == u32::MAX && self.legacy_hystart(a))
+            } else { self.hystart.on_ack(a, self.ssthresh == u32::MAX) };
             if !was_css && self.hystart.in_css() {
                 self.css_entries += 1;
             }
@@ -318,7 +357,7 @@ impl CongestionController for Cubic {
     /// RFC 8511's β_ecn in congestion avoidance; in slow start, which a
     /// mark ends having overshot by up to a window, β_cubic (RFC 8511 §3).
     fn on_ecn(&mut self, flight_size: u32) {
-        let beta = if self.cwnd < self.ssthresh {
+        let beta = if self.linux_parity || self.cwnd < self.ssthresh {
             BETA
         } else {
             BETA_ECN
@@ -329,7 +368,7 @@ impl CongestionController for Cubic {
     fn on_retransmit_timeout(&mut self, flight_size: u32, repeated: bool) {
         if !repeated {
             self.cwnd_prior = f64::from(self.cwnd);
-            self.ssthresh = self.decreased(flight_size);
+            self.ssthresh = self.decreased(if self.linux_parity { self.cwnd } else { flight_size });
         }
         // The first stage after a timeout starts its curve where it
         // stands, as after the first slow start (§4.8). Linux forgets the

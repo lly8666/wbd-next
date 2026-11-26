@@ -35,6 +35,7 @@ pub struct RtoState {
     rttvar: Duration,
     rto: Duration,
     measured: bool,
+    max_rto: Duration,
 
     timing: bool,
     time_sent: Instant,
@@ -49,10 +50,16 @@ impl RtoState {
             rttvar: Duration::ZERO,
             rto: DEFAULT_RTO,
             measured: false,
+            max_rto: MAX_RTO,
             timing: false,
             time_sent: now,
             time_seq: 0,
         }
+    }
+
+    pub(crate) fn with_linux_parity(mut self, enabled: bool) -> Self {
+        if enabled { self.max_rto = Duration::from_secs(120); }
+        self
     }
 
     /// Feed a fresh RTT sample and recompute SRTT / RTTVAR / RTO.
@@ -178,8 +185,8 @@ impl RtoState {
         if self.rto < MIN_RTO {
             self.rto = MIN_RTO;
         }
-        if self.rto > MAX_RTO {
-            self.rto = MAX_RTO;
+        if self.rto > self.max_rto {
+            self.rto = self.max_rto;
         }
     }
 }
@@ -187,6 +194,13 @@ impl RtoState {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn parity_rto_cap_is_120_seconds() {
+        let mut r = RtoState::new(Instant::now()).with_linux_parity(true);
+        for _ in 0..10 { r.backoff(); }
+        assert_eq!(r.rto(), Duration::from_secs(120));
+    }
 
     #[test]
     fn first_sample_sets_srtt_and_rto() {

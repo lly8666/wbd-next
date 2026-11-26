@@ -292,6 +292,25 @@ impl RecvBuf {
     fn insert_ooo(&mut self, seq: u32, data: &[u8]) {
         let end = seq.wrapping_add(data.len() as u32);
         let (lo, hi) = (self.off(seq), self.off(end));
+        // Common OFO case: a single adjacent range can absorb the segment
+        // directly, avoiding temporary vectors and map churn per packet.
+        let prev = self.ooo.range(..=lo).next_back().map(|(&k,e)| (k,k+e.data.len() as u64));
+        let next = self.ooo.range(lo+1..).next().map(|(&k,_)| k);
+        if let Some((k, edge)) = prev {
+            if edge == lo && next.is_none_or(|n| n > hi) {
+                self.ooo.get_mut(&k).unwrap().data.extend(data);
+                self.ooo_mem += data.len();
+                return;
+            }
+        }
+        if prev.is_none_or(|(_,edge)| edge < lo) && next == Some(hi) {
+            let mut e = self.ooo.remove(&hi).unwrap();
+            for &b in data.iter().rev() { e.data.push_front(b); }
+            e.seq = seq;
+            self.ooo_mem += data.len();
+            self.ooo.insert(lo,e);
+            return;
+        }
         // The ranges touching [seq, end): the one starting at or before it,
         // if it reaches that far, and any starting inside it or at its end.
         let mut keys: Vec<u64> = Vec::new();
@@ -771,6 +790,19 @@ mod tests {
     fn within_budget(start: std::time::Instant) {
         const LIMIT: std::time::Duration = std::time::Duration::from_secs(3);
         assert!(start.elapsed() < LIMIT, "quadratic: over {LIMIT:?}");
+    }
+
+    #[test]
+    fn adjacent_fast_paths_preserve_bridging_and_duplicates() {
+        let mut r = RecvBuf::new(0, 4096);
+        for i in [3u32, 4, 2, 7, 6, 5] { r.insert(i, &[i as u8]); }
+        assert_eq!(r.sack_blocks(), vec![SackBlock { left: 2, right: 8 }]);
+        r.insert(3, &[99]);
+        assert_eq!(r.take_dup(), Some(SackBlock { left: 3, right: 4 }));
+        r.insert(0, &[0,1]);
+        let mut out = [0;8];
+        assert_eq!(r.read(&mut out),8);
+        assert_eq!(out,[0,1,2,3,4,5,6,7]);
     }
 
     /// 1-byte segments behind a hole, in order and in reverse: each must
