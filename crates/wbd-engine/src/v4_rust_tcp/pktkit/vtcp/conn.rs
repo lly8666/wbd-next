@@ -5274,7 +5274,10 @@ impl Conn {
         // Before the new data is queued (draft-ietf-ccwg-bbr §4.1.2.4).
         self.check_app_limited();
         let n = self.send_buf.as_mut().unwrap().write(buf);
-        self.snd_nospace = n < buf.len();
+        // The owner reads exactly send_available() bytes, so a successful
+        // write filling the last byte also means the upstream is backpressured.
+        // Keep the existing ACK-time autotuning and global growth budget.
+        self.snd_nospace = n < buf.len() || self.send_buf.as_ref().unwrap().available() == 0;
         if n > 0 {
             self.flush_send_queue();
         }
@@ -9953,6 +9956,29 @@ mod tests {
         let (mut client, mut server) = tuned_pair(40506, tuned, usize::MAX);
         tuned_rounds(&mut client, &mut server, 1000, 30);
         assert_eq!(client.send_buf.as_ref().unwrap().capacity(), 1 << 16);
+    }
+
+    #[test]
+    fn send_buffer_grows_when_owner_writes_exact_available() {
+        let (mut tx, mut rx) = tuned_pair(40524, tuned, usize::MAX);
+        let mut out = Vec::new();
+        let initial = tx.send_buf.as_ref().unwrap().capacity();
+        let chunk = vec![7u8; 1 << 20];
+        for _ in 0..20 {
+            // Model ServerFlow: never read more than the destination can accept.
+            let room = tx.send_available();
+            if room != 0 {
+                let (n, packets) = tx.write(&chunk[..room]);
+                assert_eq!(n, room);
+                out.extend(packets);
+            }
+            let mut acks = deliver(&mut rx, &out);
+            rx.rcv_space.backdate(Duration::from_secs(1));
+            read_all(&mut rx);
+            acks.extend(rx.take_outgoing());
+            out = deliver(&mut tx, &acks);
+        }
+        assert!(tx.send_buf.as_ref().unwrap().capacity() > initial);
     }
 
     /// Growth stops where the budget runs out, without failing anything,
