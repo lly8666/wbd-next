@@ -1,4 +1,4 @@
-name: M0 WinXDP TX H2480 9V45 ABBA BAAB
+name: M0 WinXDP TX H2480 9V45 ABBA BAAB and smoke
 run-name: "M0 WinXDP TX 9V45 same-host ABBA BAAB | ${{ github.sha }}"
 on:
   push:
@@ -9,78 +9,11 @@ concurrency:
   group: winxdp-tx-9v45-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  build:
-    runs-on: windows-2025
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with: {persist-credentials: false, fetch-depth: 0}
-      - name: Verify unchanged Go assembly and archived cold client ABI inputs
-        shell: pwsh
-        run: |
-          git diff --exit-code 26b11e2da236e909b73f461964c52d5a86d42dca HEAD -- r0 tools/prepare_windows_wiring.py Cargo.lock
-          if($LASTEXITCODE -ne 0){throw 'Go/ABI/lock changed'}
-          git diff --exit-code f18f907e1a1ce47f53bc5b27eb7fa2796754e01c 26b11e2da236e909b73f461964c52d5a86d42dca -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py
-          if($LASTEXITCODE -ne 0){throw 'H2480 base product identity changed'}
-      - name: H1394 pin official ISA-L Win64 static prerequisite
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          choco install nasm -y --no-progress
-          if($LASTEXITCODE -ne 0){throw 'native ISA-L NASM prerequisite failed'}
-          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin') |
-            Where-Object {Test-Path (Join-Path $_ 'nasm.exe')} | Select-Object -First 1
-          if(-not $nasm){throw 'ISA-L NASM missing after install'}
-          Add-Content -Path $env:GITHUB_PATH -Value $nasm
-          git clone --quiet https://github.com/intel/isa-l.git isa-l
-          if($LASTEXITCODE -ne 0){throw 'official ISA-L clone failed'}
-          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
-          if((git -C isa-l rev-parse HEAD).Trim() -ne 'c387163fcbca62701d646149564c550c78a4f985'){throw 'official pinned ISA-L source mismatch'}
-      - name: H1394 build official static ISA-L for real MSVC release DLL
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          # The actual Windows native runner can have a different VS edition/year.
-          # Require the installed x64 MSVC tools, not a hard-coded Enterprise path.
-          $vswhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-          if(-not (Test-Path -LiteralPath $vswhere)){throw 'VS installer vswhere missing: cannot build pinned native ISA-L'}
-          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath |
-            Select-Object -First 1
-          if([string]::IsNullOrWhiteSpace($vsroot)){throw 'No installed native MSVC x64 toolchain'}
-          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
-          if(-not (Test-Path -LiteralPath $vcvars)){throw 'Installed MSVC lacks vcvars64.bat'}
-          $nativeBuild='call "'+$vcvars+'" && where nmake && cd isa-l && nmake /f Makefile.nmake'
-          & cmd.exe /d /s /c $nativeBuild
-          if($LASTEXITCODE -ne 0){throw 'Native ISA-L MSVC static build failed'}
-          Write-Output 'H1396_WIN_NATIVE_ISAL_VSWHERE_MSVC_BUILD_PASS'
-      - name: Build exact-source A/B DLLs with identical ISA-L
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          rustup toolchain install 1.85.1 --profile minimal --no-self-update
-          if($LASTEXITCODE -ne 0){throw 'Rust toolchain'}
-          nuget install Microsoft.XDP-for-Windows.Sdk -Version 1.3.0 -OutputDirectory xdp-packages -NonInteractive
-          if($LASTEXITCODE -ne 0){throw 'official XDP SDK unavailable'}
-          $env:WBD_XDP_SDK_INCLUDE=(Get-ChildItem xdp-packages -Recurse -Filter xdpapi.h | Where-Object {$_.Directory.Name -eq 'include'} | Select-Object -First 1).Directory.FullName
-          $archive=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File | Select-Object -First 1
-          if(-not $archive){throw 'ISA-L archive missing'}
-          $env:WBD_ISAL_PREFIX=$archive.Directory.FullName
-          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
-          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
-          $vs=& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-          New-Item -ItemType Directory -Force xdp-build | Out-Null
-          $cmd='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo +1.85.1 build --locked -p wbd-engine --release --features '+$features+' && copy /Y target\release\wbd_engine.dll xdp-build\A.dll && cargo +1.85.1 build --locked -p wbd-engine --release --features '+$features+',winxdp_tx_trial && copy /Y target\release\wbd_engine.dll xdp-build\B.dll'
-          cmd.exe /d /s /c $cmd
-          if($LASTEXITCODE -ne 0){throw 'native ISA-L A/B build failed'}
-          [ordered]@{source_sha=$env:GITHUB_SHA;features_A=$features;features_B=($features+',winxdp_tx_trial');isa_l_source=$env:WBD_ISAL_SOURCE_SHA;isa_l_archive_sha256=(Get-FileHash $archive.FullName).Hash.ToLowerInvariant();A=(Get-FileHash xdp-build/A.dll).Hash.ToLowerInvariant();B=(Get-FileHash xdp-build/B.dll).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content xdp-build/manifest.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with: {name: winxdp-tx-native-ab, path: xdp-build/, if-no-files-found: error, retention-days: 14}
   client-windows:
-    needs: build
     strategy:
       fail-fast: false
       matrix:
-        replica: [A,B,C,D,E,F,G,H,I]
+        replica: [A,B,C,D,E,F,G,H,I,S]
     runs-on: windows-2025
     timeout-minutes: 65
     permissions: {contents: read, actions: read}
@@ -113,18 +46,27 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'syntax check'}
           python tools/test_m0_h2478_profile.py
           if($LASTEXITCODE -ne 0){throw 'profile roundtrip test'}
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c80933
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
-        with: {name: winxdp-tx-native-ab, path: xdp-build}
+      - name: Reuse exact completed ISA-L A/B build (15110473153)
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S' }}
+        shell: pwsh
+        run: |
+          git diff --exit-code cb6775c143e5853edcfc01e4e71adba119a4bb37 HEAD -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'A/B product changed'}
+          gh run download 45808553851 -R $env:GITHUB_REPOSITORY -n winxdp-tx-native-ab -D xdp-build
+          if($LASTEXITCODE -ne 0){throw 'completed A/B archive unavailable'}
       - name: Fetch exact frozen Linux x86_64 product for local WSL server
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') }}
         shell: bash
         env:
           WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
         run: |
-          bash tools/m0_h2476_fetch_frozen_linux.sh
+          # All product differences from the verified H2480 base are the
+          # already-built Windows-only TX candidate. Check exact build identity
+          # above, then use the original frozen-server verifier at its base SHA.
+          git diff --exit-code 26b11e2da236e909b73f461964c52d5a86d42dca "$GITHUB_SHA" -- crates r0 Cargo.toml Cargo.lock tools/m0_plan029_linux_dual_native_build.sh tools/m0_linux_glibc231_build.sh ':!crates/wbd-engine/src/v4_windows_native_runtime.rs' ':!crates/wbd-engine/Cargo.toml' ':!crates/wbd-platform/Cargo.toml' ':!crates/wbd-platform/src/lib.rs' ':!crates/wbd-platform/build.rs' ':!crates/wbd-platform/native/winxdp_tx.cpp' ':!crates/wbd-platform/src/windows_xdp_tx.rs'
+          GITHUB_SHA=26b11e2da236e909b73f461964c52d5a86d42dca bash tools/m0_h2476_fetch_frozen_linux.sh
       - name: WSL stage 1 - bounded distro inventory
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') }}
         id: wsl_inventory
         shell: pwsh
         timeout-minutes: 2
@@ -140,7 +82,7 @@ jobs:
           "needs_import=$($need.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           Write-Output "H2476_WSL_INVENTORY_DONE needs_import=$need"
       - name: WSL stage 2 - official pinned image download
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' && steps.wsl_inventory.outputs.needs_import == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') && steps.wsl_inventory.outputs.needs_import == 'true' }}
         shell: pwsh
         timeout-minutes: 4
         run: |
@@ -152,7 +94,7 @@ jobs:
           if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'Ubuntu real image checksum mismatch'}
           Write-Output 'H2476_WSL_DOWNLOAD_HASH_PASS'
       - name: WSL stage 3 - file-backed import with one owned retry
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' && steps.wsl_inventory.outputs.needs_import == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') && steps.wsl_inventory.outputs.needs_import == 'true' }}
         shell: pwsh
         timeout-minutes: 6
         run: |
@@ -160,7 +102,7 @@ jobs:
           python -u tools/m0_h2476_import_wsl.py
           if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 import failed'}
       - name: WSL stage 4 - bounded guest network startup
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') }}
         shell: pwsh
         timeout-minutes: 2
         run: |
@@ -177,7 +119,7 @@ jobs:
           $ip | Set-Content -Encoding ascii result/h1706-ubuntu-guest-ip.txt
           Write-Output "H2476_WSL_BOOT_DONE ip=$ip"
       - name: Prepare actual WSL Linux kernel and read BBR capability
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') }}
         shell: pwsh
         timeout-minutes: 5
         run: |
@@ -190,14 +132,14 @@ jobs:
           if($cc -notmatch '\bbbr\b'){throw 'WSL kernel has no registered BBR; no fallback'}
           if($LASTEXITCODE -ne 0){throw 'WSL congestion control inventory unavailable'}
       - name: Real bidirectional netem and bare-port filter preflight before drivers
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') }}
         shell: pwsh
         timeout-minutes: 4
         run: |
           python tools/m0_h2475_fixture.py h2476-out/preflight
           if($LASTEXITCODE -ne 0){throw 'actual netem preflight failed'}
       - name: Retrieve exact-source Windows full product (H2441 built and archived before cold failure)
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') }}
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
@@ -211,7 +153,7 @@ jobs:
           if((Get-FileHash result/wl-public/wbd-client-embedded.exe).Hash.ToLowerInvariant() -ne $m.sha256.exe -or (Get-FileHash result/wl-public/wbd_engine.dll).Hash.ToLowerInvariant() -ne $m.sha256.dll){throw 'Windows binary hash mismatch'}
           Copy-Item result/wl-public/windows-binary-manifest.json h2442-out/
       - name: Full public-run signed original Npcap and Wintun driver install
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') }}
         shell: pwsh
         timeout-minutes: 8
         run: |
@@ -262,7 +204,7 @@ jobs:
           if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun DLL unsigned'}
           Copy-Item $dll result/wl-public/wintun.dll
       - name: Install same official XDP runtime for A and B
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') }}
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
@@ -272,11 +214,11 @@ jobs:
           & "$runtime/xdp-setup.ps1" -Install xdp
           if($LASTEXITCODE -ne 0){throw 'XDP install failed'}
           $m=Get-Content xdp-build/manifest.json -Raw | ConvertFrom-Json
-          if($m.source_sha -ne $env:GITHUB_SHA -or (Get-FileHash xdp-build/A.dll).Hash.ToLowerInvariant() -ne $m.A -or (Get-FileHash xdp-build/B.dll).Hash.ToLowerInvariant() -ne $m.B){throw 'A/B identity mismatch'}
+          if($m.source_sha -ne 'cb6775c143e5853edcfc01e4e71adba119a4bb37' -or (Get-FileHash xdp-build/A.dll).Hash.ToLowerInvariant() -ne $m.A -or (Get-FileHash xdp-build/B.dll).Hash.ToLowerInvariant() -ne $m.B){throw 'A/B identity mismatch'}
           Copy-Item xdp-build/manifest.json h2442-out/xdp-build-manifest.json
       - name: 'Same-runner 9V45: WBD TX A/B at 250 and 650 ABBA or BAAB'
         shell: pwsh
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S') }}
         timeout-minutes: 45
         run: |
           $ErrorActionPreference='Stop'

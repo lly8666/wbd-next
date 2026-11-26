@@ -378,7 +378,7 @@ def main():
     manifest=read(builds/"manifest.json")
     original=read(ROOT/"h2442-out/windows-binary-manifest.json")
     def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
-    if digest(dll)!=original["sha256"]["dll"] or manifest["source_sha"]!=os.environ["GITHUB_SHA"]:raise RuntimeError("source/DLL identity mismatch")
+    if digest(dll)!=original["sha256"]["dll"] or manifest["source_sha"]!="cb6775c143e5853edcfc01e4e71adba119a4bb37":raise RuntimeError("source/DLL identity mismatch")
     for arm in ("A","B"):
         if digest(builds/(arm+".dll"))!=manifest[arm]:raise RuntimeError("candidate hash mismatch "+arm)
     shutil.copyfile(dll,frozen)
@@ -426,7 +426,9 @@ def main():
         # Opposite candidate order across replica parity; baseline brackets.
         original_offload=offload_state();save(OUT/"h2480-original-offload.json",original_offload)
         save(OUT/"h2480-original-rsc.json",rsc_state())
-        for i in SCHEDULE:
+        # S is a separate functional check on any CPU, not a 9V45 sample.
+        smoke=os.environ["H2478_REPLICA"]=="S"
+        for i in ((1,0) if smoke else SCHEDULE):
             current_case=i
             mode,dll_sha=select(i)
             clock.clear()
@@ -458,7 +460,7 @@ def main():
             r["comparable"]=comparable(r) and (i<0 or r.get("mode_ok") is True)
             r["clean_candidate"]=clean(r) if i>=0 else False
             rows.append(r)
-            save(OUT/"summary.json",{"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"same_windows_runner":True,"server_os":"WSL2 Linux x86_64","native_windows_server":False,"streams":1,"direction":"Linux_to_Windows_bulk_Windows_TX_ACK", "rows":rows,"paired":paired(rows)})
+            save(OUT/"summary.json",{"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"same_windows_runner":True,"server_os":"WSL2 Linux x86_64","native_windows_server":False,"streams":1,"direction":"Linux_to_Windows_bulk_Windows_TX_ACK","scope":"FUNCTIONAL_SMOKE_ANY_CPU" if smoke else "9V45_ABBA_BAAB","build_source_sha":manifest["source_sha"],"rows":rows,"paired":paired(rows)})
             print("WINXDP_TX_AB_CASE "+json.dumps(r),flush=True)
             print("WINXDP_TX_AB_PAIR "+json.dumps(paired(rows)),flush=True)
             if r.get("shape_clear_error") or (i>=0 and not r.get("client_stop")):raise RuntimeError("owned Stop or netem cleanup failed; no next case")
@@ -469,7 +471,9 @@ def main():
         control("server","/finish")
         if p.wait(30)!=0:raise RuntimeError("local control exit")
         save(OUT/"h2476-windows-post-probe.json",probe.run("windows"))
-        if len(paired(rows))!=2:raise SystemExit(2)
+        if smoke:
+            if len(rows)!=2 or not all(r.get("comparable") for r in rows):raise SystemExit(2)
+        elif len(paired(rows))!=2:raise SystemExit(2)
     finally:
         if offload_changed:save(OUT/"h2480-offload-restored-finally.json",set_segmentation(original_offload,False))
         try:shape(0,0)
