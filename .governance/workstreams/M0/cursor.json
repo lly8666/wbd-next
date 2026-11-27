@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2494,
-  "checkpoint_sha": "2bf48f5911974e84e518c5f92335d513947017c5",
+  "sequence": 2495,
+  "checkpoint_sha": "a37ee0505916103adbce7433a9cb39787b4d14da",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "核对a153b50精确双ISA、ARM八组192MiB/哈希/EOF/Stop诊断，兼看a4216bd旧夹具结果；逐项比较ACK grant、RACK、CUBIC、低offer及组合；无实际区分则受控乱序/损失或跨机对照，勿重复派单。",
+  "next_action": "核对afcaaa8精确双ISA及三ARM机十组同源候选筛选，实际模式/重传/DSACK/准入/路径/Stop/吞吐/CPU；只对有价值候选复验ABBA，失败按证据排障不重复派单。",
   "unverified": true,
-  "last_tested_source": "5dda95bc447c3799e428c1928404c0a3ac3dfb6b",
+  "last_tested_source": "a153b50052e739b30ec8ec31e727189caec3d199",
   "evidence_refs": [
-    "docs/evidence/M0/20261127-CONTROLLED-RECOVERY-INCOMPLETE-RESULT.json"
+    "docs/evidence/M0/20261127-RECOVERY-BATCH-EXACT-BYTE-RESULT.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261127-PACING-QUANTUM-NATIVE-RST-RESULT.json",
-    "docs/devlog/M0/20261127-M0-PACING-NATIVE-INFRA-RETRY-HANDOFF.md",
     "docs/evidence/M0/20261127-PACING-NATIVE-INFRA-BLOCKER-RESULT.json",
     "docs/devlog/M0/20261127-M0-PACING-ABBA-RESUMED-HANDOFF.md",
     "docs/evidence/M0/20261127-PACING-NATIVE-RETRY-PASS-RESULT.json",
     "docs/devlog/M0/20261127-M0-CONTROLLED-RECOVERY-HANDOFF.md",
     "docs/evidence/M0/20261127-PACING-QUANTUM-INCOMPLETE-RESULT.json",
-    "docs/devlog/M0/20261127-M0-RECOVERY-BATCH-HANDOFF.md"
+    "docs/devlog/M0/20261127-M0-RECOVERY-BATCH-HANDOFF.md",
+    "docs/evidence/M0/20261127-CONTROLLED-RECOVERY-INCOMPLETE-RESULT.json",
+    "docs/devlog/M0/20261127-M0-CROSS-HOST-RECOVERY-SCREEN-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "5dda95b六原生PASS，ARM同机iperf固定字节三组均不合格，paired bulk216137728发/确认、重传/DSACK/timeout0，client/server full0/1862；a4216bd两独立候选及低offer组合，a153b50前向修正精确192MiB+hash+EOF批量夹具，待验。"
+  "partial_summary": "a153b50双ISA347及六原生+ARM八组精确192MiB/hash/EOF PASS，六paired sampled重传/DSACK/timeout及双端入口0，实际94M低压有floor；a4216bd旧夹具8不合格。afcaaa8产品不变三机10组screen、历史卡原样归档压缩，待验。"
 }
