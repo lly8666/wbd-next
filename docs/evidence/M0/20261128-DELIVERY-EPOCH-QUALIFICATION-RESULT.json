@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "source_sha": "933d29bef2130fa891ea3729fd163a4f5daa11e8",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native qualification and three ARM source comparison measured; correctness PASS, causal performance benefit not established.",
+  "native_run": 46034533957,
+  "native_artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140626483351,
+      "artifact_id": 15215244559,
+      "core_pass": 353,
+      "functional_profiles": 4
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140626482632,
+      "artifact_id": 15216905343,
+      "core_pass": 353,
+      "functional_profiles": 4
+    }
+  ],
+  "native_recovery": {
+    "order": [
+      "normal-selected",
+      "pause-selected",
+      "loss-selected"
+    ],
+    "mbps": [
+      339.5603491675173,
+      159.2686886343142,
+      62.86049605443475
+    ],
+    "bytes_sent": [
+      536870912,
+      536870912,
+      101247127
+    ],
+    "bytes_retrans": [
+      0,
+      0,
+      583831
+    ],
+    "all_exact_hash_eof_profile_stop": true
+  },
+  "comparison": {
+    "run_id": 46034534070,
+    "artifacts": [
+      {
+        "role": "server",
+        "job_id": 140629158638,
+        "artifact_id": 15215664073
+      },
+      {
+        "role": "relay",
+        "job_id": 140629158653,
+        "artifact_id": 15216362200
+      },
+      {
+        "role": "client",
+        "job_id": 140629158597,
+        "artifact_id": 15215753478
+      }
+    ],
+    "baseline": "136d66fb79139144dd4e08a5e742ceccd493896c",
+    "order": [
+      "A1",
+      "B1",
+      "B2",
+      "A2"
+    ],
+    "bare_mbps": [
+      330.36084062914614,
+      274.173284191823
+    ],
+    "mbps": [
+      214.30768851843024,
+      281.3319766345342,
+      269.24945993665284,
+      271.07459673159667
+    ],
+    "product_cpu_s_per_gib": [
+      30.4,
+      28.14,
+      29.75,
+      29.79
+    ],
+    "bytes_sent": [
+      1140789565,
+      1107417772,
+      1132443255,
+      1131774418
+    ],
+    "bytes_retrans": [
+      67047741,
+      33675948,
+      58701431,
+      58032594
+    ],
+    "dsack": [
+      4518,
+      2047,
+      4015,
+      3458
+    ],
+    "timeouts": [
+      1,
+      0,
+      0,
+      1
+    ],
+    "server_epoch_preserved_final": [
+      null,
+      1,
+      1,
+      null
+    ],
+    "client_epoch_preserved": [
+      null,
+      0,
+      0,
+      null
+    ],
+    "server_app_limited_snapshot_counts": [
+      34,
+      25,
+      27,
+      27
+    ],
+    "server_snapshot_counts": [
+      41,
+      32,
+      33,
+      33
+    ],
+    "server_bbr_phases": [
+      [
+        "Startup",
+        "ProbeRtt"
+      ],
+      [
+        "Startup",
+        "ProbeRtt"
+      ],
+      [
+        "Startup",
+        "ProbeRtt"
+      ],
+      [
+        "Startup",
+        "ProbeRtt"
+      ]
+    ],
+    "server_ingress_full": [
+      2934,
+      0,
+      0,
+      269
+    ],
+    "client_ingress_full": [
+      1760,
+      1313,
+      2333,
+      1733
+    ],
+    "all_exact_source_hash_eof_profile_retired_stop": true,
+    "path_sample": {
+      "points": [
+        "server_tx",
+        "relay_rx",
+        "relay_tx",
+        "client_rx"
+      ],
+      "counts": [
+        [
+          17352,
+          17077,
+          17077,
+          16415
+        ],
+        [
+          16840,
+          16737,
+          16737,
+          16328
+        ],
+        [
+          17197,
+          16945,
+          16945,
+          16369
+        ],
+        [
+          17203,
+          16991,
+          16991,
+          16419
+        ]
+      ],
+      "adjacent_missing_multiset": [
+        [
+          275,
+          0,
+          662
+        ],
+        [
+          103,
+          0,
+          409
+        ],
+        [
+          252,
+          0,
+          576
+        ],
+        [
+          212,
+          0,
+          572
+        ]
+      ],
+      "adjacent_extra_multiset": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "capture_kernel_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scope": "Per-paired port deterministic sampled virtual interfaces, not physical loss or inner TCP retrans mapping."
+    }
+  },
+  "interpretation": "Two rare corrected epoch events are insufficient to explain sustained performance differences; retain correctness fix, no causal throughput claim. All server bulk flows stayed Startup/ProbeRtt, app-limited snapshots common. Next candidate isolates pre-ACK renewal on existing Linux parity.",
+  "physical": "NOT_RUN",
+  "next_source": "e0c01aab726e4cb96ff60b5a8e7a2e1d285474c1"
+}
