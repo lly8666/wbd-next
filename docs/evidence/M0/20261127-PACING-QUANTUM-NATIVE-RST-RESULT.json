@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "source_sha": "ca4cc4466fffe9a00da7d79a70ba0f6eb2e9be35",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "scope": "Exact native selected paired Normal profiles; ARM all three pass, x86 default real concurrent TCP fails RST after core pass.",
+  "run_id": 45955024210,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140359389127,
+      "artifact_id": 15178815757,
+      "core_pass": 345,
+      "result": "FAIL",
+      "failed_profile": "default32",
+      "error": "ConnectionResetError(104, 'Connection reset by peer')",
+      "other_profiles": "NOT_RUN"
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140359388446,
+      "artifact_id": 15178104635,
+      "core_pass": 345,
+      "result": "PASS",
+      "profiles": [
+        "default",
+        "inbox2048+8",
+        "cubic"
+      ],
+      "gso_groups": [
+        159,
+        132,
+        227
+      ],
+      "gso_segments": [
+        1430,
+        1340,
+        1793
+      ]
+    }
+  ],
+  "failure": {
+    "tuple": "10.66.0.150:42060 -> 198.18.77.2:5300",
+    "client_middle": {
+      "state": "FinWait2",
+      "bytes_sent": 262144,
+      "bytes_acked": 262144,
+      "bytes_received": 0,
+      "bytes_retrans": 0
+    },
+    "server_middle": {
+      "state": "CloseWait",
+      "origin_connected": false,
+      "origin_interest": "write",
+      "recv_queued": 262144,
+      "bytes_sent": 0
+    },
+    "client_reset": "WBD_M0_TCP_RESET_ACCEPT state=FinWait2",
+    "client_ingress_full": 0,
+    "server_ingress_full": 0,
+    "client_packet_socket_drops": 0,
+    "server_packet_socket_drops": 0,
+    "review": "Both actual ZIPs opened/CRC checked, source and native summaries/logs reviewed. Origin terminal error not logged; app origin log empty at cleanup. listen(1) for 8 concurrent connections is a fixture confounder, not proven reset cause. Default32 failed, not candidate8."
+  },
+  "performance": {
+    "result": "NOT_RUN",
+    "run_id": 45955024246,
+    "prepare_job_id": 140359388718,
+    "reason": "Exact dual-ISA native gate failed; client/server/relay skipped."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "675ab84ef833d344bf294a33df0c30f62e00624b"
+}
