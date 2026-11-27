@@ -8509,6 +8509,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut middle_batch_max=0usize;
             let mut pending_peak=0usize;
             let mut local_write_failed=0u64;
+            let mut local_gso_groups=0u64;let mut local_gso_segments=0u64;
             // Actual local TCP replies use the existing generation TUN writer;
             // middle segments use the original M1 slab / M3 / RAW sender.
             let mut publish_tcp=|owner:&mut NativeTcpOwner,out:NativeTcpOutput,pending:&mut VecDeque<Vec<u8>>|{
@@ -8517,7 +8518,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 middle_batch_max=middle_batch_max.max(out.tunnel.len());
                 for frames in out.local.chunks(32){
                     if native_round_robin&&frames.len()>1{
-                        if let Ok((attempts,failed))=tun.write_native_ipv4_ready(generation,frames){
+                        if let Ok((attempts,failed,groups,segments))=tun.write_native_ipv4_ready(generation,frames){
+                            local_gso_groups+=groups as u64;local_gso_segments+=segments as u64;
                             local_write_failed+=failed as u64;
                             if failed!=0{stats.tx_error.fetch_add(failed as u64,Ordering::Relaxed);}
                             for (frame,attempted) in frames.iter().zip(attempts){if let Some(attempted)=attempted{if owner.admit(true,frame,attempted).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}}
@@ -8963,6 +8965,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             jumbo_queue.clear();
             if native_tcp_owner.is_some(){
                 if native_m4_clock{eprintln!("WBD_M0_TCP_M4_CLOCK copied={} not_proven_copied={} no_normal_pn={}",native_m4_counts[0],native_m4_counts[1],native_m4_counts[2]);}
+                if local_gso_groups!=0||std::env::var_os("WBD_M0_LOCAL_TUN_GSO").as_deref()==Some(std::ffi::OsStr::new("1")){eprintln!("WBD_M0_LOCAL_TUN_GSO groups={} segments={}",local_gso_groups,local_gso_segments);}
                 eprintln!("WBD_M0_TCP_PUBLISH calls={} local_batch_max={} middle_batch_max={} pending_peak={} local_write_failed={} ingress_first={} ingress_turn_peak={} ingress_with_pending={} admission_drain_before_service={}",publish_calls,local_batch_max,middle_batch_max,pending_peak,local_write_failed,fair_native_turn,ingress_turn_peak,ingress_with_pending,native_round_robin);
             }
             if native_tcp_owner.take().is_some(){eprintln!("WBD_DUAL_RUST_TCP_OWNER_STOP generation={} flows_and_sockets_dropped=1",generation);}

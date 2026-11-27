@@ -613,15 +613,24 @@ type ownedTun struct{
     mtu int
 }
 // Original kernel-owned /dev/net/tun FD, never a synthetic traffic adapter.
-func openTun(name,cidr string,mtu int)(*ownedTun,error){
+func openTun(name,cidr string,mtu int,vnet bool)(*ownedTun,error){
     fd,err:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
     if err!=nil{return nil,err}
     var ifr [40]byte
     copy(ifr[:16],[]byte(name))
-    binary.NativeEndian.PutUint16(ifr[16:18],0x1001) // IFF_TUN | IFF_NO_PI
+    flags:=uint16(0x1001) // IFF_TUN | IFF_NO_PI
+    if vnet { flags|=0x4000 } // IFF_VNET_HDR, local device only
+    binary.NativeEndian.PutUint16(ifr[16:18],flags)
     _,_,errno:=syscall.Syscall(syscall.SYS_IOCTL,fd.Fd(),tunSetIFF,
         uintptr(unsafe.Pointer(&ifr[0])))
     if errno!=0{_ = fd.Close();return nil,errno}
+    if vnet {
+        // This candidate aggregates only Rust-to-OS delivery. Do not request
+        // kernel-to-Rust GSO/checksum-offloaded reads; those remain datagrams.
+        _,_,errno=syscall.Syscall(syscall.SYS_IOCTL,fd.Fd(),0x400454d0,0) // TUNSETOFFLOAD
+        if errno!=0{_ = fd.Close();return nil,errno}
+        log.Printf("WBD_M0_LOCAL_TUN_VNET name=%s rx_gso=0",name)
+    }
     device:=&ownedTun{f:fd,name:name,cidr:cidr,mtu:mtu}
     // This public TUN is IPv4-only. At MTU>=1280 Linux would otherwise create
     // IPv6 link-local/RS traffic, which the IPv4 driver correctly rejects.
@@ -932,7 +941,8 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
         uint16(publicMSS),0,cfg.fecMode,cfg.gameLanes!=0,cfg.gameFecEnabled)
     if err!=nil{return err}
     log.Printf("V4_PUBLIC_MTU_PREPARE role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d record_offer=%d tun_planned=%d",cfg.role,cfg.outerMTU,iface.MTU,publicMSS,cfg.recordLimit,cfg.innerMTU)
-    tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU)
+    localGSO:=cfg.dualRustTCP&&role=="client"&&os.Getenv("WBD_M0_LOCAL_TUN_GSO")=="1"
+    tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU,localGSO)
     if err!=nil{return err}
     // The Go cold lifetime owns TUN; each Rust generation Stop joins and
     // releases kernel loans before the FINAL Go close or a fresh TLS generation.

@@ -102,6 +102,12 @@ def functional():
         for log in (sl,cl):
             assert "WBD_DUAL_RUST_TCP_OWNER_STOP" in log
             assert "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log
+        if os.environ.get("WBD_M0_LOCAL_TUN_GSO")=="1":
+            assert "WBD_M0_LOCAL_TUN_VNET" in cl and "WBD_M0_LOCAL_TUN_VNET" not in sl
+            gso=next(x for x in cl.splitlines() if "WBD_M0_LOCAL_TUN_GSO groups=" in x)
+            parts=dict(x.split("=",1) for x in gso.split() if "=" in x)
+            assert int(parts["groups"])>0 and int(parts["segments"])>=2*int(parts["groups"]),gso
+            row["local_gso"]={k:int(v) for k,v in parts.items()}
         assert "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in sl
         assert "WBD_TCP_SPLICE_READY" not in sl
         assert server.returncode==0 and client.returncode==0

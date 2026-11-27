@@ -16,6 +16,16 @@ const SIOCGIFADDR:usize=0x8915; // Linux socket ioctl, cold only
 const AF_INET:u16=2;
 const IFF_TUN:i16=0x0001;
 const IFF_NO_PI:i16=0x1000;
+const IFF_VNET_HDR:i16=0x4000;
+const TUNGETVNETHDRSZ:usize=0x800454d7;
+const VNET_LEN:usize=10;
+#[repr(C)]
+#[derive(Clone,Copy)]
+struct IoVec{base:*mut std::ffi::c_void,len:usize}
+impl IoVec {
+    fn bytes(b:&[u8])->Self{Self{base:b.as_ptr().cast_mut().cast(),len:b.len()}}
+    fn writable(b:&mut [u8])->Self{Self{base:b.as_mut_ptr().cast(),len:b.len()}}
+}
 const MAX_NAME:usize=15;
 const POLLIN:i16=1;
 const F_GETFL:i32=3;
@@ -28,6 +38,8 @@ unsafe extern "C" {
     fn ioctl(fd:i32,request:usize,...) -> i32;
     fn write(fd:i32,ptr:*const std::ffi::c_void,len:usize)->isize;
     fn read(fd:i32,ptr:*mut std::ffi::c_void,len:usize)->isize;
+    fn readv(fd:i32,iov:*const IoVec,count:i32)->isize;
+    fn writev(fd:i32,iov:*const IoVec,count:i32)->isize;
     fn poll(fds:*mut PollFd,nfds:usize,timeout:i32)->i32;
     fn fcntl(fd:i32,cmd:i32,...)->i32;
 }
@@ -43,6 +55,7 @@ pub struct ScopedTunSink {
     fence:BorrowFence,
     serialized:Mutex<()>,
     started:AtomicBool,
+    vnet:bool,
 }
 impl ScopedTunSink {
     /// Does NOT create a TUN, select a route, or grant CAP_NET_ADMIN.
@@ -70,6 +83,13 @@ impl ScopedTunSink {
             flags&0x0002!=0 {
             return Err((TunError::WrongMode,fd))
         }
+        let vnet=flags&IFF_VNET_HDR!=0;
+        if vnet{
+            let mut size=0i32;
+            if unsafe{ioctl(fd.as_raw_fd(),TUNGETVNETHDRSZ,&mut size)}<0||size!=VNET_LEN as i32{
+                return Err((TunError::WrongMode,fd))
+            }
+        }
         // A bounded ready-only read must never block after a readiness race.
         // This FD is *moved* into this owner, no concurrent Go reader allowed.
         let flags=unsafe{fcntl(fd.as_raw_fd(),F_GETFL)};
@@ -79,7 +99,27 @@ impl ScopedTunSink {
             return Err((TunError::InvalidFd,fd))
         }
         Ok(Self{fd,generation,name:expected_name.to_owned(),fence:BorrowFence::default(),
-            serialized:Mutex::new(()),started:AtomicBool::new(true)})
+            serialized:Mutex::new(()),started:AtomicBool::new(true),vnet})
+    }
+    // VNET metadata belongs only to the owned local TUN file ABI. It is
+    // never included in the IP slice passed to a caller or encrypted record.
+    fn read_datagram(&self,out:&mut [u8])->Result<usize,TunError>{
+        let mut hdr=[0u8;VNET_LEN];
+        let n=if self.vnet{
+            let iov=[IoVec::writable(&mut hdr),IoVec::writable(out)];
+            unsafe{readv(self.fd.as_raw_fd(),iov.as_ptr(),2)}
+        }else{unsafe{read(self.fd.as_raw_fd(),out.as_mut_ptr().cast(),out.len())}};
+        if n<0{return Err(TunError::Kernel(io::Error::last_os_error().raw_os_error().unwrap_or(5)))}
+        if !self.vnet{return Ok(n as usize)}
+        if n<VNET_LEN as isize||hdr[0]&1!=0||hdr[1]!=0{return Err(TunError::InvalidPacket)}
+        Ok(n as usize-VNET_LEN)
+    }
+    fn write_datagram(&self,packet:&[u8])->isize{
+        if !self.vnet{return unsafe{write(self.fd.as_raw_fd(),packet.as_ptr().cast(),packet.len())}}
+        let hdr=[0u8;VNET_LEN];
+        let iov=[IoVec::bytes(&hdr),IoVec::bytes(packet)];
+        let n=unsafe{writev(self.fd.as_raw_fd(),iov.as_ptr(),2)};
+        if n<0{n}else{(n-VNET_LEN as isize).max(0)}
     }
     pub fn name(&self)->&str{&self.name}
     pub fn generation(&self)->u32{self.generation}
@@ -167,12 +207,7 @@ impl ScopedTunSink {
             if ready==0{return Err(TunError::TimedOut)}
             if pfd.revents&POLLIN==0{return Err(TunError::InvalidFd)}
             // SAFETY: owned fd and live original M1 writable buffer.
-            let n=unsafe{read(self.fd.as_raw_fd(),out.as_mut_ptr().cast(),out.len())};
-            if n<0 {
-                return Err(TunError::Kernel(
-                    io::Error::last_os_error().raw_os_error().unwrap_or(5)))
-            }
-            let n=n as usize;
+            let n=self.read_datagram(out)?;
             if n>=40 && out[0]>>4==6 {continue} // unsupported IPv6 control
             if n<20 || n>65535 || out[0]>>4!=4 || out[0]&0x0f<5 {
                 return Err(TunError::InvalidPacket)
@@ -206,7 +241,7 @@ impl ScopedTunSink {
         let _serialized=self.serialized.lock().map_err(|_|TunError::InvalidFd)?;
         // SAFETY: fd is owned for the guard lifetime and packet slice
         // remains valid until the synchronous kernel call returns.
-        let n=unsafe{write(self.fd.as_raw_fd(),packet.as_ptr().cast(),packet.len())};
+        let n=self.write_datagram(packet);
         if n<0 {
             return Err(TunError::Kernel(io::Error::last_os_error().raw_os_error().unwrap_or(5)))
         }
@@ -271,27 +306,93 @@ fn ipv4_contract(packet:&[u8])->bool{
     let declared=usize::from(u16::from_be_bytes([packet[2],packet[3]]));
     ihl>=20&&ihl<=packet.len()&&declared==packet.len()
 }
+// A run of equal-size already-ready DATA with identical non-sequence
+// headers is representable as one Linux TCPv4 GSO skb. Never mix flows,
+// options, ECN, flags, windows, gaps or a short tail. No waiting or copying
+// payload into a new aggregate. Only the local TUN driver sees this header.
+fn native_gso_run(frames:&[Vec<u8>])->Option<(usize,usize,usize)>{
+    let p=frames.first()?;
+    if !ipv4_contract(p)||p[0]!=0x45||p[9]!=6||p.len()<40||p[4..8]!=[0,0,0x40,0]{
+        return None
+    }
+    let h=20+usize::from(p[32]>>4)*4;
+    if h<40||h>=p.len()||p[32]&15!=0||!matches!(p[33],0x10|0x18)||p[38..40]!=[0,0]{return None}
+    let size=p.len()-h;
+    let start=u32::from_be_bytes(p[24..28].try_into().unwrap());
+    let mut count=1;
+    for q in frames.iter().skip(1).take(MAX_READY_TUN-1){
+        if h+(count+1)*size>65535||q.len()!=p.len()||
+            q[..10]!=p[..10]||q[12..24]!=p[12..24]||q[28..36]!=p[28..36]||q[38..h]!=p[38..h]||
+            u32::from_be_bytes(q[24..28].try_into().unwrap())!=start.wrapping_add((count*size) as u32){
+            break
+        }
+        count+=1;
+    }
+    (count>1).then_some((count,h,size))
+}
+fn folded_words(bytes:&[u8])->u16{
+    let mut sum=bytes.chunks_exact(2).map(|w|u32::from(u16::from_be_bytes([w[0],w[1]]))).sum::<u32>();
+    while sum>>16!=0{sum=(sum&0xffff)+(sum>>16);}
+    sum as u16
+}
+fn native_gso_header(first:&[u8],h:usize,size:usize,count:usize)->([u8;VNET_LEN],[u8;80],usize){
+    let len=h+size*count;
+    let mut v=[0u8;VNET_LEN];
+    v[0]=1; // VIRTIO_NET_HDR_F_NEEDS_CSUM
+    v[1]=1; // VIRTIO_NET_HDR_GSO_TCPV4
+    v[2..4].copy_from_slice(&(h as u16).to_le_bytes());
+    v[4..6].copy_from_slice(&(size as u16).to_le_bytes());
+    v[6..8].copy_from_slice(&20u16.to_le_bytes());
+    v[8..10].copy_from_slice(&16u16.to_le_bytes());
+    let mut ip=[0u8;80];ip[..h].copy_from_slice(&first[..h]);
+    ip[2..4].copy_from_slice(&(len as u16).to_be_bytes());
+    ip[10..12].fill(0);
+    let check=!folded_words(&ip[..20]);ip[10..12].copy_from_slice(&check.to_be_bytes());
+    let mut pseudo=[0u8;12];pseudo[..8].copy_from_slice(&ip[12..20]);pseudo[9]=6;
+    pseudo[10..12].copy_from_slice(&((len-20) as u16).to_be_bytes());
+    // CHECKSUM_PARTIAL takes the folded (not complemented) pseudo sum.
+    ip[36..38].copy_from_slice(&folded_words(&pseudo).to_be_bytes());
+    (v,ip,len)
+}
 impl ScopedTunSink{
     /// Native TCP owner ready-only output. One scoped loan/lock for the
-    /// existing bounded turn; each datagram retains its own kernel write.
+    /// existing bounded turn. A VNET-enabled local client can aggregate
+    /// compatible ready DATA into one GSO skb; other frames stay independent.
     /// DATA attempt timestamps are returned even on failed writes so inner
     /// TCP alone owns recovery. No packet is retried by the TUN layer.
     pub fn write_native_ipv4_ready(&self,generation:u32,frames:&[Vec<u8>])
-        ->Result<([Option<Instant>;MAX_READY_TUN],usize),TunError>{
+        ->Result<([Option<Instant>;MAX_READY_TUN],usize,usize,usize),TunError>{
         if generation!=self.generation{return Err(TunError::InvalidScope)}
         if !self.started.load(Ordering::Acquire){return Err(TunError::Stopped)}
         if frames.len()>MAX_READY_TUN{return Err(TunError::TooLarge)}
         let mut attempts=[None;MAX_READY_TUN];let mut failed=0;
-        if frames.is_empty(){return Ok((attempts,failed))}
+        let mut groups=0;let mut segments=0;
+        if frames.is_empty(){return Ok((attempts,failed,groups,segments))}
         let _loan=self.fence.try_enter_ready().map_err(|e|match e{BorrowError::Stopping=>TunError::Stopped,BorrowError::TooManyLoans=>TunError::TooLarge})?;
         let _lock=self.serialized.lock().map_err(|_|TunError::InvalidFd)?;
-        for (i,frame) in frames.iter().enumerate(){
-            if !ipv4_contract(frame){failed+=1;continue}
+        let mut i=0;
+        while i<frames.len(){
+            if self.vnet{
+                if let Some((count,h,size))=native_gso_run(&frames[i..]){
+                    let (v,ip,len)=native_gso_header(&frames[i],h,size,count);
+                    let mut iov=[IoVec{base:std::ptr::null_mut(),len:0};MAX_READY_TUN+2];
+                    iov[0]=IoVec::bytes(&v);iov[1]=IoVec::bytes(&ip[..h]);
+                    for (j,p) in frames[i..i+count].iter().enumerate(){iov[j+2]=IoVec::bytes(&p[h..]);}
+                    let at=Instant::now();
+                    attempts[i..i+count].fill(Some(at));
+                    let n=unsafe{writev(self.fd.as_raw_fd(),iov.as_ptr(),(count+2) as i32)};
+                    if n==(len+VNET_LEN) as isize{groups+=1;segments+=count;}else{failed+=count;}
+                    i+=count;continue
+                }
+            }
+            let frame=&frames[i];
+            if !ipv4_contract(frame){failed+=1;i+=1;continue}
             if frame.len()>40&&frame[9]==6&&frame.len()>20+usize::from(frame[32]>>4)*4{attempts[i]=Some(Instant::now());}
-            let n=unsafe{write(self.fd.as_raw_fd(),frame.as_ptr().cast(),frame.len())};
+            let n=self.write_datagram(frame);
             if n!=frame.len() as isize{failed+=1;}
+            i+=1;
         }
-        Ok((attempts,failed))
+        Ok((attempts,failed,groups,segments))
     }
 
     /// Never waits for fresh packets or allocates a second frame. An
@@ -321,16 +422,15 @@ impl ScopedTunSink{
             // Unlike read_ipv4_into's legacy readiness API, batch callers
             // explicitly accept WouldBlock and never wait for missing DATA.
             // SAFETY: caller-exclusive frame buffer and scoped nonblocking FD.
-            let n=unsafe{read(self.fd.as_raw_fd(),slot.as_mut_ptr().cast(),slot.len())};
-            if n<0{
-                let e=io::Error::last_os_error().raw_os_error().unwrap_or(5);
-                if e==11{out.status=TunReadyStatus::WouldBlock;break}
-                if e==4{out.status=TunReadyStatus::Interrupted;break}
-                return Err(TunError::Kernel(e))
-            }
-            if n==0{out.status=TunReadyStatus::WouldBlock;break}
+            let size=match self.read_datagram(slot){
+                Ok(0)=>{out.status=TunReadyStatus::WouldBlock;break},
+                Ok(n)=>n,
+                Err(TunError::Kernel(11))=>{out.status=TunReadyStatus::WouldBlock;break},
+                Err(TunError::Kernel(4))=>{out.status=TunReadyStatus::Interrupted;break},
+                Err(TunError::InvalidPacket)=>{out.observed+=1;out.entries[i]=TunReadyEntry::Rejected;continue},
+                Err(e)=>return Err(e),
+            };
             out.observed+=1;
-            let size=n as usize;
             out.entries[i]=if ipv4_contract(&slot[..size]){
                 TunReadyEntry::UntrustedIpv4{len:size}
             }else{TunReadyEntry::Rejected};
@@ -373,6 +473,20 @@ impl ScopedTunSink{
 #[cfg(test)]
 mod ready_tests {
     use super::*;
+    #[test]
+    fn native_gso_only_contiguous_equal_headers_and_payloads(){
+        let frame=|seq:u32|{let mut p=vec![0u8;1040];p[0]=0x45;p[2..4].copy_from_slice(&1040u16.to_be_bytes());p[6]=0x40;p[8]=64;p[9]=6;p[12..20].copy_from_slice(&[10,0,0,1,10,0,0,2]);p[20..24].copy_from_slice(&[1,2,3,4]);p[24..28].copy_from_slice(&seq.to_be_bytes());p[32]=0x50;p[33]=0x18;p};
+        let a=frame(u32::MAX-499);let b=frame(500);let c=frame(1500);
+        assert_eq!(native_gso_run(&[a.clone(),b.clone(),c.clone()]),Some((3,40,1000)));
+        assert_eq!(native_gso_run(&[a.clone(),c.clone()]),None);
+        let mut other=b.clone();other[23]^=1;assert_eq!(native_gso_run(&[a.clone(),other]),None);
+        let mut other=b.clone();other[33]=0x10;assert_eq!(native_gso_run(&[a.clone(),other]),None);
+        let mut other=b.clone();other[35]=1;assert_eq!(native_gso_run(&[a.clone(),other]),None);
+        let mut other=b.clone();other[1]=3;assert_eq!(native_gso_run(&[a.clone(),other]),None);
+        let (v,ip,len)=native_gso_header(&a,40,1000,3);
+        assert_eq!(len,3040);assert_eq!(v,[1,1,40,0,232,3,20,0,16,0]);assert_eq!(folded_words(&ip[..20]),0xffff);
+        assert_eq!(u16::from_be_bytes([ip[36],ip[37]]),0x1fd5); // 10.0.0.1 + 10.0.0.2 + 6 + 3020
+    }
     #[test]
     fn r1_m4_pack_tun_0_1_32_33_bounded_no_implicit_auth(){
         assert_eq!(TunReadyReads::new(0).status,TunReadyStatus::Empty);

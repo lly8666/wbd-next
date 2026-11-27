@@ -220,7 +220,7 @@ def client_case(i):
         control("/start",{"case":i});started=True
         if i>=0:
             b=bundle(k);flags=[] if k=="A" else ["--dual-rust-tcp"]
-            p=spawn("client",N,d/"client.log","env","WBD_M0_LINUX_PARITY="+("1" if k=="B" else "0"),"WBD_M0_NATIVE_M4_CLOCK="+("1" if k=="B" else "0"),"WBD_M0_MIDDLE_CC="+rust_cc(i),"WBD_M0_SACK_COMPRESS="+compress(k),"WBD_M0_TCP_EXPERIMENT="+profile(i,k),"WBD_M0_ACK_PROBE="+ack_for(k),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
+            p=spawn("client",N,d/"client.log","env","WBD_M0_LOCAL_TUN_GSO="+("1" if k=="B" else "0"),"WBD_M0_LINUX_PARITY="+("1" if k=="B" else "0"),"WBD_M0_NATIVE_M4_CLOCK="+("1" if k=="B" else "0"),"WBD_M0_MIDDLE_CC="+rust_cc(i),"WBD_M0_SACK_COMPRESS="+compress(k),"WBD_M0_TCP_EXPERIMENT="+profile(i,k),"WBD_M0_ACK_PROBE="+ack_for(k),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
                     "--raw-interface","wan0","--local-ip","10.248.81.2","--local-port",str(44100+2*i),
                     "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
                     "--username","bench","--password","H2442-ONLY","--auto-ip","--installation-id-file",fixture.TMP/("install-"+str(i)),

@@ -1,4 +1,4 @@
-name: M0 ARM Linux parity orderly close recovery BBR zero-loss ABBA
+name: M0 ARM Linux parity local TUN GSO BBR zero-loss ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]

@@ -47,7 +47,8 @@
     "docs/devlog/M0/20261127-M4-FRESH-DATA-CLOCK-AND-READY-LOANS.md",
     "docs/devlog/M0/20261127-M4-CLOCK-BUILD-RECOVERY.md",
     "docs/devlog/M0/20261127-M4-CLOCK-NATIVE-RESULT-BBR-INTENT.md",
-    "docs/devlog/M0/20261127-DUAL-TCP-TIMEWAIT-LATE-RESET-RECOVERY.md"
+    "docs/devlog/M0/20261127-DUAL-TCP-TIMEWAIT-LATE-RESET-RECOVERY.md",
+    "docs/devlog/M0/20261127-LOCAL-TUN-GSO-CANDIDATE.md"
   ],
   "verification": [
     {
@@ -203,6 +204,20 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "392ee066c8bbcea96c20dea0ef76d73f497f6b87",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45930085832"
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "05bb056 native Normal original/parity, TIME_WAIT regression and M4 clock",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "05bb056d776eedaa9b17e917f29f8f11c3d5b9f7",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45932877384"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "05bb056 native Normal original/parity, TIME_WAIT regression and M4 clock",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "05bb056d776eedaa9b17e917f29f8f11c3d5b9f7",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45932877384"
     }
   ],
   "limitations": [
@@ -220,7 +235,8 @@
     "9ede62e native scoped PASS, zero-loss ABBA unqualified; actual M4 clock and ready loan candidate unverified, only Normal small DATA has PN correspondence.",
     "75c47a5 native build failed both ISA E0308; ARM parity was NOT_RUN. PN conversion and explicit M4 clock unit selection candidate unverified.",
     "392ee06 scoped native M4 clock PASS with positive copied receipts; no performance run for that SOURCE. Next narrow BBR0 ABBA source unverified.",
-    "495586c ARM native PASS; x86 original/core/M4 unit PASS but parity concurrent reset FAIL; ARM performance NOT_RUN. TIME_WAIT late-RST correction and regression candidate unverified."
+    "495586c ARM native PASS; x86 original/core/M4 unit PASS but parity concurrent reset FAIL; ARM performance NOT_RUN. TIME_WAIT late-RST correction and regression candidate unverified.",
+    "05bb056 native PASS, ARM BBR0 ABBA 4/4: 291.48→151.12 Mbps, 26.77→40.43 CPU s/GiB; local ingress losses remain, no parity. Client-only VNET write GSO candidate unverified."
   ],
   "promotion": null
 }
