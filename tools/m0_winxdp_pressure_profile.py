@@ -54,9 +54,11 @@ if os.environ.get("WBD_XDP_STRESS_PHASE")=="carrier-abba":
     base=dict(CASES[0],sndbuf=4194304)
     workloads=[
         dict(name="clean-down250",direction="down",rate=250,streams=1,loss=0,delay=200,profile=-1,mtu=1160),
-        dict(name="clean-down650",direction="down",rate=650,streams=1,loss=0,delay=200,profile=-1,mtu=1160),
+        dict(name="clean-down350",direction="down",rate=350,streams=1,loss=0,delay=200,profile=-1,mtu=1160),
         dict(name="lossy-duplex",direction="duplex",rate=400,streams=4,loss=5,delay=80,profile=6,mtu=1400),
     ]
     CASES=[dict(base,**c,arm=arm,group=c["name"]) for c in workloads for arm in "ABBA"]
-    if os.environ.get("H2478_REPLICA") in tuple("BDFHJL"):
+    # Prior A/C both completed ABBA. Deliberately reverse all main replicas
+    # for this follow-up; S repeats the historical lossy ABBA exactly.
+    if os.environ.get("H2478_REPLICA")!="S":
         CASES=[dict(c,arm="B" if c["arm"]=="A" else "A") for c in CASES]

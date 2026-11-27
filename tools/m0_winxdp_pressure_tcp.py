@@ -57,9 +57,18 @@ def exchange(sock,seconds,rate,send,receive,windows):
             result["rx_end"]="timeout"
         except Exception as e:errors.append("rx:"+repr(e));result["rx_end"]="error"
         finally:result["rx_sha256"]=h.hexdigest()
-    t=threading.Thread(target=tx);r=threading.Thread(target=rx);t.start();r.start();t.join(seconds+DRAIN_SECONDS+5);r.join(5)
+    t=threading.Thread(target=tx);r=threading.Thread(target=rx);t.start();r.start()
+    # Join both against the SAME absolute deadline. A completed TX thread
+    # must not shorten the RX drain to five seconds after the business window.
+    join_deadline=start+seconds+DRAIN_SECONDS+2
+    for worker in (t,r):
+        worker.join(max(0,join_deadline-time.monotonic()))
     if t.is_alive() or r.is_alive():
-        sock.close();t.join(3);r.join(3);errors.append("exchange thread timeout")
+        errors.append("exchange thread timeout")
+        try:sock.shutdown(socket.SHUT_RDWR)
+        except OSError:pass
+        sock.close()
+        for worker in (t,r):worker.join(3)
     result["errors"]=errors
     return result
 def active(direction,windows):

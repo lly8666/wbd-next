@@ -1,5 +1,5 @@
 name: M0 Windows Npcap vs WinXDP full product ABBA 9V45
-run-name: "M0 Npcap vs current WinXDP TCP same runner ABBA BAAB | ${{ github.sha }}"
+run-name: "M0 Npcap vs WinXDP 250/350M reverse BAAB and tail deadline | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
@@ -7,91 +7,7 @@ on:
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:
-  build:
-    runs-on: windows-2025
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with: {persist-credentials: false, fetch-depth: 0}
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          repository: lly8666/wobuzhidao
-          ref: a7a82db31fe736ffedee330795a3234d358f1984
-          path: legacy
-          persist-credentials: false
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
-        with: {go-version: "1.23.12", cache: false}
-      - name: Assemble and compile exact original Go cold client
-        shell: pwsh
-        run: |
-          python tools/prepare_windows_wiring.py
-          if($LASTEXITCODE -ne 0){throw 'original Go assembly failed'}
-          New-Item -ItemType Directory -Force xdp-build | Out-Null
-          Push-Location legacy
-          try{
-            go build -trimpath -tags wbd_v4_embedded_go -o ../xdp-build/wbd-client-embedded.exe ./cmd/wbd-client
-            if($LASTEXITCODE -ne 0){throw 'original Go client build failed'}
-          }finally{Pop-Location}
-      - name: H1394 pin official ISA-L Win64 static prerequisite
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          choco install nasm -y --no-progress
-          if($LASTEXITCODE -ne 0){throw 'native ISA-L NASM prerequisite failed'}
-          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin') |
-            Where-Object {Test-Path (Join-Path $_ 'nasm.exe')} | Select-Object -First 1
-          if(-not $nasm){throw 'ISA-L NASM missing after install'}
-          Add-Content -Path $env:GITHUB_PATH -Value $nasm
-          git clone --quiet https://github.com/intel/isa-l.git isa-l
-          if($LASTEXITCODE -ne 0){throw 'official ISA-L clone failed'}
-          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
-          if((git -C isa-l rev-parse HEAD).Trim() -ne 'c387163fcbca62701d646149564c550c78a4f985'){throw 'official pinned ISA-L source mismatch'}
-      - name: H1394 build official static ISA-L for real MSVC release DLL
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          # The actual Windows native runner can have a different VS edition/year.
-          # Require the installed x64 MSVC tools, not a hard-coded Enterprise path.
-          $vswhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-          if(-not (Test-Path -LiteralPath $vswhere)){throw 'VS installer vswhere missing: cannot build pinned native ISA-L'}
-          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath |
-            Select-Object -First 1
-          if([string]::IsNullOrWhiteSpace($vsroot)){throw 'No installed native MSVC x64 toolchain'}
-          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
-          if(-not (Test-Path -LiteralPath $vcvars)){throw 'Installed MSVC lacks vcvars64.bat'}
-          $nativeBuild='call "'+$vcvars+'" && where nmake && cd isa-l && nmake /f Makefile.nmake'
-          & cmd.exe /d /s /c $nativeBuild
-          if($LASTEXITCODE -ne 0){throw 'Native ISA-L MSVC static build failed'}
-          Write-Output 'H1396_WIN_NATIVE_ISAL_VSWHERE_MSVC_BUILD_PASS'
-      - name: Build exact-source WinXDP release DLL with ISA-L
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          rustup toolchain install 1.85.1 --profile minimal --no-self-update
-          if($LASTEXITCODE -ne 0){throw 'Rust toolchain'}
-          nuget install Microsoft.XDP-for-Windows.Sdk -Version 1.4.0 -OutputDirectory xdp-packages -NonInteractive
-          if($LASTEXITCODE -ne 0){throw 'official XDP SDK unavailable'}
-          $env:WBD_XDP_SDK_INCLUDE=(Get-ChildItem xdp-packages -Recurse -Filter xdpapi.h | Where-Object {$_.Directory.Name -eq 'include'} | Select-Object -First 1).Directory.FullName
-          $archive=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File | Select-Object -First 1
-          if(-not $archive){throw 'ISA-L archive missing'}
-          $env:WBD_ISAL_PREFIX=$archive.Directory.FullName
-          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
-          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration,winxdp_native_trial'
-          $vs=& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-          New-Item -ItemType Directory -Force xdp-build | Out-Null
-          $cmd='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo +1.85.1 test --locked -p wbd-engine --release --features '+$features+' windows_game_dispatch_credit_one_leaves_original_sibling_ready -- --nocapture && cargo +1.85.1 test --locked -p wbd-engine --release --features '+$features+' winxdp_fixed_product_arena_retains_original_fec_budget_and_rx_headroom -- --nocapture && cargo +1.85.1 build --locked -p wbd-engine --release --features '+$features+' && copy /Y target\release\wbd_engine.dll xdp-build\wbd_engine.dll'
-          cmd.exe /d /s /c $cmd
-          if($LASTEXITCODE -ne 0){throw 'native ISA-L A/B build failed'}
-          [ordered]@{source_sha=$env:GITHUB_SHA;go_source_sha=$env:GITHUB_SHA;xdp_sdk='1.4.0';features=$features;native_fec_acceleration=$true;exe=(Get-FileHash xdp-build/wbd-client-embedded.exe).Hash.ToLowerInvariant();dll=(Get-FileHash xdp-build/wbd_engine.dll).Hash.ToLowerInvariant();isa_l_source=$env:WBD_ISAL_SOURCE_SHA;isa_l_archive_sha256=(Get-FileHash $archive.FullName).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content xdp-build/manifest.json
-      - name: Build original WinForms and official complete portable package
-        shell: pwsh
-        run: |
-          & ./tools/m0_winxdp_release_package.ps1 -SourceSHA $env:GITHUB_SHA
-          if($LASTEXITCODE -ne 0){throw 'portable assembly failed'}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with: {name: winxdp-release, path: 'xdp-build/WBD-Windows-amd64-WinXDP.zip', if-no-files-found: error, retention-days: 14}
   pressure:
-    needs: build
     strategy:
       fail-fast: false
       matrix:
@@ -123,15 +39,20 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'CPU gate receipt failed'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: 'h2476-cpu-gate-${{ matrix.replica }}', path: h2442-out/cpu-gate.json, if-no-files-found: error, retention-days: 14}
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c80933
+      - name: Verify product unchanged and fetch exact previous release
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S' }}
-        with: {name: winxdp-release, path: xdp-build}
+        shell: bash
+        run: |
+          git diff --exit-code f6f84a873ec97eb70c9122acb99f6b379c030879 "$GITHUB_SHA" -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_winxdp_release_package.ps1 tools/m0_plan028_h1640_win_gui_compile.ps1 tools/m0_winxdp_driver_setup.cs
+          gh run download 45914310196 -R "$GITHUB_REPOSITORY" -n winxdp-release -D xdp-build
       - name: Validate comparison fixture syntax
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S' }}
         shell: pwsh
         run: |
           python -m py_compile tools/m0_winxdp_pressure_client.py tools/m0_winxdp_pressure_server.py tools/m0_winxdp_pressure_tcp.py tools/m0_winxdp_pressure_profile.py
           if($LASTEXITCODE -ne 0){throw 'pressure script syntax'}
+          python tools/test_m0_winxdp_pressure_tcp_drain.py
+          if($LASTEXITCODE -ne 0){throw 'TCP fixture drain regression'}
       - name: Fetch exact frozen Linux x86_64 product for local WSL server
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S' }}
         shell: bash
@@ -218,7 +139,7 @@ jobs:
           New-Item -ItemType Directory -Force $dir | Out-Null
           Expand-Archive xdp-build/WBD-Windows-amd64-WinXDP.zip $dir -Force
           $m=Get-Content "$dir/package-manifest.json" -Raw | ConvertFrom-Json -AsHashtable
-          if($m.source_sha -ne $env:GITHUB_SHA){throw 'package source mismatch'}
+          if($m.source_sha -ne 'f6f84a873ec97eb70c9122acb99f6b379c030879'){throw 'package source mismatch'}
           foreach($key in $m.files.Keys){
             if((Get-FileHash (Join-Path $dir $key)).Hash.ToLowerInvariant() -ne $m.files[$key]){throw "package bytes mismatch: $key"}
           }
@@ -302,7 +223,7 @@ jobs:
           Copy-Item result/wl-public/wbd-client-embedded.exe carrier-ab/B/wbd-client-embedded.exe
           [ordered]@{source_sha=$m.source_sha;go_source_sha=$m.go_source_sha;artifact_run=45814923159;carrier='Npcap';exe=$m.exe;dll=$m.A;features=$m.features_A} | ConvertTo-Json | Set-Content carrier-ab/A/identity.json
           $b=Get-Content result/wl-public/package-manifest.json -Raw | ConvertFrom-Json -AsHashtable
-          [ordered]@{source_sha=$b.source_sha;artifact_run=$env:GITHUB_RUN_ID;carrier='WinXDP';exe=(Get-FileHash carrier-ab/B/wbd-client-embedded.exe).Hash.ToLowerInvariant();dll=(Get-FileHash carrier-ab/B/wbd_engine.dll).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content carrier-ab/B/identity.json
+          [ordered]@{source_sha=$b.source_sha;artifact_run=45914310196;carrier='WinXDP';exe=(Get-FileHash carrier-ab/B/wbd-client-embedded.exe).Hash.ToLowerInvariant();dll=(Get-FileHash carrier-ab/B/wbd_engine.dll).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content carrier-ab/B/identity.json
           "WBD_XDP_TESTED_DLL_SHA=$($b.source_sha)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           Get-Content carrier-ab/A/identity.json,carrier-ab/B/identity.json
       - name: Real TCP carrier quartets (S lossy tail diagnostic)

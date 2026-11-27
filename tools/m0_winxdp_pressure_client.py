@@ -322,6 +322,14 @@ def main():
                             pair[a+"_"+k]=statistics.mean(v) if len(v)==2 and all(x is not None for x in v) else None
                         av,bv=pair["A_"+k],pair["B_"+k]
                         pair[k+"_delta_pct"]=100*(bv/av-1) if av and bv is not None else None
+                    # Complete receipts are not evidence that the offered rate
+                    # was achieved. Report matched-load qualification separately.
+                    pair["target_mbps"]=r["rate"]
+                    pair["all_arms_at_target"]=all(
+                        (v["direction"]=="up" or (v.get("rx_mbps") or 0)>=.95*v["rate"]) and
+                        (v["direction"]=="down" or (v.get("server_rx_mbps") or 0)>=.95*v["rate"])
+                        for v in group)
+                    pair["scope"]="MATCHED_TARGET" if pair["valid"] and pair["all_arms_at_target"] else "COMPLETE_BELOW_TARGET" if pair["valid"] else "INCOMPLETE"
                     print("WINXDP_CARRIER_ABBA_PAIR "+json.dumps(pair),flush=True)
                     save(OUT/("pair-"+r["group"]+".json"),pair)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
