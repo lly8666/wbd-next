@@ -4,25 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2471,
-  "checkpoint_sha": "8f4f9966bac5d61f968d6cd3238110cbbb308ced",
+  "sequence": 2472,
+  "checkpoint_sha": "f7120083cc2c649cb4043ecc161e906faf8622fe",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "先验收935a631同SOURCE native45914393727/core及ARM45914393841旧Rust parity→新候选BBR0/CUBIC0 ABBA，核真实交付、CPU/GiB、准入和路径；未达Linux基准继续定位owner反向ACK及输出服务耦合，不扩队列、不重派在途。",
+  "next_action": "收65aae40同SOURCE native45916282014/core及ARM Linux/Rust 45916281816完整ABBA；先定位红灯，核真实业务、CPU/GiB、准入/路径，继续补Linux实际发送时间、ACK接收快速路径及剩余行为差异；不重派在途。",
   "unverified": true,
-  "last_tested_source": "edc0d11a374f5185315814f8a940933638b7149e",
+  "last_tested_source": "935a6317969486846fec60fe98f35d2429dfedcb",
   "evidence_refs": [
-    "docs/evidence/M0/20261127-DUAL-RUST-TCP-LINUX-PARITY-FIRST-RESULT.json"
+    "docs/evidence/M0/20261127-DUAL-RUST-TCP-PARITY-HOTPATH-RESULT.json"
   ],
   "context_refs": [
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
-    "docs/devlog/M0/20261127-DUAL-RUST-TCP-LINUX-PARITY-HANDOFF.md",
-    "docs/evidence/M0/20261126-DUAL-RUST-TCP-BOUNDED-PACING-RESULT.json",
-    "docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
+    "docs/devlog/M0/20261127-DUAL-RUST-TCP-CONSOLIDATED-PARITY-HANDOFF.md",
+    "docs/evidence/M0/20261127-DUAL-RUST-TCP-LINUX-PARITY-FIRST-RESULT.json"
   ],
   "open_requests": [],
-  "partial_summary": "PR80 WIP 935a631；前SOURCE edc0d11双ISA core337/337和原生功能PASS；Linux ABBA 23/24不完整，BBR零损吞吐与单位CPU仍未达基准。当前新候选接收增长与fresh DATA去临时copy未验证；无main产品合入，治理结构历史失败未消除。"
+  "partial_summary": "935a631双ISA339/339及原生功能PASS，8/8 ARM旧/新Rust ABBA混合结果；65aae40集中补BBR1长期模型/量化、CUBIC packet增长、RTO方差、Minshall等，尚未验证；实际EDT/TSQ/GSO、完整快速路径和内核发行版补丁对照仍缺。PR80 Draft，无main产品集成。"
 }
