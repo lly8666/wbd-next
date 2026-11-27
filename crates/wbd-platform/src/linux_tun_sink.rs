@@ -272,6 +272,28 @@ fn ipv4_contract(packet:&[u8])->bool{
     ihl>=20&&ihl<=packet.len()&&declared==packet.len()
 }
 impl ScopedTunSink{
+    /// Native TCP owner ready-only output. One scoped loan/lock for the
+    /// existing bounded turn; each datagram retains its own kernel write.
+    /// DATA attempt timestamps are returned even on failed writes so inner
+    /// TCP alone owns recovery. No packet is retried by the TUN layer.
+    pub fn write_native_ipv4_ready(&self,generation:u32,frames:&[Vec<u8>])
+        ->Result<([Option<Instant>;MAX_READY_TUN],usize),TunError>{
+        if generation!=self.generation{return Err(TunError::InvalidScope)}
+        if !self.started.load(Ordering::Acquire){return Err(TunError::Stopped)}
+        if frames.len()>MAX_READY_TUN{return Err(TunError::TooLarge)}
+        let mut attempts=[None;MAX_READY_TUN];let mut failed=0;
+        if frames.is_empty(){return Ok((attempts,failed))}
+        let _loan=self.fence.try_enter_ready().map_err(|e|match e{BorrowError::Stopping=>TunError::Stopped,BorrowError::TooManyLoans=>TunError::TooLarge})?;
+        let _lock=self.serialized.lock().map_err(|_|TunError::InvalidFd)?;
+        for (i,frame) in frames.iter().enumerate(){
+            if !ipv4_contract(frame){failed+=1;continue}
+            if frame.len()>40&&frame[9]==6&&frame.len()>20+usize::from(frame[32]>>4)*4{attempts[i]=Some(Instant::now());}
+            let n=unsafe{write(self.fd.as_raw_fd(),frame.as_ptr().cast(),frame.len())};
+            if n!=frame.len() as isize{failed+=1;}
+        }
+        Ok((attempts,failed))
+    }
+
     /// Never waits for fresh packets or allocates a second frame. An
     /// unsupported/invalid datagram is counted and **not** handed to owner.
     /// The returned complete slice remains UNTRUSTED OS application ingress.

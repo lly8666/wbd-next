@@ -151,6 +151,7 @@ impl Owner{
             let (f,o)=ClientFlow::open(&p,self.local_mtu,self.middle_mtu)?;
             self.insert(p.tuple,Flow::Client(f))?;out=o;
         }else if !p.segment.has_flag(flags::RST){
+            if self.parity{eprintln!("WBD_M0_TCP_RESET_NO_FLOW leg=local tuple={:?} flags={} seq={} ack={}",p.tuple,p.segment.flags,p.segment.seq,p.segment.ack);}
             out.local.push(ipv4::reset_for(&p,self.local_mtu)?);
         }
         self.parse_scratch=p.segment;
@@ -175,6 +176,7 @@ impl Owner{
                 Err(_)=>out.tunnel.push(ipv4::reset_for(&p,self.middle_mtu)?),
             }
         }else if !p.segment.has_flag(flags::RST){
+            if self.parity{eprintln!("WBD_M0_TCP_RESET_NO_FLOW leg=middle tuple={:?} flags={} seq={} ack={}",p.tuple,p.segment.flags,p.segment.seq,p.segment.ack);}
             out.tunnel.push(ipv4::reset_for(&p,self.middle_mtu)?);
         }
         self.parse_scratch=p.segment;
@@ -214,6 +216,7 @@ impl Owner{
     /// A zero duration services only already-ready work.
     pub(crate) fn service(&mut self,wait:Duration)->io::Result<ClientOutput>{
         let now=Instant::now();
+        if self.parity&&!self.server&&wait.is_zero()&&self.deadlines.first().is_none_or(|(d,_)|*d>now){return Ok(ClientOutput::default());}
         let wait=self.deadlines.first().map_or(wait,|(d,_)|wait.min(d.saturating_duration_since(now)));
         if !wait.is_zero(){
             let mut fd=PollFd{fd:self.ep.as_raw_fd(),events:1,revents:0};

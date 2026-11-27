@@ -10,7 +10,7 @@ ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
 SOURCES={"A":"26b11e2da236e909b73f461964c52d5a86d42dca","B":os.environ["GITHUB_SHA"]}
-BLOCKS=(("cubic",0.0),("cubic",1.0),("cubic",5.0),("bbr",0.0),("bbr",1.0),("bbr",5.0))
+BLOCKS=(("bbr",0.0),("cubic",0.0))
 ORDER="ABBA"*len(BLOCKS)
 def loss_for(i):return BLOCKS[i//4][1] if i>=0 else 0.0
 def cc_for(i):return BLOCKS[i//4][0] if i>=0 else "cubic"

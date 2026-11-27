@@ -1,4 +1,4 @@
-name: M0 ARM Linux parity per-flow admitted credit and ready turns ABBA
+name: M0 ARM Linux parity zero loss native admission regression ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -205,7 +205,7 @@ jobs:
           test -s h2228-out/server-ready.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
-      - name: Keep the same ARM server through all twenty-four legs
+      - name: Keep the same ARM server through all eight legs
         run: bash tools/m0_h2228_three_runner_case.sh server-wait
       - name: Preserve native resource and path receipts
         if: always()
@@ -273,7 +273,7 @@ jobs:
           tailscale ping --c=5 "$(jq -r .tail_ip h2228-peer/relay.json)" >h2228-out/relay-ping.txt 2>&1 || true
           nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py watch client >h2228-out/watch.log 2>&1 </dev/null &
           echo $! >"$RUNNER_TEMP/dual-watch.pid"
-      - name: Wait server control and run CUBIC and BBR 0/1/5% sequential ABBA
+      - name: Wait server control and run BBR and CUBIC zero-loss sequential ABBA
         run: |
           for i in $(seq 1 150);do
             gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-server-ready -D h2228-server-ready >/dev/null 2>&1 && break

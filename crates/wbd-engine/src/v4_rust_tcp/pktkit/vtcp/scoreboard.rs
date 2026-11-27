@@ -321,6 +321,7 @@ impl Scoreboard {
 
     pub(crate) fn native_pending(&self)->u32{self.native_pending as u32}
     pub(crate) fn native_pending_count(&self)->usize{self.native_pending_count}
+    pub(crate) fn head_native_pending(&self)->bool{self.segs.front().is_some_and(|s|s.has(NATIVE_PENDING))}
     pub(crate) fn admitted_pipe(&self)->u32{self.pipe().saturating_sub(self.native_pending())}
 
     /// RACK.segs_sacked.
@@ -1201,12 +1202,12 @@ mod tests {
     fn native_reserved_data_is_not_in_delivery_clock_until_admitted(){
         let now=Instant::now();let mut s=Scoreboard::new(100,now);s.set_rack(true);
         s.reserve_native(100,1000,now,0);
-        assert_eq!(s.pipe(),1000);assert_eq!(s.admitted_pipe(),0);assert_eq!(s.native_pending_count(),1);
+        assert_eq!(s.pipe(),1000);assert_eq!(s.admitted_pipe(),0);assert_eq!(s.native_pending_count(),1);assert!(s.head_native_pending());
         assert!(s.tq.is_empty());
         let admitted=now+Duration::from_millis(10);
         assert!(s.admit_native(100,1000,admitted));
         assert!(!s.admit_native(100,1000,admitted));
-        assert_eq!(s.admitted_pipe(),1000);assert_eq!(s.native_pending_count(),0);
+        assert_eq!(s.admitted_pipe(),1000);assert_eq!(s.native_pending_count(),0);assert!(!s.head_native_pending());
         assert_eq!(s.segs[0].xmit,10_000_000);
         s.begin_ack();let d=s.ack(1100,now+Duration::from_millis(110),None);
         assert_eq!(d.delivered,1000);assert_eq!(s.native_pending(),0);

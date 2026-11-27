@@ -2537,6 +2537,7 @@ impl Conn {
             if !accept {
                 return self.take_outgoing();
             }
+            if self.cfg.native_owner_turn{eprintln!("WBD_M0_TCP_RESET_ACCEPT state={:?} local={:?} remote={:?} seq={} ack={} native_pending={}",self.state,self.cfg.local_addr,self.cfg.remote_addr,seg.seq,seg.ack,self.score.native_pending());}
             self.tear_down(State::Closed);
             return self.take_outgoing();
         }
@@ -3448,7 +3449,7 @@ impl Conn {
             self.stop_persist();
         }
         if advanced {
-            if self.send_buf.as_ref().unwrap().unacked() == 0 {
+            if self.send_buf.as_ref().unwrap().unacked() == 0 || self.score.head_native_pending() {
                 self.stop_rto();
             } else if self.score.head_sacked() {
                 // The receiver would have acknowledged the first segment
@@ -4478,7 +4479,8 @@ impl Conn {
         self.rto.start_timing(seq,self.now);
         let first=self.rto_deadline.is_none();
         if first{self.start_rto();}
-        let resume=self.native_waiting&&self.score.native_pending_count()<32;
+        let resume=(self.native_waiting&&self.score.native_pending_count()<32)||
+            (self.fin_queued&&self.score.native_pending()==0&&self.send_buf.as_ref().is_some_and(|s|s.pending()==0));
         if resume{self.native_waiting=false;self.native_resume=Some(self.now);}
         let last=self.score.native_pending()==0;
         if last{self.schedule_loss_probe();}
@@ -4582,6 +4584,7 @@ impl Conn {
         }
 
         if self.fin_queued
+            && self.score.native_pending()==0
             && self.send_buf.as_ref().unwrap().pending() == 0
             && matches!(
                 self.state,
@@ -4982,6 +4985,7 @@ impl Conn {
     }
 
     fn on_rto_timeout(&mut self) {
+        if self.score.head_native_pending(){self.stop_rto();return;}
         // The retransmission at a lowered MSS did not get through either.
         self.black_hole_undo = false;
         let zero_window =
