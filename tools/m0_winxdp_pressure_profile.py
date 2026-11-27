@@ -94,3 +94,18 @@ if os.environ.get("WBD_XDP_STRESS_PHASE")=="normal-efficiency":
     ]
     seq="BAAB" if os.environ.get("H2478_REPLICA") in "BDFHJL" else "ABBA"
     CASES=[dict(base,**w,arm=arm,group=w["name"],policy="original" if arm=="A" else "rx-pending",budget=w["rate"]) for w in workloads for arm in seq]
+
+# Single lane, Maximum fixed FEC in every lossy case; vary only RX capacity.
+if os.environ.get("WBD_XDP_STRESS_PHASE")=="maximum-memory":
+    assert PATH_MODE=="nat" and os.environ.get("WBD_XDP_PRESSURE_LAB")=="1"
+    base=dict(CASES[0],profile=6,mtu=1400,tx_slots=2048,quantum=32,policy="original",sndbuf=16777216,streams=4)
+    workloads=[
+        dict(name="maximum-loss1-duplex100",direction="duplex",rate=100,delay=80,loss=1),
+        dict(name="maximum-loss5-duplex50",direction="duplex",rate=50,delay=200,loss=5),
+        dict(name="maximum-loss10-duplex10",direction="duplex",rate=10,delay=200,loss=10),
+    ]
+    seq="BAAB" if os.environ.get("H2478_REPLICA") in "BDFHJL" else "ABBA"
+    CASES=[dict(base,**w,arm=arm,group=w["name"],rx_slots=16384 if arm=="A" else 4096,budget=w["rate"]) for w in workloads for arm in seq]
+    # A separate high-pressure asymmetric case: keep reverse ACK traffic real.
+    CASES += [dict(base,name="maximum-loss5-up150",direction="up",rate=150,delay=20,loss=5,rx_slots=4096,budget=150,arm="B",group="maximum-loss5-up150"),
+              dict(base,name="maximum-loss5-down150",direction="down",rate=150,delay=20,loss=5,rx_slots=4096,budget=150,arm="B",group="maximum-loss5-down150")]

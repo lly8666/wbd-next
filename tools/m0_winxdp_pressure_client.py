@@ -246,13 +246,14 @@ def main():
             # Other replicas run only the H2480-style clean quartets.
             order=[i for i in order if (CASES[i]["group"]=="lossy-duplex")== (os.environ["H2478_REPLICA"]=="S")]
         efficiency=os.environ.get("WBD_XDP_STRESS_PHASE")=="normal-efficiency"
-        tune=os.environ.get("WBD_XDP_STRESS_PHASE") in ("normal-tune","normal-efficiency")
+        maximum_memory=os.environ.get("WBD_XDP_STRESS_PHASE")=="maximum-memory"
+        tune=os.environ.get("WBD_XDP_STRESS_PHASE") in ("normal-tune","normal-efficiency","maximum-memory")
         if tune:
             order=list(range(len(CASES)))
             if os.environ["H2478_REPLICA"] in "BDFHJL":
-                order=list(range(8,12))+list(range(4,8))+list(range(4))
+                order=(list(range(12,len(CASES))) if maximum_memory else [])+list(range(8,12))+list(range(4,8))+list(range(4))
             if os.environ["H2478_REPLICA"]=="S":
-                order=list(range(4)) if efficiency else list(range(4))+[8,10]
+                order=list(range(4,8))+[12,13] if maximum_memory else list(range(4)) if efficiency else list(range(4))+[8,10]
         for i in order:
             CURRENT=i
             if abba:
@@ -305,6 +306,8 @@ def main():
             r["rx_lab"]=[{k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",l)} for l in s.splitlines() if "WBD_XDP_RX_LAB " in l]
             r["fec_receipts"]=[l for l in s.splitlines() if "WBD_WINDOWS_FEC2_INSTALLED" in l]
             r["fec_ok"]=r["profile"]<0 or any("mode=fec-fixed" in l and f"profile={r['profile']} " in l for l in r["fec_receipts"])
+            if maximum_memory:
+                r["fec_receipts"]=[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC2_INSTALLED" in l or ("FEC" in l and ("STOP" in l or "PARITY" in l))][-20:]
             r["loss_observed"]=sum(v for k,v in r.get("kernel_counter_delta",{}).items() if k.startswith("qdisc.") and "|netem|" in k)
             r["traffic_ok"]=(r["direction"]=="down" or r.get("sent",0)>0) and (r["direction"]=="up" or r.get("received",0)>0)
             r["lab_ok"]=os.environ.get("WBD_XDP_PRESSURE_LAB")!="1" or (r["tx_lab"].get("slots")==r["tx_slots"] and any(q.get("slots")==r["rx_slots"] and q.get("quantum")==r["quantum"] for q in r["rx_lab"]))
@@ -364,7 +367,7 @@ def main():
                     print(("WINXDP_NORMAL_TUNE_PAIR " if tune else "WINXDP_CARRIER_ABBA_PAIR ")+json.dumps(pair),flush=True)
                     save(OUT/("pair-"+r["group"]+".json"),pair)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
-            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","pending_lab","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
+            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","pending_lab","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","fec_receipts","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
             if r.get("shape_clear_error") or not r.get("client_stop") or not r.get("server_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):
                 for pth in (SERVER/("case-"+str(i))/"server.log",SERVER/("case-"+str(i))/"source.log",d/"client.log"):
                     if pth.exists():

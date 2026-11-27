@@ -35,7 +35,8 @@ def main():
     if os.environ.get("WBD_XDP_UDP_PHASE")=="game-batch":CASES=[["game2-fec-1200-0","game2-fec",16384,2048,32,"original",250,5,20,1200],["game2-fec-1200-1","game2-fec",16384,2048,32,"game-batch",250,5,20,1200],["game2-fec-1200-2","game2-fec",16384,2048,32,"game-batch",250,5,20,1200],["game2-fec-1200-3","game2-fec",16384,2048,32,"original",250,5,20,1200],["game2-fec-288-0","game2-fec",16384,2048,32,"original",100,5,20,288],["game2-fec-288-1","game2-fec",16384,2048,32,"game-batch",100,5,20,288],["game2-fec-288-2","game2-fec",16384,2048,32,"game-batch",100,5,20,288],["game2-fec-288-3","game2-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-1200-0","game4-fec",16384,2048,32,"original",250,5,20,1200],["game4-fec-1200-1","game4-fec",16384,2048,32,"game-batch",250,5,20,1200],["game4-fec-1200-2","game4-fec",16384,2048,32,"game-batch",250,5,20,1200],["game4-fec-1200-3","game4-fec",16384,2048,32,"original",250,5,20,1200],["game4-fec-288-0","game4-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-288-1","game4-fec",16384,2048,32,"game-batch",100,5,20,288],["game4-fec-288-2","game4-fec",16384,2048,32,"game-batch",100,5,20,288],["game4-fec-288-3","game4-fec",16384,2048,32,"original",100,5,20,288]]
     if os.environ.get("WBD_XDP_UDP_PHASE")=="game-direction":CASES=[["game2-fec-dir-up","game2-fec",16384,2048,32,"original",100,5,20,288],["game2-fec-dir-down","game2-fec",16384,2048,32,"original",100,5,20,288],["game2-fec-dir-duplex50","game2-fec",16384,2048,32,"original",50,5,20,288],["game2-fec-dir-duplex100","game2-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-dir-up","game4-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-dir-down","game4-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-dir-duplex50","game4-fec",16384,2048,32,"original",50,5,20,288],["game4-fec-dir-duplex100","game4-fec",16384,2048,32,"original",100,5,20,288]]
     efficiency=os.environ.get("WBD_XDP_UDP_PHASE")=="normal-efficiency"
-    tune=os.environ.get("WBD_XDP_UDP_PHASE") in ("normal-tune","normal-efficiency")
+    maximum_memory=os.environ.get("WBD_XDP_UDP_PHASE")=="maximum-memory"
+    tune=os.environ.get("WBD_XDP_UDP_PHASE") in ("normal-tune","normal-efficiency","maximum-memory")
     if tune:
         workloads=[("normal-small100",100,0,20,288),("normal-large250",250,0,20,1200)]
         seq="BAAB" if os.environ["H2478_REPLICA"] in "BDFHJL" else "ABBA"
@@ -48,6 +49,10 @@ def main():
         workloads=[("normal-small50",50,0,20,288),("normal-large175",175,0,20,1200)]
         seq="BAAB" if os.environ["H2478_REPLICA"] in "BDFHJL" else "ABBA"
         CASES=[[name+"-"+str(i),"normal",16384,2048,32,"original" if arm=="A" else "rx-pending",rate,loss,delay,size] for name,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
+    if maximum_memory:
+        workloads=[("maximum-large100-loss1",100,1,80,1200),("maximum-small50-loss5",50,5,20,288),("maximum-large50-loss10",50,10,200,1200)]
+        seq="BAAB" if os.environ["H2478_REPLICA"] in "BDFHJL" else "ABBA"
+        CASES=[[name+"-"+str(i),"fixed",16384 if arm=="A" else 4096,2048,32,"original",rate,loss,delay,size] for name,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
     rows=[]
     order=list(range(len(CASES)))
     if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
@@ -59,11 +64,11 @@ def main():
     if tune:
         order=list(range(len(CASES)))
         if os.environ["H2478_REPLICA"] in "BDFHJL":order=list(range(8,len(CASES)))+list(range(4,8))+list(range(4))
-        if os.environ["H2478_REPLICA"]=="S":order=list(range(4)) if efficiency else list(range(4))+[8,9]
+        if os.environ["H2478_REPLICA"]=="S":order=list(range(4,8)) if maximum_memory else list(range(4)) if efficiency else list(range(4))+[8,9]
     for i in order:
         name,mode,rx,tx,q,policy,rate,loss,delay,size=CASES[i]
         case=E/name;case.mkdir(exist_ok=False)
-        group=name.rsplit("-",1)[0] if tune and i<8 else name
+        group=name.rsplit("-",1)[0] if tune and (maximum_memory or i<8) else name
         path=ROOT/"scenarios"/("xdp-pressure-"+group+".json")
         shutil.copyfile(path,case/"scenario.json")
         expected=read_scenario(path)["scenario_sha256"]
@@ -112,11 +117,15 @@ def main():
             row["lab_ok"]=bool(row["tx_lab"] and row["rx_lab"]) and all(q.get("slots")==tx for q in row["tx_lab"]) and all(q.get("slots")==rx and q.get("quantum")==32 for q in row["rx_lab"])
             row["carrier_ok"]=bool(row["tx"] and row["rx"]) and all(q.get("published",0)>0 and q.get("published")==q.get("completed_before_close") and q.get("invalid")==0 for q in row["tx"]) and all(q.get("truncated")==0 for q in row["rx"])
             row["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in row["rx_lab"]),default=0)
+            if maximum_memory:
+                row["fec_ok"]="WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6" in s
+                row["lab_ok"]=row["lab_ok"] and row["fec_ok"]
+                row["fec_receipts"]=[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC2_INSTALLED" in l or ("FEC" in l and ("STOP" in l or "PARITY" in l))][-20:]
             if efficiency:
                 row["pending_lab"]=receipts("WBD_XDP_RX_PENDING_LAB ")
                 row["lab_ok"]=row["lab_ok"] and bool(row["pending_lab"]) and all(q.get("enabled")==int(row["arm"]=="B") and (row["arm"]=="A" or q.get("skipped",0)>0) for q in row["pending_lab"])
         rows.append(row)
-        if tune and i<8:
+        if tune and (maximum_memory or i<8):
             import statistics
             pair=[x for x in rows if x["group"]==group]
             if len(pair)==4:
@@ -130,6 +139,10 @@ def main():
                         "rx_peak_sampled":max(x["rx_peak_sampled"] for x in ar),
                         "rx_drops":sum(q.get("dropped",0) for x in ar for q in x["rx"]),
                         "tx_credit_limited":sum(q.get("credit_limited",0) for x in ar for q in x["tx"])}
+                    if maximum_memory:
+                        for key in ("steady_peak_working_set_bytes","steady_peak_private_bytes"):
+                            vals=[x.get(key) for x in ar]
+                            result[arm][key]=statistics.mean(vals) if all(v is not None for v in vals) else None
                 if efficiency:
                     for arm in ("A","B"):
                         ar=[x for x in pair if x["arm"]==arm]

@@ -2,7 +2,7 @@
 import hashlib,json,socket,sys,time,threading,os
 BLOCK=bytes(range(256))*256
 # Same business window; separate bounded TCP drain on both peers.
-DRAIN_SECONDS=120 if os.environ.get("WBD_XDP_STRESS_PHASE") in ("carrier-abba","normal-tune","normal-efficiency") else 65
+DRAIN_SECONDS=120 if os.environ.get("WBD_XDP_STRESS_PHASE") in ("carrier-abba","normal-tune","normal-efficiency","maximum-memory") else 65
 def exchange(sock,seconds,rate,send,receive,windows):
     sock.settimeout(.5)
     result={"sent":0,"received":0,"tx_sha256":"","rx_sha256":"","tx_end":"inactive","rx_end":"inactive","steady_rx_bytes":0,"max_rx_gap_s":0}
