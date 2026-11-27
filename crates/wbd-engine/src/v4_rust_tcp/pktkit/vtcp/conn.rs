@@ -2529,6 +2529,13 @@ impl Conn {
 
         // 2) RST.
         if seg.has_flag(flags::RST) {
+            // Both FINs have completed. A late ACK can reach a peer whose
+            // LAST-ACK state is gone and elicit RST. Do not turn that completed
+            // leg into an abnormal EOF or retire its tuple early: the relay's
+            // other leg may still be draining accepted bytes.
+            if self.state == State::TimeWait {
+                return self.take_outgoing();
+            }
             let (accept, challenge) = self.validate_rst(seg);
             if challenge {
                 self.queue_challenge_ack();
@@ -5984,6 +5991,33 @@ mod tests {
         let _ = server.handle_segment(&ack2);
         assert_eq!(server.state(), State::Closed);
         assert!(server.is_closed());
+    }
+
+    #[test]
+    fn late_ack_reset_after_peer_close_preserves_time_wait_and_unread_bytes() {
+        let (mut client, mut server) = established(40479);
+        let fin = client.close();
+        let acks = deliver(&mut server, &fin);
+        deliver(&mut client, &acks);
+        let (_, mut response) = server.write(b"still draining to the other relay leg");
+        response.extend(server.close());
+        let final_acks = deliver(&mut client, &response);
+        assert_eq!(client.state(), State::TimeWait);
+        let deadline = client.time_wait_deadline;
+        deliver(&mut server, &final_acks);
+        assert_eq!(server.state(), State::Closed);
+        let final_ack = final_acks.iter().find(|p| {
+            let s = parse(p);
+            s.has_flag(flags::ACK) && s.ack == client.recv_buf.as_ref().unwrap().nxt()
+        }).expect("final ACK");
+        let resets = deliver(&mut server, &[final_ack.clone()]);
+        assert_eq!(resets.len(), 1);
+        assert!(parse(&resets[0]).has_flag(flags::RST));
+        assert!(deliver(&mut client, &resets).is_empty());
+        assert_eq!(client.state(), State::TimeWait);
+        assert_eq!(client.time_wait_deadline, deadline);
+        assert!(!client.abnormal_end());
+        assert_eq!(read_all(&mut client), b"still draining to the other relay leg");
     }
 
     #[test]

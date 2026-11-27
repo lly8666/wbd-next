@@ -46,7 +46,8 @@
     "docs/devlog/M0/20261127-NATIVE-ADMISSION-REGRESSION-AND-READY-BATCH.md",
     "docs/devlog/M0/20261127-M4-FRESH-DATA-CLOCK-AND-READY-LOANS.md",
     "docs/devlog/M0/20261127-M4-CLOCK-BUILD-RECOVERY.md",
-    "docs/devlog/M0/20261127-M4-CLOCK-NATIVE-RESULT-BBR-INTENT.md"
+    "docs/devlog/M0/20261127-M4-CLOCK-NATIVE-RESULT-BBR-INTENT.md",
+    "docs/devlog/M0/20261127-DUAL-TCP-TIMEWAIT-LATE-RESET-RECOVERY.md"
   ],
   "verification": [
     {
@@ -218,7 +219,8 @@
     "586706c native PASS but ARM24/24 performance unqualified; ba5ed73 native parity concurrent reset on both ISA, ABBA blocked. New drain-before-service and ready-only local write batch candidate unverified.",
     "9ede62e native scoped PASS, zero-loss ABBA unqualified; actual M4 clock and ready loan candidate unverified, only Normal small DATA has PN correspondence.",
     "75c47a5 native build failed both ISA E0308; ARM parity was NOT_RUN. PN conversion and explicit M4 clock unit selection candidate unverified.",
-    "392ee06 scoped native M4 clock PASS with positive copied receipts; no performance run for that SOURCE. Next narrow BBR0 ABBA source unverified."
+    "392ee06 scoped native M4 clock PASS with positive copied receipts; no performance run for that SOURCE. Next narrow BBR0 ABBA source unverified.",
+    "495586c ARM native PASS; x86 original/core/M4 unit PASS but parity concurrent reset FAIL; ARM performance NOT_RUN. TIME_WAIT late-RST correction and regression candidate unverified."
   ],
   "promotion": null
 }
