@@ -7,6 +7,8 @@ on:
       - 'crates/wbd-engine/src/v4_embedded_go.rs'
       - 'crates/wbd-engine/src/v4_owner_crypto.rs'
       - 'crates/wbd-platform/src/linux_tun_sink.rs'
+      - 'crates/wbd-platform/src/linux_raw_carrier.rs'
+      - 'r0/go_overlay/assembly/manifest-plan020-m0.json'
       - 'r0/go_overlay/internal/v4productcli/linux.go'
       - 'tools/m0_dual_rust_tcp_*.py'
       - '.github/workflows/qa-m0-dual-rust-tcp-core.yml'
@@ -57,16 +59,13 @@ jobs:
           export WBD_ISAL_SOURCE_SHA="$(git -C "$RUNNER_TEMP/wbd-isa-l" rev-parse HEAD)"
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration --lib v4_embedded_go::native_m4_clock_only_counts_actual_copied_prefix -- --exact | tee dual-tcp-out/m4-clock-unit.txt
           grep -F 'test result: ok. 1 passed; 0 failed;' dual-tcp-out/m4-clock-unit.txt
-      - name: Original TUN to native origin, exact duplex bytes, concurrent flows, UDP and joined Stop
+      - name: Selected paired Normal defaults, no optimization environment overrides
         shell: bash
         run: |
-          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out python3 -u tools/m0_dual_rust_tcp_local.py
-      - name: Exercise opt-in parity profile on actual native TUN
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+      - name: Explicit middle CUBIC, same selected owner and GSO defaults
         run: |
-          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/parity WBD_M0_LINUX_PARITY=1 WBD_M0_MIDDLE_CC=cubic WBD_M0_ACK_PROBE=2 WBD_M0_NATIVE_M4_CLOCK=1 python3 -u tools/m0_dual_rust_tcp_local.py
-      - name: Exercise client-only local TUN GSO and server ingress-first on actual native device
-        run: |
-          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/gso WBD_M0_LINUX_PARITY=1 WBD_M0_MIDDLE_CC=cubic WBD_M0_ACK_PROBE=2 WBD_M0_NATIVE_M4_CLOCK=1 WBD_M0_LOCAL_TUN_GSO=1 WBD_M0_NATIVE_INGRESS_FIRST=1 WBD_M0_NATIVE_IPV4_HEADROOM=1 python3 -u tools/m0_dual_rust_tcp_local.py
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/cubic WBD_M0_MIDDLE_CC=cubic WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Retain exact native binary for performance jobs
         run: |
           (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)

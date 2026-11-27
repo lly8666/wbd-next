@@ -231,7 +231,7 @@ func parse(role string,args []string)(config,error){
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
     rotateInterval:=flags.Duration("rotation-interval",0,"client: cold authenticated lane/group rotation on unchanged physical network (e.g. 5m); 0 disables")
     rotateJitter:=flags.Duration("rotation-jitter",0,"client: bounded random ±jitter for each rotation (e.g. 3s with --rotation-interval 18s); 0 preserves exact interval")
-    dualTCP:=flags.Bool("dual-rust-tcp",false,"experimental paired Normal Rust TCP; both endpoints must enable; authenticated auto-/32 only")
+    dualTCP:=flags.Bool("dual-rust-tcp",false,"paired Normal Rust TCP selected branch profile; both endpoints must enable; authenticated auto-/32 only")
     proxyCC:=flags.String("tcp-proxy-cc","","server-only transparent TCP splice; kernel CC name, empty keeps NAT")
     proxyPort:=flags.Int("tcp-proxy-port",46180,"server-only transparent listener port")
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
@@ -941,7 +941,7 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
         uint16(publicMSS),0,cfg.fecMode,cfg.gameLanes!=0,cfg.gameFecEnabled)
     if err!=nil{return err}
     log.Printf("V4_PUBLIC_MTU_PREPARE role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d record_offer=%d tun_planned=%d",cfg.role,cfg.outerMTU,iface.MTU,publicMSS,cfg.recordLimit,cfg.innerMTU)
-    localGSO:=cfg.dualRustTCP&&role=="client"&&os.Getenv("WBD_M0_LOCAL_TUN_GSO")=="1"
+    localGSO:=cfg.dualRustTCP&&role=="client"&&os.Getenv("WBD_M0_LINUX_PARITY")!="0"&&os.Getenv("WBD_M0_LOCAL_TUN_GSO")!="0"
     tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU,localGSO)
     if err!=nil{return err}
     // The Go cold lifetime owns TUN; each Rust generation Stop joins and

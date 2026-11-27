@@ -1,4 +1,4 @@
-name: M0 ARM native IPv4 final-offset serialization BBR0 ABBA
+name: M0 ARM splice vs selected default BBR0 ABBA and matched RTT naked TCP
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -167,10 +167,13 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl
-          mkdir -p bundles/B
+          mkdir -p bundles/A bundles/B
+          gh run download 45821912542 -R "$GITHUB_REPOSITORY" -n dual-tcp-old-arm-build -D bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
-          tar -C bundles/B -xf bundles/B/bundle.tar
-          (cd bundles/B && sha256sum -c SHA256SUMS)
+          for leg in A B;do
+            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
+            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
+          done
       - name: Join the existing two-segment ARM routed topology
         run: |
           set -euo pipefail
@@ -242,10 +245,13 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl
-          mkdir -p bundles/B
+          mkdir -p bundles/A bundles/B
+          gh run download 45821912542 -R "$GITHUB_REPOSITORY" -n dual-tcp-old-arm-build -D bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
-          tar -C bundles/B -xf bundles/B/bundle.tar
-          (cd bundles/B && sha256sum -c SHA256SUMS)
+          for leg in A B;do
+            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
+            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
+          done
       - name: Join the existing two-segment ARM routed topology
         run: |
           set -euo pipefail
@@ -267,7 +273,7 @@ jobs:
           tailscale ping --c=5 "$(jq -r .tail_ip h2228-peer/relay.json)" >h2228-out/relay-ping.txt 2>&1 || true
           nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py watch client >h2228-out/watch.log 2>&1 </dev/null &
           echo $! >"$RUNNER_TEMP/dual-watch.pid"
-      - name: Wait server control and run BBR zero-loss sequential ABBA
+      - name: Wait server control and run BBR 0 and 1 percent loss sequential ABBA
         run: |
           for i in $(seq 1 150);do
             gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-server-ready -D h2228-server-ready >/dev/null 2>&1 && break

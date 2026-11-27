@@ -438,8 +438,6 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Product owner reserves no more than one native batch per flow event.
     pub(crate) native_owner_turn: bool,
-    // Native IPv4 flow adapter only: outgoing Vec contains 20 blank L3 bytes.
-    pub(crate) native_ipv4_headroom: bool,
     /// Opt-in M0 behavior-alignment profile; not a claim of Linux equivalence.
     pub(crate) linux_parity: bool,
     /// Explicit Congestion Notification (RFC 3168, and RFC 9768's
@@ -542,7 +540,6 @@ impl Default for ConnConfig {
             middle_sack_compress: false,
             native_bounded_pacing: false,
             native_owner_turn: false,
-            native_ipv4_headroom: false,
             linux_parity: false,
             ecn: EcnMode::default(),
             mtu_probing: MtuProbing::default(),
@@ -1067,7 +1064,6 @@ impl Conn {
         if self.cfg.native_owner_turn { self.native_credit=32usize.saturating_sub(self.score.native_pending_count()); }
     }
     pub(crate) fn native_turn_enabled(&self)->bool{self.cfg.native_owner_turn}
-    pub(crate) fn native_ipv4_prefix(&self)->usize{if self.cfg.native_ipv4_headroom{20}else{0}}
 
     // --- Accessors ---------------------------------------------------------
 
@@ -2122,7 +2118,7 @@ impl Conn {
     fn queue_seg(&mut self, mut seg: Segment) {
         let has_payload = !seg.payload.is_empty();
         self.prepare_seg(&mut seg, has_payload);
-        self.outgoing.push(seg.marshal_payload_prefix(&seg.payload,self.native_ipv4_prefix()));
+        self.outgoing.push(seg.marshal());
     }
 
     fn prepare_seg(&mut self, seg: &mut Segment, has_payload: bool) {
@@ -4382,7 +4378,7 @@ impl Conn {
         self.add_options(&mut seg);
         self.prepare_seg(&mut seg,!fin);
         let payload=if fin{&[][..]}else{self.send_buf.as_ref().unwrap().data_at(seq,payload_len)};
-        self.outgoing.push(seg.marshal_payload_prefix(payload,self.native_ipv4_prefix()));
+        self.outgoing.push(seg.marshal_payload(payload));
         let tsval = self.ts_now();
         self.score.on_retransmit(seq, len, self.now, tsval);
         self.note_sent(len);
@@ -4459,7 +4455,7 @@ impl Conn {
             ..Default::default()
         };
         self.prepare_seg(&mut seg, true);
-        let wire = seg.marshal_payload_prefix(self.send_buf.as_ref().unwrap().peek_unsent(len),self.native_ipv4_prefix());
+        let wire = seg.marshal_payload(self.send_buf.as_ref().unwrap().peek_unsent(len));
         self.outgoing.push(wire);
         self.send_buf.as_mut().unwrap().advance_sent(len);
         let tsval = self.ts_now();

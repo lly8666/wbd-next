@@ -106,7 +106,7 @@ impl Owner{
             flows:HashMap::new(),deadlines:BTreeSet::new(),scratch:vec![0;65536],
             local_in:Default::default(),local_out:Default::default(),middle_in:Default::default(),middle_out:Default::default(),
             probe_next:std::env::var_os("WBD_M0_ACK_PROBE").map(|_|Instant::now()),
-            parity:std::env::var_os("WBD_M0_LINUX_PARITY").as_deref()==Some(std::ffi::OsStr::new("1")),parse_scratch:Segment::default()})
+            parity:std::env::var_os("WBD_M0_LINUX_PARITY").as_deref()!=Some(std::ffi::OsStr::new("0")),parse_scratch:Segment::default()})
     }
     fn insert(&mut self,tuple:Tuple,flow:Flow)->io::Result<()>{
         let id=self.next_id;self.next_id+=1;

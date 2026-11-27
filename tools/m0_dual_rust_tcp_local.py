@@ -102,14 +102,25 @@ def functional():
         for log in (sl,cl):
             assert "WBD_DUAL_RUST_TCP_OWNER_STOP" in log
             assert "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log
-        if os.environ.get("WBD_M0_LOCAL_TUN_GSO")=="1":
+        if os.environ.get("WBD_M0_LINUX_PARITY")!="0" and os.environ.get("WBD_M0_LOCAL_TUN_GSO")!="0":
             assert "WBD_M0_LOCAL_TUN_VNET" in cl and "WBD_M0_LOCAL_TUN_VNET" not in sl
             gso=next(x for x in cl.splitlines() if "WBD_M0_LOCAL_TUN_GSO groups=" in x)
             parts=dict(x.split("=",1) for x in gso.split() if "=" in x)
             assert int(parts["groups"])>0 and int(parts["segments"])>=2*int(parts["groups"]),gso
             row["local_gso"]={k:int(v) for k,v in parts.items()}
-        if os.environ.get("WBD_M0_NATIVE_IPV4_HEADROOM")=="1":
-            assert "WBD_M0_TCP_IPV4_HEADROOM enabled=1" in cl and "WBD_M0_TCP_IPV4_HEADROOM enabled=1" in sl
+        if os.environ.get("WBD_M0_LINUX_PARITY")!="0":
+            for log,expected in ((sl,"true"),(cl,"false")):
+                pub=next(s for s in log.splitlines() if "WBD_M0_TCP_PUBLISH " in s)
+                assert " ingress_first="+expected+" " in pub and "admission_drain_before_service=true" in pub,pub
+                m4=next(s for s in log.splitlines() if "WBD_M0_TCP_M4_CLOCK " in s)
+                vals=dict(x.split("=",1) for x in m4.split() if "=" in x)
+                assert int(vals["copied"])>0,m4
+            row["selected_default_receipts"]=True
+        if os.environ.get("WBD_M0_RX_PACKET_STATS")=="1":
+            row["packet_rx_stats"]={}
+            for log,role in ((sl,"server"),(cl,"client")):
+                rec=next(s for s in log.splitlines() if "WBD_M0_RAW_RX_PACKET_STATS " in s)
+                row["packet_rx_stats"][role]=rec
         assert "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in sl
         assert "WBD_TCP_SPLICE_READY" not in sl
         assert server.returncode==0 and client.returncode==0

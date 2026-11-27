@@ -439,6 +439,19 @@ impl ScopedRawIpv4Rx {
             mtu:observed.kernel_mtu as usize,budget,stopped:AtomicBool::new(false),
             borrow:BorrowFence::default(),serialize:Mutex::new(())})
     }
+    /// One experiment-end read of the actual AF_PACKET socket counters.
+    /// Linux PACKET_STATISTICS resets these counters on read. Never call
+    /// during a normal data turn; unsupported legacy sockets return error.
+    pub fn diagnostic_packet_rx_counts(&self)->Result<(u32,u32),RawTxError>{
+        const SOL_PACKET:c_int=263;
+        const PACKET_STATISTICS:c_int=6;
+        let mut counts=[0u32;2];
+        let mut len=std::mem::size_of_val(&counts) as u32;
+        let rc=unsafe{getsockopt(self.fd.as_raw_fd(),SOL_PACKET,PACKET_STATISTICS,counts.as_mut_ptr().cast(),&mut len)};
+        if rc!=0{return Err(RawTxError::Kernel(errno()))}
+        if len!=std::mem::size_of_val(&counts) as u32{return Err(RawTxError::Kernel(22))}
+        Ok((counts[0],counts[1]))
+    }
     pub fn generation(&self)->u32{self.generation}
     /// Readiness-only descriptor. Original Rust owner joins its workers before dropping the driver.
     pub fn readiness_fd(&self)->i32{self.fd.as_raw_fd()}

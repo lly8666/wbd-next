@@ -5,8 +5,8 @@ use std::{io, io::{Read, Write}, net::{Shutdown, SocketAddr, TcpStream}, time::I
 use super::{Segments, transfer, ipv4::{self, Packet, Tuple}};
 use super::pktkit::vtcp::{Conn, ConnConfig, CongestionKind, MtuProbing};
 
-// OS-facing endpoint retains CUBIC/default ACKs; paired middle endpoints
-// restore pktkit BBRv3 with a distinct cumulative ACK cadence.
+// Selected paired Normal profile: local CUBIC, middle BBR1 for measured
+// Linux comparison, ACK2, SACK compression, actual native send grants.
 const TURN_BYTES: usize = 64 * 1024;
 type Packets = Vec<Vec<u8>>;
 
@@ -20,12 +20,15 @@ impl Endpoint {
         // IPv4/TCP options are subtracted from the MSS by pktkit itself.
         let mss = mtu.checked_sub(40).filter(|&v| v >= 64)
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "inner TCP MTU"))?;
-        // Temporary native experiment: only middle capacity changes in the cap64 leg.
-        let parity = std::env::var_os("WBD_M0_LINUX_PARITY").as_deref() == Some(std::ffi::OsStr::new("1"));
+        // Selected research-branch default. Explicit 0 is a laboratory
+        // comparison choice, never a runtime fallback or peer negotiation.
+        let parity = std::env::var_os("WBD_M0_LINUX_PARITY").as_deref() != Some(std::ffi::OsStr::new("0"));
         let max_buf = if parity || middle && std::env::var_os("WBD_M0_TCP_EXPERIMENT").as_deref() == Some(std::ffi::OsStr::new("cap64")) {64 << 20} else {16 << 20};
         let cc = if middle { match std::env::var_os("WBD_M0_MIDDLE_CC").as_deref().and_then(|s|s.to_str()) {
             Some("cubic") => CongestionKind::Cubic,
             Some("bbr1") => CongestionKind::Bbr1,
+            Some("bbr3") => CongestionKind::Bbr,
+            _ if parity => CongestionKind::Bbr1,
             _ => cc,
         }} else {cc};
         let conn = Conn::new(ConnConfig {
@@ -43,17 +46,15 @@ impl Endpoint {
             middle_ack_three: !parity && middle && std::env::var_os("WBD_M0_ACK_PROBE").as_deref() != Some(std::ffi::OsStr::new("2")),
             middle_sack_compress: parity || middle && std::env::var_os("WBD_M0_SACK_COMPRESS").as_deref() == Some(std::ffi::OsStr::new("1")),
             native_owner_turn: parity,
-            native_ipv4_headroom: parity&&std::env::var_os("WBD_M0_NATIVE_IPV4_HEADROOM").as_deref()==Some(std::ffi::OsStr::new("1")),
             native_bounded_pacing: parity || std::env::var_os("WBD_M0_BOUNDED_PACE").as_deref() == Some(std::ffi::OsStr::new("1")),
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()
         });
-        if conn.native_ipv4_prefix()!=0{eprintln!("WBD_M0_TCP_IPV4_HEADROOM enabled=1");}
         Ok(Self { tuple, mtu, conn })
     }
     fn append(&self, segments: Segments, out: &mut Packets) -> io::Result<()> {
         for (tcp, ecn) in segments.packets.into_iter().zip(segments.ecn) {
-            out.push(if self.conn.native_ipv4_prefix()!=0{ipv4::encode_prefixed(self.tuple,tcp,ecn,self.mtu)?}else{ipv4::encode(self.tuple,tcp,ecn,self.mtu)?});
+            out.push(ipv4::encode(self.tuple, tcp, ecn, self.mtu)?);
         }
         Ok(())
     }

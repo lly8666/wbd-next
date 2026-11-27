@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Pinned pktkit TCP, paired Linux Normal owner integration; opt-in Linux behavior alignment; performance unqualified.",
+  "summary": "Paired Linux Normal native TCP; selected research-branch default Linux-aligned owner, BBR1 middle, client GSO, M4 clock and server ingress-first; full performance unqualified.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -12,7 +12,7 @@
   "defaults": {},
   "usage": {
     "cli": "Experimental: both Linux endpoints --dual-rust-tcp --mode normal, client --auto-ip, server --lease-pool; mutually exclusive with old --tcp-proxy-cc.",
-    "config": "Cold paired selection only; no private TLS exchange or auto-detection; old path remains default for comparison. Temporary experiment WBD_M0_LINUX_PARITY=1; not default; receiver growth aligns with observed Linux settings and fresh DATA serialization avoids one temporary copy.",
+    "config": "Both endpoints explicitly select paired mode; selected branch defaults enable Linux parity, middle BBR1/ACK2/SACK compression, client-only TUN GSO, M4 fresh DATA actual attempt, server ingress-first. Explicit lab overrides only, no automatic fallback/negotiation; old nondual path remains.",
     "gui": "Not exposed"
   },
   "code_refs": [
@@ -54,7 +54,8 @@
     "docs/devlog/M0/20261127-NATIVE-FAST-RETRANS-ACTUAL-CLOCK.md",
     "docs/devlog/M0/20261127-DIRECT-ORIGIN-SENDBUF-READ.md",
     "docs/devlog/M0/20261127-DIRECT-ORIGIN-READ-MATCHED-LOAD.md",
-    "docs/devlog/M0/20261127-NATIVE-IPV4-FINAL-OFFSET.md"
+    "docs/devlog/M0/20261127-NATIVE-IPV4-FINAL-OFFSET.md",
+    "docs/devlog/M0/20261127-SELECTED-NATIVE-DEFAULTS-AND-LOSS-BOUNDARIES.md"
   ],
   "verification": [
     {
@@ -276,7 +277,8 @@
     "c6b33c1 dual ISA scoped PASS; ARM BBR0 splice206.96→Rust273.76 Mbps, CPU/GiB+16.8%; 1% splice68.74→Rust72.69 but B34.65/110.73 unstable, CPU/GiB+55.1%. Native middle fast retransmit actual-attempt candidate unverified; TLP/RTO/FIN remain generation-accounted.",
     "014a902 native scoped PASS but BBR1% same-binary A150.60→B117.09 Mbps, CPU/GiB33.16→35.40; rejected, selected c6b33c1 product restored forward. Direct origin socket read into existing SendBuf candidate unverified.",
     "31a3ac1 native scoped PASS; ARM BBR0 direct-origin peak A163.95/B213.02 Mbps, total CPU/GiB39.88→36.52, B legs divergent, bare94.54; inconclusive capacity/CPU. Fixed 120M ABBA and bracketed bare pre/post pending. No default promotion.",
-    "3ca7efd native PASS; fixed120M ABBA A1 90.50, B1/B2/A2 119.98 Mbps; CPU server three matched legs17.82/17.88/17.88; no demonstrated gain, direct-origin candidate withdrawn. Native IPv4 final-offset serialization candidate unverified; no default promotion."
+    "3ca7efd native PASS; fixed120M ABBA A1 90.50, B1/B2/A2 119.98 Mbps; CPU server three matched legs17.82/17.88/17.88; no demonstrated gain, direct-origin candidate withdrawn. Native IPv4 final-offset serialization candidate unverified; no default promotion.",
+    "b5c1520 native scoped PASS; headroom ABBA +6.06% throughput/+1.44% CPU/GiB, no demonstrated joint gain; candidate withdrawn. Selected paired defaults now implemented pending exact native/ARM validation. Zero-injected peak retrans7.61–13.54%, DSACK and actual ingress losses; no L2/default main promotion."
   ],
   "promotion": null
 }

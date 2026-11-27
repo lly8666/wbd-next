@@ -8400,6 +8400,14 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             }
             if native_tcp_rx.is_some(){
                 eprintln!("WBD_M0_TCP_INGRESS offered={} full={} disconnected={}",middle_offered,middle_full,middle_closed);
+                // Fixture-only boundary receipt, once at existing RX Stop.
+                // It is not a delivery/controller input or periodic monitor.
+                if std::env::var_os("WBD_M0_RX_PACKET_STATS").as_deref()==Some(std::ffi::OsStr::new("1")){
+                    match raw_for_rx.diagnostic_packet_rx_counts(){
+                        Ok((packets,drops))=>eprintln!("WBD_M0_RAW_RX_PACKET_STATS packets={} drops={}",packets,drops),
+                        Err(e)=>eprintln!("WBD_M0_RAW_RX_PACKET_STATS unavailable={:?}",e),
+                    }
+                }
             }
             // No outstanding kernel borrow after the synchronous call,
             // and STOP joins this thread before retiring original drivers.
@@ -8500,9 +8508,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut deferred_shared=None::<SharedTunPacket>;
             let mut wakeup_shared=None::<OriginalTunIngress>;
             let mut tcp_out=VecDeque::<Vec<u8>>::new();
-            let fair_native_turn=native_tcp_owner.is_some() && std::env::var_os("WBD_M0_NATIVE_INGRESS_FIRST").as_deref()==Some(std::ffi::OsStr::new("1"));
-            let native_round_robin=native_tcp_owner.is_some()&&std::env::var_os("WBD_M0_LINUX_PARITY").as_deref()==Some(std::ffi::OsStr::new("1"));
-            let native_m4_clock=native_round_robin&&std::env::var_os("WBD_M0_NATIVE_M4_CLOCK").as_deref()==Some(std::ffi::OsStr::new("1"));
+            let native_round_robin=native_tcp_owner.is_some()&&std::env::var_os("WBD_M0_LINUX_PARITY").as_deref()!=Some(std::ffi::OsStr::new("0"));
+            let fair_native_turn=native_round_robin&&tx_server_side&&std::env::var_os("WBD_M0_NATIVE_INGRESS_FIRST").as_deref()!=Some(std::ffi::OsStr::new("0"));
+            let native_m4_clock=native_round_robin&&std::env::var_os("WBD_M0_NATIVE_M4_CLOCK").as_deref()!=Some(std::ffi::OsStr::new("0"));
             // Server ACKs already authenticated and queued must get a turn
             // before the next origin read generates another full M4 batch.
             let native_server_ingress_first=tx_server_side&&native_round_robin&&fair_native_turn;
