@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "source_sha": "5dda95bc447c3799e428c1928404c0a3ac3dfb6b",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native both ISA original six selected paired Normal profiles functional PASS; ARM added controlled recovery diagnostic incomplete, not full workflow pass.",
+  "run_id": 45962830286,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140384436150,
+      "artifact_id": 15181796336,
+      "gso_groups": [
+        145,
+        106,
+        56
+      ],
+      "gso_segments": [
+        1743,
+        973,
+        901
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140384436591,
+      "artifact_id": 15181666844,
+      "gso_groups": [
+        202,
+        73,
+        121
+      ],
+      "gso_segments": [
+        2225,
+        952,
+        1170
+      ]
+    }
+  ],
+  "performance": {
+    "result": "INCOMPLETE",
+    "scope": "Same host native ARM four netns, BBR bare/selected paired/bare, 400ms added RTT, zero injected loss, 120M offer, intended fixed192MiB. Not peak/CPU or physical qualification.",
+    "cases": [
+      "bare-before",
+      "paired",
+      "bare-after"
+    ],
+    "status": [
+      "INCOMPLETE",
+      "INCOMPLETE",
+      "INCOMPLETE"
+    ],
+    "target_bytes": 201326592,
+    "sender_bytes": [
+      216006656,
+      216137728,
+      216137728
+    ],
+    "receiver_bytes": [
+      209977344,
+      209977344,
+      202506240
+    ],
+    "reported_mbps": [
+      119.98280289498314,
+      119.9835399106169,
+      115.70833028596505
+    ],
+    "iperf_sender_retrans_segments": [
+      0,
+      12,
+      0
+    ],
+    "paired_bulk_last_snapshot": {
+      "bytes_sent": 216137728,
+      "bytes_acked": 216137728,
+      "bytes_retrans": 0,
+      "dsack_dups": 0,
+      "reord_seen": 579,
+      "timeouts": 0,
+      "state": "FinWait2",
+      "min_rtt_ms": 400.181936,
+      "client_ingress_full": 0,
+      "server_ingress_full": 1862,
+      "client_packet_socket_drops": 0,
+      "server_packet_socket_drops": 0,
+      "client_shared_tun_full": 0,
+      "server_m4_copied": 208449,
+      "server_m4_not_proven_copied": 0,
+      "server_m4_no_normal_pn": 0,
+      "reset_events": {
+        "client": 1,
+        "server": 1
+      },
+      "joined_stop": true,
+      "receipt_present": true
+    },
+    "relay_qdisc_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "review": "Both original ZIPs opened CRC checked, all six source-matched native functional summaries and controlled recovery summary read. All three iperf reverse fixed-n cases fail exact bytes, including bare. Paired middle last sample all sent bytes cumulatively acked, zero retrans/DSACK/timeouts; actual client local/origin segments different boundary. Strong diagnostic observation, not exact app, final flow or physical qualification; do not claim every packet loss-free or compare incomplete rows as qualified performance."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "a153b50052e739b30ec8ec31e727189caec3d199"
+}
