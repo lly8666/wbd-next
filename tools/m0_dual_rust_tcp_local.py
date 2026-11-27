@@ -190,15 +190,18 @@ def controlled_recovery():
             route=ns(C,"ip","route","get",host)
             (d/"client-route.txt").write_text(route)
             assert ("dev wbdc0" in route) if paired else ("dev wan0" in route)
-            origin=spawn(where,d/"origin.json","iperf3","-s","-1","-J","-B",host,"-p",str(port))
+            app_path=pathlib.Path("tools/m0_dual_rust_tcp_app.py").resolve()
+            args=[host,str(target_bytes),str(offered)]
+            origin_argv=[sys.executable,str(app_path),"recovery-origin",str(port),*args]
+            argv=[sys.executable,str(app_path),"recovery-client",str(port),*args]
+            origin=spawn(where,d/"origin.json",*origin_argv)
             until(origin,lambda:f":{port} " in ns(where,"ss","-ltn"))
-            argv=["iperf3","-J","-c",host,"-p",str(port),"-R","-P","1","-C","bbr","-n",str(target_bytes),"-b",str(offered)]
-            save(d/"argv.json",argv)
+            save(d/"argv.json",{"origin":origin_argv,"client":argv})
             def path_counts():
                 return {dev:json.loads(ns(R,"tc","-s","-j","qdisc","show","dev",dev)) for dev in ("rc0","rs0")}
             row["qdisc_before"]=path_counts()
             save(d/"links-before.json",{n:json.loads(ns(n,"ip","-s","-j","link")) for n in N})
-            app=spawn(C,d/"iperf.json",*argv)
+            app=spawn(C,d/"app-client.json",*argv)
             samples=[]
             deadline=time.monotonic()+100
             while app.poll() is None:
@@ -209,11 +212,13 @@ def controlled_recovery():
                     if time.monotonic()>deadline:raise RuntimeError("controlled transfer timeout")
             origin.wait(20)
             assert app.returncode==0 and origin.returncode==0
-            a=json.loads((d/"iperf.json").read_text())
-            assert "error" not in a,a.get("error")
-            sent=a["end"]["sum_sent"];received=a["end"]["sum_received"]
-            row.update(sender_bytes=sent["bytes"],received_bytes=received["bytes"],mbps=received["bits_per_second"]/1e6,
-                sender_retrans_segments=sent.get("retransmits"),byte_match=sent["bytes"]==received["bytes"]==target_bytes)
+            received=json.loads((d/"app-client.json").read_text())
+            sent=json.loads((d/"origin.json").read_text())
+            row.update(sender_bytes=sent["sent_bytes"],received_bytes=received["received_bytes"],mbps=received["mbps"],
+                seconds=received["seconds"],first_data_seconds=received["first_data_seconds"],
+                sender_sha256=sent["sha256"],receiver_sha256=received["sha256"],
+                byte_match=sent["sent_bytes"]==received["received_bytes"]==target_bytes,
+                hash_match=sent["sha256"]==received["sha256"],eof=received["eof"])
             # Preserve both the application completion and later owner state.
             row["qdisc_after_app"]=path_counts()
             save(d/"links-after-app.json",{n:json.loads(ns(n,"ip","-s","-j","link")) for n in N})
@@ -247,7 +252,7 @@ def controlled_recovery():
                 row["receipt_present"]=all(any("WBD_M0_RAW_RX_PACKET_STATS " in line and " drops=" in line for line in log.splitlines()) and
                     "WBD_M0_TCP_INGRESS " in log for log in (cl,sl)) and "WBD_M0_TCP_M4_CLOCK " in sl and "WBD_M0_LOCAL_TUN_GSO " in cl and bool(latest)
             row["qdisc_after_stop"]=path_counts()
-            row["status"]="MEASURED" if row["byte_match"] and (not paired or (row.get("joined_stop") and row.get("receipt_present") and row.get("profile_valid"))) else "INCOMPLETE"
+            row["status"]="MEASURED" if row["byte_match"] and row["hash_match"] and row["eof"] and (not paired or (row.get("joined_stop") and row.get("receipt_present") and row.get("profile_valid"))) else "INCOMPLETE"
         except Exception as e:
             row["error"]=repr(e)
         finally:

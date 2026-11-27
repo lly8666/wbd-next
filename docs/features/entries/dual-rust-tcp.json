@@ -61,7 +61,8 @@
     "docs/devlog/M0/20261127-PACING-NATIVE-RST-BLOCKER.md",
     "docs/devlog/M0/20261127-PACING-NATIVE-QUALIFIED-ABBA.md",
     "docs/devlog/M0/20261127-PACING-RESULT-CONTROLLED-RECOVERY.md",
-    "docs/devlog/M0/20261127-RECOVERY-ISOLATION-BATCH.md"
+    "docs/devlog/M0/20261127-RECOVERY-ISOLATION-BATCH.md",
+    "docs/devlog/M0/20261127-RECOVERY-BATCH-FIXED-APP.md"
   ],
   "verification": [
     {
@@ -290,7 +291,8 @@
     "ca4cc44 core345 both and ARM native all PASS; x86 default32 real concurrent app RST, performance NOT_RUN. Fixture listen backlog16 for eight concurrent flows and existing origin terminal-error receipts, exact new qualification pending; no pacing selection.",
     "675ab84 dual ISA345 core and six actual native profiles PASS after x86 infrastructure-only retry; prior RST not reproduced, causal fix unproven. 32/8 server pacing ABBA pending, fixture reports existing bulk retrans/DSACK snapshots.",
     "b99fb67 six native profiles PASS; ARM32/8 B1 incomplete after iperf, server full17104→1313 but retrans8.28/8.37/11.95/7.13%, no 8 MSS promotion. Controlled same-host fixed-byte bare/paired/bare recovery pending, not peak qualification.",
-    "Recovery batch unverified: server pure ACK grant deferral and RACK window shortcut control, existing CUBIC/30M offer and combined conservative case, fixed-byte local diagnostic only. Selected defaults unchanged."
+    "Recovery batch unverified: server pure ACK grant deferral and RACK window shortcut control, existing CUBIC/30M offer and combined conservative case, fixed-byte local diagnostic only. Selected defaults unchanged.",
+    "5dda95b six original native profiles PASS; local iperf reverse fixed-byte diagnostic incomplete all 3 rows (including bare). Paired snapshot 216137728 sent/acked and 0 Middle retrans/DSACK/timeouts, ingress0/1862; strong scoped diagnostic signal not exact app qualification. Batch fixture now uses exact finite app and hash/EOF, candidate code unchanged."
   ],
   "promotion": null
 }

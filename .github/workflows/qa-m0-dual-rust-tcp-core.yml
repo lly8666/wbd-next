@@ -41,7 +41,7 @@ jobs:
           git rev-parse HEAD | tee dual-tcp-out/source.txt
           uname -m | tee dual-tcp-out/arch.txt
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iputils-ping autoconf automake libtool make gcc g++ nasm openssl iperf3
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iputils-ping autoconf automake libtool make gcc g++ nasm openssl
           python3 -m py_compile tools/m0_dual_rust_tcp_local.py tools/m0_dual_rust_tcp_app.py
           bash tools/m0_plan029_linux_dual_native_build.sh >dual-tcp-build.log 2>&1 || { tail -n 180 dual-tcp-build.log; exit 2; }
           cp linux-plan029-public-bundle/{manifest.json,SHA256SUMS} dual-tcp-out/

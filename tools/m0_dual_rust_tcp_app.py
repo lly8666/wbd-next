@@ -2,6 +2,53 @@
 """Exact finite TCP duplex and UDP echo, no private WBD wire or protocol."""
 import socket,sys,hashlib,json,threading,time
 role,port=sys.argv[1],int(sys.argv[2])
+# Fixed-byte recovery fixture, independent of iperf3's timed control stream.
+# Only the application offer is paced; the product owns all TCP behavior.
+if role in ("recovery-origin","recovery-client"):
+    host,target,offer=sys.argv[3],int(sys.argv[4]),int(sys.argv[5])
+    request=b"fixed-byte-recovery-v1"
+    pattern=hashlib.shake_256(b"fixed-byte-recovery-v1").digest(65536)
+    digest=hashlib.sha256()
+    if role=="recovery-origin":
+        with socket.socket() as listener:
+            listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+            listener.bind((host,port));listener.listen(1);listener.settimeout(30)
+            c,_=listener.accept()
+            with c:
+                c.settimeout(30);req=bytearray()
+                while True:
+                    b=c.recv(1024)
+                    if not b:break
+                    req.extend(b)
+                    assert len(req)<=len(request)
+                assert req==request
+                n=0;start=time.monotonic();due=start
+                while n<target:
+                    size=min(65536,target-n)
+                    block=(n.to_bytes(8,"big")+pattern[8:])[:size]
+                    wait=due-time.monotonic()
+                    if wait>0:time.sleep(wait)
+                    c.sendall(block);digest.update(block);n+=size
+                    # Never make up late app offer with an unbounded burst.
+                    due=max(due+size*8/offer,time.monotonic())
+                c.shutdown(socket.SHUT_WR)
+                print(json.dumps({"sent_bytes":n,"sha256":digest.hexdigest(),"offer_bps":offer,"seconds":time.monotonic()-start}),flush=True)
+    else:
+        with socket.create_connection((host,port),timeout=30) as c:
+            c.sendall(request);c.shutdown(socket.SHUT_WR)
+            start=time.monotonic();first=None;n=0
+            while True:
+                b=c.recv(65536)
+                if not b:break
+                if first is None:first=time.monotonic()
+                n+=len(b);digest.update(b)
+                assert n<=target
+            elapsed=time.monotonic()-start
+            assert n==target,(n,target)
+            print(json.dumps({"received_bytes":n,"sha256":digest.hexdigest(),"eof":True,"seconds":elapsed,
+                "first_data_seconds":first-start if first is not None else None,"mbps":n*8/elapsed/1e6}),flush=True)
+    raise SystemExit(0)
+
 host="198.18.77.2"
 up=hashlib.shake_256(b"upload-h2421").digest(2*1024*1024)
 down=hashlib.shake_256(b"download-h2421").digest(3*1024*1024)
