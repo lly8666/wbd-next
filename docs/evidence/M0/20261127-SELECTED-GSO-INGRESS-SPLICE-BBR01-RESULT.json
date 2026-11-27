@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "source_sha": "c6b33c161c484390e33d4c64691c09115db5e61c",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Native dual-ISA paired Normal original/parity/GSO+server ingress-first functional only; exact original app bytes, concurrent TCP, UDP, half-close, joined Stop. No product or performance promotion.",
+  "run_id": 45938085566,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140305824845,
+      "artifact_id": 15171906455,
+      "gso_groups": 74,
+      "gso_segments": 884
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140305824461,
+      "artifact_id": 15171851700,
+      "gso_groups": 158,
+      "gso_segments": 1362
+    }
+  ],
+  "performance": {
+    "result": "FAIL",
+    "scope": "ARM 3 distinct VMs direct endpoint path snapshots, 400ms added RTT, BBR0 and BBR1% IID, 45s 1 reverse stream per leg, outer IP MTU1160; 8/8 measured, valid profile and joined Stop. Not comprehensive qualification.",
+    "run_id": 45938085540,
+    "job_ids": {
+      "client": 140307426576,
+      "server": 140307426469,
+      "relay": 140307426527
+    },
+    "artifact_ids": {
+      "client": 15170994957,
+      "server": 15171593144,
+      "relay": 15171089669
+    },
+    "baseline_sha": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "bare_mbps": 485.045778077995,
+    "blocks": [
+      {
+        "loss_pct": 0,
+        "legs_mbps": [
+          217.2172722170126,
+          260.95244184476246,
+          286.56110693572367,
+          196.7124598036924
+        ],
+        "means": {
+          "splice_mbps": 206.96486601035252,
+          "rust_mbps": 273.7567743902431,
+          "splice_client_cpu_s_per_gib": 12.935726414870409,
+          "splice_server_cpu_s_per_gib": 14.897218080986857,
+          "rust_client_cpu_s_per_gib": 15.327920189421693,
+          "rust_server_cpu_s_per_gib": 17.17971854670538
+        },
+        "rust_client_ingress_full": [
+          919,
+          877
+        ],
+        "rust_server_ingress_full": [
+          9313,
+          7361
+        ],
+        "rust_client_shared_tun_full": [
+          6,
+          0
+        ],
+        "rust_server_bulk_retrans_bytes_last_snapshot": [
+          139376357,
+          90671132
+        ]
+      },
+      {
+        "loss_pct": 1,
+        "legs_mbps": [
+          65.33643435837497,
+          34.64923793599114,
+          110.72844695719795,
+          72.14092424229327
+        ],
+        "means": {
+          "splice_mbps": 68.73867930033413,
+          "rust_mbps": 72.68884244659455,
+          "splice_client_cpu_s_per_gib": 16.84483340521293,
+          "splice_server_cpu_s_per_gib": 22.418691349014143,
+          "rust_client_cpu_s_per_gib": 27.927701674897374,
+          "rust_server_cpu_s_per_gib": 32.953512891750954
+        },
+        "rust_client_ingress_full": [
+          0,
+          277
+        ],
+        "rust_server_ingress_full": [
+          0,
+          0
+        ],
+        "rust_client_shared_tun_full": [
+          0,
+          0
+        ]
+      }
+    ],
+    "relay_cumulative_qdisc_drops_after_each_leg": {
+      "client": [
+        0,
+        0,
+        0,
+        0,
+        4020,
+        6275,
+        12987,
+        17371
+      ],
+      "server": [
+        0,
+        0,
+        0,
+        0,
+        504,
+        928,
+        1418,
+        1809
+      ]
+    },
+    "review": "All five original ZIPs materialized and opened. Native exact source and 3 profiles each, actual app/UDP/Stop receipts. Performance summary every row MEASURED, both endpoints direct/profile/Stop valid; server and client bulk logs and relay qdisc snapshots examined. Zero injected loss throughput exceeds A in both B legs, CPU remains higher. 1% B widely divergent and CPU remains high, server local queue drops zero. B1 slow BBR bandwidth rise; B2 early high bw then collapse. Several late Stop RST/control events visible, not an assertion of all loss-free end-to-end closure beyond measured app and owned Stop. Bare no-added-RTT preflight not proof of 400ms capacity. No full parity."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "014a902870d319e470dd8c440fc338a4f73e60c8"
+}
