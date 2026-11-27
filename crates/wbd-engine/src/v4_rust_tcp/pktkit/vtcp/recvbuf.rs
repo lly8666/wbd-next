@@ -132,6 +132,12 @@ impl RecvBuf {
     /// Snapshot of disjoint out-of-order range count and allocated cost.
     pub(crate) fn m0_ooo(&self)->(usize,usize){(self.ooo.len(),self.ooo_mem)}
 
+    /// Span through the furthest queued byte, including holes (Linux's
+    /// ooo_last_skb.end_seq - rcv_nxt), not allocated memory or byte count.
+    pub(crate) fn ooo_span(&self) -> usize {
+        self.ooo.last_key_value().map_or(0, |(_, e)| e.end().wrapping_sub(self.nxt) as usize)
+    }
+
     /// The most the out-of-order ranges may cost before the furthest are
     /// given up. The bytes they hold lie inside the window, so they never
     /// come to more than the buffer (a unit more, when a scaled window was

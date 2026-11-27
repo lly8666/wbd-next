@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Pinned pktkit TCP with paired original Linux Normal native owner integration; scoped real-product dual-ISA function PASS.",
+  "summary": "Pinned pktkit TCP, paired Linux Normal owner integration; opt-in Linux behavior alignment; performance unqualified.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -12,7 +12,7 @@
   "defaults": {},
   "usage": {
     "cli": "Experimental: both Linux endpoints --dual-rust-tcp --mode normal, client --auto-ip, server --lease-pool; mutually exclusive with old --tcp-proxy-cc.",
-    "config": "Cold paired selection only; no private TLS exchange or auto-detection; old path remains default for comparison.",
+    "config": "Cold paired selection only; no private TLS exchange or auto-detection; old path remains default for comparison. Temporary experiment WBD_M0_LINUX_PARITY=1; not default; receiver growth aligns with observed Linux settings and fresh DATA serialization avoids one temporary copy.",
     "gui": "Not exposed"
   },
   "code_refs": [
@@ -37,7 +37,9 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-INTENT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-RESULT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-INTENT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-INTENT.md"
+    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-INTENT.md",
+    "docs/devlog/M0/20261127-LINUX-TCP-PARITY-AUDIT-AND-CANDIDATE.md",
+    "docs/devlog/M0/20261127-LINUX-TCP-PARITY-RESULT-AND-HOTPATH.md"
   ],
   "verification": [
     {
@@ -137,6 +139,20 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "8a6439bd0ec7b807957f35c978729cc86986e1f2",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45821912474"
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "Opt-in Linux parity and original Normal actual TUN product duplex/UDP/concurrency/Stop, 337 core tests",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "edc0d11a374f5185315814f8a940933638b7149e",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45862140433"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "Opt-in Linux parity and original Normal actual TUN product duplex/UDP/concurrency/Stop, 337 core tests",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "edc0d11a374f5185315814f8a940933638b7149e",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45862140433"
     }
   ],
   "limitations": [
@@ -145,7 +161,8 @@
     "Old splice retained for same-host comparison; Windows unchanged",
     "Clean x86 ABBA measured capped goodput parity, but client CPU +29.1%; full performance qualification NOT_RUN. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json",
     "Matched CUBIC ABBA measured capped goodput parity, client CPU +47.45%, host +15.19%; mixed BBR same VM similar gap. CUBIC trial not selected for product; restore BBRv3 in next substantive candidate. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json",
-    "ACK3 BBRv3 middle candidate 8a6439b exact scoped functional dual ISA PASS; same-VM old splice/original Rust ABBA run45821912542 and ARM three-runner loss1/5 run45822382519/45822382479 in flight. No performance or default promotion."
+    "ACK3 BBRv3 middle candidate 8a6439b exact scoped functional dual ISA PASS; same-VM old splice/original Rust ABBA run45821912542 and ARM three-runner loss1/5 run45822382519/45822382479 in flight. No performance or default promotion.",
+    "edc0d11 ARM Linux parity ABBA 23/24 measured, CUBIC 5% baseline reset, BBR0 150.56 vs 205.79 Mbps and CPU/GiB higher; no performance promotion. New receive growth / borrowed DATA candidate unverified."
   ],
   "promotion": null
 }

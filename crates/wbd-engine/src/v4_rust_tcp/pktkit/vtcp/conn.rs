@@ -2098,8 +2098,14 @@ impl Conn {
     }
 
     fn queue_seg(&mut self, mut seg: Segment) {
+        let has_payload = !seg.payload.is_empty();
+        self.prepare_seg(&mut seg, has_payload);
+        self.outgoing.push(seg.marshal());
+    }
+
+    fn prepare_seg(&mut self, seg: &mut Segment, has_payload: bool) {
         let mut new_data =
-            !seg.payload.is_empty() && self.send_buf.as_ref().is_some_and(|s| s.nxt() == seg.seq);
+            has_payload && self.send_buf.as_ref().is_some_and(|s| s.nxt() == seg.seq);
         if let Some(end) = self.syn_data_end.filter(|_| new_data) {
             if seq_before(seg.seq, end) {
                 new_data = false;
@@ -2107,7 +2113,7 @@ impl Conn {
                 self.syn_data_end = None;
             }
         }
-        let ip = self.ecn.mark(&mut seg, new_data);
+        let ip = self.ecn.mark_payload(seg, new_data, has_payload);
         self.outgoing_ecn.push(ip);
         if seg.has_flag(flags::ACK) && self.recv_buf.is_some() {
             // Whatever we send acknowledges everything received so far.
@@ -2131,7 +2137,6 @@ impl Conn {
             }
         }
         self.stats.segs_out += 1;
-        self.outgoing.push(seg.marshal());
     }
 
     /// Answer an out-of-window segment with the duplicate ACK RFC 9293
@@ -3096,9 +3101,11 @@ impl Conn {
     fn rcv_space_adjust(&mut self) {
         let srtt = Some(self.rto.srtt()).filter(|d| !d.is_zero());
         let mss = self.cfg.mss.max(1) as usize;
-        if let Some(want) = self.rcv_space.adjust(self.now, srtt, mss) {
-            self.grow_recv(want);
-        }
+        let want = if self.cfg.linux_parity {
+            let rb = self.recv_buf.as_ref().unwrap();
+            self.rcv_space.adjust_linux(self.now, rb.readable(), rb.ooo_span())
+        } else { self.rcv_space.adjust(self.now, srtt, mss) };
+        if let Some(want) = want { self.grow_recv(want); }
     }
 
     /// Grow the receive buffer towards `want` bytes, as far as the
@@ -4396,25 +4403,25 @@ impl Conn {
 
     /// Send `n` bytes of new data as one segment carrying `opts`.
     fn send_new(&mut self, n: usize, opts: Vec<TcpOption>) {
-        let data = self.send_buf.as_ref().unwrap().peek_unsent(n).to_vec();
-        if data.is_empty() {
+        let len = self.send_buf.as_ref().unwrap().peek_unsent(n).len();
+        if len == 0 {
             return;
         }
         let snd_nxt = self.send_buf.as_ref().unwrap().nxt();
         let rcv_nxt = self.recv_buf.as_ref().unwrap().nxt();
-        let seg = Segment {
+        let mut seg = Segment {
             src_port: self.cfg.local_port,
             dst_port: self.cfg.remote_port,
             seq: snd_nxt,
             ack: rcv_nxt,
             flags: flags::ACK | flags::PSH,
             window: self.rcv_window(),
-            payload: data,
             options: opts,
             ..Default::default()
         };
-        let len = seg.payload.len();
-        self.queue_seg(seg);
+        self.prepare_seg(&mut seg, true);
+        let wire = seg.marshal_payload(self.send_buf.as_ref().unwrap().peek_unsent(len));
+        self.outgoing.push(wire);
         self.send_buf.as_mut().unwrap().advance_sent(len);
         let tsval = self.ts_now();
         self.score

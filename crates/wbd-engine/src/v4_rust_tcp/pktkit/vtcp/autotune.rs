@@ -176,6 +176,29 @@ impl RcvSpace {
         }
     }
 
+    /// Linux v7.0 tcp_rcv_space_adjust/tcp_rcvbuf_grow expressed in
+    /// payload-window units. The receiver RTT is the actual interval, not
+    /// one eighth of it: Linux's stored estimator is scaled by eight.
+    /// Kernel skb truesize conversion has no equivalent in this byte ring.
+    pub(crate) fn adjust_linux(&mut self, now: Instant, unread: usize, ooo_span: usize) -> Option<usize> {
+        let rtt = self.rtt?;
+        if now.saturating_duration_since(self.time) < rtt { return None; }
+        let copied = usize::try_from(self.copied - self.mark).unwrap_or(usize::MAX).saturating_sub(unread);
+        self.mark = self.copied;
+        self.time = now;
+        if copied <= self.space { return None; }
+        let window = copied.saturating_mul(2);
+        // Actual previous ARM fixture: tcp_rcvbuf_low_rtt=1000 us.
+        let low_rtt = Duration::from_micros(1000);
+        let growth = if rtt < low_rtt {
+            (window as u128 * rtt.as_nanos() / low_rtt.as_nanos()) as usize
+        } else {
+            ((window as u128 * 2 * (copied - self.space) as u128 / self.space as u128).min(usize::MAX as u128)) as usize
+        };
+        self.space = copied;
+        Some(window.saturating_add(growth).saturating_add(ooo_span))
+    }
+
     /// Called after a read: once a round trip has passed since the last
     /// measurement, the buffer size wanted for what the application read
     /// in it, if that is more than ever before. `mss` is the largest
@@ -262,6 +285,23 @@ mod tests {
         r.on_read(200_000);
         let more = r.adjust(t0 + 300 * MS, srtt, 1460).unwrap();
         assert!(more >= 4 * 200_000, "{more}");
+    }
+
+    #[test]
+    fn linux_growth_uses_receive_rtt_unread_and_ooo_span() {
+        let t = Instant::now();
+        let mut r = RcvSpace::new(10_000);
+        r.time = t;
+        r.measure_ts(100 * MS);
+        r.on_read(30_000);
+        assert_eq!(r.adjust_linux(t + 50 * MS, 10_000, 500), None);
+        // copied=20k, window=40k, growth=80k, OOO span=500.
+        assert_eq!(r.adjust_linux(t + 100 * MS, 10_000, 500), Some(120_500));
+        let mut low = RcvSpace::new(10_000);
+        low.time = t;
+        low.measure_ts(Duration::from_micros(500));
+        low.on_read(20_000);
+        assert_eq!(low.adjust_linux(t + MS, 0, 0), Some(60_000));
     }
 
     #[test]

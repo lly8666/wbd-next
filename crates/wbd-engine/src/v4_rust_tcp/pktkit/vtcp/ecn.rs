@@ -368,7 +368,13 @@ impl Ecn {
     /// Put the ECN flags on `seg`, about to go out, and return the
     /// codepoint it goes with. `new_data` if it carries data never sent
     /// before.
+    #[cfg(test)]
     pub fn mark(&mut self, seg: &mut Segment, new_data: bool) -> IpEcn {
+        let has_payload = !seg.payload.is_empty();
+        self.mark_payload(seg, new_data, has_payload)
+    }
+
+    pub(crate) fn mark_payload(&mut self, seg: &mut Segment, new_data: bool, has_payload: bool) -> IpEcn {
         if seg.has_flag(flags::SYN) || seg.has_flag(flags::RST) || !seg.has_flag(flags::ACK) {
             return IpEcn::NOT_ECT;
         }
@@ -395,7 +401,7 @@ impl Ecn {
             Feedback::Accurate => {
                 let handshake = self.synack.filter(|&(_, irs1)| {
                     seg.ack == irs1
-                        && seg.payload.is_empty()
+                        && !has_payload
                         && !seg.has_flag(flags::FIN)
                         && get_sack_blocks(&seg.options).is_empty()
                 });

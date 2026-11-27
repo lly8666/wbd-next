@@ -102,8 +102,14 @@ impl Segment {
     /// callers must compute the TCP checksum over IP pseudo-header + segment
     /// and patch bytes 16..18 of the result before transmission.
     pub fn marshal(&self) -> Vec<u8> {
+        self.marshal_payload(&self.payload)
+    }
+
+    /// Serialize the header with borrowed payload already owned by SendBuf.
+    pub(crate) fn marshal_payload(&self, payload: &[u8]) -> Vec<u8> {
         let hdr_len = 20 + options::options_len(&self.options);
-        let mut out = vec![0u8; hdr_len + self.payload.len()];
+        let mut out = Vec::with_capacity(hdr_len + payload.len());
+        out.resize(hdr_len, 0);
         out[0..2].copy_from_slice(&self.src_port.to_be_bytes());
         out[2..4].copy_from_slice(&self.dst_port.to_be_bytes());
         out[4..8].copy_from_slice(&self.seq.to_be_bytes());
@@ -116,9 +122,7 @@ impl Segment {
         // Straight into place: an intermediate buffer per segment cost
         // more than the rest of the header together.
         options::write_options(&self.options, &mut out[20..hdr_len]);
-        if !self.payload.is_empty() {
-            out[hdr_len..].copy_from_slice(&self.payload);
-        }
+        out.extend_from_slice(payload);
         out
     }
 
@@ -190,6 +194,17 @@ mod tests {
         let p = Segment::parse(&raw).unwrap();
         assert_eq!(p.payload, b"hello");
         assert_eq!(get_mss(&p.options), 1460);
+    }
+
+    #[test]
+    fn borrowed_payload_matches_owned_wire() {
+        let mut s = Segment { src_port: 12, dst_port: 34, seq: 77, ack: 88,
+            flags: flags::ACK | flags::PSH, window: 1000, options: vec![mss_option(1460)],
+            payload: vec![1, 2, 3, 4, 5], ..Default::default() };
+        let owned = s.marshal();
+        let payload = std::mem::take(&mut s.payload);
+        assert_eq!(s.marshal_payload(&payload), owned);
+        assert_eq!(Segment::parse(&owned).unwrap().payload, payload);
     }
 
     #[test]
