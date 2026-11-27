@@ -26,6 +26,16 @@ pub(super) struct WinGameGroup {
     adapter:GameAdapter,
     handles:Vec<u64>,
     lanes:Vec<Arc<Mutex<Entry>>>,
+    // Cold TLS identity per handle, retained after moving exporter keys
+    // into GameAdapter. No duplicate key material or hot lookup.
+    #[cfg(feature="winxdp_native_trial")]
+    lane_identities:Vec<crate::cold_v4::ColdIdentity>,
+    // The first original owner pins the Windows OS/WAL proof. When slot1
+    // changes, retain only that existing owner as a non-data anchor.
+    #[cfg(feature="winxdp_native_trial")]
+    os_anchor:Option<Arc<Mutex<Entry>>>,
+    #[cfg(feature="winxdp_native_trial")]
+    os_anchor_handle:u64,
     generation:u32,
     epoch:[u8;16],
     tick:u64,
@@ -93,6 +103,10 @@ pub(super) fn join(
     let next=generation.checked_add(1).ok_or(FULL)?;
     let group=(u64::from(generation)<<32)|0x474Du64;
     if r.game_groups.contains_key(&group){return Err(FULL)}
+    #[cfg(feature="winxdp_native_trial")]
+    let lane_identities=cold.iter().map(|c|c.identity()).collect();
+    #[cfg(feature="winxdp_native_trial")]
+    let os_anchor_handle=ids[0];
     let adapter=GameAdapter::from_private_original_go_tls(
         cold,server,TunnelKey{slot:14,generation},generation,
     ).map_err(|_|INVALID)?;
@@ -104,6 +118,12 @@ pub(super) fn join(
         .collect::<Result<Vec<_>,_>>()?;
     r.game_groups.insert(group,Arc::new(Mutex::new(WinGameGroup{
         adapter,handles:ids,lanes,generation,
+        #[cfg(feature="winxdp_native_trial")]
+        lane_identities,
+        #[cfg(feature="winxdp_native_trial")]
+        os_anchor:None,
+        #[cfg(feature="winxdp_native_trial")]
+        os_anchor_handle,
         epoch:scope.ok_or(INVALID)?,tick:0,role_server:server,
         started:std::time::Instant::now(),
         off_pending:(0..handles.len()).map(|_|None).collect(),
@@ -122,6 +142,11 @@ fn stopped_group(r:&mut Registry,h:u64)->i32{
     if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
         !e.device.is_some_and(|d|d.quiesced))){return STOP_INCOMPLETE}
+    #[cfg(feature="winxdp_native_trial")]
+    if game.os_anchor.as_ref().is_some_and(|a|a.lock().ok().is_none_or(|e|
+        e.game_group!=Some(h)||e.phase!=PH_ACTIVE||!e.device.is_some_and(|d|d.quiesced))){
+        return STOP_INCOMPLETE
+    }
     if game.off_pending.iter().any(Option::is_some){return STOP_INCOMPLETE}
     #[cfg(feature="fec2_product_record")]
     if game.fec_pending.iter().any(Option::is_some){return STOP_INCOMPLETE}
@@ -152,6 +177,10 @@ fn stopped_group(r:&mut Registry,h:u64)->i32{
     for lane in &game.lanes{
         let Ok(mut e)=lane.lock()else{return STOP_INCOMPLETE};
         e.game_group=None;
+    }
+    #[cfg(feature="winxdp_native_trial")]
+    if let Some(anchor)=game.os_anchor.take(){
+        let Ok(mut e)=anchor.lock()else{return STOP_INCOMPLETE};e.game_group=None;
     }
     drop(game);
     r.game_groups.remove(&h);
@@ -208,6 +237,95 @@ pub(super) fn native_game_group(
         }
     }
     Ok(g)
+}
+// Candidate entry is prepared on the cold path, then moved to the existing
+// native workers. The group mutex is taken only at original record/command
+// boundaries; no additional hot-path registry lookup.
+#[cfg(feature="winxdp_native_trial")]
+pub(super) struct PreparedWinGameLane{
+    group:u64,index:usize,old_handle:u64,new_handle:u64,
+    next:Arc<Mutex<Entry>>,identity:crate::cold_v4::ColdIdentity,
+    pub(super) crypto:crate::v4_game_lane::WindowsGameLaneCandidate,
+}
+#[cfg(feature="winxdp_native_trial")]
+impl PreparedWinGameLane{
+    pub(super) fn index(&self)->usize{self.index}
+    pub(super) fn new_handle(&self)->u64{self.new_handle}
+}
+#[cfg(feature="winxdp_native_trial")]
+pub(super) fn prepare_native_lane_candidate(
+    r:&Registry,h:u64,lane:u32,old_handle:u64,new_handle:u64,
+)->Result<PreparedWinGameLane,i32>{
+    let g=r.game_groups.get(&h).ok_or(UNKNOWN)?.clone();
+    let game=g.lock().map_err(|_|BAD_STAGE)?;
+    if game.handles.len()!=4||game.role_server||lane==0||lane>4||
+        game.handles.contains(&new_handle)||new_handle==game.os_anchor_handle{
+        return Err(INVALID)
+    }
+    let index=game.lane_identities.iter().position(|x|u32::from(x.go_lane_id)==lane)
+        .ok_or(INVALID)?;
+    if game.handles[index]!=old_handle{return Err(INVALID)}
+    let old=game.lanes[index].lock().map_err(|_|BAD_STAGE)?;
+    let next=r.entries.get(&new_handle).cloned().ok_or(UNKNOWN)?;
+    let mut e=next.lock().map_err(|_|BAD_STAGE)?;
+    let before=game.lane_identities[index];
+    let after=e.game_cold.as_ref().ok_or(BAD_STAGE)?.identity();
+    if e.phase!=PH_ACTIVE||e.role_server||!e.feature7||e.game_group.is_some()||
+        e.authenticated_epoch!=game.epoch||
+        old.phase!=PH_ACTIVE||old.game_group!=Some(h)||
+        old.path_mtu==0||old.path_mtu!=e.path_mtu||
+        old.path_mtu_is_outer!=e.path_mtu_is_outer||
+        e.peer_mss<old.peer_mss||e.record_wire_limit!=old.record_wire_limit||
+        !old.device.zip(e.device).is_some_and(|(a,b)|
+            !a.quiesced&&!b.quiesced&&a.luid==b.luid&&a.ifindex==b.ifindex)||
+        before.server!=after.server||before.go_lane_id!=after.go_lane_id||
+        before.tunnel_id!=after.tunnel_id||before.logical_epoch!=after.logical_epoch||
+        before.principal_hash!=after.principal_hash||before.cipher!=after.cipher||
+        before.client_limit!=after.client_limit||before.server_limit!=after.server_limit||
+        game.lane_identities.iter().any(|x|x.incarnation==after.incarnation){
+        return Err(INVALID)
+    }
+    let cold=e.game_cold.take().ok_or(BAD_STAGE)?;
+    let crypto=game.adapter.prepare_windows_lane_candidate(cold,false).map_err(|_|INVALID)?;
+    if crypto.slot()!=lane as usize-1{return Err(INVALID)}
+    drop(e);drop(old);
+    Ok(PreparedWinGameLane{group:h,index,old_handle,new_handle,next,identity:after,crypto})
+}
+#[cfg(feature="winxdp_native_trial")]
+pub(super) struct RetiredWinGameLane{
+    pub(super) handle:u64,
+    pub(super) keep_os_anchor:bool,
+    pub(super) opener:crate::v4_game_lane::GameLaneOpener,
+}
+/// Commit after native selected-lane proof and at settled TX/RX boundaries.
+/// Old entry is no longer a data member. The first original OS proof
+/// stays pinned until product Stop, independently of the new slot1.
+#[cfg(feature="winxdp_native_trial")]
+pub(super) fn commit_native_lane_candidate(
+    game:&mut WinGameGroup,h:u64,c:PreparedWinGameLane,
+)->Result<RetiredWinGameLane,i32>{
+    let i=c.index;
+    if c.group!=h||game.handles.get(i)!=Some(&c.old_handle)||!c.crypto.ready()||
+        !game.staged.is_empty()||game.off_pending[i].is_some()||
+        game.fec_pending[i].is_some(){return Err(BAD_STAGE)}
+    let old=game.lanes[i].clone();
+    let mut prior=old.lock().map_err(|_|BAD_STAGE)?;
+    let mut next=c.next.lock().map_err(|_|BAD_STAGE)?;
+    if prior.phase!=PH_ACTIVE||prior.game_group!=Some(h)||
+        next.phase!=PH_ACTIVE||next.game_group.is_some()||
+        !prior.device.zip(next.device).is_some_and(|(a,b)|
+            !a.quiesced&&!b.quiesced&&a.luid==b.luid&&a.ifindex==b.ifindex){
+        return Err(BAD_STAGE)
+    }
+    let keep=c.old_handle==game.os_anchor_handle;
+    if keep&&game.os_anchor.is_some(){return Err(BAD_STAGE)}
+    let opener=game.adapter.commit_windows_lane_candidate(c.crypto).map_err(|_|BAD_STAGE)?;
+    next.game_group=Some(h);
+    if !keep{prior.game_group=None;}
+    drop(next);drop(prior);
+    if keep{game.os_anchor=Some(old);}
+    game.lanes[i]=c.next;game.handles[i]=c.new_handle;game.lane_identities[i]=c.identity;
+    Ok(RetiredWinGameLane{handle:c.old_handle,keep_os_anchor:keep,opener})
 }
 #[cfg(feature="fec2_product_record")]
 pub(super) fn offer_records_native(
@@ -846,6 +964,55 @@ mod tests{
             hs.push(h);
         }
         hs
+    }
+    #[cfg(feature="winxdp_native_trial")]
+    #[test]
+    fn winxdp_rotation_owner_slot1_retains_os_anchor_and_other_members(){
+        let mut r=Registry{generation:980,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let hs=setup(&mut r,4,false);
+        let h=join(&mut r,&hs,false).unwrap();
+        let old_device=r.entries[&hs[0]].lock().unwrap().device.unwrap();
+        let mut fresh=cold(false,1);
+        fresh[44..60].fill(81);fresh[96..172].fill(90);fresh[172..].fill(91);
+        let next=allocate(&mut r,&fresh,&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,next,0,0,800),OK);
+        assert_eq!(bind_wintun(&mut r,next,[2;16],old_device.luid,old_device.ifindex),OK);
+        set_path_mtu(&mut r,next,[2;16],old_device.luid,old_device.ifindex,1400).unwrap();
+        assert!(prepare_native_lane_candidate(&r,h,2,hs[1],next).is_err());
+        assert!(prepare_native_lane_candidate(&r,h,1,hs[1],next).is_err());
+        let mut c=prepare_native_lane_candidate(&r,h,1,hs[0],next).unwrap();
+        assert_eq!(c.index(),0);assert_eq!(c.new_handle(),next);
+        // Only synthetic test counterpart. Real runtime must obtain the
+        // accepted driver receipt and peer wire from the candidate tuple.
+        let mut peer_colds=(1..=4).map(|i|UntrustedColdV4::parse(&cold(true,i)).unwrap()).collect::<Vec<_>>();
+        let peer=GameAdapter::from_private_original_go_tls(std::mem::take(&mut peer_colds),
+            true,TunnelKey{slot:14,generation:71},71).unwrap();
+        fresh[8]=1;
+        let mut p=peer.prepare_windows_lane_candidate(UntrustedColdV4::parse(&fresh).unwrap(),true).unwrap();
+        let mut wire=[0u8;512];
+        let (pn,_)=c.crypto.seal_probe(0,&mut wire).unwrap();
+        c.crypto.probe_result(pn,true).unwrap();
+        let (_,n)=p.seal_probe(0,&mut wire).unwrap();
+        assert!(c.crypto.open_peer(&mut wire[..n]).unwrap().is_none());
+        {
+            let mut g=r.game_groups[&h].lock().unwrap();
+            let retired=commit_native_lane_candidate(&mut g,h,c).unwrap();
+            assert!(retired.keep_os_anchor);assert_eq!(retired.handle,hs[0]);
+            drop(retired.opener);
+            assert_eq!(g.handles,[next,hs[1],hs[2],hs[3]]);
+            assert!(g.os_anchor.is_some());
+            assert!(game_m4_members_active(&g,h));
+        }
+        // Original OS proof remains ACTIVE and independently bound;
+        // explicit Stop cannot remove it while the group still lives.
+        assert_eq!(stop(&mut r,hs[0]),STOP_INCOMPLETE);
+        assert!(v3_ready(&r.entries[&hs[0]].lock().unwrap(),[2;16],old_device.luid,old_device.ifindex));
+        for id in hs.iter().chain(std::iter::once(&next)){
+            let d=r.entries[id].lock().unwrap().device.unwrap();
+            assert_eq!(quiesce_wintun(&mut r,*id,[2;16],d.luid,d.ifindex),OK);
+        }
+        assert_eq!(stopped_group(&mut r,h),OK);
+        for id in hs.iter().chain(std::iter::once(&next)){assert_eq!(stop(&mut r,*id),OK);}
     }
     #[test]
     fn m0_windows_game_tun_partial_prefix_never_claims_full_kernel_copy(){

@@ -963,10 +963,9 @@ mod tests{
         let mut client=build(4);let mut server=build(4);
         let slot=2;
         let key=client.lanes[slot-1].key;
-        let (_,old_len)=server.seal_native_health(slot as u32,0,&mut [0u8;512]).unwrap();
+        // Health uses genuine randomized padding; never compare sizes.
         let mut old_wire=[0u8;512];
         let (_,n)=server.seal_native_health(slot as u32,0,&mut old_wire).unwrap();
-        assert_eq!(n,old_len);
         let (sibling_before,_)=client.seal_native_health(3,0,&mut [0u8;512]).unwrap();
         let premature=client.prepare_windows_lane_candidate(rotation_cold(false,slot as u8),false).unwrap();
         assert!(matches!(client.commit_windows_lane_candidate(premature),Err(Error::Unauthorized)));
