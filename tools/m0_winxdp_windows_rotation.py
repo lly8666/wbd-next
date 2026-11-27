@@ -1,12 +1,12 @@
 """Actual Windows timed generation-renewal observation, not hot-lane parity."""
-import json,pathlib,re,socket,subprocess,sys,time
+import json,pathlib,re,select,socket,subprocess,sys,time
 
 def echo():
     with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
         sock.bind(("10.66.0.1",45903))
         print("WINDOWS_ROTATION_ECHO_READY",flush=True)
         sock.settimeout(.5)
-        until=time.monotonic()+150
+        until=time.monotonic()+175
         while time.monotonic()<until:
             try:data,peer=sock.recvfrom(2048)
             except socket.timeout:continue
@@ -22,31 +22,55 @@ def measure_rotation(root,out,unix,win,server):
             while "WINDOWS_ROTATION_ECHO_READY" not in logs.read_text(errors="replace"):
                 if p.poll() is not None or time.monotonic()>=until:raise RuntimeError("rotation UDP echo not ready")
                 time.sleep(.1)
+            # 100pps independent offered packets; no stop-and-wait at
+            # a 400ms RTT, no app retry, and no catch-up send burst.
             start=time.monotonic();seq=0;receipts=[];errors=[];gen_receipts={}
+            sent={};seen=set();ready=0;last_log=0.;next_send=start;drain_until=None
+            prefix=b"WBD_WINDOWS_TIMER_NATIVE/"
             with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
-                sock.bind(("10.66.0.2",0));sock.settimeout(.15)
-                while time.monotonic()-start<110:
+                sock.bind(("10.66.0.2",0));sock.setblocking(False)
+                while True:
+                    now=time.monotonic()
                     if win.poll() is not None or server.poll() is not None:raise RuntimeError("owner exited during timer rotation")
-                    log=(out/"client.log").read_text(errors="replace")
-                    ready=log.count("WBD_WINDOWS_CLIENT_READY")
-                    if ready>=3 and gen_receipts.get(3,0)>=20:break
-                    data=("WBD_WINDOWS_TIMER_NATIVE/"+str(seq)).encode();seq+=1
-                    at=time.monotonic()
-                    try:
-                        sock.sendto(data,("10.66.0.1",45903))
-                        while time.monotonic()-at<.15:
-                            response,peer=sock.recvfrom(2048)
-                            if response==data and peer[0]=="10.66.0.1":
-                                elapsed=round((time.monotonic()-start)*1000,3)
-                                receipts.append({"seq":seq-1,"elapsed_ms":elapsed,"ready_generation":ready})
-                                gen_receipts[ready]=gen_receipts.get(ready,0)+1
-                                break
-                    except OSError as err:
-                        if not isinstance(err,socket.timeout):errors.append({"seq":seq-1,"error":repr(err)})
-                    time.sleep(.05)
+                    if now-last_log>=.05:
+                        ready=(out/"client.log").read_text(errors="replace").count("WBD_WINDOWS_CLIENT_READY")
+                        last_log=now
+                    if drain_until is None and (now-start>=110 or (ready>=3 and gen_receipts.get(3,0)>=20)):
+                        drain_until=now+1.5
+                    if drain_until is not None and now>=drain_until:break
+                    if drain_until is None and now>=next_send:
+                        data=prefix+str(seq).encode()
+                        try:
+                            sock.sendto(data,("10.66.0.1",45903))
+                            sent[seq]=(now,ready)
+                        except OSError as err:
+                            errors.append({"seq":seq,"phase":"send","error":repr(err)})
+                        seq+=1
+                        next_send=now+.01
+                    timeout=.01 if drain_until is not None else max(0.,min(.01,next_send-time.monotonic()))
+                    if not select.select([sock],[],[],timeout)[0]:continue
+                    while True:
+                        try:response,peer=sock.recvfrom(2048)
+                        except BlockingIOError:break
+                        except OSError as err:
+                            errors.append({"phase":"receive","error":repr(err)})
+                            break
+                        if peer[0]!="10.66.0.1" or not response.startswith(prefix):continue
+                        try:i=int(response[len(prefix):])
+                        except ValueError:continue
+                        if i not in sent or i in seen:continue
+                        seen.add(i)
+                        at=time.monotonic();sent_at,gen=sent[i]
+                        receipts.append({"seq":i,"elapsed_ms":round((at-start)*1000,3),
+                            "rtt_ms":round((at-sent_at)*1000,3),"ready_generation":gen})
+                        gen_receipts[gen]=gen_receipts.get(gen,0)+1
+            rtts=sorted(r["rtt_ms"] for r in receipts)
             result={"scope":"WINDOWS_FULL_GENERATION_RENEWAL_NOT_HOT_LANE",
-                "sent":seq,"received":len(receipts),"generation_receipts":gen_receipts,
-                "socket_errors":errors,"same_socket":True,
+                "sent":seq,"socket_accepted":len(sent),"received":len(receipts),
+                "missing":seq-len(receipts),"generation_receipts":gen_receipts,
+                "socket_errors":errors,"same_socket":True,"send_interval_ms":10,
+                "rtt_p50_ms":rtts[len(rtts)//2] if rtts else None,
+                "rtt_p99_ms":rtts[min(len(rtts)-1,int(len(rtts)*.99))] if rtts else None,
                 "max_successful_receive_gap_ms":max((b["elapsed_ms"]-a["elapsed_ms"] for a,b in zip(receipts,receipts[1:])),default=None),
                 "receipts":receipts}
             (out/"windows-timer-business.json").write_text(json.dumps(result,indent=2))

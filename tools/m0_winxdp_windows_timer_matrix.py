@@ -43,10 +43,10 @@ def main():
         env=dict(os.environ,WBD_WL_PUBLIC_MODE=mode,WBD_WL_PUBLIC_MODES=mode,
                  WBD_XDP_WINDOWS_ROTATION="1",WBD_XDP_GAME_DOWNLOAD_BBR="0",WBD_XDP_GAME_DOWNLOAD_DIAG="0")
         for k in ("WBD_WL_V2_SCENARIO","WBD_WL_RUN_N0","WBD_WL_RUN_P200","WBD_XDP_GAME_DOWNLOAD_TRANSPORT"):env.pop(k,None)
-        rc=run(["tools/m0_wl_public_modes_e2e.py"],env,case/"fixture.log",225)
+        rc=run(["tools/m0_wl_public_modes_e2e.py"],env,case/"fixture.log",260)
         report=read(OUT/"report.json");report["fixture_rc"]=rc
         (case/"timer-measurement.json").write_text(json.dumps(report,indent=2))
-        for pat in ("client.log","server.log","windows-app.log","linux-app.log","windows-timer-*","gamefec-*.txt","mode-batch.json","windows-original-go-rust-process-1hz.jsonl"):
+        for pat in ("client.log","server.log","windows-app.log","linux-app.log","windows-timer-*","wl-n0-netem-before.json","wl-n0-netem-after.json","gamefec-*.txt","mode-batch.json","windows-original-go-rust-process-1hz.jsonl"):
             for p in OUT.glob(pat):
                 if p.is_file():shutil.copyfile(p,case/p.name)
         codes.append(rc)

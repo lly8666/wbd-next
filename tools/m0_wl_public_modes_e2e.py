@@ -66,6 +66,7 @@ for mode in modes:
  mode_seconds=(270 if hard8 else 185 if minimal_game_fec else
   350 if game_stages else 240 if (slow and mode.startswith("game"))
   else 690 if slow else 165)
+ if env.get("WBD_XDP_WINDOWS_ROTATION")=="1":mode_seconds=225
  # H1907: only this EXACT signed Normal original-owner 10-GiB challenge
  # gets 900s inside its separate 1060s PID supervisor and the existing
  # 24-minute Windows step watchdog. Never widen ordinary 165s Normal.

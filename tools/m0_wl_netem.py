@@ -23,6 +23,7 @@ if profile_name == "v2":
     from m0_wl_perf_v2_config import read_scenario
     ingress_ports = ingress_ports_for_mode(read_scenario(scenario_path)["public_mode"])
 else:
+    # Timed Windows shared-manual Normal and Game4 use one real server port.
     ingress_ports = (443,)
 out = pathlib.Path(directory)
 out.mkdir(parents=True, exist_ok=True)
@@ -126,7 +127,8 @@ if action == "arm":
         snapshot["requested_kernel_profile"] = profile
         snapshot["requested_linux_egress_profile"] = egress_profile
         (out / "wl-n0-netem-before.json").write_text(json.dumps(snapshot, indent=2) + "\n")
-        marker=("WL_N0_GENUINE_KERNEL_300MS_BOTH_DIRECTIONS_CONFIGURED" if profile_name=="n0"
+        marker=("WL_ROTATION_GENUINE_KERNEL_200MS_LOSS0_BOTH_DIRECTIONS_CONFIGURED" if profile_name=="rotation-400ms-loss0"
+                else "WL_N0_GENUINE_KERNEL_300MS_BOTH_DIRECTIONS_CONFIGURED" if profile_name=="n0"
                 else "WL_V2_GENUINE_KERNEL_BIDIRECTIONAL_SCENE_CONFIGURED" if profile_name=="v2"
                 else "WL_P200_GENUINE_KERNEL_200MS_30PCT_250MBIT_BOTH_DIRECTIONS_CONFIGURED")
         print(marker,flush=True)

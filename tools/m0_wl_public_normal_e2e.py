@@ -1886,8 +1886,30 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  # requirement; never disguise its known independent FAIL as B4 product FAIL.
  if timed_rotation:
   from m0_winxdp_windows_rotation import measure_rotation
-  rotation_report=measure_rotation(root,out,unix,w,s)
-  report["windows_timed_rotation"]=rotation_report
+  # This is the existing cold-renewal comparator, not a hot-lane PASS.
+  # Install real 200ms each way before observing either timer turn.
+  def rotation_netem(action):
+   return run(["wsl.exe","-d","Ubuntu","-u","root","--","python3",
+     unix(root/"tools"/"m0_wl_netem.py"),action,unix(out),"rotation-400ms-loss0"],timeout=35)
+  print(rotation_netem("arm"),flush=True)
+  try:
+   rotation_report=measure_rotation(root,out,unix,w,s)
+   print(rotation_netem("snapshot"),flush=True)
+   before=json.loads((out/"wl-n0-netem-before.json").read_text())
+   after=json.loads((out/"wl-n0-netem-after.json").read_text())
+   assert before["ingress_ports"]==[443] and before["declared_profile"]=="rotation-400ms-loss0"
+   for k in ("requested_kernel_profile","requested_linux_egress_profile"):
+    assert before[k]["delay_ms"]==200 and before[k]["loss_pct"]==0 and before[k]["tc_mbit"] is None
+   counters={}
+   for dev in ("eth0","ifb"):
+    a=next(q for q in before[dev] if q["kind"]=="netem")
+    b=next(q for q in after[dev] if q["kind"]=="netem")
+    counters[dev]={"packets":b["packets"]-a["packets"],"drops":b["drops"]-a["drops"]}
+    assert counters[dev]["packets"]>0 and counters[dev]["drops"]==0,counters
+   rotation_report["kernel_netem"]={"rtt_ms":400,"loss_pct":0,"one_server_port":443,"actual_delta":counters}
+   report["windows_timed_rotation"]=rotation_report
+  finally:
+   print(rotation_netem("cleanup"),flush=True)
  elif p029_direct or p029b_b4 or p029b_game_case:
   # H2159: Game2/4 original kernel Windows->Linux TCP+echo is REQUIRED
   # for all five source-locked business policies. The old Linux-initiated

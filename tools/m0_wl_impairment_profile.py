@@ -2,6 +2,9 @@
 This is TEST infrastructure only; a configured tc bandwidth is not measured throughput.
 """
 PROFILES = {
+    # One-port protected shared server: real 200ms each way, no loss/rate cap.
+    "rotation-400ms-loss0": {"delay_ms":200,"loss_pct":0,"tc_mbit":None,
+                              "offered_mbps":0.0,"duration_s":150},
     "n0": {"delay_ms":300,"loss_pct":0,"tc_mbit":None,
            "offered_mbps":10.0,"duration_s":240},
     "p200-250m-30p": {"delay_ms":200,"loss_pct":30,"tc_mbit":250,

@@ -1,5 +1,5 @@
-name: M0 Windows timer grace and Game BBR preconnect impairment
-run-name: "M0 Windows timer grace and Game BBR preconnect | ${{ github.sha }}"
+name: M0 Windows 400ms no-loss cold renewal comparator
+run-name: "M0 Windows cold renewal 400ms loss0 and outstanding Game4 BBR | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
@@ -42,8 +42,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        replica: [A,B,C,D,E,F]
-        task: [normal,game4-fec,game2-tcp,game4-fec-tcp]
+        replica: [A,B,C,D,E,F,G,H]
+        task: [normal,game4-fec,game4-fec-tcp]
     runs-on: windows-2025
     timeout-minutes: 30
     env:
@@ -322,7 +322,7 @@ jobs:
         shell: python
         run: |
           import json,pathlib,sys
-          expected={"normal","game4-fec","game2-tcp","game4-fec-tcp"}
+          expected={"normal","game4-fec","game4-fec-tcp"}
           covered=set()
           for root in pathlib.Path("evidence").glob("winxdp-windows-timer-*"):
               gates=list(root.rglob("cpu-gate.json"))
@@ -330,7 +330,7 @@ jobs:
               for f in root.rglob("timer-measurement.json"):
                   x=json.loads(f.read_text())
                   r=x.get("windows_timed_rotation") or {}
-                  if x.get("stop")=="PASS_BOTH_OWNED" and x.get("mode_public","").startswith("PASS_ACTUAL_") and r.get("reauthorized",[])[:2]==[2,3] and r.get("ready",0)>=3:
+                  if x.get("stop")=="PASS_BOTH_OWNED" and x.get("mode_public","").startswith("PASS_ACTUAL_") and r.get("reauthorized",[])[:2]==[2,3] and r.get("ready",0)>=3 and (r.get("kernel_netem") or {}).get("rtt_ms")==400 and (r.get("kernel_netem") or {}).get("loss_pct")==0:
                       covered.add(x["mode"])
                   print("WINXDP_TIMER_COVERAGE_ROW "+json.dumps({"mode":x.get("mode"),"stop":x.get("stop"),"error":x.get("error"),"rotation":r}))
               for f in root.rglob("measurement.json"):
