@@ -16,7 +16,7 @@ def read_all(s,first=None):
 if role=="origin":
     with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as u,socket.socket() as listener:
         u.bind((host,port));u.settimeout(30)
-        listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1);listener.bind((host,port));listener.listen(1);listener.settimeout(30)
+        listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1);listener.bind((host,port));listener.listen(16);listener.settimeout(30) # eight concurrent clients, not a listen-overflow test
         c,_=listener.accept()
         with c:
             c.settimeout(30);data=read_all(c);assert data==up

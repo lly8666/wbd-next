@@ -279,7 +279,7 @@ impl ServerFlow {
             self.middle.conn.readable() == 0 {
             match self.stream.shutdown(Shutdown::Write) {
                 Ok(()) => self.origin_write_closed = true,
-                Err(_) => self.middle.abort(out)?,
+                Err(e) => { eprintln!("WBD_M0_TCP_ORIGIN_ERROR tuple={:?} op=shutdown_write error={:?}",self.tuple(),e); self.middle.abort(out)?; },
             }
         }
         Ok(())
@@ -289,13 +289,15 @@ impl ServerFlow {
     ) -> io::Result<Packets> {
         self.middle.conn.begin_native_turn();let mut out = Vec::new();
         if self.middle.conn.is_closed() { return Ok(out) }
-        if self.stream.take_error()?.is_some() {
+        if let Some(e)=self.stream.take_error()? {
+            eprintln!("WBD_M0_TCP_ORIGIN_ERROR tuple={:?} op=socket_error error={:?}",self.tuple(),e);
             self.middle.abort(&mut out)?;
             return Ok(out)
         }
         if !self.connected {
             if !writable { return Ok(out) }
-            if self.stream.peer_addr().is_err() {
+            if let Err(e)=self.stream.peer_addr() {
+                eprintln!("WBD_M0_TCP_ORIGIN_ERROR tuple={:?} op=connect_peer error={:?}",self.tuple(),e);
                 self.middle.abort(&mut out)?;
                 return Ok(out)
             }
@@ -306,11 +308,11 @@ impl ServerFlow {
             while budget != 0 && self.middle.conn.readable() != 0 {
                 let stream = &mut self.stream;
                 match self.middle.conn.read_to(budget, |bytes| stream.write(bytes)) {
-                    Ok(0) => { self.middle.abort(&mut out)?; return Ok(out) }
+                    Ok(0) => { eprintln!("WBD_M0_TCP_ORIGIN_ERROR tuple={:?} op=write_zero",self.tuple()); self.middle.abort(&mut out)?; return Ok(out) }
                     Ok(n) => budget -= n,
                     Err(e) if e.kind() == io::ErrorKind::WouldBlock => break,
                     Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
-                    Err(_) => { self.middle.abort(&mut out)?; return Ok(out) }
+                    Err(e) => { eprintln!("WBD_M0_TCP_ORIGIN_ERROR tuple={:?} op=write error={:?}",self.tuple(),e); self.middle.abort(&mut out)?; return Ok(out) }
                 }
             }
             let packets = self.middle.conn.take_outgoing();
@@ -336,7 +338,7 @@ impl ServerFlow {
                     }
                     Err(e) if e.kind() == io::ErrorKind::WouldBlock => break,
                     Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
-                    Err(_) => { self.middle.abort(&mut out)?; break }
+                    Err(e) => { eprintln!("WBD_M0_TCP_ORIGIN_ERROR tuple={:?} op=read error={:?}",self.tuple(),e); self.middle.abort(&mut out)?; break }
                 }
             }
         }

@@ -57,7 +57,8 @@
     "docs/devlog/M0/20261127-NATIVE-IPV4-FINAL-OFFSET.md",
     "docs/devlog/M0/20261127-SELECTED-NATIVE-DEFAULTS-AND-LOSS-BOUNDARIES.md",
     "docs/devlog/M0/20261127-PAIRED-NORMAL-INBOX-DOUBLING.md",
-    "docs/devlog/M0/20261127-NORMAL-INBOX-RESULT-AND-PACING-QUANTUM.md"
+    "docs/devlog/M0/20261127-NORMAL-INBOX-RESULT-AND-PACING-QUANTUM.md",
+    "docs/devlog/M0/20261127-PACING-NATIVE-RST-BLOCKER.md"
   ],
   "verification": [
     {
@@ -282,7 +283,8 @@
     "3ca7efd native PASS; fixed120M ABBA A1 90.50, B1/B2/A2 119.98 Mbps; CPU server three matched legs17.82/17.88/17.88; no demonstrated gain, direct-origin candidate withdrawn. Native IPv4 final-offset serialization candidate unverified; no default promotion.",
     "b5c1520 native scoped PASS; headroom ABBA +6.06% throughput/+1.44% CPU/GiB, no demonstrated joint gain; candidate withdrawn. Selected paired defaults now implemented pending exact native/ARM validation. Zero-injected peak retrans7.61–13.54%, DSACK and actual ingress losses; no L2/default main promotion.",
     "47a42a6 core344/345 each ISA failed component FIN assertion before native product fixture; selected default unqualified. Normal actual1024 since H2437, Game128; paired2048 capacity ABBA pending. Old splice c6b33c1 kernel middle retrans~0.97/0.91% despite zero SharedTun full.",
-    "25eca47 exact native selected default/2048/CUBIC scoped PASS; ARM 1024/2048 BBR0 ABBA +0.87% throughput/-2.27% CPU, client full7193→888, server15208→15766, weighted retrans7.41→9.32%; bare1.41/1.33% retrans. No capacity promotion; server pacing quantum32/8 candidate unverified."
+    "25eca47 exact native selected default/2048/CUBIC scoped PASS; ARM 1024/2048 BBR0 ABBA +0.87% throughput/-2.27% CPU, client full7193→888, server15208→15766, weighted retrans7.41→9.32%; bare1.41/1.33% retrans. No capacity promotion; server pacing quantum32/8 candidate unverified.",
+    "ca4cc44 core345 both and ARM native all PASS; x86 default32 real concurrent app RST, performance NOT_RUN. Fixture listen backlog16 for eight concurrent flows and existing origin terminal-error receipts, exact new qualification pending; no pacing selection."
   ],
   "promotion": null
 }
