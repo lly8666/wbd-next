@@ -1,0 +1,11 @@
+# Server ingress-first causal candidate — unverified
+
+c732dfd312967efb84442b6dbc917bb9d5a07752 native45935209571 dual ISA 345 core, GSO and M4 units PASS; original/parity/GSO real business and Stop PASS. Actual GSO native x86 116 groups/1285 DATA, ARM111/1152. ARM45935209572 completed 4/4, bare339.38, old splice282.0737 vs Rust182.8247 Mbps, total CPU/GiB27.8614 vs36.1296; not parity. Original client15170751433, server15171060271, relay15170711581 ZIPs and native15170376820/15170516274 reviewed. B1/B2 client GSO38961/40202 groups, 892130/1045865 logical segments; total local DATA980966/1094492, removed853169/1005663 write calls (derived), local write failures0, Shared-TUN full0/0, middle ingress full3376/1504. Server ingress full22364/17507, offered124574/106795, mostly ACK based on middle_in wire counters. Cross-run difference vs05bb056 is not isolated GSO causal effect; actual local write reduction is direct. Relay final qdisc drops0.
+
+Current top-of-loop services origin/timer before reading existing inbound queue whenever generated output empties. Under parity, that new output takes all available staging seats; this can repeatedly postpone reverse ACK processing. Opt-in existing WBD_M0_NATIVE_INGRESS_FIRST=1 now changes server parity ordering: drain old produced output, process at most existing 32 ingress attempts, service ready origin/timer once after empty or cap, stage new output. Recheck queue after eventfd clear before sleep; full turn preserves immediate next drain. Client parity scheduling unchanged. No new queue capacity, wait, thread, polling, controller, outer protocol, AEAD or MTU change. Real native GSO profile includes the candidate.
+
+Next experiment isolates order rather than compare old splice again: exact same current ARM binary A/B, client GSO both, server flag only 0/1; same three runner BBR0 400ms single-flow 45s ABBA, same path/bare precheck and positive GSO/actual Stop profile receipts. Preserve previous splice benchmark, no claim of promotion. Candidate unverified pending Actions.
+
+```feature-impact
+{"kind":"updated","ids":["dual-rust-tcp"],"reason":"Record real local GSO receipts and isolate native server ingress ordering; preserve all outer protocol and no default promotion."}
+```

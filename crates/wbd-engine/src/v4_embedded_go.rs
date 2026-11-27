@@ -8458,6 +8458,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     #[cfg(feature="fec2_product_record")]
     let diag_ifname=ifname.clone();
     let tx_ifname=ifname;
+    let tx_server_side=e.server_side;
     let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
@@ -8502,6 +8503,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let fair_native_turn=native_tcp_owner.is_some() && std::env::var_os("WBD_M0_NATIVE_INGRESS_FIRST").as_deref()==Some(std::ffi::OsStr::new("1"));
             let native_round_robin=native_tcp_owner.is_some()&&std::env::var_os("WBD_M0_LINUX_PARITY").as_deref()==Some(std::ffi::OsStr::new("1"));
             let native_m4_clock=native_round_robin&&std::env::var_os("WBD_M0_NATIVE_M4_CLOCK").as_deref()==Some(std::ffi::OsStr::new("1"));
+            // Server ACKs already authenticated and queued must get a turn
+            // before the next origin read generates another full M4 batch.
+            let native_server_ingress_first=tx_server_side&&native_round_robin&&fair_native_turn;
             let mut ingress_turn_peak=0usize;
             let mut ingress_with_pending=0u64;
             let mut publish_calls=0u64;
@@ -8535,7 +8539,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 pending.extend(out.tunnel);
                 pending_peak=pending_peak.max(pending.len());
             };
-            while !stop_tx.load(Ordering::Acquire){
+            'native_tx: while !stop_tx.load(Ordering::Acquire){
                 #[cfg(feature="fec2_product_record")]
                 if egress_diag && last_egress_diag.elapsed()>=Duration::from_millis(500){
                     last_egress_diag=Instant::now();
@@ -8571,7 +8575,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     }
                 }
                 if let Some(owner)=native_tcp_owner.as_mut(){
-                    if tcp_out.is_empty(){
+                    if tcp_out.is_empty()&&!native_server_ingress_first{
                         match owner.service(Duration::ZERO){
                             Ok(out)=>publish_tcp(owner,out,&mut tcp_out),
                             Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break}
@@ -8586,7 +8590,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     // generated TCP output. M1 still has the same 32
                     // packet cap; drain only already-ready work.
                     let mut input_turns=0;
-                                        let mut input_empty=false;
+                    let mut input_empty=false;
+                    let mut native_service_done=false;
                     loop {
                         if tx_pending.len()+jumbo_queue.len()>=32 ||
                             jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
@@ -8626,6 +8631,18 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         }
                         if input_turns==32{
                             tcp_input_exhausted=native_tcp_owner.is_some();
+                            // A continuously ready ACK stream cannot starve
+                            // origin readiness or due TCP timers. Service at
+                            // most once after this bounded ingress turn.
+                            if native_server_ingress_first&&!native_service_done&&tcp_out.is_empty(){
+                                native_service_done=true;
+                                let owner=native_tcp_owner.as_mut().expect("native server owner");
+                                match owner.service(Duration::ZERO){
+                                    Ok(out)=>publish_tcp(owner,out,&mut tcp_out),
+                                    Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break 'native_tx}
+                                }
+                                if !tcp_out.is_empty(){continue}
+                            }
                             break
                         }
                         let next=if let Some(buf)=deferred_shared.take(){
@@ -8680,6 +8697,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                 }
                             },
                             Err(_)=>{
+                                if native_server_ingress_first&&!native_service_done&&tcp_out.is_empty(){
+                                    native_service_done=true;
+                                    let owner=native_tcp_owner.as_mut().expect("native server owner");
+                                    match owner.service(Duration::ZERO){
+                                        Ok(out)=>publish_tcp(owner,out,&mut tcp_out),
+                                        Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break 'native_tx}
+                                    }
+                                    // service may have cleared the coalesced
+                                    // eventfd; recheck the queue before sleep.
+                                    continue
+                                }
                                 if (fair_native_turn||native_round_robin)&&!tcp_out.is_empty()&&!input_empty{
                                     input_empty=true;continue
                                 }

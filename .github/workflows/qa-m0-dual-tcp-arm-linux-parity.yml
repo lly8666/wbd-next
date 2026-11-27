@@ -1,4 +1,4 @@
-name: M0 ARM Linux parity local TUN GSO BBR zero-loss ABBA
+name: M0 ARM native server ingress-first BBR0 same-binary ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -167,13 +167,10 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl
-          mkdir -p bundles/A bundles/B
-          gh run download 45821912542 -R "$GITHUB_REPOSITORY" -n dual-tcp-old-arm-build -D bundles/A
+          mkdir -p bundles/B
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
-          for leg in A B;do
-            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
-            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
-          done
+          tar -C bundles/B -xf bundles/B/bundle.tar
+          (cd bundles/B && sha256sum -c SHA256SUMS)
       - name: Join the existing two-segment ARM routed topology
         run: |
           set -euo pipefail
@@ -245,13 +242,10 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl
-          mkdir -p bundles/A bundles/B
-          gh run download 45821912542 -R "$GITHUB_REPOSITORY" -n dual-tcp-old-arm-build -D bundles/A
+          mkdir -p bundles/B
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
-          for leg in A B;do
-            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
-            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
-          done
+          tar -C bundles/B -xf bundles/B/bundle.tar
+          (cd bundles/B && sha256sum -c SHA256SUMS)
       - name: Join the existing two-segment ARM routed topology
         run: |
           set -euo pipefail
