@@ -48,6 +48,7 @@ impl Endpoint {
             middle_ack_three: !parity && middle && std::env::var_os("WBD_M0_ACK_PROBE").as_deref() != Some(std::ffi::OsStr::new("2")),
             middle_sack_compress: parity || middle && std::env::var_os("WBD_M0_SACK_COMPRESS").as_deref() == Some(std::ffi::OsStr::new("1")),
             native_owner_turn: parity,
+            rack_keep_reo_window:middle&&parity&&std::env::var_os("WBD_M0_RACK_KEEP_WINDOW").as_deref()==Some(std::ffi::OsStr::new("1")),
             native_pace_quantum_mss:quantum_mss,
             native_bounded_pacing: parity || std::env::var_os("WBD_M0_BOUNDED_PACE").as_deref() == Some(std::ffi::OsStr::new("1")),
             mtu_probing: MtuProbing::Off,
@@ -213,6 +214,7 @@ pub(crate) struct ServerFlow {
     connected: bool,
     origin_eof: bool,
     origin_write_closed: bool,
+    ack_drain:bool,
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct Interest {
@@ -237,12 +239,13 @@ impl ServerFlow {
         let mut middle = Endpoint::new(syn.tuple.reverse(), mtu, CongestionKind::Bbr, true)?;
         let mut out = Vec::new();
         middle.accept(syn, &mut out)?;
-        Ok((Self { middle, stream, connected, origin_eof: false, origin_write_closed: false }, out))
+        let ack_drain=middle.conn.native_turn_enabled()&&std::env::var_os("WBD_M0_SERVER_ACK_DRAIN").as_deref()==Some(std::ffi::OsStr::new("1"));
+        Ok((Self { middle, stream, connected, origin_eof: false, origin_write_closed: false,ack_drain }, out))
     }
     pub(crate) fn probe(&self, id:u64, wall_ns:u128) {
         self.middle.conn.m0_probe("server-middle",id,wall_ns);
-        eprintln!("WBD_M0_TCP_ORIGIN wall_ns={} id={} connected={} interest={:?} eof={} write_closed={}",
-            wall_ns,id,self.connected,self.interest(),self.origin_eof,self.origin_write_closed);
+        eprintln!("WBD_M0_TCP_ORIGIN wall_ns={} id={} connected={} interest={:?} eof={} write_closed={} ack_drain={}",
+            wall_ns,id,self.connected,self.interest(),self.origin_eof,self.origin_write_closed,self.ack_drain);
     }
     pub(crate) fn tuple(&self) -> Tuple { self.middle.tuple.reverse() }
     pub(crate) fn socket(&self) -> &TcpStream { &self.stream }
@@ -256,7 +259,8 @@ impl ServerFlow {
     }
     pub(crate) fn admit(&mut self,seq:u32,len:u32,now:Instant)->bool{self.middle.conn.native_admit(seq,len,now)}
     pub(crate) fn on_packet(&mut self, p: &Packet) -> io::Result<Packets> {
-        self.middle.conn.begin_native_turn();let mut out = Vec::new();
+        if self.ack_drain{self.middle.conn.begin_native_ack_turn(&p.segment);}else{self.middle.conn.begin_native_turn();}
+        let mut out = Vec::new();
         self.middle.receive(p, &mut out)?;
         self.finish_write(&mut out)?;
         Ok(out)

@@ -60,7 +60,8 @@
     "docs/devlog/M0/20261127-NORMAL-INBOX-RESULT-AND-PACING-QUANTUM.md",
     "docs/devlog/M0/20261127-PACING-NATIVE-RST-BLOCKER.md",
     "docs/devlog/M0/20261127-PACING-NATIVE-QUALIFIED-ABBA.md",
-    "docs/devlog/M0/20261127-PACING-RESULT-CONTROLLED-RECOVERY.md"
+    "docs/devlog/M0/20261127-PACING-RESULT-CONTROLLED-RECOVERY.md",
+    "docs/devlog/M0/20261127-RECOVERY-ISOLATION-BATCH.md"
   ],
   "verification": [
     {
@@ -288,7 +289,8 @@
     "25eca47 exact native selected default/2048/CUBIC scoped PASS; ARM 1024/2048 BBR0 ABBA +0.87% throughput/-2.27% CPU, client full7193→888, server15208→15766, weighted retrans7.41→9.32%; bare1.41/1.33% retrans. No capacity promotion; server pacing quantum32/8 candidate unverified.",
     "ca4cc44 core345 both and ARM native all PASS; x86 default32 real concurrent app RST, performance NOT_RUN. Fixture listen backlog16 for eight concurrent flows and existing origin terminal-error receipts, exact new qualification pending; no pacing selection.",
     "675ab84 dual ISA345 core and six actual native profiles PASS after x86 infrastructure-only retry; prior RST not reproduced, causal fix unproven. 32/8 server pacing ABBA pending, fixture reports existing bulk retrans/DSACK snapshots.",
-    "b99fb67 six native profiles PASS; ARM32/8 B1 incomplete after iperf, server full17104→1313 but retrans8.28/8.37/11.95/7.13%, no 8 MSS promotion. Controlled same-host fixed-byte bare/paired/bare recovery pending, not peak qualification."
+    "b99fb67 six native profiles PASS; ARM32/8 B1 incomplete after iperf, server full17104→1313 but retrans8.28/8.37/11.95/7.13%, no 8 MSS promotion. Controlled same-host fixed-byte bare/paired/bare recovery pending, not peak qualification.",
+    "Recovery batch unverified: server pure ACK grant deferral and RACK window shortcut control, existing CUBIC/30M offer and combined conservative case, fixed-byte local diagnostic only. Selected defaults unchanged."
   ],
   "promotion": null
 }

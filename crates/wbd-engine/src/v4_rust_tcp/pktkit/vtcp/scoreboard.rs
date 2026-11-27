@@ -813,6 +813,7 @@ impl Scoreboard {
         recovering: bool,
         exiting: bool,
         srtt: Duration,
+        keep_window:bool,
     ) -> Duration {
         let r = &mut self.rack;
         if r.dsack_round.is_some_and(|round| self.una_off >= round) {
@@ -828,7 +829,7 @@ impl Scoreboard {
                 r.reo_wnd_mult = 1;
             }
         }
-        if !r.reordering_seen && (recovering || self.sacked_segs >= DUP_THRESH) {
+        if !keep_window && !r.reordering_seen && (recovering || self.sacked_segs >= DUP_THRESH) {
             return Duration::ZERO;
         }
         let min_rtt = Duration::from_nanos(r.min_rtt.get().unwrap_or(0));
@@ -1347,7 +1348,7 @@ mod tests {
         let now = t0 + Duration::from_millis(102);
         b.begin_ack();
         b.sack(&[blk(1, 3)], now, None);
-        let reo = b.reo_wnd(false, false, false, Duration::from_millis(100));
+        let reo = b.reo_wnd(false, false, false, Duration::from_millis(100), false);
         assert_eq!(reo, Duration::from_millis(25));
         let (lost, timeout) = b.detect_loss(now, reo);
         assert!(!lost);
@@ -1371,11 +1372,32 @@ mod tests {
         let now = t0 + Duration::from_millis(103);
         b.begin_ack();
         b.sack(&[blk(1, 4)], now, None);
-        let reo = b.reo_wnd(false, false, false, Duration::from_millis(100));
+        let reo = b.reo_wnd(false, false, false, Duration::from_millis(100), false);
         assert_eq!(reo, Duration::ZERO);
         assert!(b.detect_loss(now, reo).0);
         assert_eq!(b.lost_bytes(), MSS);
         assert_eq!(b.pipe(), 6 * MSS);
+    }
+
+    #[test]
+    fn rack_keep_window_waits_for_late_original_but_recovers_real_loss(){
+        let t0=Instant::now();
+        let now=t0+Duration::from_millis(103);
+        for late_original in [true,false]{
+            let mut b=board(10,t0);
+            b.rtt_sample(Duration::from_millis(100),t0);
+            b.begin_ack();
+            b.sack(&[blk(1,4)],now,None);
+            let reo=b.reo_wnd(false,false,false,Duration::from_millis(100),true);
+            assert_eq!(reo,Duration::from_millis(25));
+            let (lost,wait)=b.detect_loss(now,reo);
+            assert!(!lost);
+            let due=now+wait.unwrap();
+            if late_original{b.begin_ack();b.ack(seq(4),now+Duration::from_millis(5),None);}
+            let (lost,_)=b.detect_loss(due,reo);
+            assert_eq!(lost,!late_original);
+            if !late_original{assert_eq!(b.next_lost(MSS),Some((seq(0),MSS,false)));}
+        }
     }
 
     /// Reordering: segment 1 arrives after 2 and 3 were SACKed. It is an
@@ -1393,17 +1415,17 @@ mod tests {
         b.sack(&[blk(1, 4)], now, None);
         assert!(b.reordering_seen());
         b.sack(&[blk(1, 6)], now, None);
-        let reo = b.reo_wnd(false, false, false, Duration::from_millis(100));
+        let reo = b.reo_wnd(false, false, false, Duration::from_millis(100), false);
         assert_eq!(reo, Duration::from_millis(25));
         assert!(!b.detect_loss(now, reo).0);
         // D-SACKs grow the window a quarter RTT per round, up to SRTT.
-        let reo = b.reo_wnd(true, false, false, Duration::from_millis(100));
+        let reo = b.reo_wnd(true, false, false, Duration::from_millis(100), false);
         assert_eq!(reo, Duration::from_millis(50));
         assert_eq!(b.reo_wnd_mult(), 2);
-        let reo = b.reo_wnd(true, false, false, Duration::from_millis(100));
+        let reo = b.reo_wnd(true, false, false, Duration::from_millis(100), false);
         assert_eq!(reo, Duration::from_millis(50), "one step per round");
         b.ack(seq(10), now, None);
-        let reo = b.reo_wnd(true, false, false, Duration::from_millis(60));
+        let reo = b.reo_wnd(true, false, false, Duration::from_millis(60), false);
         assert_eq!(reo, Duration::from_millis(60));
     }
 
@@ -1417,7 +1439,7 @@ mod tests {
         let now = t0 + Duration::from_millis(20);
         b.begin_ack();
         b.sack(&[blk(1, 5)], now, None);
-        let reo = b.reo_wnd(false, false, false, Duration::from_millis(10));
+        let reo = b.reo_wnd(false, false, false, Duration::from_millis(10), false);
         assert!(b.detect_loss(now, reo).0);
         let (s, l, _) = b.next_lost(MSS).unwrap();
         b.on_retransmit(s, l, now, 100);
@@ -1429,7 +1451,7 @@ mod tests {
         let later = now + Duration::from_millis(30);
         b.begin_ack();
         b.sack(&[blk(1, 6)], later, None);
-        let reo = b.reo_wnd(false, true, false, Duration::from_millis(10));
+        let reo = b.reo_wnd(false, true, false, Duration::from_millis(10), false);
         assert!(b.detect_loss(later, reo).0);
         assert_eq!(b.next_lost(MSS), Some((seq(0), MSS, false)));
     }

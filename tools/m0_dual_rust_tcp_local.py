@@ -148,24 +148,36 @@ def controlled_recovery():
     # sockets and original carrier, no tailnet. Each case gets fresh netem.
     global DELAY
     DELAY=200
-    offered=120_000_000
     target_bytes=192*1024*1024
     rows=[]
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--dual-rust-tcp"]
-    for label,paired in (("bare-before",False),("paired",True),("bare-after",False)):
+    # Each candidate changes one causal dimension. The final conservative
+    # combination is a diagnostic lower-pressure operating point, not a
+    # component-wise causal estimate. The two bare brackets remain 120M.
+    cases=[
+        ("bare-before",False,120_000_000,{}),
+        ("paired",True,120_000_000,{}),
+        ("ack-drain",True,120_000_000,{"WBD_M0_SERVER_ACK_DRAIN":"1"}),
+        ("rack-window",True,120_000_000,{"WBD_M0_RACK_KEEP_WINDOW":"1"}),
+        ("cubic",True,120_000_000,{"WBD_M0_MIDDLE_CC":"cubic"}),
+        ("lower-offer",True,30_000_000,{}),
+        ("combined-lower-offer",True,30_000_000,{"WBD_M0_SERVER_ACK_DRAIN":"1","WBD_M0_RACK_KEEP_WINDOW":"1","WBD_M0_MIDDLE_CC":"cubic"}),
+        ("bare-after",False,120_000_000,{}),
+    ]
+    for label,paired,offered,profile in cases:
         d=O/label;d.mkdir()
         server=client=origin=app=None
-        row={"case":label,"paired":paired,"offered_bps":offered,"target_bytes":target_bytes,"added_rtt_ms":400,"injected_loss_pct":0,"status":"INCOMPLETE"}
+        row={"case":label,"paired":paired,"offered_bps":offered,"target_bytes":target_bytes,"added_rtt_ms":400,"injected_loss_pct":0,"profile":profile,"status":"INCOMPLETE"}
         try:
             shape(True)
             if paired:
-                server=spawn(S,d/"server.log","env","LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-server",
+                server=spawn(S,d/"server.log","env",*[k+"="+v for k,v in profile.items()],"LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-server",
                     "--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443",
                     "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--users-file",O/"users.json",
                     "--lease-pool","10.66.0.128/25","--tls-cert",O/"cert.pem","--tls-key",O/"key.pem",*common)
                 until(server,lambda:"V4_PUBLIC_MULTI_SERVER_READY role=server port=443" in (d/"server.log").read_text())
-                client=spawn(C,d/"client.log","env","LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-client",
+                client=spawn(C,d/"client.log","env",*(["WBD_M0_MIDDLE_CC=cubic"] if profile.get("WBD_M0_MIDDLE_CC")=="cubic" else []),"LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-client",
                     "--raw-interface","wan0","--local-ip","10.248.81.2","--local-port","44100",
                     "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
                     "--username","bench","--password","DUAL-TCP-FIXTURE","--auto-ip","--installation-id-file",d/"install",*common)
@@ -226,10 +238,16 @@ def controlled_recovery():
                     bulk=max(latest.values(),key=lambda x:x["bytes_sent"])
                     row["bulk_tcp_sample"]=bulk
                     row["bulk_snapshot_retrans_ratio"]=bulk["bytes_retrans"]/bulk["bytes_sent"] if bulk["bytes_sent"] else None
+                info=[x for x in sl.splitlines() if "WBD_M0_TCP_INFO " in x and "leg=server-middle " in x]
+                origin_info=[x for x in sl.splitlines() if "WBD_M0_TCP_ORIGIN " in x]
+                expected_ack="true" if profile.get("WBD_M0_SERVER_ACK_DRAIN")=="1" else "false"
+                expected_rack="true" if profile.get("WBD_M0_RACK_KEEP_WINDOW")=="1" else "false"
+                expected_cc=profile.get("WBD_M0_MIDDLE_CC","bbr1")
+                row["profile_valid"]=bool(info and origin_info) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info)
                 row["receipt_present"]=all(any("WBD_M0_RAW_RX_PACKET_STATS " in line and " drops=" in line for line in log.splitlines()) and
                     "WBD_M0_TCP_INGRESS " in log for log in (cl,sl)) and "WBD_M0_TCP_M4_CLOCK " in sl and "WBD_M0_LOCAL_TUN_GSO " in cl and bool(latest)
             row["qdisc_after_stop"]=path_counts()
-            row["status"]="MEASURED" if row["byte_match"] and (not paired or (row.get("joined_stop") and row.get("receipt_present"))) else "INCOMPLETE"
+            row["status"]="MEASURED" if row["byte_match"] and (not paired or (row.get("joined_stop") and row.get("receipt_present") and row.get("profile_valid"))) else "INCOMPLETE"
         except Exception as e:
             row["error"]=repr(e)
         finally:
@@ -239,7 +257,7 @@ def controlled_recovery():
             save(d/"result.json",row)
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, actual four kernel netns, bare TCP brackets vs selected paired Normal; fixed bytes/offer, 400ms added RTT, zero injected loss; diagnostic not peak parity","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, actual four kernel netns, bare brackets and isolated ACK-grant/RACK-window/CC/offer candidates, plus conservative combination; fixed bytes, 400ms added RTT, zero injected loss; diagnostic not peak parity","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)

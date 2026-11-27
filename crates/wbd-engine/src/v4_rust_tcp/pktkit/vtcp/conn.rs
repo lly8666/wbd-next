@@ -440,6 +440,8 @@ pub struct ConnConfig {
     pub(crate) native_pace_quantum_mss: u32,
     /// Product owner reserves no more than one native batch per flow event.
     pub(crate) native_owner_turn: bool,
+    /// Lab comparison: keep the RFC 8985 reordering window instead of its zero shortcut.
+    pub(crate) rack_keep_reo_window: bool,
     /// Opt-in M0 behavior-alignment profile; not a claim of Linux equivalence.
     pub(crate) linux_parity: bool,
     /// Explicit Congestion Notification (RFC 3168, and RFC 9768's
@@ -543,6 +545,7 @@ impl Default for ConnConfig {
             native_bounded_pacing: false,
             native_pace_quantum_mss: 32,
             native_owner_turn: false,
+            rack_keep_reo_window: false,
             linux_parity: false,
             ecn: EcnMode::default(),
             mtu_probing: MtuProbing::default(),
@@ -1067,6 +1070,16 @@ impl Conn {
         if self.cfg.native_owner_turn { self.native_credit=32usize.saturating_sub(self.score.native_pending_count()); }
     }
     pub(crate) fn native_turn_enabled(&self)->bool{self.cfg.native_owner_turn}
+    /// Consume a pure established ACK with no fresh send grant. The
+    /// existing native_resume/owner deadline handles ready sends after
+    /// the current ingress turn. All ACK validation and recovery remain.
+    pub(crate) fn begin_native_ack_turn(&mut self,seg:&Segment){
+        self.begin_native_turn();
+        if self.cfg.native_owner_turn && self.state==State::Established
+            && seg.payload.is_empty() && seg.has_flag(flags::ACK)
+            && seg.flags&(flags::SYN|flags::FIN|flags::RST|flags::URG)==0
+        {self.native_credit=0;}
+    }
 
     // --- Accessors ---------------------------------------------------------
 
@@ -1235,8 +1248,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline));
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -3994,7 +4007,7 @@ impl Conn {
         let recovering = self.ca != LossState::Open;
         let reo = self
             .score
-            .reo_wnd(dsack, recovering, exiting, self.rto.srtt());
+            .reo_wnd(dsack, recovering, exiting, self.rto.srtt(),self.cfg.rack_keep_reo_window);
         let (_, wait) = self.score.detect_loss(self.now, reo);
         self.reo_deadline = wait.map(|w| self.now + w);
     }
@@ -5077,7 +5090,7 @@ impl Conn {
                     self.score.clear_sacks();
                 }
                 if self.sack_ok {
-                    let reo = self.score.reo_wnd(false, true, false, self.rto.srtt());
+                    let reo = self.score.reo_wnd(false, true, false, self.rto.srtt(),self.cfg.rack_keep_reo_window);
                     self.score.mark_lost_on_rto(self.now, reo);
                 } else {
                     self.score.mark_all_lost();
@@ -10511,6 +10524,35 @@ mod tests {
         assert_eq!(server.delack_deadline, None);
         assert_eq!(server.sack_ack_pending, 0);
         assert_eq!(deliver(&mut server, &segs[0..1]).len(), 1);
+    }
+
+    #[test]
+    fn native_pure_ack_turn_advances_ack_before_existing_send_grant(){
+        let mut sender=Conn::new(big(40694,80));
+        let mut receiver=Conn::new(big(80,40694));
+        drive_handshake(&mut sender,&mut receiver);
+        sender.cfg.native_owner_turn=true;
+        sender.begin_native_turn();
+        let (n,packets)=sender.write(&[7;20000]);
+        assert_eq!(n,20000);
+        assert!(!packets.is_empty());
+        for wire in &packets{
+            let p=parse(wire);
+            if !p.payload.is_empty(){sender.native_admit(p.seq,p.payload.len() as u32,test_now());}
+        }
+        assert!(sender.send_buf.as_ref().unwrap().pending()>0);
+        let ack=deliver(&mut receiver,&packets[..1]);
+        assert!(!ack.is_empty());
+        let before=sender.stats.bytes_acked;
+        for wire in &ack{
+            let p=parse(wire);
+            sender.begin_native_ack_turn(&p);
+            assert!(sender.handle_segment(&p).iter().all(|x|parse(x).payload.is_empty()));
+        }
+        assert!(sender.stats.bytes_acked>before);
+        assert!(sender.native_resume.is_some());
+        sender.begin_native_turn();
+        assert!(sender.tick().iter().any(|x|!parse(x).payload.is_empty()));
     }
 
     #[test]
