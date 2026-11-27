@@ -50,6 +50,10 @@ type v4WindowsRealDeviceLease struct{
     release func()
     stopped bool
     maxIPv4 int
+    // Immutable authenticated owner budget inputs, retained for a hot
+    // replacement bound to the SAME device. No steady packet use.
+    originalPathMTU uint32
+    originalGeometry [2]uint32
 }
 type v4WindowsDeviceFenceV2 struct{
     Version,StructSize,Generation,Bound,Quiesced,Applied,IfIndex,Reserved uint32
@@ -69,6 +73,12 @@ func (b *v4WindowsNativeOwnerBridge) realNativeDeviceState()(v4WindowsDeviceFenc
 func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintun(
     ctx context.Context,device V4WindowsCurrentNativeDevice,
     id V4WindowsNativeDeviceIdentity,geometry ...uint32,
+)(*v4WindowsRealDeviceLease,error){
+    return b.holdOriginalCreatedWintunBudget(ctx,device,id,0,geometry...)
+}
+func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintunBudget(
+    ctx context.Context,device V4WindowsCurrentNativeDevice,
+    id V4WindowsNativeDeviceIdentity,priorPathMTU uint32,geometry ...uint32,
 )(*v4WindowsRealDeviceLease,error){
     if b==nil||device==nil||ctx==nil||b.dll==nil||b.handle==0||
         !b.committed||b.stopped||b.epoch==[16]byte{}||
@@ -109,6 +119,15 @@ func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintun(
     // frame ceiling; use the smaller bound, never claim the OS MTU is 2048.
     effectiveMTU:=live.MTU
     if effectiveMTU>2048{effectiveMTU=2048}
+    if priorPathMTU!=0{
+        // The original owner may have bound before the product applied
+        // the planned inner MTU. Reuse that authenticated cold budget;
+        // do not confuse the new current Wintun inner MTU with outer.
+        if len(geometry)!=0||priorPathMTU<576||priorPathMTU>2048{
+            release();return nil,errV4WindowsOwner
+        }
+        effectiveMTU=int(priorPathMTU)
+    }
     procName:="wbd_m0_win_owner_v4_bind_real_path_mtu"
     if len(geometry)==2{procName="wbd_m0_win_owner_v5_bind_outer_inner_budget"}
     proc,findErr:=b.dll.FindProc(procName)
@@ -132,6 +151,7 @@ func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintun(
         return nil,fmt.Errorf("%w: native FrameBudget original MTU/peer MSS: %v",errV4WindowsOwner,bindErr)
     }
     lease:=&v4WindowsRealDeviceLease{bridge:b,device:device,identity:id,release:release,maxIPv4:int(maxIPv4)}
+    if len(geometry)==2{copy(lease.originalGeometry[:],geometry)}else{lease.originalPathMTU=uint32(effectiveMTU)}
     lease.lastAuditNS.Store(time.Now().UnixNano())
     bound,err=b.realNativeDeviceState()
     if err!=nil||bound.Bound!=1||bound.Quiesced!=0||

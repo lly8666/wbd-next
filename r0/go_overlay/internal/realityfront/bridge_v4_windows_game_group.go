@@ -90,36 +90,8 @@ func V4WindowsEstablishOriginalGameClientGroup(
   if e!=nil{return fail(e)}
   cfg:=base
   cfg.LaneID=uint8(i+1)
-  // The SYN loop has finished, but each lane still has real TLS DATA
-  // in the original FakeTCP Sender. Drive its RTO until TLS returns,
-  // then join before Detach so no Go send can race the Rust owner.
-  pumpCtx,stopPump:=context.WithCancel(ctx)
-  type coldResult struct{copied uint64;err error}
-  pumpDone:=make(chan coldResult,1)
-  go func(){
-   ticker:=time.NewTicker(100*time.Millisecond)
-   defer ticker.Stop()
-   var copied uint64
-   for{
-    select{
-    case <-pumpCtx.Done():pumpDone<-coldResult{copied:copied};return
-    case <-ticker.C:
-     if assoc.State()!=faketcp.ClientAssociationEstablished{
-      pumpDone<-coldResult{copied:copied};return
-     }
-     sent,err:=assoc.EmitRetransmitDue(time.Now())
-     if err!=nil{assoc.Close();pumpDone<-coldResult{copied,err};return}
-     if sent{copied++}
-    }
-   }
-  }()
-  session,e:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
-   V4ClientOptions{DataPlaneReady:true,Epoch:g.epoch,
-    fec2Product:true,GameFec:g.gameFec,StartupPadding:g.paddingMode})
-  stopPump()
-  pump:=<-pumpDone
-  fmt.Printf("WBD_WINDOWS_GAME_COLD_TLS_LANE lane=%d rto_copied=%d joined=1 result=%t\n",i+1,pump.copied,e==nil&&pump.err==nil)
-  if e!=nil||pump.err!=nil{return fail(fmt.Errorf("Game lane %d original TLS: %w",i+1,errors.Join(e,pump.err)))}
+  session,e:=establishWindowsGameLaneTLS(ctx,assoc,cfg,g.epoch,g.gameFec,g.paddingMode)
+  if e!=nil{return fail(e)}
   if i==0{g.epoch=session.Epoch}
   if session.Epoch!=g.epoch||g.epoch==[16]byte{}{return fail(ErrAdmissionUnsupported)}
   lease,leaseErr:=session.AuthenticatedLeaseIPv4()
@@ -423,4 +395,135 @@ func(g *V4WindowsAuthenticatedGameGroup) OriginalGameTCPBoundaries()([][2]uint32
   v=append(v,[2]uint32{tx,rx})
  }
  return v,nil
+}
+
+func establishWindowsGameLaneTLS(ctx context.Context,assoc *faketcp.ClientAssociation,
+ cfg ClientAdmissionConfig,epoch [16]byte,gameFec,paddingMode uint8,
+)(*V4ClientSession,error){
+  // The SYN loop has finished, but each lane still has real TLS DATA
+  // in the original FakeTCP Sender. Drive its RTO until TLS returns,
+  // then join before Detach so no Go send can race the Rust owner.
+  pumpCtx,stopPump:=context.WithCancel(ctx)
+  type coldResult struct{copied uint64;err error}
+  pumpDone:=make(chan coldResult,1)
+  go func(){
+   ticker:=time.NewTicker(100*time.Millisecond)
+   defer ticker.Stop()
+   var copied uint64
+   for{
+    select{
+    case <-pumpCtx.Done():pumpDone<-coldResult{copied:copied};return
+    case <-ticker.C:
+     if assoc.State()!=faketcp.ClientAssociationEstablished{
+      pumpDone<-coldResult{copied:copied};return
+     }
+     sent,err:=assoc.EmitRetransmitDue(time.Now())
+     if err!=nil{assoc.Close();pumpDone<-coldResult{copied,err};return}
+     if sent{copied++}
+    }
+   }
+  }()
+  session,e:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
+   V4ClientOptions{DataPlaneReady:true,Epoch:epoch,
+    fec2Product:true,GameFec:gameFec,StartupPadding:paddingMode})
+  stopPump()
+  pump:=<-pumpDone
+  fmt.Printf("WBD_WINDOWS_GAME_COLD_TLS_LANE lane=%d rto_copied=%d joined=1 result=%t\n",cfg.LaneID,pump.copied,e==nil&&pump.err==nil)
+  if e!=nil||pump.err!=nil{return nil,fmt.Errorf("Game lane %d original TLS: %w",cfg.LaneID,errors.Join(e,pump.err))}
+ return session,nil
+}
+
+// The candidate is still not a physical M4 member. The caller must stop
+// its original cold reader before native staging, and the Rust workers
+// must independently prove its new AEAD path before publishing it.
+type V4WindowsGameLaneCandidate struct{
+ lane uint8
+ old,owner *V4WindowsAuthenticatedClientOwner
+ session *V4ClientSession
+}
+func(c *V4WindowsGameLaneCandidate) TCPBoundaries()(uint32,uint32,error){
+ if c==nil||c.owner==nil{return 0,0,errV4WindowsOwner}
+ return c.owner.OriginalVerifiedTCPBoundaries()
+}
+// Only legal before native selected-slot commit. A committed physical lane
+// is retired by the existing group/worker ownership transaction instead.
+func(c *V4WindowsGameLaneCandidate) Abort(ctx context.Context)error{
+ if c==nil||c.owner==nil{return errV4WindowsOwner}
+ return c.owner.StopScopedOwner(ctx)
+}
+
+// Authenticate one same-epoch original Go TLS association just like the
+// Linux ReplaceClientGameLane. Do not hold g.mu across network or TLS:
+// the old group and all siblings remain live. The caller serializes
+// turns and supplies the actual candidate-only FakeTCP reader/writer.
+func(g *V4WindowsAuthenticatedGameGroup) PrepareOriginalGameLaneCandidate(
+ ctx context.Context,assoc *faketcp.ClientAssociation,base ClientAdmissionConfig,lane uint8,
+)(*V4WindowsGameLaneCandidate,error){
+ if g==nil||ctx==nil||assoc==nil||assoc.BootstrapConn()==nil||
+    lane<1||lane>4||base.Policy.Transport!=TransportGame||
+    base.Policy.DesiredLanes!=4||base.DesiredLanes!=4||base.Policy.SupportedNow()!=nil{
+  return nil,ErrAdmissionParams
+ }
+ if err:=ctx.Err();err!=nil{return nil,err}
+ i:=int(lane)-1
+ g.mu.Lock()
+ if g.closed||g.joined==0||len(g.members)!=4||len(g.sessions)!=4{
+  g.mu.Unlock();return nil,ErrAdmissionUnsupported
+ }
+ old:=g.members[i];previous:=g.sessions[i]
+ if old==nil||old.bridge==nil||old.device==nil||previous==nil{
+  g.mu.Unlock();return nil,errV4WindowsOwner
+ }
+ sessions:=append([]*V4ClientSession(nil),g.sessions...)
+ epoch,fec,padding,lease,cipher:=g.epoch,g.gameFec,g.paddingMode,g.authenticatedLease,g.authenticatedCipher
+ library:=old.bridge.dll.Name
+ device:=old.device
+ joined:=g.joined
+ g.mu.Unlock()
+ prior,e:=previous.ColdSnapshot()
+ if e!=nil{return nil,e}
+ base.LaneID=lane
+ session,e:=establishWindowsGameLaneTLS(ctx,assoc,base,epoch,fec,padding)
+ if e!=nil{return nil,e}
+ fresh,e:=session.ColdSnapshot()
+ actualLease,le:=session.AuthenticatedLeaseIPv4()
+ if e!=nil||le!=nil||session.Epoch!=epoch||fresh.Cipher()!=cipher||
+    fresh.StartupPaddingMode()!=padding||actualLease!=lease||
+    prior.laneID!=lane||fresh.laneID!=lane||
+    prior.server!=fresh.server||prior.principal!=fresh.principal||
+    prior.tunnelID!=fresh.tunnelID||prior.epoch!=fresh.epoch||
+    prior.features!=fresh.features||prior.cipher!=fresh.cipher||
+    prior.clientLimit!=fresh.clientLimit||prior.serverLimit!=fresh.serverLimit||
+    prior.incarnation==fresh.incarnation||prior.keys.C2S==fresh.keys.C2S||
+    prior.keys.S2C==fresh.keys.S2C{
+  return nil,ErrAdmissionParams
+ }
+ // Reuse complete group identity/key uniqueness check for every sibling.
+ sessions[i]=session
+ if _,e=v4OriginalGameClientColdSet(sessions...);e!=nil{return nil,e}
+ b,e:=newV4WindowsPrivateOwnerBridge(library)
+ if e!=nil{return nil,e}
+ owner:=&V4WindowsAuthenticatedClientOwner{bridge:b}
+ fail:=func(cause error)(*V4WindowsGameLaneCandidate,error){
+  stop,cancel:=context.WithTimeout(context.Background(),15*time.Second);defer cancel()
+  if b.committed{cause=errors.Join(cause,owner.StopScopedOwner(stop))}
+  if b.handle==0{_ = b.dll.Release()}
+  return nil,cause
+ }
+ handoff,e:=assoc.Detach();if e!=nil{return fail(e)}
+ for j:=0;j<2;j++{_,_=assoc.RepeatGameColdFinalACK(nil)}
+ if e=b.prepareAuthenticatedClient(session,handoff,assoc.Flow());e!=nil{return fail(e)}
+ // Pin the exact existing Wintun; retain the original authenticated
+ // budget inputs rather than rebinding it using an unrelated inner MTU.
+ var geometry []uint32
+ if device.originalGeometry[0]!=0{geometry=device.originalGeometry[:]}
+ held,e:=b.holdOriginalCreatedWintunBudget(ctx,device.device,device.identity,device.originalPathMTU,geometry...)
+ if held!=nil{owner.device=held}
+ if e!=nil{return fail(e)}
+ if held.maxIPv4!=device.maxIPv4{return fail(ErrAdmissionParams)}
+ g.mu.Lock()
+ unchanged:=!g.closed&&g.joined==joined&&g.members[i]==old&&g.sessions[i]==previous
+ g.mu.Unlock()
+ if !unchanged{return fail(ErrAdmissionUnsupported)}
+ return &V4WindowsGameLaneCandidate{lane:lane,old:old,owner:owner,session:session},nil
 }

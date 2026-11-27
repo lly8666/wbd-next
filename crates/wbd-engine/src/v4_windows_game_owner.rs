@@ -241,18 +241,18 @@ pub(super) fn native_game_group(
 // Candidate entry is prepared on the cold path, then moved to the existing
 // native workers. The group mutex is taken only at original record/command
 // boundaries; no additional hot-path registry lookup.
-#[cfg(feature="winxdp_native_trial")]
+#[cfg(all(feature="winxdp_native_trial",feature="fec2_product_record"))]
 pub(super) struct PreparedWinGameLane{
     group:u64,index:usize,old_handle:u64,new_handle:u64,
     next:Arc<Mutex<Entry>>,identity:crate::cold_v4::ColdIdentity,
     pub(super) crypto:crate::v4_game_lane::WindowsGameLaneCandidate,
 }
-#[cfg(feature="winxdp_native_trial")]
+#[cfg(all(feature="winxdp_native_trial",feature="fec2_product_record"))]
 impl PreparedWinGameLane{
     pub(super) fn index(&self)->usize{self.index}
     pub(super) fn new_handle(&self)->u64{self.new_handle}
 }
-#[cfg(feature="winxdp_native_trial")]
+#[cfg(all(feature="winxdp_native_trial",feature="fec2_product_record"))]
 pub(super) fn prepare_native_lane_candidate(
     r:&Registry,h:u64,lane:u32,old_handle:u64,new_handle:u64,
 )->Result<PreparedWinGameLane,i32>{
@@ -291,7 +291,7 @@ pub(super) fn prepare_native_lane_candidate(
     drop(e);drop(old);
     Ok(PreparedWinGameLane{group:h,index,old_handle,new_handle,next,identity:after,crypto})
 }
-#[cfg(feature="winxdp_native_trial")]
+#[cfg(all(feature="winxdp_native_trial",feature="fec2_product_record"))]
 pub(super) struct RetiredWinGameLane{
     pub(super) handle:u64,
     pub(super) keep_os_anchor:bool,
@@ -300,7 +300,7 @@ pub(super) struct RetiredWinGameLane{
 /// Commit after native selected-lane proof and at settled TX/RX boundaries.
 /// Old entry is no longer a data member. The first original OS proof
 /// stays pinned until product Stop, independently of the new slot1.
-#[cfg(feature="winxdp_native_trial")]
+#[cfg(all(feature="winxdp_native_trial",feature="fec2_product_record"))]
 pub(super) fn commit_native_lane_candidate(
     game:&mut WinGameGroup,h:u64,c:PreparedWinGameLane,
 )->Result<RetiredWinGameLane,i32>{

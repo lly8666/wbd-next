@@ -1,0 +1,9 @@
+# Windows original same-epoch TLS candidate (source increment)
+
+Follow Linux ReplaceClientGameLane with genuine FakeTCP association, existing TLS pump and protected same epoch, lane ID, lease, cipher, padding, FEC, exact old record limits and distinct exporter/incarnation. Initial Windows Game TLS and candidate use one shared original TLS pump helper. Candidate holds actual same Wintun identity and exact prior authenticated budget inputs (pre-Apply legacy path MTU vs explicit outer/inner geometry), not current Wintun inner MTU substituted for outer. Keep group lock out of network handshake. No member publication or driver promotion in this function; existing native worker transaction still needed. Original Go overlay extra bridge source is installed by prepare_windows_wiring.py; these two files are not in the plan020 manifest operations.
+
+Important verified Linux behavior: v4_game_public_kernel.rs sends ordinary Health only on lanes.first_mut() (slot1). For lanes2–4 Windows cannot expect a same-slot periodic Health on an idle server. Candidate reverse readiness must come from actual selected-tuple authenticated DATA (including valid duplicate) or selected-tuple authentic control when present; no invented wire acknowledgement. Linux server rekeys selected slot after TLS, then old cold tuple grace; no peer-side extra two-phase DATA confirmation. Keep siblings live, avoid claiming all four old native slots remain active. For idle non-slot1 candidate a timer alone cannot prove reverse reachability; wait for genuine authenticated traffic rather than fabricating a proof. Product activation, worker switch, old RX grace, random timer and 400ms end-to-end acceptance remain not done.
+
+```feature-impact
+{"kind":"updated","ids":["game-lanes","original-lane-rotation-jitter"],"reason":"Reuse original protected Game TLS and exact existing Wintun budget for one Windows-only candidate. Runtime commit not yet enabled."}
+```
