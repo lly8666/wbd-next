@@ -8468,12 +8468,14 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut local_write_failed=0u64;
             // Actual local TCP replies use the existing generation TUN writer;
             // middle segments use the original M1 slab / M3 / RAW sender.
-            let mut publish_tcp=|out:NativeTcpOutput,pending:&mut VecDeque<Vec<u8>>|{
+            let mut publish_tcp=|owner:&mut NativeTcpOwner,out:NativeTcpOutput,pending:&mut VecDeque<Vec<u8>>|{
                 publish_calls+=1;
                 local_batch_max=local_batch_max.max(out.local.len());
                 middle_batch_max=middle_batch_max.max(out.tunnel.len());
                 for frame in out.local{
+                    let attempted=if frame.len()>40&&frame.len()>20+usize::from(frame[32]>>4)*4{Some(Instant::now())}else{None};
                     if tun.write_authenticated_ipv4(generation,&frame).is_err(){local_write_failed+=1;stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                    if let Some(attempted)=attempted{if owner.admit(true,&frame,attempted).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
                 }
                 pending.extend(out.tunnel);
                 pending_peak=pending_peak.max(pending.len());
@@ -8516,7 +8518,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if let Some(owner)=native_tcp_owner.as_mut(){
                     if tcp_out.is_empty(){
                         match owner.service(Duration::ZERO){
-                            Ok(out)=>publish_tcp(out,&mut tcp_out),
+                            Ok(out)=>publish_tcp(owner,out,&mut tcp_out),
                             Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break}
                         }
                     }
@@ -8550,8 +8552,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                 e.arena.allocate_preserving(floor)};
                             let Ok(mut slab)=loan else{break};
                             let n=frame.len();
-                            if n>M0_SMALL_ARENA_PAYLOAD{jumbo_queue.push_back(tcp_out.pop_front().unwrap());continue}
+                            if n>M0_SMALL_ARENA_PAYLOAD{
+                                if let Some(owner)=native_tcp_owner.as_mut(){if owner.admit(false,frame,Instant::now()).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
+                                jumbo_queue.push_back(tcp_out.pop_front().unwrap());continue
+                            }
                             slab.writable()[14..14+n].copy_from_slice(frame);
+                            if let Some(owner)=native_tcp_owner.as_mut(){if owner.admit(false,frame,Instant::now()).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
                             tcp_out.pop_front();tx_pending.push((slab,n));continue
                         }
                         if input_turns==32{
@@ -8573,12 +8579,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),
                             Ok(OriginalTunIngress::MiddleTcp(frame))=>{
                                 let Some(owner)=native_tcp_owner.as_mut()else{continue};
-                                match owner.middle(&frame){Ok(out)=>publish_tcp(out,&mut tcp_out),Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
+                                match owner.middle(&frame){Ok(out)=>publish_tcp(owner,out,&mut tcp_out),Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
                             },
                             Ok(OriginalTunIngress::Shared(buf))=>{
                                 if let Some(owner)=native_tcp_owner.as_mut(){
                                     match owner.local(buf.as_slice()){
-                                        Ok(Some(out))=>{publish_tcp(out,&mut tcp_out);continue},
+                                        Ok(Some(out))=>{publish_tcp(owner,out,&mut tcp_out);continue},
                                         Ok(None)=>{},
                                         Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);continue}
                                     }
@@ -8750,7 +8756,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         if !tcp_out.is_empty()||deferred_shared.is_some(){thread::sleep(Duration::from_millis(1));continue}
                         let wait=wait_ns.clamp(1,10_000_000);
                         match owner.service(Duration::from_nanos(wait)){
-                            Ok(out)=>publish_tcp(out,&mut tcp_out),
+                            Ok(out)=>publish_tcp(owner,out,&mut tcp_out),
                             Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break}
                         }
                     }else if split_ingress{

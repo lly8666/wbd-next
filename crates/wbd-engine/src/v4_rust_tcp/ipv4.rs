@@ -40,6 +40,9 @@ impl Packet {
     /// datagram is not a flow event. IP fragmentation is handled outside
     /// this endpoint; middle TCP sends DF within its derived inner budget.
     pub(crate) fn parse(ip: &[u8]) -> io::Result<Option<Self>> {
+        Self::parse_reuse(ip,&mut Segment::default())
+    }
+    pub(crate) fn parse_reuse(ip:&[u8],scratch:&mut Segment)->io::Result<Option<Self>>{
         if ip.len() < 20 || ip[0] >> 4 != 4 { return Err(invalid()) }
         if ip[9] != 6 { return Ok(None) }
         let ihl = (ip[0] & 15) as usize * 4;
@@ -53,8 +56,9 @@ impl Packet {
         let dst = Ipv4Addr::new(ip[16], ip[17], ip[18], ip[19]);
         let tcp = &ip[ihl..];
         if checksum(tcp_sum(src, dst, tcp)) != 0 { return Err(invalid()) }
-        let segment = Segment::parse(tcp)?;
-        if segment.src_port == 0 || segment.dst_port == 0 { return Err(invalid()) }
+        scratch.parse_into(tcp)?;
+        if scratch.src_port==0||scratch.dst_port==0{return Err(invalid())}
+        let segment=std::mem::take(scratch);
         Ok(Some(Self {
             tuple: Tuple { src: SocketAddrV4::new(src, segment.src_port),
                            dst: SocketAddrV4::new(dst, segment.dst_port) },
@@ -77,8 +81,8 @@ pub(crate) fn encode(tuple: Tuple, mut tcp: Vec<u8>, ecn: IpEcn, mtu: u16) -> io
     tcp[16..18].fill(0);
     let check = checksum(tcp_sum(src, dst, &tcp));
     tcp[16..18].copy_from_slice(&check.to_be_bytes());
-    let mut ip = Vec::with_capacity(len);
-    ip.resize(20, 0);
+    let tcp_len=tcp.len();tcp.resize(len,0);tcp.copy_within(..tcp_len,20);tcp[..20].fill(0);
+    let mut ip=tcp;
     ip[0] = 0x45;
     ip[1] = ecn.0;
     ip[2..4].copy_from_slice(&(len as u16).to_be_bytes());
@@ -87,9 +91,8 @@ pub(crate) fn encode(tuple: Tuple, mut tcp: Vec<u8>, ecn: IpEcn, mtu: u16) -> io
     ip[9] = 6;
     ip[12..16].copy_from_slice(&src.octets());
     ip[16..20].copy_from_slice(&dst.octets());
-    let check = checksum(sum(&ip));
+    let check = checksum(sum(&ip[..20]));
     ip[10..12].copy_from_slice(&check.to_be_bytes());
-    ip.extend(tcp);
     Ok(ip)
 }
 

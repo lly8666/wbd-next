@@ -1,4 +1,4 @@
-name: M0 ARM Linux parity consolidated TCP behavior ABBA
+name: M0 ARM Linux parity native owner admission and fast path ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]

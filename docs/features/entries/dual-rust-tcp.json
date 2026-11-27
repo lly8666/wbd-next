@@ -40,7 +40,8 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-INTENT.md",
     "docs/devlog/M0/20261127-LINUX-TCP-PARITY-AUDIT-AND-CANDIDATE.md",
     "docs/devlog/M0/20261127-LINUX-TCP-PARITY-RESULT-AND-HOTPATH.md",
-    "docs/devlog/M0/20261127-LINUX-TCP-PARITY-CONSOLIDATED-BEHAVIOR.md"
+    "docs/devlog/M0/20261127-LINUX-TCP-PARITY-CONSOLIDATED-BEHAVIOR.md",
+    "docs/devlog/M0/20261127-LINUX-TCP-NATIVE-OWNER-ADMISSION.md"
   ],
   "verification": [
     {
@@ -168,6 +169,20 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "935a6317969486846fec60fe98f35d2429dfedcb",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45914393727"
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "65aae40 native original/parity Normal and 342 core tests",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45916282014"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "65aae40 native original/parity Normal and 342 core tests",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45916282014"
     }
   ],
   "limitations": [
@@ -178,7 +193,8 @@
     "Matched CUBIC ABBA measured capped goodput parity, client CPU +47.45%, host +15.19%; mixed BBR same VM similar gap. CUBIC trial not selected for product; restore BBRv3 in next substantive candidate. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json",
     "ACK3 BBRv3 middle candidate 8a6439b exact scoped functional dual ISA PASS; same-VM old splice/original Rust ABBA run45821912542 and ARM three-runner loss1/5 run45822382519/45822382479 in flight. No performance or default promotion.",
     "edc0d11 ARM Linux parity ABBA 23/24 measured, CUBIC 5% baseline reset, BBR0 150.56 vs 205.79 Mbps and CPU/GiB higher; no performance promotion. New receive growth / borrowed DATA candidate unverified.",
-    "935a631 dual ISA 339/339; ARM hotpath ABBA BBR -11.6% throughput, CUBIC +24.7%; mixed. Consolidated candidate unverified."
+    "935a631 dual ISA 339/339; ARM hotpath ABBA BBR -11.6% throughput, CUBIC +24.7%; mixed. Consolidated candidate unverified.",
+    "65aae40 native342/342 scoped PASS, ARM24/24 performance unqualified BBR0 314.20→150.63; new owner admission candidate unverified, actual M4/TSO/EDT and complete recovery parity remain."
   ],
   "promotion": null
 }

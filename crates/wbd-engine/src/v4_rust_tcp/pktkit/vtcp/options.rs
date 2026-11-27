@@ -40,40 +40,24 @@ pub struct SackBlock {
 
 /// Parse the options portion of a TCP header. Stops at end-of-options or a
 /// malformed entry; never panics.
-pub fn parse_options(raw: &[u8]) -> Vec<TcpOption> {
-    // Room for what a segment usually carries (timestamps and SACK, or a
-    // SYN's four), without growing.
-    let mut opts = Vec::with_capacity(4);
-    let mut i = 0;
-    while i < raw.len() {
-        let k = raw[i];
-        if k == kind::End {
-            break;
-        }
-        if k == kind::Nop {
-            opts.push(TcpOption {
-                kind: kind::Nop,
-                data: Vec::new(),
-            });
-            i += 1;
-            continue;
-        }
-        if i + 1 >= raw.len() {
-            break;
-        }
-        let l = raw[i + 1] as usize;
-        if l < 2 || i + l > raw.len() {
-            break;
-        }
-        let data = if l > 2 {
-            raw[i + 2..i + l].to_vec()
-        } else {
-            Vec::new()
+pub fn parse_options(raw:&[u8])->Vec<TcpOption>{
+    let mut opts=Vec::with_capacity(4);parse_options_into(raw,&mut opts);opts
+}
+pub(crate) fn parse_options_into(raw:&[u8],opts:&mut Vec<TcpOption>){
+    let (mut i,mut n)=(0,0);
+    while i<raw.len(){
+        let k=raw[i];if k==kind::End{break}
+        let (data,step)=if k==kind::Nop{(&[][..],1)}else{
+            if i+1>=raw.len(){break}
+            let len=raw[i+1] as usize;
+            if len<2||i+len>raw.len(){break}
+            (&raw[i+2..i+len],len)
         };
-        opts.push(TcpOption { kind: k, data });
-        i += l;
+        if let Some(o)=opts.get_mut(n){o.kind=k;o.data.clear();o.data.extend_from_slice(data);}
+        else{opts.push(TcpOption{kind:k,data:data.to_vec()});}
+        n+=1;i+=step;
     }
-    opts
+    opts.truncate(n);
 }
 
 /// Serialize options into wire format, padding to a 4-byte boundary with

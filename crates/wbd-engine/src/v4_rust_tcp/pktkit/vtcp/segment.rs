@@ -63,6 +63,9 @@ pub struct Segment {
 impl Segment {
     /// Parse a raw TCP segment (no IP header).
     pub fn parse(raw: &[u8]) -> Result<Self> {
+        let mut s=Self::default();s.parse_into(raw)?;Ok(s)
+    }
+    pub(crate) fn parse_into(&mut self,raw:&[u8])->Result<()> {
         if raw.len() < 20 {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -76,26 +79,17 @@ impl Segment {
                 "invalid data offset",
             ));
         }
-        let mut s = Segment {
-            src_port: u16::from_be_bytes([raw[0], raw[1]]),
-            dst_port: u16::from_be_bytes([raw[2], raw[3]]),
-            seq: u32::from_be_bytes([raw[4], raw[5], raw[6], raw[7]]),
-            ack: u32::from_be_bytes([raw[8], raw[9], raw[10], raw[11]]),
-            flags: raw[13],
-            ae: raw[12] & 1 != 0,
-            window: u16::from_be_bytes([raw[14], raw[15]]),
-            checksum: u16::from_be_bytes([raw[16], raw[17]]),
-            urgent: u16::from_be_bytes([raw[18], raw[19]]),
-            options: Vec::new(),
-            payload: Vec::new(),
-        };
-        if data_off > 20 {
-            s.options = options::parse_options(&raw[20..data_off]);
-        }
-        if data_off < raw.len() {
-            s.payload = raw[data_off..].to_vec();
-        }
-        Ok(s)
+        self.src_port=u16::from_be_bytes([raw[0],raw[1]]);
+        self.dst_port=u16::from_be_bytes([raw[2],raw[3]]);
+        self.seq=u32::from_be_bytes([raw[4],raw[5],raw[6],raw[7]]);
+        self.ack=u32::from_be_bytes([raw[8],raw[9],raw[10],raw[11]]);
+        self.flags=raw[13];self.ae=raw[12]&1!=0;
+        self.window=u16::from_be_bytes([raw[14],raw[15]]);
+        self.checksum=u16::from_be_bytes([raw[16],raw[17]]);
+        self.urgent=u16::from_be_bytes([raw[18],raw[19]]);
+        options::parse_options_into(&raw[20..data_off],&mut self.options);
+        self.payload.clear();self.payload.extend_from_slice(&raw[data_off..]);
+        Ok(())
     }
 
     /// Serialize the segment to wire format. The checksum field is zero;
@@ -108,7 +102,7 @@ impl Segment {
     /// Serialize the header with borrowed payload already owned by SendBuf.
     pub(crate) fn marshal_payload(&self, payload: &[u8]) -> Vec<u8> {
         let hdr_len = 20 + options::options_len(&self.options);
-        let mut out = Vec::with_capacity(hdr_len + payload.len());
+        let mut out = Vec::with_capacity(20 + hdr_len + payload.len());
         out.resize(hdr_len, 0);
         out[0..2].copy_from_slice(&self.src_port.to_be_bytes());
         out[2..4].copy_from_slice(&self.dst_port.to_be_bytes());
@@ -156,6 +150,13 @@ mod tests {
     use super::options::{get_mss, mss_option};
     use super::*;
 
+    #[test]
+    fn reused_parse_matches_fresh_and_clears_previous_options(){
+        let a=Segment{src_port:1,dst_port:2,seq:9,flags:flags::ACK,options:vec![options::timestamp_option(1,2)],payload:vec![3;99],..Default::default()}.marshal();
+        let b=Segment{src_port:2,dst_port:1,seq:10,flags:flags::ACK,..Default::default()}.marshal();
+        let mut s=Segment::default();
+        for raw in [&a,&b,&a,&b]{s.parse_into(raw).unwrap();assert_eq!(s.marshal(),*raw);}
+    }
     #[test]
     fn parse_minimal() {
         let mut raw = vec![0u8; 20];

@@ -42,6 +42,7 @@ impl Endpoint {
             // Temporary causal experiment: both variants use the same instrumented build.
             middle_ack_three: !parity && middle && std::env::var_os("WBD_M0_ACK_PROBE").as_deref() != Some(std::ffi::OsStr::new("2")),
             middle_sack_compress: parity || middle && std::env::var_os("WBD_M0_SACK_COMPRESS").as_deref() == Some(std::ffi::OsStr::new("1")),
+            native_owner_turn: parity,
             native_bounded_pacing: parity || std::env::var_os("WBD_M0_BOUNDED_PACE").as_deref() == Some(std::ffi::OsStr::new("1")),
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()
@@ -104,6 +105,7 @@ pub(crate) struct ClientFlow {
     middle: Endpoint,
     local_fin_forwarded: bool,
     middle_fin_forwarded: bool,
+    drive_due: Option<Instant>,
 }
 impl ClientFlow {
     pub(crate) fn open(syn: &Packet, local_mtu: u16, middle_mtu: u16)
@@ -117,6 +119,7 @@ impl ClientFlow {
             middle: Endpoint::new(syn.tuple, middle_mtu, CongestionKind::Bbr, true)?,
             local_fin_forwarded: false,
             middle_fin_forwarded: false,
+            drive_due:None,
         };
         let mut out = ClientOutput::default();
         flow.local.accept(syn, &mut out.local)?;
@@ -128,32 +131,38 @@ impl ClientFlow {
         self.middle.conn.m0_probe("client-middle",id,wall_ns);
     }
     pub(crate) fn tuple(&self) -> Tuple { self.middle.tuple }
+    fn begin_turn(&mut self){self.local.conn.begin_native_turn();self.middle.conn.begin_native_turn();}
+    pub(crate) fn admit(&mut self,local:bool,seq:u32,len:u32,now:Instant)->bool{
+        if local{self.local.conn.native_admit(seq,len,now)}else{self.middle.conn.native_admit(seq,len,now)}
+    }
     pub(crate) fn on_local(&mut self, p: &Packet) -> io::Result<ClientOutput> {
-        let mut out = ClientOutput::default();
+        self.begin_turn();let mut out = ClientOutput::default();
         self.local.receive(p, &mut out.local)?;
         self.drive(&mut out)?;
         Ok(out)
     }
     pub(crate) fn on_middle(&mut self, p: &Packet) -> io::Result<ClientOutput> {
-        let mut out = ClientOutput::default();
+        self.begin_turn();let mut out = ClientOutput::default();
         self.middle.receive(p, &mut out.tunnel)?;
         self.drive(&mut out)?;
         Ok(out)
     }
     pub(crate) fn tick(&mut self, now: Instant) -> io::Result<ClientOutput> {
-        let mut out = ClientOutput::default();
+        self.begin_turn();let mut out = ClientOutput::default();
         self.local.tick(now, &mut out.local)?;
         self.middle.tick(now, &mut out.tunnel)?;
         self.drive(&mut out)?;
         Ok(out)
     }
     pub(crate) fn next_deadline(&self) -> Option<Instant> {
-        self.local.deadline().into_iter().chain(self.middle.deadline()).min()
+        self.local.deadline().into_iter().chain(self.middle.deadline()).chain(self.drive_due).min()
     }
     pub(crate) fn finished(&self) -> bool {
         self.local.conn.is_closed() && self.middle.conn.is_closed()
     }
     fn drive(&mut self, out: &mut ClientOutput) -> io::Result<()> {
+        self.drive_due=None;
+        let bounded=self.local.conn.native_turn_enabled();
         if self.local.conn.abnormal_end() || self.middle.conn.abnormal_end() {
             self.local.abort(&mut out.local)?;
             self.middle.abort(&mut out.tunnel)?;
@@ -170,12 +179,15 @@ impl ClientFlow {
             // The receive ring itself is the relay buffer. No bytes
             // leave it until the peer leg accepts them. A ring wraps at
             // most once; the destination capacity is re-read each time.
-            while from.conn.readable() != 0 && to.conn.send_available() != 0 {
-                let (n, a, b) = transfer(&mut from.conn, &mut to.conn, TURN_BYTES);
+            let mut budget=if bounded{TURN_BYTES}else{usize::MAX};
+            while budget!=0&&from.conn.readable() != 0 && to.conn.send_available() != 0 {
+                let (n, a, b) = transfer(&mut from.conn, &mut to.conn, TURN_BYTES.min(budget));
                 from.append(a, from_out)?;
                 to.append(b, to_out)?;
                 if n == 0 { break }
+                budget-=n;
             }
+            if bounded&&budget==0&&from.conn.readable()!=0&&to.conn.send_available()!=0{self.drive_due=Some(Instant::now());}
             if !*fin_forwarded && from.conn.fin_received() &&
                 from.conn.readable() == 0 && to.conn.is_established() {
                 to.close(to_out)?;
@@ -236,8 +248,9 @@ impl ServerFlow {
             write: !self.origin_write_closed && self.middle.conn.readable() != 0,
         }
     }
+    pub(crate) fn admit(&mut self,seq:u32,len:u32,now:Instant)->bool{self.middle.conn.native_admit(seq,len,now)}
     pub(crate) fn on_packet(&mut self, p: &Packet) -> io::Result<Packets> {
-        let mut out = Vec::new();
+        self.middle.conn.begin_native_turn();let mut out = Vec::new();
         self.middle.receive(p, &mut out)?;
         self.finish_write(&mut out)?;
         Ok(out)
@@ -245,7 +258,7 @@ impl ServerFlow {
     pub(crate) fn next_deadline(&self) -> Option<Instant> { self.middle.deadline() }
     pub(crate) fn finished(&self) -> bool { self.middle.conn.is_closed() }
     pub(crate) fn tick(&mut self, now: Instant) -> io::Result<Packets> {
-        let mut out = Vec::new();
+        self.middle.conn.begin_native_turn();let mut out = Vec::new();
         self.middle.tick(now, &mut out)?;
         self.finish_write(&mut out)?;
         Ok(out)
@@ -268,7 +281,7 @@ impl ServerFlow {
     pub(crate) fn on_socket_ready(
         &mut self, readable: bool, writable: bool, scratch: &mut [u8],
     ) -> io::Result<Packets> {
-        let mut out = Vec::new();
+        self.middle.conn.begin_native_turn();let mut out = Vec::new();
         if self.middle.conn.is_closed() { return Ok(out) }
         if self.stream.take_error()?.is_some() {
             self.middle.abort(&mut out)?;

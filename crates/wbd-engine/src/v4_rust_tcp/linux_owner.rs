@@ -2,7 +2,8 @@
 use std::{collections::{BTreeSet,HashMap},io,os::fd::{AsRawFd,FromRawFd,OwnedFd,RawFd},
     sync::{Arc,atomic::{AtomicBool,Ordering}},time::{Duration,Instant}};
 use super::{flow::{ClientFlow,ClientOutput,ServerFlow},ipv4::{self,Packet,Tuple}};
-use super::pktkit::vtcp::flags;
+use super::pktkit::vtcp::{flags,Segment};
+use std::net::{Ipv4Addr,SocketAddrV4};
 
 const IN:u32=1; const OUT:u32=4; const ERR:u32=8; const HUP:u32=16; const RDHUP:u32=0x2000;
 const CE:i32=0x80000; const NB:i32=0x800;
@@ -95,6 +96,7 @@ pub(crate) struct Owner{
     deadlines:BTreeSet<(Instant,u64)>,scratch:Vec<u8>,
     local_in:TcpWireCount,local_out:TcpWireCount,middle_in:TcpWireCount,middle_out:TcpWireCount,
     probe_next:Option<Instant>,
+    parity:bool,parse_scratch:Segment,
 }
 impl Owner{
     pub(crate) fn new(server:bool,local_mtu:u16,middle_mtu:u16,wake:Arc<Wake>)->io::Result<Self>{
@@ -103,7 +105,8 @@ impl Owner{
         Ok(Self{server,local_mtu,middle_mtu,ep,wake,next_id:1,keys:HashMap::new(),
             flows:HashMap::new(),deadlines:BTreeSet::new(),scratch:vec![0;65536],
             local_in:Default::default(),local_out:Default::default(),middle_in:Default::default(),middle_out:Default::default(),
-            probe_next:std::env::var_os("WBD_M0_ACK_PROBE").map(|_|Instant::now())})
+            probe_next:std::env::var_os("WBD_M0_ACK_PROBE").map(|_|Instant::now()),
+            parity:std::env::var_os("WBD_M0_LINUX_PARITY").as_deref()==Some(std::ffi::OsStr::new("1")),parse_scratch:Segment::default()})
     }
     fn insert(&mut self,tuple:Tuple,flow:Flow)->io::Result<()>{
         let id=self.next_id;self.next_id+=1;
@@ -113,14 +116,17 @@ impl Owner{
     }
     fn refresh(&mut self,id:u64)->io::Result<()>{
         let e=self.flows.get_mut(&id).unwrap();
-        if let Some(d)=e.deadline.take(){self.deadlines.remove(&(d,id));}
         if e.finished(){
+            if let Some(d)=e.deadline.take(){self.deadlines.remove(&(d,id));}
             if let Flow::Server(f)=&e.flow{
                 if e.interest!=0{change(self.ep.as_raw_fd(),2,f.socket().as_raw_fd(),id,0)?;}
             }
             self.keys.remove(&e.tuple);self.flows.remove(&id);return Ok(())
         }
-        if let Some(d)=e.deadline(){self.deadlines.insert((d,id));e.deadline=Some(d);}
+        let next=e.deadline();if next!=e.deadline{
+            if let Some(d)=e.deadline.take(){self.deadlines.remove(&(d,id));}
+            if let Some(d)=next{self.deadlines.insert((d,id));}e.deadline=next;
+        }
         if let Flow::Server(f)=&e.flow{
             let i=f.interest();
             let next=(if i.read{IN|RDHUP}else{0})|(if i.write{OUT}else{0});
@@ -135,7 +141,7 @@ impl Owner{
     /// Returns None for non-TCP or for server's normal TUN output.
     pub(crate) fn local(&mut self,ip:&[u8])->io::Result<Option<ClientOutput>>{
         if self.server{return Ok(None)}
-        let Some(p)=Packet::parse(ip)? else{return Ok(None)};
+        let Some(p)=Packet::parse_reuse(ip,&mut self.parse_scratch)? else{return Ok(None)};
         self.local_in.add(p.segment.flags,p.segment.payload.len());
         let mut out=ClientOutput::default();
         if let Some(&id)=self.keys.get(&p.tuple){
@@ -147,12 +153,13 @@ impl Owner{
         }else if !p.segment.has_flag(flags::RST){
             out.local.push(ipv4::reset_for(&p,self.local_mtu)?);
         }
+        self.parse_scratch=p.segment;
         self.local_out.output(&out.local);self.middle_out.output(&out.tunnel);
         Ok(Some(out))
     }
     /// Caller is the same generation's post-authentication LINK path.
     pub(crate) fn middle(&mut self,ip:&[u8])->io::Result<ClientOutput>{
-        let Some(p)=Packet::parse(ip)? else{return Err(io::ErrorKind::InvalidData.into())};
+        let Some(p)=Packet::parse_reuse(ip,&mut self.parse_scratch)? else{return Err(io::ErrorKind::InvalidData.into())};
         self.middle_in.add(p.segment.flags,p.segment.payload.len());
         let mut out=ClientOutput::default();
         let tuple=if self.server{p.tuple}else{p.tuple.reverse()};
@@ -170,8 +177,22 @@ impl Owner{
         }else if !p.segment.has_flag(flags::RST){
             out.tunnel.push(ipv4::reset_for(&p,self.middle_mtu)?);
         }
+        self.parse_scratch=p.segment;
         self.local_out.output(&out.local);self.middle_out.output(&out.tunnel);
         Ok(out)
+    }
+    /// Receipt for a generated inner DATA datagram at the actual TUN
+    /// write attempt or original M1 slab acceptance boundary.
+    pub(crate) fn admit(&mut self,local:bool,ip:&[u8],now:Instant)->io::Result<()>{
+        if !self.parity||ip.len()<40{return Ok(())}
+        let h=20+usize::from(ip[32]>>4)*4;
+        if h>=ip.len()||ip[33]&(flags::SYN|flags::FIN|flags::RST)!=0{return Ok(())}
+        let tuple=Tuple{src:SocketAddrV4::new(Ipv4Addr::new(ip[12],ip[13],ip[14],ip[15]),u16::from_be_bytes([ip[20],ip[21]])),dst:SocketAddrV4::new(Ipv4Addr::new(ip[16],ip[17],ip[18],ip[19]),u16::from_be_bytes([ip[22],ip[23]]))};
+        let tuple=if local||self.server{tuple.reverse()}else{tuple};
+        let Some(&id)=self.keys.get(&tuple)else{return Ok(())};
+        let seq=u32::from_be_bytes(ip[24..28].try_into().unwrap());let len=(ip.len()-h) as u32;
+        let e=self.flows.get_mut(&id).unwrap();let changed=match &mut e.flow{Flow::Client(f)=>f.admit(local,seq,len,now),Flow::Server(f)=>f.admit(seq,len,now)};
+        if changed{self.refresh(id)?;}Ok(())
     }
     // Experiment only: sample during existing owner service turns; no extra wake/deadline.
     fn probe(&mut self,now:Instant) {
@@ -213,6 +234,7 @@ impl Owner{
             let Flow::Server(f)=&mut e.flow else{unreachable!()};
             out.tunnel.extend(f.on_socket_ready(bits&(IN|RDHUP|HUP|ERR)!=0,bits&(OUT|HUP|ERR)!=0,&mut self.scratch)?);
             self.refresh(id)?;
+            if self.parity&&out.tunnel.len()+out.local.len()>=64{break;}
         }
         let now=Instant::now();
         // Each due connection at most once this turn; the next deadline
@@ -225,6 +247,7 @@ impl Owner{
                 Flow::Server(f)=>out.tunnel.extend(f.tick(now)?),
             }
             self.refresh(id)?;
+            if self.parity&&out.tunnel.len()+out.local.len()>=64{break;}
         }
         self.local_out.output(&out.local);self.middle_out.output(&out.tunnel);
         self.probe(Instant::now());

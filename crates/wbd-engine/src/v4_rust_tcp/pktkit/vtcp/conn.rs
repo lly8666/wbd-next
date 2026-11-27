@@ -436,6 +436,8 @@ pub struct ConnConfig {
     pub(crate) middle_sack_compress: bool,
     /// Native owner diagnostic: bounded packet pacing burst, no accumulated late catch-up.
     pub(crate) native_bounded_pacing: bool,
+    /// Product owner reserves no more than one native batch per flow event.
+    pub(crate) native_owner_turn: bool,
     /// Opt-in M0 behavior-alignment profile; not a claim of Linux equivalence.
     pub(crate) linux_parity: bool,
     /// Explicit Congestion Notification (RFC 3168, and RFC 9768's
@@ -537,6 +539,7 @@ impl Default for ConnConfig {
             middle_ack_three: false,
             middle_sack_compress: false,
             native_bounded_pacing: false,
+            native_owner_turn: false,
             linux_parity: false,
             ecn: EcnMode::default(),
             mtu_probing: MtuProbing::default(),
@@ -705,6 +708,8 @@ pub struct Conn {
     /// When enough credit will have built up to send again, while data is
     /// held back by pacing alone.
     pace_deadline: std::option::Option<Instant>,
+    native_resume: Option<Instant>,
+    native_credit: usize,
     /// The smoothed round trip pacing goes by: SRTT's average (1/8) of
     /// the send-to-ACK times of the newest segment each ACK delivers,
     /// taken to the nanosecond as Linux takes its SRTT to the microsecond.
@@ -969,6 +974,8 @@ impl Conn {
             pace_credit: 0.0,
             pace_stamp: now,
             pace_deadline: None,
+            native_resume: None,
+            native_credit: usize::MAX,
             pace_srtt: None,
             pace_late: Duration::ZERO,
             delack_deadline: None,
@@ -1048,6 +1055,13 @@ impl Conn {
         self.now = wall_clock();
         self.now
     }
+
+    /// Owner grants a ready turn, not an extra congestion window. Data stays
+    /// in SendBuf when the turn ends; other flows and ingress can run first.
+    pub(crate) fn begin_native_turn(&mut self) {
+        if self.cfg.native_owner_turn { self.native_credit=32; }
+    }
+    pub(crate) fn native_turn_enabled(&self)->bool{self.cfg.native_owner_turn}
 
     // --- Accessors ---------------------------------------------------------
 
@@ -2471,6 +2485,11 @@ impl Conn {
             return self.take_outgoing();
         }
 
+        if self.cfg.native_owner_turn&&self.state==State::Established&&seg.flags&(flags::SYN|flags::FIN|flags::RST|flags::URG)==0&&seg.has_flag(flags::ACK) {
+            if self.rcv_space().is_some_and(|(nxt,wnd)|seg.seq==nxt&&seg.payload.len()<=wnd as usize){
+                return self.handle_data_state(seg);
+            }
+        }
         let simopen_synack = self.is_simopen_synack(seg);
 
         // 1) Sequence number check. The SYN-ACK completing a simultaneous
@@ -3327,7 +3346,7 @@ impl Conn {
         let wnd_changed = self.update_send_window(seg);
         let now = self.now;
         let ecr = self.ts_echo(seg);
-        let flight = self.send_buf.as_ref().unwrap().unacked() as u32;
+        let flight = if self.cfg.linux_parity&&self.cc.as_bbr1().is_some(){self.score.admitted_pipe()}else{self.send_buf.as_ref().unwrap().unacked() as u32};
         let advanced = seq_after(ack, una);
 
         // The scoreboard: what this ACK says reached the receiver.
@@ -3642,6 +3661,7 @@ impl Conn {
             let newly_lost = (self.score.rate().lost() - lost_before) as u32;
             if advanced || delivered > 0 || newly_lost > 0 {
                 let bytes = if self.sack_ok { d.delivered } else { acked };
+                let rs=if self.cfg.linux_parity {rs.map(|mut r|{r.lost=r.lost.saturating_add(u64::from(newly_lost));r})}else{rs};
                 let mut a = self.ack_info(bytes, flight, rtt, ack, rs, delivered, newly_lost);
                 a.ce = ce;
                 self.cc.on_ack(&a);
@@ -3719,6 +3739,7 @@ impl Conn {
             return;
         }
         if sb.pending() < self.mss as usize
+            && self.score.native_pending()==0
             && self.in_flight() < self.cc.cwnd()
             && self.score.lost_bytes() == 0
         {
@@ -3936,6 +3957,7 @@ impl Conn {
     /// Count `len` bytes sent, for PRR and pacing.
     #[inline]
     fn note_sent(&mut self, len: u32) {
+        if self.cfg.native_owner_turn {self.native_credit=self.native_credit.saturating_sub(1);}
         if self.ca == LossState::Recovery || self.cwr_high.is_some() {
             self.prr_out += u64::from(len);
         }
@@ -4195,6 +4217,7 @@ impl Conn {
         if !self.sack_ok
             || self.ca != LossState::Open
             || self.score.sacked_segs() > 0
+            || self.score.native_pending() != 0
             || sb.unacked() == 0
             || !self.state.is_synchronized()
         {
@@ -4312,15 +4335,9 @@ impl Conn {
         let rcv_nxt = self.recv_buf.as_ref().unwrap().nxt();
         let sb = self.send_buf.as_ref().unwrap();
         let una = sb.una();
-        let payload = if fin {
-            Vec::new()
-        } else {
-            sb.data_at(seq, len as usize).to_vec()
-        };
-        if !fin && payload.is_empty() {
-            return;
-        }
-        let len = if fin { 1 } else { payload.len() as u32 };
+        let payload_len=if fin{0}else{sb.data_at(seq,len as usize).len()};
+        if !fin&&payload_len==0{return;}
+        let len=if fin{1}else{payload_len as u32};
         // Resending the probe settles it: lost, and to its size unless
         // something sent before it was lost too, which says congestion.
         if let Some(p) = self.mtu_probe.as_mut() {
@@ -4345,11 +4362,12 @@ impl Conn {
                 flags::ACK | flags::PSH
             },
             window: self.rcv_window(),
-            payload,
             ..Default::default()
         };
         self.add_options(&mut seg);
-        self.queue_seg(seg);
+        self.prepare_seg(&mut seg,!fin);
+        let payload=if fin{&[][..]}else{self.send_buf.as_ref().unwrap().data_at(seq,payload_len)};
+        self.outgoing.push(seg.marshal_payload(payload));
         let tsval = self.ts_now();
         self.score.on_retransmit(seq, len, self.now, tsval);
         self.note_sent(len);
@@ -4430,8 +4448,8 @@ impl Conn {
         self.outgoing.push(wire);
         self.send_buf.as_mut().unwrap().advance_sent(len);
         let tsval = self.ts_now();
-        self.score
-            .on_send(snd_nxt, len as u32, false, self.now, tsval);
+        if self.cfg.native_owner_turn {self.score.reserve_native(snd_nxt,len as u32,self.now,tsval);}
+        else {self.score.on_send(snd_nxt,len as u32,false,self.now,tsval);}
         self.note_sent(len as u32);
         self.stats.data_segs_out += 1;
         self.stats.bytes_sent += len as u64;
@@ -4444,13 +4462,24 @@ impl Conn {
         {
             self.pingpong = true;
         }
-        self.rto.start_timing(snd_nxt, self.now);
-        if self.rto_deadline.is_none() {
-            self.start_rto();
+        if !self.cfg.native_owner_turn {
+            self.rto.start_timing(snd_nxt,self.now);
+            if self.rto_deadline.is_none(){self.start_rto();}
         }
     }
 
+    pub(crate) fn native_admit(&mut self,seq:u32,len:u32,now:Instant)->bool{
+        if !self.cfg.native_owner_turn||!self.score.admit_native(seq,len,now){return false}
+        self.now=self.now.max(now);
+        self.last_data_sent=Some(self.now);
+        self.rto.start_timing(seq,self.now);
+        if self.rto_deadline.is_none(){self.start_rto();}
+        if self.score.native_pending()==0{self.schedule_loss_probe();}
+        true
+    }
+
     fn flush_send_queue(&mut self) {
+        self.native_resume=None;
         // Anything held back by pacing is looked at again now.
         self.pace_late = self
             .pace_deadline
@@ -4683,6 +4712,9 @@ impl Conn {
     /// few milliseconds would otherwise pace a slow flow at a fraction of
     /// its rate. A sender idle for a while may burst two quanta, no more.
     fn pace_ready(&mut self) -> bool {
+        if self.cfg.native_owner_turn && self.native_credit==0 {
+            self.native_resume=Some(self.now);return false;
+        }
         let Some(rate) = self.pace_rate() else {
             return true;
         };
@@ -4698,6 +4730,7 @@ impl Conn {
 
     /// Pacing holds data back: send again once a quantum has built up.
     fn pace_wait(&mut self) {
+        if self.cfg.native_owner_turn && self.native_credit==0{return;}
         let Some(rate) = self.pace_rate() else {
             return;
         };
@@ -4807,6 +4840,7 @@ impl Conn {
             consider(self.reo_deadline);
             consider(self.pto_deadline);
             consider(self.pace_deadline);
+            consider(self.native_resume);
             consider(self.rto_deadline);
             consider(self.persist_deadline);
             consider(self.keepalive_deadline);
@@ -4846,6 +4880,7 @@ impl Conn {
                 self.pto_deadline,
                 self.rto_deadline,
                 self.pace_deadline,
+                self.native_resume,
             ]
             .iter()
             .any(|d| d.is_some_and(|d| now >= d))
@@ -4866,12 +4901,12 @@ impl Conn {
         }
         // Pacing released what it held back (the flush takes the deadline,
         // and how late it is).
-        if self.pace_deadline.is_some_and(|d| now >= d)
+        if self.pace_deadline.is_some_and(|d| now >= d) || self.native_resume.is_some_and(|d|now>=d)
         {
             if live && self.state.is_synchronized() && self.send_buf.is_some() {
                 self.flush_send_queue();
             } else {
-                self.pace_deadline = None;
+                self.pace_deadline = None;self.native_resume=None;
             }
         }
         // RTO.

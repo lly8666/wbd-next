@@ -1,0 +1,13 @@
+# Native owner admission and TCP hot path — unverified grouped candidate
+
+Exact parent 65aae40cdbd99c0a9957518db1748ad533181bdc: dual ISA core342/342, scoped Normal functional PASS, 24/24 Linux ABBA 45916281816. BBR0 Linux314.20 vs Rust150.63 Mbps; Rust local burst 7607 packets, client ingress full19599/14933, server21469/10409, SharedTUN109144/39666, relay qdisc zero. Main handoff H2473. User directs large grouped alignment, preserve outer TLS-like/TCP-like, no HOL or defensive layers.
+
+- Existing per-flow send buffer reserves sequence/cwnd and at most 32 DATA/retransmit sends per owner event; remaining work via existing per-flow deadline, not global FIFO or batch fill wait. Client relay transfer bounded to 64KiB each direction per event, continuation uses existing deadline. Owner socket/timer output service yields at ready batch size; no new worker, queue, timer thread or queue capacity change.
+- Fresh DATA reserves sequence separately from actual admission. RACK transmission and delivery-rate snapshot are recorded at actual local TUN attempt or existing M1 slab acceptance, not when Vec generated. RTO starts on admission. Existing retransmission accounting remains generation-based; M4/physical-wire completion is NOT claimed. BBR uses prior admitted pipe and includes current ACK newly marked loss in rate sample; app-limited not marked while fresh reserved DATA exists.
+- Established in-order prediction uses same PAWS/ACK/data state path, reuses parser payload/options allocations; serialize IPv4 in original TCP Vec headroom (one move, no extra IP Vec allocation), retransmit borrows payload. Existing IP/TCP checksum and packet bytes, outer crypto, record, FEC, MTU, TLS, presentation and first arrival path unchanged.
+- Native service uses existing epoll/deadline structure. No new cross-flow ordering or global wait; actual multi-flow fairness and no HOL still require test. Fresh admission is not full Linux TSQ/EDT; M4 completion, real GSO/TSO equivalent batch submission, remaining RACK/TLP/DSACK traces, AccECN extension and exact vendor source remain open. No claim zero-loss solved until real ABBA.
+- Added tests for reservation/admission clock and parser reuse. Frozen candidate native core & real original/parity TUN tests on both ISA, then existing 24-leg ARM Linux splice vs Rust ABBA. No changes to original product defaults or production carrier.
+
+```feature-impact
+{"kind":"updated","ids":["dual-rust-tcp"],"reason":"Experimental parity owner per-flow send grant and fresh DATA admission timestamp, faster established parse/serialization and exact BBR admitted pipe; no outer protocol or default change."}
+```

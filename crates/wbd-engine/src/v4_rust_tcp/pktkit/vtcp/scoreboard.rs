@@ -21,6 +21,7 @@ const LOST: u8 = 2;
 /// Retransmitted at least once (RFC 8985's `Segment.retransmitted`).
 const RETRANS: u8 = 4;
 const FIN: u8 = 8;
+const NATIVE_PENDING: u8 = 16;
 
 /// DupThresh (RFC 6675 §2): SACKed segments that show a loss without
 /// waiting out the reordering window, while no reordering has been seen.
@@ -198,6 +199,7 @@ pub(crate) struct Scoreboard {
     sacked: u64,
     sacked_segs: u32,
     lost: u64,
+    native_pending: u64,
     /// Starts of the segments marked lost and not sent since, which are
     /// what retransmission goes through, lowest first.
     lost_set: BTreeSet<u64>,
@@ -231,6 +233,7 @@ impl Scoreboard {
             sacked: 0,
             sacked_segs: 0,
             lost: 0,
+            native_pending:0,
             lost_set: BTreeSet::new(),
             rack_on: false,
             tq: VecDeque::new(),
@@ -313,6 +316,9 @@ impl Scoreboard {
     pub fn pipe(&self) -> u32 {
         (self.end_off() - self.una_off - self.sacked - self.lost) as u32
     }
+
+    pub(crate) fn native_pending(&self)->u32{self.native_pending as u32}
+    pub(crate) fn admitted_pipe(&self)->u32{self.pipe().saturating_sub(self.native_pending())}
 
     /// RACK.segs_sacked.
     #[inline]
@@ -410,7 +416,13 @@ impl Scoreboard {
 
     /// New data, `[seq, seq+len)`, or the FIN at `seq`, went out at `now`
     /// carrying `tsval` (RFC 8985 §6.1).
-    pub fn on_send(&mut self, seq: u32, len: u32, fin: bool, now: Instant, tsval: u32) {
+    pub fn on_send(&mut self,seq:u32,len:u32,fin:bool,now:Instant,tsval:u32){
+        self.record_send(seq,len,fin,now,tsval,false);
+    }
+    pub(crate) fn reserve_native(&mut self,seq:u32,len:u32,now:Instant,tsval:u32){
+        self.record_send(seq,len,false,now,tsval,true);
+    }
+    fn record_send(&mut self, seq: u32, len: u32, fin: bool, now: Instant, tsval: u32, deferred:bool) {
         let len = if fin { 1 } else { len };
         if len == 0 {
             return;
@@ -420,17 +432,33 @@ impl Scoreboard {
         let xmit = self.ns(now);
         let tx = self.next_tx;
         self.next_tx += 1;
-        let rate = self.rate.on_send(xmit, self.pipe(), len);
+        let rate=if deferred{self.native_pending+=u64::from(len);TxState::default()}else{self.rate.on_send(xmit,self.admitted_pipe(),len)};
         self.segs.push_back(Seg {
             start,
             end: start + u64::from(len),
             xmit,
             tsval,
             tx,
-            flags: if fin { FIN } else { 0 },
+            flags: if deferred {NATIVE_PENDING}else if fin { FIN } else { 0 },
             rate,
         });
-        self.push_tx(start, start + u64::from(len), xmit, tx);
+        if !deferred{self.push_tx(start,start+u64::from(len),xmit,tx);}
+    }
+
+    /// Actual native admission, in the same flow's existing output order.
+    /// No second network ACK, no invented wire completion. An explicit
+    /// failed TUN attempt is also timed so ordinary TCP can recover it.
+    pub(crate) fn admit_native(&mut self,seq:u32,len:u32,now:Instant)->bool{
+        if seq_before(seq,self.una){return false}
+        let off=self.off(seq);
+        let Some(i)=self.idx(off)else{return false};
+        let old=self.segs[i];
+        if !old.has(NATIVE_PENDING)||old.start!=off||old.len()!=u64::from(len){return false}
+        self.native_pending-=old.len();
+        let xmit=self.ns(now);
+        let rate=self.rate.on_send(xmit,self.admitted_pipe().saturating_sub(len),len);
+        let record=&mut self.segs[i];record.flags&=!NATIVE_PENDING;record.xmit=xmit;record.rate=rate;
+        self.push_tx(old.start,old.end,xmit,old.tx);true
     }
 
     /// `[seq, seq+len)`, the start of a segment, was sent again at `now`
@@ -441,6 +469,7 @@ impl Scoreboard {
         let Some(mut i) = self.idx(start) else {
             return;
         };
+        if self.segs[i].has(NATIVE_PENDING){return;}
         if self.segs[i].start < start {
             self.split(i, start);
             i += 1;
@@ -468,7 +497,7 @@ impl Scoreboard {
         let len = (s_end - s_start) as u32;
         let rate = self
             .rate
-            .on_send(xmit, self.pipe().saturating_sub(len), len);
+            .on_send(xmit, self.admitted_pipe().saturating_sub(len), len);
         let s = &mut self.segs[i];
         s.flags |= RETRANS;
         s.xmit = xmit;
@@ -530,6 +559,7 @@ impl Scoreboard {
         while let Some(&front) = self.segs.front() {
             if front.end <= ack_off {
                 self.segs.pop_front();
+                if front.has(NATIVE_PENDING){self.native_pending-=front.len();}
                 if front.has(LOST) {
                     self.lost -= front.len();
                     self.lost_set.remove(&front.start);
@@ -537,6 +567,8 @@ impl Scoreboard {
                 if front.has(SACKED) {
                     self.sacked -= front.len();
                     self.sacked_segs -= 1;
+                } else if front.has(NATIVE_PENDING){
+                    d.delivered=d.delivered.saturating_add(front.len() as u32);self.rate.on_partial(front.len());
                 } else {
                     let end = self.seq_of(front.end);
                     d.note(front.len(), end, !front.has(RETRANS));
@@ -551,6 +583,7 @@ impl Scoreboard {
                     let cut = ack_off - front.start;
                     let f = &mut self.segs[0];
                     f.start = ack_off;
+                    if f.has(NATIVE_PENDING){self.native_pending-=cut;}
                     if f.has(SACKED) {
                         self.sacked -= cut;
                     } else {
@@ -685,6 +718,7 @@ impl Scoreboard {
                 }
             }
             let s = self.segs[i];
+            if s.has(NATIVE_PENDING){i+=1;continue;}
             let seg = &mut self.segs[i];
             seg.flags |= SACKED;
             if s.has(LOST) {
@@ -811,7 +845,7 @@ impl Scoreboard {
 
     fn mark_lost(&mut self, i: usize) -> bool {
         let s = &mut self.segs[i];
-        if s.has(LOST) || s.has(SACKED) {
+        if s.has(LOST) || s.has(SACKED) || s.has(NATIVE_PENDING) {
             return false;
         }
         s.flags |= LOST;
@@ -1159,6 +1193,22 @@ pub(crate) fn dsack_valid(b: SackBlock, snd_nxt: u32) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn native_reserved_data_is_not_in_delivery_clock_until_admitted(){
+        let now=Instant::now();let mut s=Scoreboard::new(100,now);s.set_rack(true);
+        s.reserve_native(100,1000,now,0);
+        assert_eq!(s.pipe(),1000);assert_eq!(s.admitted_pipe(),0);
+        assert!(s.tq.is_empty());
+        let admitted=now+Duration::from_millis(10);
+        assert!(s.admit_native(100,1000,admitted));
+        assert!(!s.admit_native(100,1000,admitted));
+        assert_eq!(s.admitted_pipe(),1000);
+        assert_eq!(s.segs[0].xmit,10_000_000);
+        s.begin_ack();let d=s.ack(1100,now+Duration::from_millis(110),None);
+        assert_eq!(d.delivered,1000);assert_eq!(s.native_pending(),0);
+        assert_eq!(s.rate_sample().unwrap().delivery_rate,10_000);
+    }
+
 
     const MSS: u32 = 1000;
 
