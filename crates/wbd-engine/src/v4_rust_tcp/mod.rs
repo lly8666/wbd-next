@@ -33,7 +33,7 @@ pub(crate) fn transfer(
     to: &mut Conn,
     limit: usize,
 ) -> (usize, Segments, Segments) {
-    let limit = limit.min(to.send_available());
+    let limit = limit.min(to.relay_send_available());
     let mut to_packets = Vec::new();
     let n = from.read_to(limit, |bytes| {
         let (n, packets) = to.write(bytes);

@@ -441,6 +441,9 @@ pub struct ConnConfig {
     pub(crate) native_pace_quantum_mss: u32,
     /// Lab-only ceiling on the existing TCP pacing rate (payload bytes/s).
     pub(crate) native_pace_ceiling: Option<u64>,
+    /// Lab-only relay admission bound on fresh, not yet generated data.
+    /// Never limits the already outstanding TCP window or retransmits.
+    pub(crate) relay_pending_limit: Option<usize>,
     pub(crate) gentle_bbr1_startup:bool,
     /// Product owner reserves no more than one native batch per flow event.
     pub(crate) native_owner_turn: bool,
@@ -549,6 +552,7 @@ impl Default for ConnConfig {
             native_bounded_pacing: false,
             native_pace_quantum_mss: 32,
             native_pace_ceiling: None,
+            relay_pending_limit: None,
             gentle_bbr1_startup:false,
             native_owner_turn: false,
             rack_keep_reo_window: false,
@@ -1140,6 +1144,19 @@ impl Conn {
         self.send_buf.as_ref().map_or(0, |sb| sb.available())
     }
 
+    /// Capacity for the adjacent stream producer. Outstanding bytes
+    /// stay governed by cwnd/rwnd and the existing send-buffer budget.
+    /// When unsent bytes fill this allowance, the source stops reading;
+    /// ordinary ACK, pacing, and native grant events reopen capacity.
+    pub(crate) fn relay_send_available(&self)->usize{
+        let available=self.send_available();
+        match self.cfg.relay_pending_limit{
+            None=>available,
+            Some(limit)=>available.min(limit.saturating_sub(
+                self.send_buf.as_ref().map_or(0,|s|s.pending()))),
+        }
+    }
+
     /// Whether a writer waiting for room in the send buffer is worth
     /// waking: once a third of it is free, as Linux's
     /// sk_stream_is_writeable has it (free space at least half of what is
@@ -1258,8 +1275,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} relay_pending_limit={} relay_pending_bytes={} relay_available={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.cfg.relay_pending_limit.unwrap_or(0),self.send_buf.as_ref().map_or(0,|s|s.pending()),self.relay_send_available(),self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline));
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -10601,6 +10618,28 @@ mod tests {
         assert!(sender.native_resume.is_some());
         sender.begin_native_turn();
         assert!(sender.tick().iter().any(|x|!parse(x).payload.is_empty()));
+    }
+
+    #[test]
+    fn relay_pending_admission_tracks_unsent_not_outstanding_bytes(){
+        let mut sender=Conn::new(big(40697,80));
+        let mut receiver=Conn::new(big(80,40697));
+        drive_handshake(&mut sender,&mut receiver);
+        sender.cfg.relay_pending_limit=Some(4096);
+        sender.snd_wnd=0;
+        assert_eq!(sender.relay_send_available(),4096);
+        let (n,_)=sender.write(&[7;4096]);
+        assert_eq!(n,4096);
+        assert_eq!(sender.relay_send_available(),0);
+        assert!(sender.send_available()>0);
+        assert_eq!(sender.send_buf.as_ref().unwrap().pending(),4096);
+        sender.snd_wnd=65535;
+        sender.flush_send_queue();
+        assert_eq!(sender.send_buf.as_ref().unwrap().pending(),0);
+        assert_eq!(sender.send_buf.as_ref().unwrap().unacked(),4096);
+        assert_eq!(sender.relay_send_available(),4096);
+        sender.cfg.relay_pending_limit=None;
+        assert_eq!(sender.relay_send_available(),sender.send_available());
     }
 
     #[test]

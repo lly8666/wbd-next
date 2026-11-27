@@ -1,4 +1,4 @@
-name: M0 ARM Startup gain and pacing ceiling two ABBA
+name: M0 ARM uncapped adjacent-leg relay credit ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -271,7 +271,7 @@ jobs:
           tailscale ping --c=5 "$(jq -r .tail_ip h2228-peer/relay.json)" >h2228-out/relay-ping.txt 2>&1 || true
           nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py watch client >h2228-out/watch.log 2>&1 </dev/null &
           echo $! >"$RUNNER_TEMP/dual-watch.pid"
-      - name: Wait server control and run Startup gain and pacing ceiling ABBA
+      - name: Wait server control and run uncapped adjacent-leg relay credit ABBA
         run: |
           for i in $(seq 1 150);do
             gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-server-ready -D h2228-server-ready >/dev/null 2>&1 && break

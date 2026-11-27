@@ -6,6 +6,7 @@ role,port=sys.argv[1],int(sys.argv[2])
 # Only the application offer is paced; the product owns all TCP behavior.
 if role in ("recovery-origin","recovery-client"):
     host,target,offer=sys.argv[3],int(sys.argv[4]),int(sys.argv[5])
+    pause=float(sys.argv[6]) if len(sys.argv)>6 else 0.0
     request=b"fixed-byte-recovery-v1"
     pattern=hashlib.shake_256(b"fixed-byte-recovery-v1").digest(65536)
     digest=hashlib.sha256()
@@ -22,31 +23,36 @@ if role in ("recovery-origin","recovery-client"):
                     req.extend(b)
                     assert len(req)<=len(request)
                 assert req==request
-                n=0;start=time.monotonic();due=start
+                n=0;start=time.monotonic();due=start;max_sendall=0.0;blocked_s=0.0
                 while n<target:
                     size=min(65536,target-n)
                     block=(n.to_bytes(8,"big")+pattern[8:])[:size]
                     wait=due-time.monotonic()
                     if wait>0:time.sleep(wait)
-                    c.sendall(block);digest.update(block);n+=size
+                    t=time.monotonic();c.sendall(block);elapsed=time.monotonic()-t
+                    max_sendall=max(max_sendall,elapsed)
+                    if elapsed>=0.25:blocked_s+=elapsed
+                    digest.update(block);n+=size
                     # Never make up late app offer with an unbounded burst.
                     due=max(due+size*8/offer,time.monotonic())
                 c.shutdown(socket.SHUT_WR)
-                print(json.dumps({"sent_bytes":n,"sha256":digest.hexdigest(),"offer_bps":offer,"seconds":time.monotonic()-start}),flush=True)
+                print(json.dumps({"sent_bytes":n,"sha256":digest.hexdigest(),"offer_bps":offer,"seconds":time.monotonic()-start,"max_sendall_seconds":max_sendall,"sendall_over_250ms_seconds":blocked_s}),flush=True)
     else:
         with socket.create_connection((host,port),timeout=30) as c:
             c.sendall(request);c.shutdown(socket.SHUT_WR)
-            start=time.monotonic();first=None;n=0
+            start=time.monotonic();first=None;n=0;paused=0.0
             while True:
                 b=c.recv(65536)
                 if not b:break
                 if first is None:first=time.monotonic()
                 n+=len(b);digest.update(b)
                 assert n<=target
+                if pause and not paused and n>=16*1024*1024:
+                    t=time.monotonic();time.sleep(pause);paused=time.monotonic()-t
             elapsed=time.monotonic()-start
             assert n==target,(n,target)
             print(json.dumps({"received_bytes":n,"sha256":digest.hexdigest(),"eof":True,"seconds":elapsed,
-                "first_data_seconds":first-start if first is not None else None,"mbps":n*8/elapsed/1e6}),flush=True)
+                "first_data_seconds":first-start if first is not None else None,"mbps":n*8/elapsed/1e6,"paused_seconds":paused}),flush=True)
     raise SystemExit(0)
 
 host="198.18.77.2"

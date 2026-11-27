@@ -50,6 +50,7 @@ impl Endpoint {
             native_owner_turn: parity,
             rack_keep_reo_window:middle&&parity&&std::env::var_os("WBD_M0_RACK_KEEP_WINDOW").as_deref()==Some(std::ffi::OsStr::new("1")),
             native_pace_quantum_mss:quantum_mss,
+            relay_pending_limit:if parity&&std::env::var_os("WBD_M0_RELAY_PENDING_CREDIT").as_deref()==Some(std::ffi::OsStr::new("1")){Some(2*TURN_BYTES)}else{None},
             native_pace_ceiling:if middle&&parity{
                 match std::env::var_os("WBD_M0_NATIVE_PACE_MBPS").as_deref().and_then(|s|s.to_str()){
                     Some("160")=>Some(20_000_000),
@@ -196,14 +197,14 @@ impl ClientFlow {
             // leave it until the peer leg accepts them. A ring wraps at
             // most once; the destination capacity is re-read each time.
             let mut budget=if bounded{TURN_BYTES}else{usize::MAX};
-            while budget!=0&&from.conn.readable() != 0 && to.conn.send_available() != 0 {
+            while budget!=0&&from.conn.readable() != 0 && to.conn.relay_send_available() != 0 {
                 let (n, a, b) = transfer(&mut from.conn, &mut to.conn, TURN_BYTES.min(budget));
                 from.append(a, from_out)?;
                 to.append(b, to_out)?;
                 if n == 0 { break }
                 budget-=n;
             }
-            if bounded&&budget==0&&from.conn.readable()!=0&&to.conn.send_available()!=0{self.drive_due=Some(Instant::now());}
+            if bounded&&budget==0&&from.conn.readable()!=0&&to.conn.relay_send_available()!=0{self.drive_due=Some(Instant::now());}
             if !*fin_forwarded && from.conn.fin_received() &&
                 from.conn.readable() == 0 && to.conn.is_established() {
                 to.close(to_out)?;
@@ -262,7 +263,7 @@ impl ServerFlow {
         if self.middle.conn.is_closed() { return Interest { read: false, write: false } }
         if !self.connected { return Interest { read: false, write: true } }
         Interest {
-            read: !self.origin_eof && self.middle.conn.send_available() != 0,
+            read: !self.origin_eof && self.middle.conn.relay_send_available() != 0,
             write: !self.origin_write_closed && self.middle.conn.readable() != 0,
         }
     }
@@ -335,7 +336,7 @@ impl ServerFlow {
         if readable && !self.origin_eof && !self.middle.conn.is_closed() {
             let mut budget = TURN_BYTES;
             while budget != 0 {
-                let n = self.middle.conn.send_available().min(budget).min(scratch.len());
+                let n = self.middle.conn.relay_send_available().min(budget).min(scratch.len());
                 if n == 0 { break }
                 match self.stream.read(&mut scratch[..n]) {
                     Ok(0) => {
