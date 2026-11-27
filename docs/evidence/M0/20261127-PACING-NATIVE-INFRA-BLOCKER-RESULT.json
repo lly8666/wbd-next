@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "source_sha": "675ab84ef833d344bf294a33df0c30f62e00624b",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "scope": "Run attempt 1 exact source native qualification incomplete; ARM functional PASS, x86 infrastructure failure before compilation, no x86 application verdict.",
+  "run_id": 45956534713,
+  "run_attempt": 1,
+  "artifacts": [
+    {
+      "arch": "aarch64",
+      "job_id": 140364204590,
+      "artifact_id": 15179820090,
+      "result": "PASS",
+      "core_pass": 345,
+      "profiles": [
+        "default",
+        "inbox2048+8",
+        "cubic"
+      ],
+      "gso_groups": [
+        163,
+        163,
+        138
+      ],
+      "gso_segments": [
+        1338,
+        1889,
+        1265
+      ],
+      "origin_terminal_error_logs": 0
+    },
+    {
+      "arch": "x86_64",
+      "job_id": 140364204313,
+      "artifact_id": 15179037022,
+      "result": "NOT_RUN",
+      "failure": "apt-get update exit100, packages.microsoft.com Ubuntu noble InRelease HTTP403; before Rust build"
+    }
+  ],
+  "review": "Both original ZIPs opened CRC clean. ARM exact source and 3 functional summaries, 3MiB/2MiB bytes, 8 concurrent, half-close, UDP, exits0 and selected defaults receipts; server logs no origin error. Core345 and GSO/M4 unit original logs checked. x86 ZIP contains only source/arch, original job log confirms infrastructure failure. No inference that previous x86 RST resolved.",
+  "retry": {
+    "run_attempt": 2,
+    "scope": "Only failed jobs rerun, same SOURCE, no duplicate performance run",
+    "status": "in_progress",
+    "x86_job_id": 140367274504
+  },
+  "performance": {
+    "result": "NOT_RUN",
+    "reason": "No exact dual ISA qualification yet; ARM workflow not triggered by previous product-only commit."
+  },
+  "physical": "NOT_RUN"
+}
