@@ -161,6 +161,8 @@ struct GameColdCandidate {
     raw_rx:usize,
     initial_ports:[u16;4],
     proof:Mutex<Option<NativeCandidateProof>>,
+    staged:AtomicBool,
+    probe_needed:AtomicBool,
 }
 #[cfg(feature="winxdp_native_trial")]
 struct NativeCandidateProof{
@@ -176,7 +178,7 @@ impl GameColdCandidate {
             changed:std::sync::Condvar::new(),tx:Mutex::new(None),
             tx_pending:AtomicBool::new(false),raw_rx,
             initial_ports:std::array::from_fn(|i|lanes.get(i).map_or(0,|l|l.local_port)),
-            proof:Mutex::new(None)}
+            proof:Mutex::new(None),staged:AtomicBool::new(false),probe_needed:AtomicBool::new(false)}
     }
     fn offer_rx(&self,port:u16,frame:&[u8]){
         if self.port.load(Ordering::Acquire)!=u32::from(port)||frame.len()>FRAME_CAP{return}
@@ -208,6 +210,8 @@ impl GameColdCandidate {
         self.tx_pending.store(false,Ordering::Release);
         let mut proof=self.proof.lock().map_err(|_|BAD_STAGE)?;
         *proof=None;
+        self.staged.store(false,Ordering::Release);
+        self.probe_needed.store(false,Ordering::Release);
         let mut rx=self.rx.lock().map_err(|_|BAD_STAGE)?;
         rx.clear();self.changed.notify_all();
         unsafe{wbd_platform::windows_xdp_rx::cold_change_port(self.raw_rx,port,false)}
@@ -226,8 +230,11 @@ impl GameColdCandidate {
     // Only the original native TX worker seals and sends candidate Health.
     // No fresh DATA waits for this probe or its reverse receipt.
     fn send_probe(&self,cfg:&WbdWinNativeAttachV1,npf:&mut GameTx,id:&mut u16)->Result<(),i32>{
-        if self.port.load(Ordering::Acquire)==0{return Ok(())}
-        let mut p=self.proof.lock().map_err(|_|BAD_STAGE)?;
+        if !self.probe_needed.load(Ordering::Acquire){return Ok(())}
+        let mut p=match self.proof.try_lock(){
+            Ok(v)=>v,Err(std::sync::TryLockError::WouldBlock)=>return Ok(()),
+            Err(_)=>return Err(BAD_STAGE),
+        };
         let Some(p)=p.as_mut()else{return Ok(())};
         if p.probe_sent||npf.credit(1).map_err(|_|BAD_STAGE)?==0{return Ok(())}
         let mut wire=[0u8;512];let mut frame=[0u8;FRAME_CAP];
@@ -237,7 +244,8 @@ impl GameColdCandidate {
         let outcome=send_lane(npf,p.prepared.slot(),&[bytes]);
         let copied=outcome.accepted_prefix==1&&outcome.uncertain_index.is_none();
         p.prepared.crypto.probe_result(pn,copied).map_err(|_|BAD_STAGE)?;
-        if copied{p.lane.tx_seq=p.lane.tx_seq.wrapping_add(n as u32);p.probe_sent=true;}
+        if copied{p.lane.tx_seq=p.lane.tx_seq.wrapping_add(n as u32);p.probe_sent=true;
+            self.probe_needed.store(false,Ordering::Release);}
         if outcome.error.is_some_and(|e|e!=wbd_platform::TxError::WouldBlock){return Err(BAD_STAGE)}
         Ok(())
     }
@@ -965,7 +973,7 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     // outside the group lock or a blocked TUN send would stall every
     // sibling Game4 TX lane. AllCopied is settled only after real kernel
     // results, with exact per-lane prefix on partial failure.
-    let (mut frames,pending)={
+    let (frames,pending)={
         let mut g=group.lock().map_err(|_|BAD_STAGE)?;
         if game::native_game_has_fec(&g){
             game::receive_fec_group(&mut g,cfg.group,(lane+1) as u32,wire)?
@@ -1112,7 +1120,8 @@ fn flush_deferred_fec(
             // frames have actually passed the original Wintun kernel writer.
             let rc={
                 let mut g=group.lock().map_err(|_|BAD_STAGE)?;
-                game::finish_fec_group(&mut g,(i+1) as u32,row.copied)
+                if game::native_game_has_fec(&g){game::finish_fec_group(&mut g,(i+1) as u32,row.copied)}
+                else{game::finish_off_group(&mut g,(i+1) as u32,row.copied==1)}
             };
             if rc!=OK{return Err(rc)}
             // Physical ACK already advanced when the original ciphertext
@@ -1130,7 +1139,8 @@ fn abort_deferred_fec(group:&Arc<Mutex<game::WinGameGroup>>,
     let Ok(mut g)=group.lock()else{return BAD_STAGE};
     for (i,slot) in deferred.iter_mut().enumerate(){
         if let Some(row)=slot.take(){
-            let rc=game::finish_fec_group(&mut g,(i+1) as u32,row.copied);
+            let rc=if game::native_game_has_fec(&g){game::finish_fec_group(&mut g,(i+1) as u32,row.copied)}
+                else{game::finish_off_group(&mut g,(i+1) as u32,row.copied==1)};
             if rc!=OK{return rc}
         }
     }
@@ -1273,40 +1283,44 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         }
         #[cfg(feature="winxdp_native_trial")]
         if let Some(candidate)=cold_candidate.as_ref(){
-            if candidate.port.load(Ordering::Acquire)!=0{
-                // After Go cold handoff, the same RX worker consumes
-                // queued and newly arriving candidate frames. A selected
-                // slot's deferred Wintun batch is settled before another.
-                let mut proof=match candidate.proof.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
-                if let Some(p)=proof.as_mut(){
-                    let slot=p.prepared.slot();
-                    for _ in 0..32{
+            if candidate.staged.load(Ordering::Acquire){
+                // No candidate mutex spans shared decoder or Wintun writes.
+                // Healthy TX never waits on candidate crypto/readback.
+                for _ in 0..32{
+                    let mut frame=Vec::new();
+                    let mut wire=Vec::new();
+                    let (slot,opened)={
+                        let mut proof=match candidate.proof.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+                        let Some(p)=proof.as_mut()else{break};
+                        let slot=p.prepared.slot();
                         if deferred[slot].is_some(){break}
-                        let frame=match candidate.rx.lock(){Ok(mut q)=>q.pop_front(),Err(_)=>return BAD_STAGE};
-                        let Some(frame)=frame else{break};
+                        let Some(next)=candidate.rx.lock().map_err(|_|BAD_STAGE).ok().and_then(|mut q|q.pop_front())else{break};
+                        frame=next;
                         let Some(ipv4)=io::ethernet_ipv4(&frame)else{continue};
                         let trusted=trusted_windows_game_rx(&cfg.first.peer_ip,&cfg.first.local_ip,
                             p.lane.peer_port,p.lane.local_port,cfg.first.path_mtu as usize);
                         let Ok(data)=parse_data_packet_fast(ipv4,trusted)else{continue};
-                        let mut wire=data.ciphertext.to_vec();
+                        wire.extend_from_slice(data.ciphertext);
                         let opened=match p.prepared.crypto.open_peer(&mut wire){
                             Ok(v)=>v,Err(_)=>continue,
                         };
                         let _=p.ack.verified(data.seq32,data.ciphertext.len());
-                        if let Some((logical,payload))=opened{
-                            let result={
-                                let mut g=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
-                                game::prepare_opened_native_lane(&mut g,cfg.group,slot,logical,payload)
-                            };
-                            match result{
-                                Ok((frames,pending))=>{
-                                    if let Err(e)=deliver_game_frames(&group,&mut tun,&c,&mut deferred,
-                                        slot,frames,pending,tunnel_dns.as_ref(),split_clock.elapsed().as_millis() as u64){
-                                        return e
-                                    }
-                                },
-                                Err(INVALID)=>{},Err(e)=>return e,
-                            }
+                        (slot,opened)
+                    };
+                    if candidate.probe_needed.load(Ordering::Acquire){let _=tx_wake.wake();}
+                    if let Some((logical,payload))=opened{
+                        let result={
+                            let mut g=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
+                            game::prepare_opened_native_lane(&mut g,cfg.group,slot,logical,payload)
+                        };
+                        match result{
+                            Ok((frames,pending))=>{
+                                if let Err(e)=deliver_game_frames(&group,&mut tun,&c,&mut deferred,
+                                    slot,frames,pending,tunnel_dns.as_ref(),split_clock.elapsed().as_millis() as u64){
+                                    return e
+                                }
+                            },
+                            Err(INVALID)=>{},Err(e)=>return e,
                         }
                     }
                 }
@@ -1702,6 +1716,8 @@ pub extern "C" fn wbd_m0_win_game_candidate_stage(h:u64,lane:u32,old:u64,new:u64
     *p=Some(NativeCandidateProof{prepared,lane:LaneConfig{owner:new,tx_seq,rx_seq,
         local_port,peer_port,rx_capture:candidate.raw_rx,tx_capture:0,npcap:[0;6]},
         ack:AckLedger::new(rx_seq),probe_sent:false});
+    candidate.staged.store(true,Ordering::Release);
+    candidate.probe_needed.store(true,Ordering::Release);
     drop(p);
     if session.rx_wake.wake().is_err()||session.tx_wake.wake().is_err(){return BAD_STAGE}
     OK
@@ -1727,7 +1743,7 @@ pub unsafe extern "C" fn wbd_m0_win_game_candidate_read(h:u64,port:u16,dst:*mut 
         if s.counters.stop.load(Ordering::Acquire){return -1}
         let Some(c)=s.cold_candidate.as_ref()else{return -1};Arc::clone(c)
     };
-    if c.proof.lock().is_ok_and(|p|p.is_some()){return -1}
+    if c.staged.load(Ordering::Acquire){return -1}
     c.read(port,unsafe{std::slice::from_raw_parts_mut(dst,cap)})
 }
 #[cfg(feature="winxdp_native_trial")]
@@ -1748,7 +1764,7 @@ pub unsafe extern "C" fn wbd_m0_win_game_candidate_write(h:u64,port:u16,frame:*c
         let Some(c)=s.cold_candidate.as_ref()else{return -1};
         let Ok(mut tx)=c.tx.lock()else{return -1};
         if c.port.load(Ordering::Acquire)!=u32::from(port)||tx.is_some()||
-            c.proof.lock().is_ok_and(|p|p.is_some()){return -1}
+            c.staged.load(Ordering::Acquire){return -1}
         *tx=Some((port,bytes.to_vec(),reply));
         c.tx_pending.store(true,Ordering::Release);
         (Arc::clone(&s.tx_wake),Arc::clone(c))

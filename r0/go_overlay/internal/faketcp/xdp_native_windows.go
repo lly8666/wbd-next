@@ -209,6 +209,7 @@ type XdpGameCandidate struct{
  gate *npcapCallGate
  sendMu sync.Mutex
  ipID uint16
+ native bool // cold serialized transfer; no Go ring access after handoff
 }
 func BeginXdpGameCandidate(group uint64,cfg NpcapConfig,port,read,write *syscall.Proc)(*XdpGameCandidate,error){
  if group==0||port==nil||read==nil||write==nil{return nil,ErrNpcapClosed}
@@ -246,11 +247,19 @@ func(c *XdpGameCandidate) WriteSegment(seg Segment)error{
  if int32(rc)!=1{return fmt.Errorf("WinXDP candidate write rc=%d",int32(rc))}
  return nil
 }
+// Join the original Go candidate reader/writer without releasing the port.
+// The native proof command then takes the queued frames from the same RX owner.
+func(c *XdpGameCandidate) TakeNative()error{
+ if !c.gate.close(){return ErrNpcapClosed}
+ c.gate.wait();c.native=true;return nil
+}
+func(c *XdpGameCandidate) CandidatePort()uint16{return c.cfg.Flow.LocalPort}
 // Only an uncommitted candidate is discarded through this interface.
 // The future native slot commit must transfer its exact port instead.
 func(c *XdpGameCandidate) Close()error{
- if !c.gate.close(){return nil}
+ if !c.native&&!c.gate.close(){return nil}
  c.gate.wait()
+ c.native=false
  rc,_,_:=c.port.Call(uintptr(c.group),uintptr(c.cfg.Flow.LocalPort),0)
  if rc!=0{return fmt.Errorf("WinXDP candidate port retirement rc=%d",rc)}
  return nil

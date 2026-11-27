@@ -441,6 +441,29 @@ type V4WindowsGameLaneCandidate struct{
  old,owner *V4WindowsAuthenticatedClientOwner
  session *V4ClientSession
 }
+// Stage only after the original candidate association has detached and its
+// Go reader/writer has joined. Readiness is the original native worker's
+// accepted copy plus the candidate's own authenticated reverse record.
+func(g *V4WindowsAuthenticatedGameGroup) StageNativeLaneCandidate(ctx context.Context,c *V4WindowsGameLaneCandidate,transport *faketcp.XdpGameCandidate,peerPort uint16)error{
+ if g==nil||c==nil||transport==nil||ctx==nil||peerPort==0{return errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return err}
+ tx,rx,err:=c.TCPBoundaries();if err!=nil{return err}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||g.joined==0||len(g.members)!=4||c.lane<1||c.lane>4||g.members[c.lane-1]!=c.old{return errV4WindowsOwner}
+ proc,err:=c.old.bridge.fixedProc("wbd_m0_win_game_candidate_stage");if err!=nil{return err}
+ if err=transport.TakeNative();err!=nil{return err}
+ return winOwnerCall(proc,uintptr(g.joined),uintptr(c.lane),uintptr(c.old.bridge.handle),uintptr(c.owner.bridge.handle),uintptr(transport.CandidatePort()),uintptr(peerPort),uintptr(tx),uintptr(rx))
+}
+func(g *V4WindowsAuthenticatedGameGroup) NativeLaneCandidateReady(ctx context.Context,c *V4WindowsGameLaneCandidate,transport *faketcp.XdpGameCandidate)(bool,error){
+ if g==nil||ctx==nil||c==nil||transport==nil{return false,errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return false,err}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||g.joined==0||len(g.members)!=4||c.lane<1||c.lane>4||g.members[c.lane-1]!=c.old{return false,errV4WindowsOwner}
+ proc,err:=c.old.bridge.fixedProc("wbd_m0_win_game_candidate_ready");if err!=nil{return false,err}
+ rc,_,_:=proc.Call(uintptr(g.joined),uintptr(transport.CandidatePort()))
+ if int32(rc)!=0&&int32(rc)!=1{return false,errV4WindowsOwner}
+ return rc==1,nil
+}
 func(c *V4WindowsGameLaneCandidate) TCPBoundaries()(uint32,uint32,error){
  if c==nil||c.owner==nil{return 0,0,errV4WindowsOwner}
  return c.owner.OriginalVerifiedTCPBoundaries()
