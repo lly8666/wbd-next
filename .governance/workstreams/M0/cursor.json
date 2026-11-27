@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2496,
-  "checkpoint_sha": "c23fee1d0e46227dea190b356102ea0cc96b36e1",
+  "sequence": 2497,
+  "checkpoint_sha": "f38110d783f9f3d5f06c795305b272827f47061b",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "核对74f7927精确双ISA及ARM同机12组高offer/正向jitter/独立0.5%损失，实际bytes/hash/EOF、重传DSACK、准入/qdisc/seed/CPU/Stop；筛选后因果复验，三机冷路径资格另处理，不重复派单。",
+  "next_action": "核对4bb9808精确双ISA及ACK CloseWait实际grant回归，ARM高offer clean及0.5%两组ABBA，B实际计数>0/A0、业务hash/Stop/CPU/入口/重传；审视累计有效默认与无价值实验，候选仅凭证据选择。",
   "unverified": true,
-  "last_tested_source": "afcaaa8ff4fc11a5f041ffe420e8c09db3eed881",
+  "last_tested_source": "74f7927fccdac022deb05b2507d1bb74b99f3f7c",
   "evidence_refs": [
-    "docs/evidence/M0/20261127-CROSS-HOST-RECOVERY-PATH-BLOCKED-RESULT.json"
+    "docs/evidence/M0/20261127-CONTROLLED-IMPAIRMENT-RECOVERY-RESULT.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261127-PACING-NATIVE-RETRY-PASS-RESULT.json",
-    "docs/devlog/M0/20261127-M0-CONTROLLED-RECOVERY-HANDOFF.md",
     "docs/evidence/M0/20261127-PACING-QUANTUM-INCOMPLETE-RESULT.json",
     "docs/devlog/M0/20261127-M0-RECOVERY-BATCH-HANDOFF.md",
     "docs/evidence/M0/20261127-CONTROLLED-RECOVERY-INCOMPLETE-RESULT.json",
     "docs/devlog/M0/20261127-M0-CROSS-HOST-RECOVERY-SCREEN-HANDOFF.md",
     "docs/evidence/M0/20261127-RECOVERY-BATCH-EXACT-BYTE-RESULT.json",
-    "docs/devlog/M0/20261127-M0-CONTROLLED-IMPAIRMENT-SCREEN-HANDOFF.md"
+    "docs/devlog/M0/20261127-M0-CONTROLLED-IMPAIRMENT-SCREEN-HANDOFF.md",
+    "docs/evidence/M0/20261127-CROSS-HOST-RECOVERY-PATH-BLOCKED-RESULT.json",
+    "docs/devlog/M0/20261127-M0-RECOVERY-ACCEPTANCE-ACK-STATE-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "afcaaa8六原生及8同机精确字节PASS，paired重传/DSACK/full/reset0，floor；三机仅裸前测381.89M，server before未direct，PATH_NOT_QUALIFIED，未跑候选。74f7927产品不变，ARM12组真实高供给/乱序/损失筛选待验。"
+  "partial_summary": "74f7927六原生347通过，恢复11/12；默认clean207.67/jitter78.01零重传，0.5% loss69.05/0.539%；组合100s超时不选。审计发现ACK只Established漏CloseWait，4bb9808修正并验证实际grant分支，聚焦两ABBA，未验；跨机高重传与L2仍未解决。"
 }
