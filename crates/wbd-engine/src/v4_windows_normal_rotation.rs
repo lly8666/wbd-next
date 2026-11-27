@@ -60,7 +60,8 @@ impl NormalRotation{
         self.phase.store(COLD,Ordering::Release);Ok(())
     }
     // Go has joined the selected original TLS association's cold reader
-    // before calling Stage. Its new epoch is NOT the product WAL epoch.
+    // before calling Stage. The logical epoch stays fixed; the candidate is a
+    // new authenticated incarnation with its own native owner and keys.
     fn stage(&self,owner:u64,entry:Arc<Mutex<Entry>>,port:u16,
         tx_seq:u32,rx_seq:u32,sack:bool)->Result<(),i32>{
         let mut p=self.paths.lock().map_err(|_|BAD_STAGE)?;
@@ -69,12 +70,12 @@ impl NormalRotation{
         let mut cfg=p.current.cfg;
         let old=p.current.lane.lock().map_err(|_|BAD_STAGE)?;
         let mut e=entry.lock().map_err(|_|BAD_STAGE)?;
-        if e.role_server||e.feature7||e.game_group.is_some()||e.authenticated_epoch==cfg.epoch||
-            !v3_ready(&e,e.authenticated_epoch,cfg.luid,cfg.ifindex)||
+        if e.role_server||e.feature7||e.game_group.is_some()||
+            !v3_ready(&e,cfg.epoch,cfg.luid,cfg.ifindex)||
             e.path_mtu!=old.path_mtu||e.path_mtu_is_outer!=old.path_mtu_is_outer||
             e.record_wire_limit!=old.record_wire_limit||e.peer_mss<old.peer_mss||
             e.m2.is_none(){return Err(INVALID)}
-        cfg.owner=owner;cfg.epoch=e.authenticated_epoch;
+        cfg.owner=owner;
         cfg.local_port=port;cfg.initial_tx_seq=tx_seq;cfg.initial_rx_seq=rx_seq;
         // Original Normal authenticated client Health sends its existing
         // cold burst; Linux promotes the new server /32 after real M4 RX.
@@ -95,7 +96,7 @@ impl NormalRotation{
         if p.counters.feedback_outer_bytes.load(Ordering::Acquire)==0{return Ok(false)}
         let e=p.lane.lock().map_err(|_|BAD_STAGE)?;
         let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
-        // No old lane or TCP ACK can authorize this distinct epoch.
+        // No old lane or TCP ACK can authorize this distinct incarnation.
         Ok(!m.health.peer_retired()&&m.health.last_authenticated_age_ns(m2_clock().0).is_some())
     }
     fn request_promote(&self,port:u16,grace_ms:u32)->Result<u64,i32>{

@@ -753,7 +753,8 @@ func(s *V4WindowsAuthenticatedClientOwner) BoundOriginalIPv4Budget(
 }
 
 // Normal MBB uses the existing original TLS owner. The successor is a new
-// protected epoch on the SAME actual Wintun device, not a new OS Apply/WAL.
+// protected incarnation in the SAME logical epoch on the same actual Wintun,
+// not a new OS Apply/WAL. Match the original Linux same-lane admission.
 // The first original owner remains the product's OS proof anchor.
 func(s *V4WindowsAuthenticatedClientOwner) PrepareOriginalNormalSuccessor(
  ctx context.Context,assoc *faketcp.ClientAssociation,base ClientAdmissionConfig,
@@ -772,8 +773,8 @@ func(s *V4WindowsAuthenticatedClientOwner) PrepareOriginalNormalSuccessor(
  }
  fresh,e:=session.ColdSnapshot()
  actualLease,le:=session.AuthenticatedLeaseIPv4()
- if e!=nil||le!=nil||actualLease!=priorLease||session.Epoch==previous.Epoch||
-    fresh.epoch==[16]byte{}||prior.server!=fresh.server||fresh.server||
+ if e!=nil||le!=nil||actualLease!=priorLease||session.Epoch!=previous.Epoch||
+    fresh.epoch!=prior.epoch||prior.server!=fresh.server||fresh.server||
     fresh.laneID!=1||prior.principal!=fresh.principal||prior.tunnelID!=fresh.tunnelID||
     prior.features!=fresh.features||prior.cipher!=fresh.cipher||
     prior.clientLimit!=fresh.clientLimit||prior.serverLimit!=fresh.serverLimit||
