@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "source_sha": "136d66fb79139144dd4e08a5e742ceccd493896c",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA native core351 and twelve functional profiles, five ARM diagnostic cases; performance identity screen not yet reviewed. Native workflow success after one failed-job retry, original failure retained.",
+  "run_id": 46024068536,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "attempt": 2,
+      "job_id": 140602742040,
+      "artifact_id": 15213595799,
+      "core_pass": 351,
+      "gso_groups": [
+        85,
+        51,
+        89,
+        62,
+        160,
+        95
+      ],
+      "gso_segments": [
+        1003,
+        768,
+        926,
+        800,
+        1520,
+        1105
+      ],
+      "client_pending_default": 131072,
+      "client_pending_rollback": 1011140
+    },
+    {
+      "arch": "aarch64",
+      "attempt": 1,
+      "job_id": 140590787039,
+      "artifact_id": 15211367271,
+      "core_pass": 351,
+      "gso_groups": [
+        161,
+        156,
+        104,
+        309,
+        175,
+        153
+      ],
+      "gso_segments": [
+        1489,
+        1622,
+        1037,
+        2580,
+        1713,
+        1331
+      ],
+      "client_pending_default": 131072,
+      "client_pending_rollback": 1010918
+    }
+  ],
+  "failed_attempt": {
+    "job_id": 140590786833,
+    "artifact_id": 15210543272,
+    "core_pass": 350,
+    "failed": "bbr_holds_its_rate_through_random_loss",
+    "goodput_bytes_s": 3732509.6,
+    "threshold_bytes_s": 3750000,
+    "unchanged_runtime_and_threshold": true,
+    "interpretation": "One retry passed; consistent with stochastic BBRv3 probe-cycle test variance, not established deterministic root cause."
+  },
+  "local": {
+    "order": [
+      "normal-B",
+      "normal-C",
+      "pause-C",
+      "loss-B",
+      "loss-C"
+    ],
+    "mbps": [
+      340.2621806327348,
+      340.2336754780479,
+      159.27263642984144,
+      63.06887505605685,
+      57.863335575232675
+    ],
+    "pending_max_samples": [
+      131072,
+      131072,
+      131072,
+      131072,
+      131072
+    ],
+    "credit_full_samples": [
+      5,
+      3,
+      32,
+      4,
+      6
+    ],
+    "stop_sample_retrans_bytes": [
+      0,
+      0,
+      0,
+      589016,
+      578646
+    ],
+    "all_hash_eof_profile": true
+  },
+  "performance": {
+    "run_id": 46024068630,
+    "attempt": 2,
+    "status": "in_progress",
+    "conclusion": null,
+    "review": "Original prepare failed; all execution jobs skipped; exact native passed after retry, requested one failed-job rerun. No identity evidence yet."
+  },
+  "governance": {
+    "main_h2509": "PASS",
+    "run_id": 46027668725,
+    "branch": "historical unresolved"
+  },
+  "physical": "NOT_RUN",
+  "review": "Actual x86 attempt2 and ARM attempt1 ZIPs opened CRC, exact source, six functional profiles each, ARM five rows and actual credit receipts, x86 attempt2 log named test and351. No product changes since 92d1db9."
+}
