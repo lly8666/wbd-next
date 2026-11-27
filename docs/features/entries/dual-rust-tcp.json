@@ -41,7 +41,8 @@
     "docs/devlog/M0/20261127-PACING80-RESULT-STARTUP-AND-160.md",
     "docs/devlog/M0/20261127-ADJACENT-LEG-RELAY-CREDIT.md",
     "docs/devlog/M0/20261127-RELAY-CREDIT-NAGLE-TEST-CORRECTION.md",
-    "docs/devlog/M0/20261127-RELAY-CREDIT-LOCAL-PASS-CROSS-HOST.md"
+    "docs/devlog/M0/20261127-RELAY-CREDIT-LOCAL-PASS-CROSS-HOST.md",
+    "docs/devlog/M0/20261127-RELAY-CREDIT-CROSS-HOST-PASS-REQUALIFY.md"
   ],
   "verification": [
     {
@@ -93,7 +94,8 @@
     "ddc6b5d native PASS; cross ABBA incomplete A2 post-app sample, both cap80 backlogged1GiB >117s final retrans0.00164/0.00135%, goodput~73M CPU/GiB~85.5; no default promotion. Next independent Startup1.5 and cap80/160 ABBA.",
     "bd36c2e native PASS, 10/10 cross-host; cap160 139.59Mbps/0.00222% final retrans, cap80 73.58Mbps/0.00126%; Startup1.5 rejected. Adjacent-leg relay pending credit opt-in both endpoints, no pace cap, normal/paused consumer and uncapped ABBA pending.",
     "d09f615 both ISA core350/351, same new relay-credit unit failed pending96 vs expected0 after 4x1000 MSS; Nagle-tail test assumption corrected, runtime untouched. Native normal/paused and cross-host ABBA not run on failed source.",
-    "ff19c06 exact dual ISA351, six native and four local cases PASS; normal339.41 vs344.48M, server full2994→0; paused159.32 vs93.05M, pending64MiB→128KiB, zero window sampled12s, origin single write stall13.45s, exact payload and Stop. No cross-host result yet; opt-in only."
+    "ff19c06 exact dual ISA351, six native and four local cases PASS; normal339.41 vs344.48M, server full2994→0; paused159.32 vs93.05M, pending64MiB→128KiB, zero window sampled12s, origin single write stall13.45s, exact payload and Stop. No cross-host result yet; opt-in only.",
+    "f7614b6 native and cross-host6/6 measured; uncapped relay credit mean235.86→254.34M, CPU/GiB30.50→25.36, weighted final retrans6.351→4.343%, server full5672→0. Useful partial mitigation; weak loss, candidate native profiles and reverse order requalification pending, not default."
   ],
   "promotion": null
 }

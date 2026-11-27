@@ -11,7 +11,7 @@ OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
 # Test adjacent-leg relay credit without a fixed throughput ceiling.
 # Same binary and actual business, one A/B/B/A block.
-ORDER=("A","B","B","A")
+ORDER=("B","A","A","B")
 CASES=(-1,0,1,2,3,-2)
 PROFILES={"A":"selected-default","B":"adjacent-leg-pending-credit"}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
@@ -404,7 +404,7 @@ def client():
                 sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                 recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary uncapped adjacent-leg relay admission credit ABBA; fixed1GiB/600M offered, same-RTT bare brackets; actual pending/cap/available samples and final-or-Stop recovery; lab only","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"independent reversed-order B/A/A/B of uncapped adjacent-leg relay credit; fixed1GiB/600M offered, same-RTT bare brackets; actual pending/cap/available samples and final-or-Stop recovery; lab only","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

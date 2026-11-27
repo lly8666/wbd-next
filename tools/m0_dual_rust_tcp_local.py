@@ -116,6 +116,13 @@ def functional():
                 vals=dict(x.split("=",1) for x in m4.split() if "=" in x)
                 assert int(vals["copied"])>0,m4
             row["selected_default_receipts"]=True
+        if os.environ.get("WBD_M0_RELAY_PENDING_CREDIT")=="1":
+            credit=[]
+            for role,log in (("server",sl),("client",cl)):
+                samples=[(int(m.group(1)),int(m.group(2))) for x in log.splitlines() if "WBD_M0_TCP_INFO " in x and (m:=re.search(r" relay_pending_limit=(\d+) relay_pending_bytes=(\d+) ",x))]
+                assert samples and all(l==131072 and p<=l for l,p in samples),role
+                credit.append({"role":role,"samples":len(samples),"max_pending":max(p for l,p in samples)})
+            row["relay_credit_receipts"]=credit
         expected_slots=2048 if os.environ.get("WBD_M0_NATIVE_INBOX_DOUBLE")=="1" else 1024
         for log in (sl,cl):
             receipt=next(s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND " in s)
@@ -151,14 +158,14 @@ def controlled_recovery():
     rows=[]
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--dual-rust-tcp"]
-    # Test real downstream pause with the same application and both
-    # paired profiles, no artificial pacing ceiling. Also verify normal
-    # high-load progress without a paused consumer.
+    # Normal and paused clean cases have two reviewed repetitions.
+    # Qualify the candidate under true data-path loss before selection.
+    credit={"WBD_M0_RELAY_PENDING_CREDIT":"1"}
     cases=[
-        ("normal-default",True,600_000_000,{},0,0,512),
-        ("normal-credit",True,600_000_000,{"WBD_M0_RELAY_PENDING_CREDIT":"1"},0,0,512),
-        ("pause-default",True,600_000_000,{},0,0,512),
-        ("pause-credit",True,600_000_000,{"WBD_M0_RELAY_PENDING_CREDIT":"1"},0,0,512),
+        ("loss-A1",True,120_000_000,{},0,0.5,96),
+        ("loss-B1",True,120_000_000,credit,0,0.5,96),
+        ("loss-B2",True,120_000_000,credit,0,0.5,96),
+        ("loss-A2",True,120_000_000,{},0,0.5,96),
     ]
     for label,paired,offered,profile,jitter,loss,mib in cases:
         target_bytes=mib*1024*1024
@@ -312,7 +319,7 @@ def controlled_recovery():
             save(d/"result.json",row)
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, fixed512MiB actual finite app at600M offer, uncapped adjacent-leg relay pending credit; ordinary and paused consumer, zero injection400ms; actual profile/rate and final-or-Stop sample; local qualification not ABBA","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, fixed96MiB exact app at120M offer, uncapped adjacent-leg relay credit ABBA,0.5% IID both directions after control setup,400ms added RTT; actual profile/rate, qdisc delta and final-or-Stop sample; seed capability recorded","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)
