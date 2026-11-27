@@ -112,68 +112,8 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with: {name: winxdp-single-rss-roster, path: 'h2442-out/', retention-days: 14}
-  build:
-    runs-on: windows-2025
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with: {persist-credentials: false, fetch-depth: 0}
-      - name: H1394 pin official ISA-L Win64 static prerequisite
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          choco install nasm -y --no-progress
-          if($LASTEXITCODE -ne 0){throw 'native ISA-L NASM prerequisite failed'}
-          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin') |
-            Where-Object {Test-Path (Join-Path $_ 'nasm.exe')} | Select-Object -First 1
-          if(-not $nasm){throw 'ISA-L NASM missing after install'}
-          Add-Content -Path $env:GITHUB_PATH -Value $nasm
-          git clone --quiet https://github.com/intel/isa-l.git isa-l
-          if($LASTEXITCODE -ne 0){throw 'official ISA-L clone failed'}
-          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
-          if((git -C isa-l rev-parse HEAD).Trim() -ne 'c387163fcbca62701d646149564c550c78a4f985'){throw 'official pinned ISA-L source mismatch'}
-      - name: H1394 build official static ISA-L for real MSVC release DLL
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          # The actual Windows native runner can have a different VS edition/year.
-          # Require the installed x64 MSVC tools, not a hard-coded Enterprise path.
-          $vswhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-          if(-not (Test-Path -LiteralPath $vswhere)){throw 'VS installer vswhere missing: cannot build pinned native ISA-L'}
-          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath |
-            Select-Object -First 1
-          if([string]::IsNullOrWhiteSpace($vsroot)){throw 'No installed native MSVC x64 toolchain'}
-          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
-          if(-not (Test-Path -LiteralPath $vcvars)){throw 'Installed MSVC lacks vcvars64.bat'}
-          $nativeBuild='call "'+$vcvars+'" && where nmake && cd isa-l && nmake /f Makefile.nmake'
-          & cmd.exe /d /s /c $nativeBuild
-          if($LASTEXITCODE -ne 0){throw 'Native ISA-L MSVC static build failed'}
-          Write-Output 'H1396_WIN_NATIVE_ISAL_VSWHERE_MSVC_BUILD_PASS'
-      - name: Build instrumented WinXDP lab DLL with ISA-L
-        shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          rustup toolchain install 1.85.1 --profile minimal --no-self-update
-          if($LASTEXITCODE -ne 0){throw 'Rust toolchain'}
-          nuget install Microsoft.XDP-for-Windows.Sdk -Version 1.4.0 -OutputDirectory xdp-packages -NonInteractive
-          if($LASTEXITCODE -ne 0){throw 'official XDP SDK unavailable'}
-          $env:WBD_XDP_SDK_INCLUDE=(Get-ChildItem xdp-packages -Recurse -Filter xdpapi.h | Where-Object {$_.Directory.Name -eq 'include'} | Select-Object -First 1).Directory.FullName
-          $archive=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File | Select-Object -First 1
-          if(-not $archive){throw 'ISA-L archive missing'}
-          $env:WBD_ISAL_PREFIX=$archive.Directory.FullName
-          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
-          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration,winxdp_native_trial'
-          $vs=& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-          New-Item -ItemType Directory -Force xdp-build | Out-Null
-          $env:WBD_XDP_PRESSURE_LAB='1'
-          $cmd='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo +1.85.1 build --locked -p wbd-engine --release --features '+$features+' && copy /Y target\release\wbd_engine.dll xdp-build\wbd_engine.dll && cargo +1.85.1 test --locked -p wbd-engine --release --features '+$features+' winxdp_fixed_product_arena_retains_original_fec_budget_and_rx_headroom -- --nocapture'
-          cmd.exe /d /s /c $cmd
-          if($LASTEXITCODE -ne 0){throw 'native ISA-L A/B build failed'}
-          [ordered]@{source_sha=$env:GITHUB_SHA;lab=$true;features=$features;dll=(Get-FileHash xdp-build/wbd_engine.dll).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content xdp-build/lab-manifest.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with: {name: winxdp-lab-dll, path: 'xdp-build/', if-no-files-found: error, retention-days: 14}
   tcp:
-    needs: [build, roster]
+    needs: roster
     strategy:
       fail-fast: false
       matrix:
@@ -328,13 +268,15 @@ jobs:
           if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'unexpected Npcap dependency'}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c80933
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S' }}
-        with: {name: winxdp-lab-dll, path: lab-build}
+        with: {name: winxdp-lab-dll, path: lab-build, run-id: 45936129594, github-token: '${{ github.token }}'}
       - name: Select exact lab DLL after original package installation
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S' }}
         shell: pwsh
         run: |
           $m=Get-Content lab-build/lab-manifest.json -Raw | ConvertFrom-Json
-          if($m.source_sha -ne $env:GITHUB_SHA -or !$m.lab -or (Get-FileHash lab-build/wbd_engine.dll).Hash.ToLowerInvariant() -ne $m.dll){throw 'lab identity mismatch'}
+          git diff --exit-code a913e3a024fe534d4eaf10eca881844c0bdf3f13 "$GITHUB_SHA" -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_winxdp_release_package.ps1 tools/m0_plan028_h1640_win_gui_compile.ps1 tools/m0_winxdp_driver_setup.cs
+          if($LASTEXITCODE -ne 0){throw 'frozen lab product sources changed'}
+          if($m.source_sha -ne 'a913e3a024fe534d4eaf10eca881844c0bdf3f13' -or !$m.lab -or (Get-FileHash lab-build/wbd_engine.dll).Hash.ToLowerInvariant() -ne $m.dll){throw 'lab identity mismatch'}
           Copy-Item lab-build/wbd_engine.dll result/wl-public/wbd_engine.dll -Force
           "WBD_XDP_TESTED_DLL_SHA=$($m.source_sha)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: 'Pool TCP 350M quartet'
@@ -416,7 +358,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
   udp:
-    needs: [build, roster]
+    needs: roster
     strategy:
       fail-fast: false
       matrix:
@@ -576,13 +518,15 @@ jobs:
           if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'unexpected Npcap dependency'}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c80933
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S' }}
-        with: {name: winxdp-lab-dll, path: lab-build}
+        with: {name: winxdp-lab-dll, path: lab-build, run-id: 45936129594, github-token: '${{ github.token }}'}
       - name: Select exact lab DLL after original package installation
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'S' }}
         shell: pwsh
         run: |
           $m=Get-Content lab-build/lab-manifest.json -Raw | ConvertFrom-Json
-          if($m.source_sha -ne $env:GITHUB_SHA -or !$m.lab -or (Get-FileHash lab-build/wbd_engine.dll).Hash.ToLowerInvariant() -ne $m.dll){throw 'lab identity mismatch'}
+          git diff --exit-code a913e3a024fe534d4eaf10eca881844c0bdf3f13 "$GITHUB_SHA" -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_winxdp_release_package.ps1 tools/m0_plan028_h1640_win_gui_compile.ps1 tools/m0_winxdp_driver_setup.cs
+          if($LASTEXITCODE -ne 0){throw 'frozen lab product sources changed'}
+          if($m.source_sha -ne 'a913e3a024fe534d4eaf10eca881844c0bdf3f13' -or !$m.lab -or (Get-FileHash lab-build/wbd_engine.dll).Hash.ToLowerInvariant() -ne $m.dll){throw 'lab identity mismatch'}
           Copy-Item lab-build/wbd_engine.dll result/wl-public/wbd_engine.dll -Force
           "WBD_XDP_TESTED_DLL_SHA=$($m.source_sha)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: 'Pool Maximum UDP 288B quartet'

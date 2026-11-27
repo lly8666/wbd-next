@@ -30,7 +30,7 @@ static UINT32 free_count(RxOwner* o){return o->pool_total-o->pool_next+o->free_c
 static void account(RxOwner* o){
     UINT32 sum=free_count(o);
     for(UINT32 i=0;i<o->count;++i)sum+=o->queues[i].posted;
-    require(sum==o->pool_total,"pool accounting");
+    require(sum==(o->pooled?o->pool_total:o->count*o->slots),"pool accounting");
 }
 // Do not infer the actual RSS hash from source ports. Read real RX queue IDs.
 static void batch(RxOwner* o,unsigned port,unsigned count,std::map<unsigned,unsigned>& mapping){
