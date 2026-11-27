@@ -124,5 +124,10 @@ if os.environ.get("WBD_XDP_STRESS_PHASE")=="pool-qualification":
             dict(name="single-max-loss5",direction="duplex",rate=50,delay=200,streams=4,mtu=1400,profile=6,loss=5),
             dict(name="single-max-loss10",direction="duplex",rate=10,delay=200,streams=4,mtu=1400,profile=6,loss=10),
         ]
+    loan=os.environ.get("WBD_XDP_SOURCE_LOAN")=="1"
+    if loan:
+        replica=os.environ.get("H2478_REPLICA","S")
+        workloads=[dict(name="single-loan-up350",direction="up",rate=350,delay=20,streams=4,mtu=1460) if replica in "ACEGIKS" else
+                   dict(name="single-loan-duplex175",direction="duplex",rate=175,delay=20,streams=4,mtu=1460)]
     seq="BAAB" if os.environ.get("H2478_REPLICA") in "BDFHJL" else "ABBA"
-    CASES=[dict(base,**w,arm=arm,group=w["name"],policy="original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),budget=w["rate"]) for w in workloads for arm in seq]
+    CASES=[dict(base,**w,arm=arm,group=w["name"],policy=("rx-single" if arm=="A" else "rx-single-loan") if loan else "original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),budget=w["rate"]) for w in workloads for arm in seq]

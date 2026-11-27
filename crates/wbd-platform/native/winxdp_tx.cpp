@@ -420,9 +420,9 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     // table length; set every entry to one currently valid processor.
     // Generic rss.c assigns one queue per distinct processor, starting
     // at queue0. The scoped interface handle restores the original table.
-    if(!udp&&port_count==1&&(!std::strcmp(policy,"rx-single")||
+    if(!udp&&port_count==1&&(!std::strcmp(policy,"rx-single")||!std::strcmp(policy,"rx-single-loan")||
         GetEnvironmentVariableA("WBD_XDP_SINGLE_RSS",nullptr,0)>0)){
-        const bool single=!std::strcmp(policy,"rx-single");
+        const bool single=!std::strcmp(policy,"rx-single")||!std::strcmp(policy,"rx-single-loan");
         alignas(XDP_RSS_CONFIGURATION) unsigned char buf[4096]{};
         auto* cfg=reinterpret_cast<XDP_RSS_CONFIGURATION*>(buf);
         UINT32 bytes=sizeof(buf);

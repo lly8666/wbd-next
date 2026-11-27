@@ -228,7 +228,7 @@ def main():
     global CURRENT
     rows=[]
     log=(OUT/"server-control.log").open("w")
-    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"WBD_XDP_STRESS_PHASE="+os.environ.get("WBD_XDP_STRESS_PHASE",""),"WBD_XDP_SINGLE_WIDE="+os.environ.get("WBD_XDP_SINGLE_WIDE","0"),"WBD_XDP_SINGLE_RSS="+os.environ.get("WBD_XDP_SINGLE_RSS","0"),"H2478_REPLICA="+os.environ["H2478_REPLICA"],"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
+    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"WBD_XDP_STRESS_PHASE="+os.environ.get("WBD_XDP_STRESS_PHASE",""),"WBD_XDP_SINGLE_WIDE="+os.environ.get("WBD_XDP_SINGLE_WIDE","0"),"WBD_XDP_SOURCE_LOAN="+os.environ.get("WBD_XDP_SOURCE_LOAN","0"),"WBD_XDP_SINGLE_RSS="+os.environ.get("WBD_XDP_SINGLE_RSS","0"),"H2478_REPLICA="+os.environ["H2478_REPLICA"],"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
     try:
         deadline=time.monotonic()+60
         while "H2442_SERVER_CONTROL_READY" not in (OUT/"server-control.log").read_text(errors="replace"):
@@ -336,7 +336,11 @@ def main():
                 r["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in r["rx_lab"]),default=0)
                 if pool:
                     r["rx_pool"]=receipt("WBD_XDP_RX_POOL_STOP ")
-                    if os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
+                    if os.environ.get("WBD_XDP_SOURCE_LOAN")=="1":
+                        r["rss_map_before"]=receipt("WBD_XDP_RSS_MAP_BEFORE ")
+                        r["source_loan"]=receipt("WBD_XDP_WINTUN_SOURCE_LOAN_STOP ")
+                        r["pressure_valid"]=r["pressure_valid"] and r["rss_map_before"].get("processors",0)>1 and r["rx_pool"].get("single")==1 and r["rx_pool"].get("queues")==1 and r["rx_pool"].get("backing_bytes")==33554432 and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and bool(r["source_loan"]) and (r["source_loan"].get("packets",0)>0)==(r["arm"]=="B")
+                    elif os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
                         r["rss_map_before"]=receipt("WBD_XDP_RSS_MAP_BEFORE ")
                         r["pressure_valid"]=r["pressure_valid"] and r["rss_map_before"].get("processors",0)>1 and r["rx_pool"].get("single")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and (r["arm"]=="A" or (r["rx_pool"].get("queues")==1 and r["rx_pool"].get("backing_bytes")==33554432 and "WBD_XDP_SINGLE_RSS_READY processors=1 queues=1" in s))
                     else:
@@ -388,7 +392,7 @@ def main():
                     print(("WINXDP_NORMAL_TUNE_PAIR " if tune else "WINXDP_CARRIER_ABBA_PAIR ")+json.dumps(pair),flush=True)
                     save(OUT/("pair-"+r["group"]+".json"),pair)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
-            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","rx_pool","rss_map_before","pending_lab","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","fec_receipts","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
+            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","rx_pool","rss_map_before","source_loan","pending_lab","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","fec_receipts","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
             if r.get("shape_clear_error") or not r.get("client_stop") or not r.get("server_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):
                 for pth in (SERVER/("case-"+str(i))/"server.log",SERVER/("case-"+str(i))/"source.log",d/"client.log"):
                     if pth.exists():

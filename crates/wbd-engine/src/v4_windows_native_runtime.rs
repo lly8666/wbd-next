@@ -256,6 +256,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  }
  struct Counters {
      tx_copied:AtomicU64,
+     wintun_source_loans:AtomicU64,
      rx_delivered:AtomicU64,
      rx_tx_notify_attempts:AtomicU64,
      post_ingress_direct_to_rx:AtomicU64,
@@ -285,7 +286,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  }
  impl Counters {
      fn new(ack:u32,seq:u32)->Self{
-         Self{tx_copied:AtomicU64::new(0),rx_delivered:AtomicU64::new(0),
+         Self{tx_copied:AtomicU64::new(0),wintun_source_loans:AtomicU64::new(0),rx_delivered:AtomicU64::new(0),
              rx_tx_notify_attempts:AtomicU64::new(0),
              post_ingress_direct_to_rx:AtomicU64::new(0),
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
@@ -537,11 +538,13 @@ fn stage_sources(
      counters:&Counters,ip_id:&mut u16,fixed:bool,
      split:&mut Option<NativeSplitWorker>,now_ms:u64,
      sources:&mut [[u8;MAX_IPV4];BATCH],frames:&mut SourceFrames,
+     source_loan:bool,
  )->Result<StageWork,i32>{
      // One bounded Wintun drain, ONE Entry lock to seal ALL ready sources,
      // ONE NPF ready-only queue and ONE lock to settle real driver receipts.
      // No Vec, Go call, thread pool or shared registry lookup per packet.
      let mut source_len=[0usize;BATCH];
+     let mut loans:[Option<io::WintunPacket<'_>>;BATCH]=std::array::from_fn(|_|None);
      let mut count=0;
      let mut captured=0usize;
      let mut direct=0usize;
@@ -556,13 +559,28 @@ fn stage_sources(
      // even a single ready credit; never wait to assemble a full batch.
      for _ in 0..admitted {
          if counters.stopping.load(Ordering::Acquire){break}
-         match tun.read(&mut sources[count]){
+         let ready=if source_loan{
+             match tun.borrow_packet(MAX_IPV4){
+                 Ok(io::WintunLoanRead::Packet(packet))=>{
+                     let n=packet.bytes().len();
+                     loans[count]=Some(packet);Ok(ReadResult::Frame(n))
+                 },
+                 Ok(io::WintunLoanRead::Other(r))=>Ok(r),
+                 Err(e)=>Err(e),
+             }
+         }else{tun.read(&mut sources[count])};
+         match ready{
              Ok(ReadResult::Frame(n))=>{
                  captured+=1;
                  if let Some(s)=split.as_mut(){
-                     match s.on_packet(&sources[count][..n],now_ms){
+                     let source=loans[count].as_ref().map_or(&sources[count][..n],|p|p.bytes());
+                     match s.on_packet(source,now_ms){
                          NativeDecision::Tunnel=>{},
                          NativeDecision::TunnelDns=>{
+                             // Only the DNS rewrite needs mutable source storage.
+                             if let Some(packet)=loans[count].take(){
+                                 sources[count][..n].copy_from_slice(packet.bytes());
+                             }
                              if !s.rewrite_tunnel_dns(&mut sources[count][..n],now_ms){
                                  // Only this bounded Tunnel DNS request
                                  // failed admission, e.g. 256 tickets full.
@@ -573,8 +591,9 @@ fn stage_sources(
                                  continue
                              }
                          },
-                         NativeDecision::DirectHandled=>{direct+=1;continue},
+                         NativeDecision::DirectHandled=>{loans[count]=None;direct+=1;continue},
                          NativeDecision::LocalDrop=>{
+                             loans[count]=None;
                              counters.rejected.fetch_add(1,Ordering::Relaxed);
                              continue
                          },
@@ -607,7 +626,7 @@ fn stage_sources(
      let mut batch={let _=frames;npf.reserve(count).map_err(|_|BAD_STAGE)?};
      let order:[usize;BATCH]=if count==BATCH{
          crate::v4_ingress_fair::ready_order(std::array::from_fn(|i|
-             crate::v4_ingress_fair::flow_key(&sources[i][..source_len[i]])),count)
+             crate::v4_ingress_fair::flow_key(loans[i].as_ref().map_or(&sources[i][..source_len[i]],|p|p.bytes()))),count)
      }else{std::array::from_fn(|i|i)};
      let mut meta=[(0u64,0u32,0usize);BATCH];
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
@@ -621,7 +640,7 @@ fn stage_sources(
                  {
                      let (used,seq,pn)=fec2::stage_fixed_source_entry(
                          &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                         &sources[j][..source_len[j]],
+                         loans[j].as_ref().map_or(&sources[j][..source_len[j]],|p|p.bytes()),
                          &mut batch.frame(i)[FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+MAX_IPV4]
                      )?;
                      meta[i]=(pn,seq,used);
@@ -639,7 +658,7 @@ fn stage_sources(
              // No new delay, second queue, worker or PN allocator.
              for i in 0..count{
                  let j=order[i];
-                 let source=&sources[j][..source_len[j]];
+                 let source=loans[j].as_ref().map_or(&sources[j][..source_len[j]],|p|p.bytes());
                  let pad=if pad_enabled{
                      let room=budget.record_wire_mtu.min(MAX_IPV4).saturating_sub(
                          source.len().saturating_add(FIXED_WIRE_OVERHEAD));
@@ -659,6 +678,13 @@ fn stage_sources(
 
          }
      }
+     // Every source is now copied into its owned record/final Fixed slot.
+     // Release the bounded Wintun loans before header build or driver submit.
+     if source_loan{
+         let n=loans.iter().filter(|p|p.is_some()).count();
+         counters.wintun_source_loans.fetch_add(n as u64,Ordering::Relaxed);
+     }
+     drop(loans);
      let mut lens=[0usize;BATCH];
      let ack=counters.ack.load(Ordering::Acquire);
      for i in 0..count {
@@ -1038,6 +1064,9 @@ fn stage_sources(
      // Genuine reverse ACK-only fallback, only when no piggybacked DATA
      // has settled current progress; never a periodic ACK/PTO generator.
      let mut last_pure_ack=None::<Instant>;
+     let lab_source_loan=cfg!(feature="winxdp_tx_trial")
+         &&option_env!("WBD_XDP_PRESSURE_LAB")==Some("1")
+         &&std::env::var("WBD_XDP_LAB_POLICY").ok().as_deref()==Some("rx-single-loan");
      #[cfg(feature="winxdp_tx_trial")]
      let lab_feedback_first=option_env!("WBD_XDP_PRESSURE_LAB")==Some("1")
          &&std::env::var("WBD_XDP_LAB_POLICY").ok().as_deref()==Some("feedback");
@@ -1222,7 +1251,7 @@ fn stage_sources(
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
                  let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
                      &counters,&mut ip_id,fixed,&mut split,now_ms,
-                     &mut sources,&mut frames)?;
+                     &mut sources,&mut frames,lab_source_loan)?;
                  work+=staged.tunnel;
                  fresh_direct_ingress|=staged.direct>0;
                  direct_progress|=staged.direct>0;
@@ -2144,6 +2173,10 @@ fn stage_sources(
      };
      let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
      let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
+     if option_env!("WBD_XDP_PRESSURE_LAB")==Some("1"){
+         eprintln!("WBD_XDP_WINTUN_SOURCE_LOAN_STOP packets={} joined=true",
+             session.counters.wintun_source_loans.load(Ordering::Relaxed));
+     }
      eprintln!("PLAN029B_WINTUN_IPV6_SKIPPED_STOP packets={} joined=true original_wintun_owner=1",
          session.counters.skipped_ipv6.load(Ordering::Relaxed));
      eprintln!("WBD_WINDOWS_RUST_NATIVE_WAKE_BATCH max_verified_per_wake={} tx_wake_attempts={} rx_data_delivered={} joined=true",
