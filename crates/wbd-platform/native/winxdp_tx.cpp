@@ -44,7 +44,7 @@ struct TxOwner {
 #ifdef WBD_XDP_PRESSURE_LAB
     UINT32 slots,peak_pending,peak_unreclaimed;
     UINT64 samples,zero_credit,partial_credit,credit_calls;
-    bool early_reclaim;
+    bool early_reclaim,publish_reclaim;
     UINT64 reclaim_calls,reclaim_batches,reclaim_pokes,early_reclaims;
 #endif
 };
@@ -126,7 +126,9 @@ static TxOwner* open_tx(DWORD ifindex,UINT32 slots,XSK_BIND_FLAGS mode,HRESULT* 
 #ifdef WBD_XDP_PRESSURE_LAB
     o->slots=slots;
     {char policy[32]{};GetEnvironmentVariableA("WBD_XDP_LAB_POLICY",policy,sizeof(policy));
-    o->early_reclaim=slots==Slots&&!std::strcmp(policy,"rx-single-reclaim");}
+    o->early_reclaim=slots==Slots&&!std::strcmp(policy,"rx-single-reclaim");
+    char publish[4]{};
+    o->publish_reclaim=o->early_reclaim&&GetEnvironmentVariableA("WBD_XDP_PUBLISH_RECLAIM",publish,sizeof(publish))==1&&publish[0]=='1';}
 #endif
     *result=S_OK;return o;
 fail:
@@ -153,7 +155,7 @@ extern "C" int wbd_xdp_tx_credit(void* raw,UINT32 wanted){
 #ifdef WBD_XDP_PRESSURE_LAB
     // Refill ahead of exhaustion only if a real large completion batch
     // is already available. No wait, no deferral of the required poke.
-    else if(o->early_reclaim&&o->free_count>=wanted&&o->free_count<=512&&
+    else if(o->early_reclaim&&!o->publish_reclaim&&o->free_count>=wanted&&o->free_count<=512&&
         ReadUInt32Acquire(o->completion.SharedProducer)-*o->completion.SharedConsumer>=512){
         ++o->early_reclaims;if(!reclaim(o))return -1;
     }
@@ -234,7 +236,22 @@ extern "C" int wbd_xdp_tx_publish(void* raw,const size_t* lengths){
         d->Length=static_cast<UINT32>(lengths[i]);d->Reserved=0;
     }
     XskRingProducerSubmit(&o->tx,n);o->published+=n;o->reserved_count=0;
+#ifdef WBD_XDP_PRESSURE_LAB
+    // The publication is the sole point that consumes free chunks.
+    // At this boundary there are no outstanding unpublished chunk loans.
+    // Return only completed addresses, then service the required TX poke
+    // immediately for both ring advances. No timer, wait or FEC knowledge.
+    const bool refill=o->publish_reclaim&&o->free_count<=512&&
+        ReadUInt32Acquire(o->completion.SharedProducer)-*o->completion.SharedConsumer>=512;
+    if(refill){
+        ++o->early_reclaims;
+        reclaim(o,false);
+    }
+#endif
     if(XskRingProducerNeedPoke(&o->tx)){
+#ifdef WBD_XDP_PRESSURE_LAB
+        if(refill)++o->reclaim_pokes;
+#endif
         XSK_NOTIFY_RESULT_FLAGS result{};++o->pokes;
         HRESULT hr=XskNotifySocket(o->socket,XSK_NOTIFY_FLAG_POKE_TX,0,&result);
         if(FAILED(hr)){std::fprintf(stderr,"WBD_XDP_TX_POKE_FAILED hr=0x%08lx\n",(unsigned long)hr);return 0;}
@@ -247,7 +264,7 @@ extern "C" void wbd_xdp_tx_report(void* raw){
     o->reported=true;
     reclaim(o,false);
 #ifdef WBD_XDP_PRESSURE_LAB
-    std::fprintf(stderr,"WBD_XDP_TX_RECLAIM_LAB enabled=%u calls=%llu batches=%llu early=%llu reclaim_pokes=%llu\n",o->early_reclaim?1u:0u,o->reclaim_calls,o->reclaim_batches,o->early_reclaims,o->reclaim_pokes);
+    std::fprintf(stderr,"WBD_XDP_TX_RECLAIM_LAB enabled=%u calls=%llu batches=%llu early=%llu reclaim_pokes=%llu publish_mode=%u\n",o->early_reclaim?1u:0u,o->reclaim_calls,o->reclaim_batches,o->early_reclaims,o->reclaim_pokes,o->publish_reclaim?1u:0u);
     std::fprintf(stderr,"WBD_XDP_TX_LAB slots=%u samples=%llu peak_pending_sampled=%u peak_unreclaimed_sampled=%u credit_calls=%llu zero_credit=%llu partial_credit=%llu\n",o->slots,o->samples,o->peak_pending,o->peak_unreclaimed,o->credit_calls,o->zero_credit,o->partial_credit);
 #endif
     XSK_STATISTICS stats{};UINT32 size=sizeof(stats);

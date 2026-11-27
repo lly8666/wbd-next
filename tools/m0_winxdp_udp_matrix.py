@@ -88,6 +88,8 @@ def main():
         if fec_shard:
             assert arch=="arch-reclaim" and os.environ.get("WBD_XDP_ARCH_REPEAT")=="1"
             workloads={
+                "publish-game":[("game2-fec-dir-duplex50","game2-fec",50,5,20,288),
+                                ("game4-fec-dir-duplex50","game4-fec",50,5,20,288)],
                 "maximum-load":[("maximum-large150-loss5","fixed",150,5,20,1200),
                                 ("maximum-small75-loss5","fixed",75,5,20,288)],
                 "auto-only":[("auto-large100-loss5","auto",100,5,20,1200)],
@@ -216,6 +218,8 @@ def main():
                     row["cipher_lab"]=receipts("WBD_XDP_CIPHER_LOAN_LAB ")
                     b=row["arm"]=="B"
                     row["lab_ok"]=row["lab_ok"] and len(row["reclaim_lab"])==1 and row["reclaim_lab"][0].get("enabled")==int(b) and bool(row["rx"]) and all(q.get("queues",0)>0 and q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
+                    if os.environ.get("WBD_XDP_PUBLISH_RECLAIM")=="1":
+                        row["lab_ok"]=row["lab_ok"] and all(q.get("publish_mode")==int(b) for q in row["reclaim_lab"])
                     row["mechanism_exercised"]=not b or any(q.get("early",0)>0 for q in row["reclaim_lab"])
                 elif os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
                     row["rss_map_before"]=receipts("WBD_XDP_RSS_MAP_BEFORE ")
@@ -230,6 +234,8 @@ def main():
                         # Exclude any cold DNS TX owner from the candidate receipt;
                         # the fixed one-lane data path has the existing 2048-slot TX.
                         row["lab_ok"]=row["lab_ok"] and bool(row["reclaim_lab"] and row["wake_lab"] and row["cipher_lab"]) and any(q.get("enabled")==int(b and arch=="arch-reclaim") for q in row["reclaim_lab"]) and all(q.get("enabled")==int(b and arch=="arch-wake") for q in row["wake_lab"]) and all((q.get("packets",0)>0)==(b and arch=="arch-cipher") for q in row["cipher_lab"])
+                        if os.environ.get("WBD_XDP_PUBLISH_RECLAIM")=="1":
+                            row["lab_ok"]=row["lab_ok"] and bool(row["reclaim_lab"]) and all(q.get("publish_mode")==int(b) for q in row["reclaim_lab"])
                         row["mechanism_exercised"]=not b or any(q.get(key,0)>0 for q in row[{"arch-reclaim":"reclaim_lab","arch-wake":"wake_lab","arch-cipher":"cipher_lab"}[arch]] for key in [{"arch-reclaim":"early","arch-wake":"reused","arch-cipher":"packets"}[arch]])
                 else:
                     row["lab_ok"]=row["lab_ok"] and bool(row["rx_pool"]) and all(q.get("enabled")==int(row["arm"]=="B") and q.get("recycle")==int(row["arm"]=="B") and (q.get("posted",0)+q.get("reserve_remaining",0))*2048==q.get("backing_bytes") and q.get("posted",0)>=q.get("base",0)*q.get("queues",0) for q in row["rx_pool"]) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])

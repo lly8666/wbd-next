@@ -159,7 +159,7 @@ if arch in ("arch-reclaim","arch-wake","arch-cipher"):
 # across orders. Use the exact already-built candidate DLL.
 if os.environ.get("WBD_XDP_ARCH_REPEAT")=="1":
     assert arch in ("arch-reclaim","arch-cipher")
-    if arch=="arch-reclaim":
+    if arch=="arch-reclaim" and os.environ.get("WBD_XDP_PUBLISH_RECLAIM")!="1":
         # Earlier Maximum TCP was neutral; prioritize upload replication.
         workloads=[w for w in workloads if w["name"]=="reclaim-up350"]
     orders=("BAAB","ABBA") if seq=="BAAB" else ("ABBA","BAAB")

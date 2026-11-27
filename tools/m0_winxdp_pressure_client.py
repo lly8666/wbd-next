@@ -359,6 +359,8 @@ def main():
                             r["cipher_lab"]=receipt("WBD_XDP_CIPHER_LOAN_LAB ")
                             b=r["arm"]=="B"
                             r["pressure_valid"]=r["pressure_valid"] and bool(r["reclaim_lab"] and r["wake_lab"] and r["cipher_lab"]) and r["reclaim_lab"].get("enabled")==int(b and arch=="arch-reclaim") and r["wake_lab"].get("enabled")==int(b and arch=="arch-wake") and (r["cipher_lab"].get("packets",0)>0)==(b and arch=="arch-cipher")
+                            if os.environ.get("WBD_XDP_PUBLISH_RECLAIM")=="1":
+                                r["pressure_valid"]=r["pressure_valid"] and r["reclaim_lab"].get("publish_mode")==int(b)
                             r["mechanism_exercised"]=not b or {"arch-reclaim":r["reclaim_lab"].get("early",0),"arch-wake":r["wake_lab"].get("reused",0),"arch-cipher":r["cipher_lab"].get("packets",0)}[arch]>0
                     else:
                         r["pressure_valid"]=r["pressure_valid"] and r["rx_pool"].get("enabled")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and r["rx_pool"].get("recycle")==int(r["arm"]=="B") and (r["rx_pool"].get("posted",0)+r["rx_pool"].get("reserve_remaining",0))*2048==r["rx_pool"].get("backing_bytes") and r["rx_pool"].get("posted",0)>=r["rx_pool"].get("base",0)*r["rx_pool"].get("queues",0)
