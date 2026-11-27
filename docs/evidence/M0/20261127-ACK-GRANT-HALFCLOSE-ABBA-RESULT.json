@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "source_sha": "4bb9808167cac120170ba7e17d7ad07085a721a9",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA core348, six native Normal profiles and ARM same-host two ACK-grant ABBA blocks. Not cross-host/old-splice/physical parity.",
+  "run_id": 45970485704,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140409419868,
+      "artifact_id": 15185101261,
+      "core_pass": 348,
+      "gso_groups": [
+        197,
+        59,
+        80
+      ],
+      "gso_segments": [
+        1800,
+        848,
+        977
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140409420314,
+      "artifact_id": 15184812935,
+      "core_pass": 348,
+      "gso_groups": [
+        221,
+        228,
+        186
+      ],
+      "gso_segments": [
+        3236,
+        1983,
+        1810
+      ]
+    }
+  ],
+  "performance": {
+    "result": "PASS",
+    "scope": "Actual grant candidate executed. Same binary, 400ms added RTT, MTU1160, fixed exact bytes/hash/EOF, high clean offer600M 192MiB and IID0.5% offer120M 96MiB; BBR1/1024/32/GSO/M4/ingress-first both; B only server ACK grant.",
+    "all_8_exact_bytes_hash_eof": true,
+    "all_8_profile_joined_stop": true,
+    "order": [
+      "clean-A1",
+      "clean-B1",
+      "clean-B2",
+      "clean-A2",
+      "loss-A1",
+      "loss-B1",
+      "loss-B2",
+      "loss-A2"
+    ],
+    "mbps": [
+      207.24922915242595,
+      204.66195631305126,
+      204.99435752783515,
+      207.32956316433413,
+      67.62364421851126,
+      67.1804892175645,
+      69.65720834876929,
+      67.59280181251549
+    ],
+    "client_cpu_s_per_gib": [
+      16.69333333333333,
+      17.226666666666667,
+      17.066666666666666,
+      17.066666666666666,
+      12.906666666666666,
+      12.693333333333333,
+      12.053333333333333,
+      12.266666666666666
+    ],
+    "server_cpu_s_per_gib": [
+      14.613333333333335,
+      15.253333333333332,
+      14.986666666666666,
+      15.36,
+      14.08,
+      13.44,
+      13.226666666666667,
+      13.44
+    ],
+    "actual_grants_max_sample": [
+      0,
+      79372,
+      79343,
+      0,
+      0,
+      7225,
+      6992,
+      0
+    ],
+    "server_ingress_full": [
+      3707,
+      0,
+      0,
+      2977,
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_ingress_offered": [
+      95171,
+      93528,
+      92927,
+      92530,
+      7635,
+      7740,
+      7521,
+      7382
+    ],
+    "client_full_and_both_packet_socket_drop_and_reset_zero": true,
+    "bulk_last_sample": {
+      "bytes_sent": [
+        201326592,
+        192686627,
+        192094220,
+        199258883,
+        101200462,
+        101136168,
+        101216017,
+        101229498
+      ],
+      "bytes_retrans": [
+        0,
+        0,
+        0,
+        0,
+        537166,
+        472872,
+        552721,
+        566202
+      ],
+      "dsack": [
+        0,
+        0,
+        0,
+        0,
+        171,
+        149,
+        229,
+        221
+      ],
+      "reorder": [
+        658,
+        490,
+        773,
+        556,
+        20,
+        0,
+        0,
+        0
+      ],
+      "timeouts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "seed_supported": false,
+    "interpretation": "Actual ACK grant eliminates high-load server ingress full6684→0; throughput -1.19%, CPU/GiB +1.26%; loss throughput +1.20%, CPU/GiB -2.43%, retrans ratio ~0.545→0.507%, variable actual IID loss, no strong recovery causal gain. Candidate merits cross-host ABBA, not automatic promotion."
+  },
+  "comparison": {
+    "older_source": "c6b33c161c484390e33d4c64691c09115db5e61c",
+    "later_source": "74f7927fccdac022deb05b2507d1bb74b99f3f7c",
+    "older_mbps": 273.7567743902431,
+    "later_mbps": 207.66761435766415,
+    "source_diff_review": "Actual Git compare checked; selected effective BBR1/parity/ACK2/1024/32/GSO/M4/ingress-first same, defaults and diagnostic/opt-in candidates differ. Different topology, duration (45s vs fixed192MiB ~8s), workload and path; no causal attribution to code or rate. Prior cross-host bare same RTT retrans1.41/1.33% proves zero injection is not zero actual loss."
+  },
+  "physical": "NOT_RUN",
+  "review": "Both actual ZIPs downloaded CRC checked, six exact native summaries and eight recovery summaries, original job logs core348 both and named halfclose regression. Main H2497 governance PASS. No full L2 qualification.",
+  "next_source": "90de1b2791b62fe4440ca3f709b7f35cf5107167"
+}
