@@ -692,7 +692,7 @@ try:
  if game_download_bbr and os.environ.get("WBD_XDP_GAME_DOWNLOAD_TRANSPORT")=="tcp":
   args[args.index("--route-mode")+1]="all"
  if timed_rotation:
-  args.extend(["--rotate-min","12s","--rotate-max","18s"])
+  args.extend(["--rotate-min","30s","--rotate-max","35s"])
  if p029b_game_padding:
   # Signed original Game V5 selector; never bypass Go saved cold config.
   args.extend(["--startup-padding",p029b_game_padding])
@@ -1372,7 +1372,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   if mode=="normal":
    from m0_wl_public_mss_contract import verified_current_v4_mss,verified_plan028_shared_manual_two_generation_v4_mss
    linux_log=(out/"server.log").read_text(errors="replace")
-   if plan028_owned_mtu_only:
+   if timed_rotation:
+    # Manual shared Normal has no singleton decoded-peer-SYN log.
+    # Audit initial generation here and all three at joined Stop.
+    budget_and_wire=verified_plan028_shared_manual_two_generation_v4_mss(winlog,linux_log,configured_mtu,expected_sessions=(1,))[-1]
+   elif plan028_owned_mtu_only:
     # The same authenticated Linux shared-server TUN stays unchanged.
     # The Windows client alone must narrow its true NEW TCP SYN budget;
     # Linux SYNACK may legitimately advertise its own larger 1460 path.

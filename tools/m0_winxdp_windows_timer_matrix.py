@@ -24,15 +24,18 @@ def run(args,env,log,limit):
             if p.poll() is None:p.kill()
             return 124
 def main():
-    # Keep the failed Game4 TCP scene separate from timer renewal, so
-    # a cold timer does not pollute 30s weak-link throughput attribution.
-    env=dict(os.environ,WBD_XDP_GAME_DOWNLOAD_MODES="game4-fec",WBD_XDP_GAME_DOWNLOAD_TRANSPORT="tcp",
-             WBD_XDP_GAME_DOWNLOAD_BBR="1",WBD_XDP_GAME_DOWNLOAD_DIAG="1",WBD_XDP_WINDOWS_ROTATION="0")
-    tcp_rc=run(["tools/m0_winxdp_game_download.py"],env,E/"game4-tcp-driver.log",260)
-    print("WINXDP_GAME4_TCP_RETEST_RC "+str(tcp_rc),flush=True)
-    if tcp_rc and not owned_stop():return 2
+    # Independent jobs: a failed TCP connect/Stop cannot hide timer evidence.
+    task=os.environ["WBD_XDP_TIMER_TASK"]
+    if task in ("game2-tcp","game4-fec-tcp"):
+        mode=task.removesuffix("-tcp")
+        env=dict(os.environ,WBD_XDP_GAME_DOWNLOAD_MODES=mode,WBD_XDP_GAME_DOWNLOAD_TRANSPORT="tcp",
+                 WBD_XDP_GAME_DOWNLOAD_BBR="1",WBD_XDP_GAME_DOWNLOAD_DIAG="1",WBD_XDP_WINDOWS_ROTATION="0")
+        rc=run(["tools/m0_winxdp_game_download.py"],env,E/(task+"-driver.log"),300)
+        print("WINXDP_BBR_PRECONNECT_RETEST_RC "+str(rc),flush=True)
+        return rc
+    assert task in ("normal","game4-fec")
     codes=[]
-    for mode in ("normal","game4-fec"):
+    for mode in (task,):
         case=E/mode;case.mkdir()
         for pat in ("report.json","*-report.json","client.log","server.log","windows-app.log","linux-app.log","windows-tcp-app.log","linux-tcp-app.log","windows-timer-*","gamefec-*.flag","mode-batch.json","windows-original-go-rust-process-1hz.jsonl","wl-v2-scenario.json"):
             for p in OUT.glob(pat):
@@ -49,5 +52,5 @@ def main():
         codes.append(rc)
         print("WINXDP_WINDOWS_TIMER_MODE "+json.dumps({"mode":mode,"rc":rc,"stop":report.get("stop"),"error":report.get("error"),"rotation":report.get("windows_timed_rotation")}),flush=True)
         if rc and not owned_stop():break
-    return 0 if tcp_rc==0 and codes==[0,0] else 2
+    return 0 if codes==[0] else 2
 if __name__=="__main__":raise SystemExit(main())

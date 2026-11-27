@@ -33,23 +33,23 @@ def verified_current_v4_mss(win,linux,outer):
   "generation":generation,"limiting_reason":reason,"proof":"ACTUAL_GO_TCP_OPTIONS_AND_INBOUND_PEER"}
 
 
-def verified_plan028_shared_manual_two_generation_v4_mss(win,linux,outer):
+def verified_plan028_shared_manual_two_generation_v4_mss(win,linux,outer,expected_sessions=(1,2)):
  """Exact original Windows SYN / Linux SYNACK bytes for two shared sessions.
  The shared server does not log the legacy singleton decoded-peer-SYN marker;
  never synthesize or claim that unavailable observation.
  """
  if outer not in (1280,1400,1460,1500):raise ValueError("invalid outer")
  cold=re.findall(r"^WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=(\d+) mode=(\S+) configured_outer_mtu=(\d+) physical_outer_mtu=(\d+) effective_outer_mtu=(\d+) local_advertised_mss=(\d+) inner_mtu_planned=(\d+) limiting_reason=(\w+) source=RUST_V1_REAL_OS$",win,re.MULTILINE)
- if len(cold)!=2 or [int(x[0]) for x in cold]!=[1,2]:
-  raise ValueError("two Windows generations not authenticated")
+ if len(cold)!=len(expected_sessions) or [int(x[0]) for x in cold]!=list(range(1,len(expected_sessions)+1)):
+  raise ValueError("expected Windows generations not authenticated")
  prep=one(linux,r"V4_PUBLIC_MTU_PREPARE role=server mtu_budget_version=\d+ outer_config=(\d+) interface=(\d+) advertised_mss=(\d+) record_offer=(\d+) tun_planned=(\d+)","Linux physical budget")
  so,sp,sm,sr,si=map(int,prep)
  if so!=outer or sp<576 or sm!=min(outer,sp)-40 or sr!=sm or si!=sm-31:
   raise ValueError("original Linux MTU/MSS/record budget inconsistent")
  srv_syn=re.findall(r"V4_PUBLIC_ACTUAL_HANDSHAKE_MSS_V1 side=server generation=\d+ kind=SYNACK local_advertised_mss=(\d+) tcp_option_bytes=([0-9a-fA-F]+)",linux)
  srv_ready=re.findall(r"V4_PUBLIC_MULTI_SESSION_READY role=server one_port=(\d+) active_detached_flows=(\d+) auto_lease=0 original_TLS=1 Rust_M4=1",linux)
- if len(srv_syn)!=2 or len(re.findall(r"V4_PUBLIC_MULTI_SESSION_READY[^\n]*",linux))!=2 or srv_ready!=[("443","1"),("443","2")]:
-  raise ValueError("two original Linux SYNACK/authenticated shared READY receipts missing")
+ if len(srv_syn)!=len(expected_sessions) or len(re.findall(r"V4_PUBLIC_MULTI_SESSION_READY[^\n]*",linux))!=len(expected_sessions) or srv_ready!=[("443",str(n)) for n in expected_sessions]:
+  raise ValueError("original Linux SYNACK/authenticated shared READY receipts missing")
  proof=[]
  for i,(g,mode,oc,physical,effective,mss,inner,reason) in enumerate(cold):
   g=int(g);oc,physical,effective,mss,inner=map(int,(oc,physical,effective,mss,inner))

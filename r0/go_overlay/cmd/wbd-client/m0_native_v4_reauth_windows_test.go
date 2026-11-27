@@ -552,11 +552,11 @@ func TestH2400WindowsGameColdTupleGroupsDoNotOverlap(t *testing.T){
 }
 
 func TestM0WindowsNativeRotationBounds(t *testing.T){
- for _,p:=range [][2]time.Duration{{0,0},{5*time.Second,5*time.Second},{12*time.Second,18*time.Second},{5*time.Second,24*time.Hour}}{
+ for _,p:=range [][2]time.Duration{{0,0},{30*time.Second,30*time.Second},{30*time.Second,35*time.Second},{30*time.Second,24*time.Hour}}{
   if err:=m0WindowsValidateRotation(p[0],p[1]);err!=nil{t.Fatal(p,err)}
   for i:=0;i<1000;i++{if d:=m0WindowsRotationDelay(p[0],p[1]);d<p[0]||d>p[1]{t.Fatal(p,d)}}
  }
- for _,p:=range [][2]time.Duration{{0,time.Second},{time.Second,0},{4*time.Second,5*time.Second},{10*time.Second,9*time.Second},{5*time.Second,25*time.Hour}}{
+ for _,p:=range [][2]time.Duration{{0,time.Second},{time.Second,0},{12*time.Second,18*time.Second},{29*time.Second,30*time.Second},{35*time.Second,30*time.Second},{30*time.Second,25*time.Hour}}{
   if m0WindowsValidateRotation(p[0],p[1])==nil{t.Fatal("accepted invalid rotation bounds",p)}
  }
  ch,stop:=m0WindowsArmRotation(m0NativeV4Options{});defer stop()

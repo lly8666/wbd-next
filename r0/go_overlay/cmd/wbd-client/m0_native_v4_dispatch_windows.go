@@ -53,12 +53,14 @@ type m0NativeV4Options struct {
  // the real M2 TX clock returns the effective, not GUI intent.
  HealthIntervalSeconds,HealthDeadSeconds,HealthDormantSeconds uint32
 }
-// Same explicit lower/upper interval contract as the original Windows
-// CLI. Native renewal is bounded to the Linux-supported time scale.
+// Full-generation Windows renewal uses the same two per-lane incarnations
+// as the shared Game server: up to 5s for M4 proof, then 10..20s predecessor
+// RX grace plus the 1s retirement tick. This is not a hot per-lane interval.
+const m0WindowsFullGenerationMinRotation = 30*time.Second
 func m0WindowsValidateRotation(min,max time.Duration)error{
  if min==0&&max==0{return nil}
- if min<5*time.Second||max<min||max>24*time.Hour{
-  return fmt.Errorf("rotate-min/max require 5s <= min <= max <= 24h, or both zero")
+ if min<m0WindowsFullGenerationMinRotation||max<min||max>24*time.Hour{
+  return fmt.Errorf("Windows full-generation rotate-min/max require 30s <= min <= max <= 24h, or both zero (server predecessor RX grace)")
  }
  return nil
 }

@@ -1,5 +1,5 @@
-name: M0 Windows timed generation renewal and Game4 BBR retest
-run-name: "M0 Windows native timer Normal Game4 plus BBR retest | ${{ github.sha }}"
+name: M0 Windows timer grace and Game BBR preconnect impairment
+run-name: "M0 Windows timer grace and Game BBR preconnect | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
@@ -42,7 +42,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        replica: [A,B,C,D,E,F,G,H]
+        replica: [A,B,C,D,E,F]
+        task: [normal,game4-fec,game2-tcp,game4-fec-tcp]
     runs-on: windows-2025
     timeout-minutes: 30
     env:
@@ -61,6 +62,7 @@ jobs:
       WBD_PLAN029_NATIVE_V3_TRIAL: '0'
       LINUX_BINARY_SRC: 5e1b68331a4b666287ee28219f30a6b7c70df0dd
       H2478_REPLICA: ${{ matrix.replica }}
+      WBD_XDP_TIMER_TASK: ${{ matrix.task }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with: {persist-credentials: false, fetch-depth: 0}
@@ -78,7 +80,7 @@ jobs:
           python tools/m0_h2476_gate.py h2442-out/cpu-names.json h2442-out/cpu-gate.json
           if($LASTEXITCODE -ne 0){throw 'CPU gate receipt failed'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with: {name: 'h2476-game-download-cpu-gate-${{ matrix.replica }}', path: h2442-out/cpu-gate.json, if-no-files-found: error, retention-days: 14}
+        with: {name: 'h2476-game-download-cpu-gate-${{ matrix.task }}-${{ matrix.replica }}', path: h2442-out/cpu-gate.json, if-no-files-found: error, retention-days: 14}
       - name: Fetch already qualified exact WinXDP installed release
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
         shell: pwsh
@@ -225,7 +227,7 @@ jobs:
           $m=Get-Content timer-go/timer-go-manifest.json -Raw | ConvertFrom-Json
           if($m.source_sha -ne $env:GITHUB_SHA -or (Get-FileHash timer-go/wbd-client-embedded.exe).Hash.ToLowerInvariant() -ne $m.exe){throw 'timer Go build identity mismatch'}
           Copy-Item timer-go/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe -Force
-      - name: 'Actual Windows Normal and Game4 timer turns plus Game4 BBR download'
+      - name: Actual selected Windows timer or BBR preconnect scene
         shell: pwsh
         if: ${{ (steps.cpu_gate.outputs.eligible == 'true') }}
         timeout-minutes: 15
@@ -295,7 +297,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: winxdp-windows-timer-${{ matrix.replica }}
+          name: winxdp-windows-timer-${{ matrix.task }}-${{ matrix.replica }}
           path: |
             h2442-out/cpu-gate.json
             h2439-out/build-identity.json
@@ -320,7 +322,7 @@ jobs:
         shell: python
         run: |
           import json,pathlib,sys
-          expected={"normal","game4-fec","game4-fec-tcp"}
+          expected={"normal","game4-fec","game2-tcp","game4-fec-tcp"}
           covered=set()
           for root in pathlib.Path("evidence").glob("winxdp-windows-timer-*"):
               gates=list(root.rglob("cpu-gate.json"))
@@ -335,8 +337,8 @@ jobs:
                   x=json.loads(f.read_text())
                   b=x.get("bbr") or {}
                   single=x.get("rss_default") and x.get("rx") and all(q.get("queues")==1 for q in x["rx"])
-                  if x.get("mode")=="game4-fec" and x.get("status")=="MEASURED_TCP_DOWNLOAD" and x.get("stop")=="PASS_BOTH_OWNED" and single and b.get("ready") and b.get("stop") and (x.get("bbr_accepts") or 0)>=4:
-                      covered.add("game4-fec-tcp")
+                  if x.get("mode") in ("game2","game4-fec") and x.get("status")=="MEASURED_TCP_DOWNLOAD" and x.get("stop")=="PASS_BOTH_OWNED" and single and b.get("ready") and b.get("stop") and (x.get("bbr_accepts") or 0)>=4 and x.get("netem_before_connect") is True:
+                      covered.add(x["mode"]+"-tcp")
                   print("WINXDP_GAME4_TCP_COVERAGE_ROW "+json.dumps(x))
           print("WINXDP_WINDOWS_TIMER_COVERAGE "+json.dumps(sorted(covered)))
           sys.exit(0 if covered==expected else 2)

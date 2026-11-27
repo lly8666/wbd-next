@@ -74,7 +74,7 @@ def tcp_app(side,flag,directory):
             listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
             listener.bind((TARGET,PORT));listener.listen(STREAMS);listener.settimeout(.25)
             print("GAME_TCP_LISTEN",flush=True)
-            limit=time.monotonic()+28
+            limit=time.monotonic()+80
             while len(sockets)<STREAMS and time.monotonic()<limit and not flag.exists():
                 try:
                     c,_=listener.accept()
@@ -90,7 +90,7 @@ def tcp_app(side,flag,directory):
             c=socket.socket()
             try:
                 c.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,16*1024*1024)
-                c.bind(("10.66.0.2",0));c.settimeout(20);c.connect((TARGET,PORT))
+                c.bind(("10.66.0.2",0));c.settimeout(60);c.connect((TARGET,PORT))
                 return c,None
             except OSError as e:c.close();return None,repr(e)
         with concurrent.futures.ThreadPoolExecutor(max_workers=STREAMS) as pool:
@@ -98,7 +98,7 @@ def tcp_app(side,flag,directory):
                 if c is not None:sockets.append(c)
                 else:errors.append(err)
         print("GAME_TCP_CONNECTED "+str(len(sockets))+" errors="+json.dumps(errors),flush=True)
-    limit=time.monotonic()+30
+    limit=time.monotonic()+100
     while not flag.exists() and time.monotonic()<limit:time.sleep(.015)
     if not flag.exists():
         for c in sockets:c.close()
@@ -147,19 +147,23 @@ def _measure_tcp(root,out,unix,win_product,linux_product,scenario,arm):
         try:
             l=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","ip","netns","exec",NS,"python3","-u",unix(script),"tcp-app","linux",unix(flag),unix(out)],stdout=ll,stderr=subprocess.STDOUT);processes.append(l)
             wait_marker(l,out/"game-tcp-linux.log","GAME_TCP_LISTEN",10)
+            # Keep the full requested kernel delay/loss/rate in place from
+            # BEFORE the client-facing BBR TCP SYN through the whole data window.
+            print(arm(),flush=True)
+            armed_at=time.monotonic()
+            (out/"game-tcp-preconnect-netem.json").write_text(json.dumps({"armed_utc":time.time(),"before_windows_connect":True}))
             w=subprocess.Popen([sys.executable,"-u",str(script),"tcp-app","windows",str(flag),str(out)],stdout=wl,stderr=subprocess.STDOUT);processes.append(w)
-            wait_marker(w,out/"game-tcp-windows.log","GAME_TCP_CONNECTED",25)
+            wait_marker(w,out/"game-tcp-windows.log","GAME_TCP_CONNECTED",65)
             startup=(out/"game-tcp-windows.log").read_text(errors="replace")
             if "GAME_TCP_CONNECTED 4 errors=[]" in startup:
                 wait_marker(l,out/"game-tcp-linux.log","GAME_TCP_ORIGIN_CONNECTED 4",10)
             accepted=(out/"server.log").read_text(errors="replace").count("WBD_TCP_SPLICE_ACCEPT target="+TARGET+":"+str(PORT)+" cc=bbr")
             origin=(out/"game-tcp-linux.log").read_text(errors="replace")
-            (out/"game-tcp-before-netem.json").write_text(json.dumps({"windows":startup,"origin":origin,"bbr_accepts":accepted}))
+            (out/"game-tcp-before-measurement.json").write_text(json.dumps({"windows":startup,"origin":origin,"bbr_accepts":accepted}))
             if "GAME_TCP_CONNECTED 4 errors=[]" not in startup or "GAME_TCP_ORIGIN_CONNECTED 4" not in origin or accepted<STREAMS:
-                raise RuntimeError("TCP pre-netem connection or BBR acceptance failed: "+startup[-600:])
-            # Keep loss/RTT/rate exactly as previous run during the 30s
-            # measurement, not during connection setup.
-            print(arm(),flush=True)
+                raise RuntimeError("TCP impaired connection or BBR acceptance failed: "+startup[-600:])
+            # Report connection time separately; no qdisc change here.
+            connect_s=time.monotonic()-armed_at
             flag.write_text("REAL_TCP_SOCKETS_CONNECTED\n")
             end=time.monotonic()+42
             while any(p.poll() is None for p in processes):
@@ -170,7 +174,7 @@ def _measure_tcp(root,out,unix,win_product,linux_product,scenario,arm):
             accepts=(out/"server.log").read_text(errors="replace").count("WBD_TCP_SPLICE_ACCEPT target="+TARGET+":"+str(PORT)+" cc=bbr")
             status=("MEASURED_TCP_DOWNLOAD" if rows["windows"]["connected_streams"]==rows["linux"]["connected_streams"]==STREAMS and accepts>=STREAMS and rows["windows"]["window_bytes"]>0
                     else "TCP_PARTIAL_OR_BBR_NOT_PROVED")
-            return {"status":status,"bbr_accepts":accepts,"windows":rows["windows"],"linux":rows["linux"],"sender_scope":"SOCKET_ACCEPTED_BYTES_NOT_DELIVERED","receiver_scope":"FIRST_TCP_STREAM_BYTES_IN_30S"}
+            return {"status":status,"bbr_accepts":accepts,"netem_before_connect":True,"pre_measure_connect_s":connect_s,"windows":rows["windows"],"linux":rows["linux"],"sender_scope":"SOCKET_ACCEPTED_BYTES_NOT_DELIVERED","receiver_scope":"FIRST_TCP_STREAM_BYTES_IN_30S"}
         finally:
             for p in processes:
                 if p.poll() is None:p.terminate()
@@ -179,7 +183,7 @@ def _measure_tcp(root,out,unix,win_product,linux_product,scenario,arm):
                 except subprocess.TimeoutExpired:p.kill()
 
 def kernel_sample(flag,output):
-    flag=pathlib.Path(flag);end=time.monotonic()+150
+    flag=pathlib.Path(flag);end=time.monotonic()+230
     while not flag.exists() and time.monotonic()<end:time.sleep(.1)
     if not flag.exists():return
     start=time.monotonic()
@@ -257,7 +261,7 @@ def summary(case,mode,transport,rc):
          "tx_lab":receipts("WBD_XDP_TX_LAB "),"rx_lab":receipts("WBD_XDP_RX_LAB "),
          "wintun_backpressure":receipts("WBD_XDP_GAME_DOWNLOAD_STOP "),
          "rss_default":receipts("WBD_XDP_SINGLE_RSS_READY "),"rss_ready":receipts("WBD_XDP_RX_READY "),
-         "bbr":report.get("game_download_bbr"),"bbr_accepts":v.get("tcp_download",{}).get("bbr_accepts"),
+         "bbr":report.get("game_download_bbr"),"bbr_accepts":v.get("tcp_download",{}).get("bbr_accepts"),"netem_before_connect":v.get("tcp_download",{}).get("netem_before_connect"),"pre_measure_connect_s":v.get("tcp_download",{}).get("pre_measure_connect_s"),
          "fec_backend":lines("M0_WINDOWS_GAME_M4_FEC_BACKEND_READBACK"),"outer_stop":lines("WBD_GAME_FEC_NORMAL_OUTER_STOP"),
          "fec_applied":[l[-600:] for l in server.splitlines() if "V4_PUBLIC_GAME_FEC_APPLIED role=server" in l][-4:],
          "native_telemetry_last":telemetry[-3:],"linux_tun_link":report.get("linux_tun_link_kernel"),"linux_tun_fq":report.get("linux_tun_fq_kernel")}

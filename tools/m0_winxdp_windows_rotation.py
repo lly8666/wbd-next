@@ -6,7 +6,7 @@ def echo():
         sock.bind(("10.66.0.1",45903))
         print("WINDOWS_ROTATION_ECHO_READY",flush=True)
         sock.settimeout(.5)
-        until=time.monotonic()+120
+        until=time.monotonic()+150
         while time.monotonic()<until:
             try:data,peer=sock.recvfrom(2048)
             except socket.timeout:continue
@@ -25,7 +25,7 @@ def measure_rotation(root,out,unix,win,server):
             start=time.monotonic();seq=0;receipts=[];errors=[];gen_receipts={}
             with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
                 sock.bind(("10.66.0.2",0));sock.settimeout(.15)
-                while time.monotonic()-start<85:
+                while time.monotonic()-start<110:
                     if win.poll() is not None or server.poll() is not None:raise RuntimeError("owner exited during timer rotation")
                     log=(out/"client.log").read_text(errors="replace")
                     ready=log.count("WBD_WINDOWS_CLIENT_READY")
@@ -74,12 +74,22 @@ def audit_stop(out):
             "game4_single_lane_hot_swap":False}
     (out/"windows-timer-audit.json").write_text(json.dumps(result,indent=2))
     assert len(arms)>=3 and len(dues)>=2 and generations[:2]==[2,3],result
-    assert all(lo==12000 and hi==18000 and lo<=delay<=hi for lo,hi,delay,_ in arms),arms
+    assert all(lo==30000 and hi==35000 and lo<=delay<=hi for lo,hi,delay,_ in arms),arms
     assert all(0<=due-(arm[3]+arm[2])<=2000 for due,arm in zip(dues,arms)),(dues,arms)
     assert len({x[1] for x in ports[:3]})==3 and [x[0] for x in ports[:3]]==[1,2,3],ports
     steady=[x for x in rss if x[3] in (1,4) and x[2] in {p[1] for p in ports}]
     assert len(steady)>=3 and all(x[1]==1 for x in steady) and len({x[0] for x in steady})==1,rss
-    assert ready>=3 and stops>=ready and not result["physical_path_events"],result
+    assert ready==3 and stops>=ready and not result["physical_path_events"],result
+    if any(x[3]==4 for x in steady):
+        group_ports=[(int(lane),int(port)) for lane,port in re.findall(r"V4_PUBLIC_GAME_GROUP_LANE_READY role=server lanes=4 lane=(\d+) client_port=(\d+) server_port=443 protected_TLS=1 original_Rust_M4=1 grouped_commit=1",server)]
+        assert group_ports==[(lane,base+lane-1) for _,base in ports[:3] for lane in range(1,5)],group_ports
+        assert server.count("V4_PUBLIC_GAME_SERVER_B_CLIENT_READY role=server lanes=4 source=authenticated_client_native_Health promoted=1")==2,result
+        assert server.count("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-grace-expired")>=1,result
+        result["server_authenticated_groups"]=3
+    else:
+        from m0_wl_public_mss_contract import verified_plan028_shared_manual_two_generation_v4_mss
+        result["server_authenticated_generations"]=verified_plan028_shared_manual_two_generation_v4_mss(client,server,1460,expected_sessions=(1,2,2))
+    (out/"windows-timer-audit.json").write_text(json.dumps(result,indent=2))
     return result
 
 if __name__=="__main__":echo()
