@@ -9,11 +9,11 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# Same application and exact byte count as local recovery. No product
-# intervention: separate path/duration from short-flow and ACK experiments.
-ORDER=("L","H","L")
-CASES=(-1,0,1,-2,2,-3)
-PROFILES={"L":"selected-default-offer30M","H":"selected-default-offer120M"}
+# One causal intervention on the existing sender pacing mechanism.
+# All paired legs use the same source, exact bytes and high app offer.
+ORDER=("A","B","B","A")
+CASES=(-1,0,1,2,3,-2)
+PROFILES={"A":"selected-default","B":"server-existing-pacing-ceiling80M"}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
@@ -21,9 +21,9 @@ def rust_cc(i):return "bbr1"
 def ack_for(k):return "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
-def offer(i):return 120_000_000 if i in (1,-2) else 30_000_000
-def target_bytes(i):return (512 if i in (1,-2) else 256)*1024*1024
-def profile_env(k,server):return []
+def offer(i):return 600_000_000
+def target_bytes(i):return 1024*1024*1024
+def profile_env(k,server):return ["WBD_M0_NATIVE_PACE80=1"] if server and k=="B" else []
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
@@ -190,6 +190,7 @@ def server_close():
         result["bulk_tcp_sample"]=bulk_tcp_sample(log,"server-middle")
         bulk=result["bulk_tcp_sample"]
         result["bulk_retired"]=bool(bulk and any("WBD_M0_TCP_FLOW_FINAL " in s and (" id="+str(bulk["flow_id"])+" ") in s and "leg=server-middle" in s for s in log.splitlines()))
+        result["bulk_stop_sample"]=bool(bulk and any("WBD_M0_TCP_FLOW_STOP " in s and (" id="+str(bulk["flow_id"])+" ") in s and "leg=server-middle" in s for s in log.splitlines()))
         result["experiment"]=profile(i,ORDER[i])
         result["native_counters"]=[s for s in log.splitlines() if "V4_PUBLIC_RX_CHAIN role=" in s or "V4_PUBLIC_TX_CHAIN role=" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s or "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s]
     save(d/"result.json",result);CURRENT=fixture.current=None
@@ -260,13 +261,16 @@ def probe_receipt(log,leg,k,i):
     server=leg=="server-middle"
     expected_rack="false"
     expected_ack="false"
+    ceiling=10_000_000 if server and k=="B" else 0
+    rates=[int(m.group(1)) for s in rows if (m:=re.search(r"\bpacing_rate: Some\((\d+)\)",s))]
+    ceiling_ok=bool(rates) and all(" native_pace_ceiling_bytes_s="+str(ceiling)+" " in s for s in rows) and (not ceiling or max(rates)<=ceiling)
     origin_rows=[s for s in log.splitlines() if "WBD_M0_TCP_ORIGIN " in s]
     grants=[int(m.group(1)) for s in rows if (m:=re.search(r"\bnative_ack_grant_deferred=(\d+)",s))]
     actual_grant_max=max(grants,default=0)
     ack_ok=bool(grants) and ((actual_grant_max>0)==(expected_ack=="true")) and (not server or (bool(origin_rows) and all(" ack_drain="+expected_ack in s for s in origin_rows)))
     bound=next((s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND " in s),"")
     rx=next((s for s in log.splitlines() if "WBD_M0_RAW_RX_PACKET_STATS " in s),"")
-    mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and ack_ok and all(" pace_quantum_mss="+str(quantum)+" " in s and " rack_keep_reo_window="+expected_rack+" " in s for s in rows)
+    mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and ack_ok and ceiling_ok and all(" pace_quantum_mss="+str(quantum)+" " in s and " rack_keep_reo_window="+expected_rack+" " in s for s in rows)
     gso_ok=True
     if leg=="client-middle":
         receipt=next((s for s in log.splitlines() if "WBD_M0_LOCAL_TUN_GSO groups=" in s),"")
@@ -274,7 +278,7 @@ def probe_receipt(log,leg,k,i):
         gso_ok=int(vals.get("groups",0))>0
     expected='congestion: "'+rust_cc(i)+'"'
     return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows),
-            "ingress_first_expected":expected_first,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,
+            "ingress_first_expected":expected_first,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,"pacing_ceiling_bytes_s":ceiling,"actual_pacing_max_bytes_s":max(rates,default=0),
             "valid":mode_ok and gso_ok and len(rows)>=10 and all(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows)}
 def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
@@ -393,7 +397,7 @@ def client():
                 sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                 recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"matched same finite application 30M/256MiB and120M/512MiB with bare controls and repeat30, 1024/32 all, same selected defaults as local, actual retirement marker distinguishes final/live","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary existing server Middle pacing ceiling80M ABBA, fixed1GiB/600M offered all, same-RTT bare brackets, actual rate and final-or-Stop sample; ceiling is a lab intervention, not selected default","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

@@ -151,16 +151,11 @@ def controlled_recovery():
     rows=[]
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--dual-rust-tcp"]
-    # Same finite application, bytes, offer, and delay as the cross-host
-    # experiment. Long low offered rate, then sustained 120M. A diagnostic
-    # topology comparison, not a short-stream or peak performance claim.
+    # Same existing pacing mechanism, one opt-in ceiling. Local runs
+    # qualify actual ceiling execution and complete business, not ABBA.
     cases=[
-        ("bare30",False,30_000_000,{},0,0,256),
-        ("paired30",True,30_000_000,{},0,0,256),
-        ("paired120",True,120_000_000,{},0,0,512),
-        ("bare120",False,120_000_000,{},0,0,512),
-        ("paired30-repeat",True,30_000_000,{},0,0,256),
-        ("bare30-repeat",False,30_000_000,{},0,0,256),
+        ("backlog-default",True,600_000_000,{},0,0,512),
+        ("backlog-pace80",True,600_000_000,{"WBD_M0_NATIVE_PACE80":"1"},0,0,512),
     ]
     for label,paired,offered,profile,jitter,loss,mib in cases:
         target_bytes=mib*1024*1024
@@ -274,6 +269,7 @@ def controlled_recovery():
                     bulk=max(latest.values(),key=lambda x:x["bytes_sent"])
                     row["bulk_tcp_sample"]=bulk
                     row["bulk_retired"]=any("WBD_M0_TCP_FLOW_FINAL " in x and (" id="+str(bulk["flow_id"])+" ") in x and "leg=server-middle" in x for x in sl.splitlines())
+                    row["bulk_stop_sample"]=any("WBD_M0_TCP_FLOW_STOP " in x and (" id="+str(bulk["flow_id"])+" ") in x and "leg=server-middle" in x for x in sl.splitlines())
                     row["bulk_snapshot_retrans_ratio"]=bulk["bytes_retrans"]/bulk["bytes_sent"] if bulk["bytes_sent"] else None
                 info=[x for x in sl.splitlines() if "WBD_M0_TCP_INFO " in x and "leg=server-middle " in x]
                 origin_info=[x for x in sl.splitlines() if "WBD_M0_TCP_ORIGIN " in x]
@@ -282,7 +278,10 @@ def controlled_recovery():
                 expected_cc=profile.get("WBD_M0_MIDDLE_CC","bbr1")
                 actual_grants=[int(m.group(1)) for x in info if (m:=re.search(r"\bnative_ack_grant_deferred=(\d+)",x))]
                 row["ack_grant_deferred_max_sample"]=max(actual_grants,default=0)
-                row["profile_valid"]=bool(info and origin_info) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true"))
+                ceiling=10_000_000 if profile.get("WBD_M0_NATIVE_PACE80")=="1" else 0
+                rates=[int(m.group(1)) for x in info if (m:=re.search(r"\bpacing_rate: Some\((\d+)\)",x))]
+                row["actual_pacing_max_bytes_s"]=max(rates,default=0)
+                row["profile_valid"]=bool(info and origin_info and rates) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x and " native_pace_ceiling_bytes_s="+str(ceiling)+" " in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true")) and (not ceiling or row["actual_pacing_max_bytes_s"]<=ceiling)
                 row["receipt_present"]=all(any("WBD_M0_RAW_RX_PACKET_STATS " in line and " drops=" in line for line in log.splitlines()) and
                     "WBD_M0_TCP_INGRESS " in log for log in (cl,sl)) and "WBD_M0_TCP_M4_CLOCK " in sl and "WBD_M0_LOCAL_TUN_GSO " in cl and bool(latest)
             row["qdisc_after_stop"]=path_counts()
@@ -296,7 +295,7 @@ def controlled_recovery():
             save(d/"result.json",row)
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, matched sustained finite application with cross-host fixture: 30M/256MiB and 120M/512MiB, repeat30, zero injection,400ms added RTT, same selected profile; actual retirement marker distinguishes final from live sample; not physical or peak qualification","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, fixed512MiB actual finite app at600M offer, existing server Middle pacing uncapped vs80M ceiling, zero injection400ms; actual profile/rate and final-or-Stop sample; local qualification not ABBA","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)

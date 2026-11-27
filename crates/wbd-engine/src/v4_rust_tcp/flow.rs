@@ -50,6 +50,7 @@ impl Endpoint {
             native_owner_turn: parity,
             rack_keep_reo_window:middle&&parity&&std::env::var_os("WBD_M0_RACK_KEEP_WINDOW").as_deref()==Some(std::ffi::OsStr::new("1")),
             native_pace_quantum_mss:quantum_mss,
+            native_pace_ceiling:if middle&&parity&&std::env::var_os("WBD_M0_NATIVE_PACE80").as_deref()==Some(std::ffi::OsStr::new("1")){Some(10_000_000)}else{None},
             native_bounded_pacing: parity || std::env::var_os("WBD_M0_BOUNDED_PACE").as_deref() == Some(std::ffi::OsStr::new("1")),
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()

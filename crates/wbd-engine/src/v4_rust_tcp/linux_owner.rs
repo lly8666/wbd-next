@@ -269,6 +269,15 @@ impl Owner{
 }
 impl Drop for Owner{
     fn drop(&mut self){
+        if self.probe_next.is_some(){
+            let wall_ns=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos();
+            for (&id,entry) in &self.flows{
+                if let Flow::Server(f)=&entry.flow{
+                    eprintln!("WBD_M0_TCP_FLOW_STOP wall_ns={} id={} leg=server-middle",wall_ns,id);
+                    f.probe(id,wall_ns);
+                }
+            }
+        }
         eprintln!("WBD_DUAL_TCP_WIRE role={} local_in={:?} local_out={:?} middle_in={:?} middle_out={:?}",
             if self.server{"server"}else{"client"},self.local_in,self.local_out,self.middle_in,self.middle_out);
     }

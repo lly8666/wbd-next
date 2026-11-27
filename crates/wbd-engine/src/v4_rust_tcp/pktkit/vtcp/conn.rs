@@ -438,6 +438,8 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Native paired Middle TCP experiment: existing quantum cap in MSS.
     pub(crate) native_pace_quantum_mss: u32,
+    /// Lab-only ceiling on the existing TCP pacing rate (payload bytes/s).
+    pub(crate) native_pace_ceiling: Option<u64>,
     /// Product owner reserves no more than one native batch per flow event.
     pub(crate) native_owner_turn: bool,
     /// Lab comparison: keep the RFC 8985 reordering window instead of its zero shortcut.
@@ -544,6 +546,7 @@ impl Default for ConnConfig {
             middle_sack_compress: false,
             native_bounded_pacing: false,
             native_pace_quantum_mss: 32,
+            native_pace_ceiling: None,
             native_owner_turn: false,
             rack_keep_reo_window: false,
             linux_parity: false,
@@ -1252,8 +1255,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline));
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -4716,7 +4719,7 @@ impl Conn {
             return None;
         }
         if let Some(r) = self.cc.pacing_rate() {
-            return Some(r.max(1));
+            return Some(r.max(1).min(self.cfg.native_pace_ceiling.unwrap_or(u64::MAX)));
         }
         let srtt = if self.cfg.linux_parity { self.rto.srtt() } else { self.pace_srtt.unwrap_or_else(|| self.rto.srtt()) };
         if srtt.is_zero() {
@@ -4729,7 +4732,7 @@ impl Conn {
         } else {
             1.2
         };
-        Some(((f64::from(cwnd) * gain / srtt.as_secs_f64()) as u64).max(1))
+        Some(((f64::from(cwnd) * gain / srtt.as_secs_f64()) as u64).max(1).min(self.cfg.native_pace_ceiling.unwrap_or(u64::MAX)))
     }
 
     /// What pacing sends at a time: a millisecond's worth at `rate`, and at
@@ -10593,6 +10596,28 @@ mod tests {
         assert!(sender.native_resume.is_some());
         sender.begin_native_turn();
         assert!(sender.tick().iter().any(|x|!parse(x).payload.is_empty()));
+    }
+
+    #[test]
+    fn native_pacing_ceiling_uses_existing_credit_and_deadline(){
+        let mut cfg=big(40696,80);
+        cfg.congestion=CongestionKind::Bbr1;
+        cfg.pacing=true;
+        cfg.native_bounded_pacing=true;
+        let mut conn=Conn::new(cfg);
+        let original=conn.pace_rate().unwrap();
+        assert!(original>2);
+        let ceiling=original/2;
+        conn.cfg.native_pace_ceiling=Some(ceiling);
+        assert_eq!(conn.pace_rate(),Some(ceiling));
+        conn.pace_credit=1_000_000_000.0;
+        assert!(conn.pace_ready());
+        assert!(conn.pace_credit<=2.0*conn.pace_quantum(ceiling));
+        conn.pace_credit=0.0;
+        conn.pace_wait();
+        assert!(conn.pace_deadline.unwrap()>conn.now);
+        conn.cfg.native_pace_ceiling=None;
+        assert_eq!(conn.pace_rate(),Some(original));
     }
 
     #[test]
