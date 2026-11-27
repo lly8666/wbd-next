@@ -1,0 +1,9 @@
+# M0 reviewed native M4 clock and ARM qualification handoff
+
+392ee066c8bbcea96c20dea0ef76d73f497f6b87: run45930085832 scoped dual-ISA native PASS; see docs/evidence/M0/20261127-DUAL-RUST-TCP-M4-CLOCK-NATIVE-RESULT.json. Both ZIPs independently inspected; positive M4 copied PN counters client/server and zero full ingress on small functional test. No ARM performance run existed for this SHA because parity workflow filters only its own workflow/fixture. Previous 75c47a5 compile FAIL and ARM NOT_RUN remain unchanged.
+
+New branch SOURCE 495586c769d485b9916a80cd5b9f239fb1f98fb0, PR80: workflow/fixture/docs only, unchanged product from 392ee06. One BBR zero-injected-loss 400ms single-flow 45s ABBA against exact 26b11e2 splice, existing ARM three-runner topology, no duplicate dispatch. Exact-source native qualification required; do not treat old native PASS as new SHA PASS. This comparison does not isolate M4-clock causality. Bare capacity preflight remains reported separately.
+
+Main governance45930178285 artifact15168082221 and catalog15168086456 structure.json independently read: BLOCKED unknown schema at 20261127-DUAL-RUST-TCP-NATIVE-REGRESSION-REPAIR-RESULT.json. That historical research JSON has scope/source/native/performance/next fields, not schema_version/source_sha. Preserve original content; move it to cursor context_refs and use the new exact-source scoped receipt in evidence_refs. Do not weaken validator or rewrite old experiment results. New main checks not yet verified.
+
+Engineering assessment: product-specific parity plausible, not equivalent to bare kernel stack. 0% injected loss still shows prior local drops, ACK and IO packet processing costs; actual send timing now has functional evidence but no throughput evidence. Next review measured BBR rows and actual drop/copy/CPU receipts; focus on genuine native IO work and inner TCP send-attempt semantics, no extra outer mechanisms.

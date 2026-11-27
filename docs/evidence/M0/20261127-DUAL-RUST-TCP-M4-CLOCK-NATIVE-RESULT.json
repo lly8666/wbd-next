@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "source_sha": "392ee066c8bbcea96c20dea0ef76d73f497f6b87",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Native x86_64 and aarch64 paired Normal original and parity profile; 344 core and explicit copied-prefix unit each, real TCP/UDP and joined Stop; no performance/physical qualification",
+  "run_id": 45930085832,
+  "run_attempt": 1,
+  "artifacts": [
+    {
+      "architecture": "x86_64",
+      "job_id": 140280456873,
+      "artifact_id": 15167837607,
+      "core_pass": 344,
+      "m4_unit_pass": 1,
+      "client": {
+        "copied": 3214,
+        "not_proven_copied": 0,
+        "no_normal_pn": 0,
+        "ingress_full": 0
+      },
+      "server": {
+        "copied": 9576,
+        "not_proven_copied": 0,
+        "no_normal_pn": 0,
+        "ingress_full": 0
+      },
+      "build_artifact_id": 15168446269
+    },
+    {
+      "architecture": "aarch64",
+      "job_id": 140280457090,
+      "artifact_id": 15168156822,
+      "core_pass": 344,
+      "m4_unit_pass": 1,
+      "client": {
+        "copied": 3217,
+        "not_proven_copied": 0,
+        "no_normal_pn": 0,
+        "ingress_full": 0
+      },
+      "server": {
+        "copied": 9652,
+        "not_proven_copied": 0,
+        "no_normal_pn": 0,
+        "ingress_full": 0
+      },
+      "build_artifact_id": 15167932422
+    }
+  ],
+  "review": "Both native original job logs and original evidence ZIPs inspected; source manifests, exact M4 unit and client/server joined Stop counters. No bulk performance rows at this source.",
+  "performance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_source": "495586c769d485b9916a80cd5b9f239fb1f98fb0"
+}
