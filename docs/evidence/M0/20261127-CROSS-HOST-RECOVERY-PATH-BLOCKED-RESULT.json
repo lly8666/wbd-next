@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "source_sha": "afcaaa8ff4fc11a5f041ffe420e8c09db3eed881",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA original native functional profiles and eight same-host exact-byte recovery diagnostic cases. Cross-host performance path not qualified; no paired candidate measurement.",
+  "run_id": 45965994849,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140394694112,
+      "artifact_id": 15183595738,
+      "gso_groups": [
+        351,
+        118,
+        226
+      ],
+      "gso_segments": [
+        1699,
+        1337,
+        1450
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140394694500,
+      "artifact_id": 15182788893,
+      "gso_groups": [
+        156,
+        107,
+        95
+      ],
+      "gso_segments": [
+        1444,
+        965,
+        1048
+      ]
+    }
+  ],
+  "local_recovery": {
+    "result": "PASS",
+    "target_bytes": 201326592,
+    "all_hash_eof_exact": true,
+    "order": [
+      "bare-before",
+      "paired",
+      "ack-drain",
+      "rack-window",
+      "cubic",
+      "lower-offer",
+      "combined-lower-offer",
+      "bare-after"
+    ],
+    "actual_mbps": [
+      98.17402827042532,
+      93.9712253080897,
+      94.19214504567026,
+      94.3129606765365,
+      93.90414231446884,
+      28.700082920926157,
+      28.658568732660363,
+      98.1005228880182
+    ],
+    "paired_bulk_sample_bytes_sent": [
+      195427326,
+      195755211,
+      196509931,
+      195296303,
+      200801291,
+      200474238
+    ],
+    "paired_retrans_bytes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "paired_dsack": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "paired_reorder": [
+      53,
+      50,
+      112,
+      19,
+      0,
+      12
+    ],
+    "paired_timeouts": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "all_paired_full_raw_drops_reset_zero": true,
+    "all_paired_joined_stop": true
+  },
+  "performance": {
+    "result": "PATH_NOT_QUALIFIED",
+    "run_id": 45965994918,
+    "job_ids": {
+      "client": 140398359484,
+      "server": 140398359613,
+      "relay": 140398359494
+    },
+    "artifact_ids": {
+      "client": 15183441604,
+      "server": 15183452088,
+      "relay": 15183152435
+    },
+    "attempted_cases": 1,
+    "paired_cases": 0,
+    "bare_app": {
+      "mbps": 381.88907937909977,
+      "receiver_bytes": 2148139008,
+      "sender_bytes": 2193227776,
+      "seconds": 45.000271,
+      "sender_retrans_segments": 21781
+    },
+    "path_receipts": {
+      "client_before_direct": true,
+      "client_after_direct": true,
+      "server_before_direct": false,
+      "server_before_active": false,
+      "server_before_curaddr_empty": true,
+      "server_after_direct": true
+    },
+    "server_final_sample_error": null,
+    "relay_qdisc_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "reason": "Server before direct receipt absent; no full-window direct qualification. Application result retained, no paired measurements. Not candidate or product failure."
+  },
+  "governance": {
+    "run_id": 45965994880,
+    "feature_card_size_check": "PASS",
+    "remaining_contract_validation": "FAIL",
+    "detail": "Exit2 from contract exercise after 121 tests OK; exact structure report not reviewed. Main H2495 governance PASS."
+  },
+  "review": "Five original ZIPs materialized and CRC opened; six native exact source summaries, local eight exact bytes/hash/EOF, per-case endpoint and bulk snapshots, cross-host bare app/summary/path receipts, server final result and relay-end. Local repeated floor; no candidate promotion. No physical qualification.",
+  "physical": "NOT_RUN",
+  "next_source": "74f7927fccdac022deb05b2507d1bb74b99f3f7c"
+}
