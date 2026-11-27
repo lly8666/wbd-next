@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "source_sha": "5536d9c16fa650e9bcc2d477b20d437517a11cd2",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Native dual-ISA paired Normal functional only; original/parity/GSO+server ingress-first profiles, real app hashes concurrent UDP Stop, not whole product promotion.",
+  "run_id": 45936754713,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140301612344,
+      "artifact_id": 15171166455,
+      "gso_groups": 148,
+      "gso_segments": 1389
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140301612107,
+      "artifact_id": 15171067571,
+      "gso_groups": 307,
+      "gso_segments": 2749
+    }
+  ],
+  "performance": {
+    "result": "PASS",
+    "scope": "Causal same-binary candidate improvement only, no old splice or product parity claim; ARM three-runner BBR1 implementation at zero injected loss,400ms added RTT,45s 1 reverse stream,outer IP MTU1160",
+    "run_id": 45936754666,
+    "job_ids": {
+      "client": 140302901504,
+      "server": 140302901546,
+      "relay": 140302901574
+    },
+    "artifact_ids": {
+      "client": 15171346616,
+      "server": 15171246935,
+      "relay": 15170559827
+    },
+    "bare_mbps": 483.46274719175136,
+    "legs_mbps": [
+      239.3051913782558,
+      274.14251170075397,
+      288.51490162525397,
+      202.81475871362613
+    ],
+    "means": {
+      "A": {
+        "mbps": 221.05997504594097,
+        "client_cpu_s_per_gib": 12.794220974855376,
+        "server_cpu_s_per_gib": 19.229880290967408
+      },
+      "B": {
+        "mbps": 281.32870666300397,
+        "client_cpu_s_per_gib": 13.057213324278425,
+        "server_cpu_s_per_gib": 17.03721303514012
+      }
+    },
+    "server_ingress_offered": [
+      179381,
+      194777,
+      248391,
+      139492
+    ],
+    "server_ingress_full": [
+      30422,
+      8092,
+      6924,
+      29498
+    ],
+    "server_m4_copied": [
+      1533796,
+      1741348,
+      1776672,
+      1387524
+    ],
+    "client_middle_ingress_full": [
+      0,
+      3954,
+      3488,
+      1617
+    ],
+    "client_shared_tun_full": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_local_write_failed": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_gso_groups": [
+      48579,
+      55519,
+      51048,
+      48693
+    ],
+    "client_gso_segments": [
+      1145971,
+      1337315,
+      1293096,
+      1050092
+    ],
+    "client_local_ack": [
+      87941,
+      99244,
+      146313,
+      69414
+    ],
+    "client_local_data": [
+      1298320,
+      1506545,
+      1618004,
+      1133323
+    ],
+    "client_middle_ack": [
+      194439,
+      208292,
+      267329,
+      149815
+    ],
+    "client_middle_data": [
+      1371365,
+      1577066,
+      1656140,
+      1199298
+    ],
+    "probe_ack_causes_B_last_bulk_snapshot": [
+      [
+        139419,
+        23,
+        49692,
+        5112,
+        0,
+        11
+      ],
+      [
+        112260,
+        16,
+        140226,
+        4594,
+        0,
+        10
+      ]
+    ],
+    "review": "Materialized all five actual ZIPs; native three profile summaries, client summary+per-case logs, server per-case logs, relay-end reviewed. All four direct/Stop/flag/GSO/CC receipts valid. Bare without added RTT not proof of full 400ms path capacity. A legs variable; two B higher than two A. Need repeat against old splice."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "c6b33c161c484390e33d4c64691c09115db5e61c"
+}
