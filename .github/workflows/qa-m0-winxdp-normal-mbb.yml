@@ -97,7 +97,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: 'h2476-game-download-cpu-gate-${{ matrix.task }}-${{ matrix.replica }}', path: h2442-out/cpu-gate.json, if-no-files-found: error, retention-days: 14}
       - name: Fetch already qualified exact WinXDP installed release
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'A' || matrix.replica == 'B') }}
         shell: pwsh
         run: |
           gh run download 45914310196 -R $env:GITHUB_REPOSITORY -n winxdp-release -D xdp-build
@@ -105,7 +105,7 @@ jobs:
           python -m py_compile tools/m0_winxdp_game_download.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_rate_app.py tools/m0_wl_native_resource_sampler.py tools/m0_winxdp_windows_rotation.py tools/m0_winxdp_windows_timer_matrix.py
           if($LASTEXITCODE -ne 0){throw 'pressure script syntax'}
       - name: Fetch exact frozen Linux x86_64 product for local WSL server
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'A' || matrix.replica == 'B') }}
         shell: bash
         env:
           WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
@@ -118,7 +118,7 @@ jobs:
           GITHUB_SHA=26b11e2da236e909b73f461964c52d5a86d42dca bash tools/m0_h2476_fetch_frozen_linux.sh
           cp -a linux-plan029-public-bundle linux-product
       - name: WSL stage 1 - bounded distro inventory
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'A' || matrix.replica == 'B') }}
         id: wsl_inventory
         shell: pwsh
         timeout-minutes: 2
@@ -134,7 +134,7 @@ jobs:
           "needs_import=$($need.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           Write-Output "H2476_WSL_INVENTORY_DONE needs_import=$need"
       - name: WSL stage 2 - official pinned image download
-        if: ${{ (steps.cpu_gate.outputs.eligible == 'true') && steps.wsl_inventory.outputs.needs_import == 'true' }}
+        if: ${{ ((steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'A' || matrix.replica == 'B')) && steps.wsl_inventory.outputs.needs_import == 'true' }}
         shell: pwsh
         timeout-minutes: 4
         run: |
@@ -154,7 +154,7 @@ jobs:
           python -u tools/m0_h2476_import_wsl.py
           if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 import failed'}
       - name: WSL stage 4 - bounded guest network startup
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'A' || matrix.replica == 'B') }}
         shell: pwsh
         timeout-minutes: 2
         run: |
@@ -171,7 +171,7 @@ jobs:
           $ip | Set-Content -Encoding ascii result/h1706-ubuntu-guest-ip.txt
           Write-Output "H2476_WSL_BOOT_DONE ip=$ip"
       - name: Prepare real WSL kernel tools
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'A' || matrix.replica == 'B') }}
         shell: pwsh
         timeout-minutes: 5
         run: |
@@ -180,7 +180,7 @@ jobs:
           & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root --exec sh -c 'command -v tcpdump && command -v ethtool || (apt-get update -qq && apt-get install -y -qq tcpdump ethtool)'
           if($LASTEXITCODE -ne 0){throw 'H2480 ethtool/tcpdump prerequisites unavailable'}
       - name: Extract final portable package and run the real bundled installer
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'A' || matrix.replica == 'B') }}
         shell: pwsh
         timeout-minutes: 10
         run: |
@@ -216,10 +216,10 @@ jobs:
           }
           if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'unexpected Npcap dependency'}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c80933
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'A' || matrix.replica == 'B') }}
         with: {name: winxdp-timer-go, path: timer-go}
       - name: Select fresh exact same-source Normal MBB EXE and DLL
-        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'A' || matrix.replica == 'B') }}
         shell: pwsh
         run: |
           $m=Get-Content timer-go/timer-go-manifest.json -Raw | ConvertFrom-Json
@@ -231,7 +231,7 @@ jobs:
           "WBD_XDP_TESTED_DLL_SHA=$($d.source_sha)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Actual selected Windows timer or BBR preconnect scene
         shell: pwsh
-        if: ${{ (steps.cpu_gate.outputs.eligible == 'true') }}
+        if: ${{ ((steps.cpu_gate.outputs.eligible == 'true' || matrix.replica == 'A' || matrix.replica == 'B')) }}
         timeout-minutes: 15
         run: |
           $ErrorActionPreference='Stop'
@@ -325,20 +325,25 @@ jobs:
         run: |
           import json,pathlib,sys
           passes=[]
+          functional=[]
           for root in pathlib.Path("evidence").glob("winxdp-windows-timer-*"):
               gates=list(root.rglob("cpu-gate.json"))
-              if len(gates)!=1 or not json.loads(gates[0].read_text(encoding="utf-8-sig")).get("eligible"):continue
+              if len(gates)!=1:continue
+              gate=json.loads(gates[0].read_text(encoding="utf-8-sig"))
+              eligible=gate.get("eligible",False)
               for f in root.rglob("timer-measurement.json"):
                   x=json.loads(f.read_text())
                   r=x.get("windows_timed_rotation") or {}
                   audit=list(root.rglob("windows-timer-audit.json"))
                   a=json.loads(audit[0].read_text()) if len(audit)==1 else {}
-                  print("WINXDP_NORMAL_MBB_ROW "+json.dumps({"runner":root.name,"stop":x.get("stop"),"error":x.get("error"),"rotation":r,"audit":a}))
+                  print("WINXDP_NORMAL_MBB_ROW "+json.dumps({"runner":root.name,"cpu":gate.get("names"),"eligible_9v45":eligible,"stop":x.get("stop"),"error":x.get("error"),"rotation":r,"audit":a}))
                   if (x.get("stop")=="PASS_BOTH_OWNED" and x.get("mode_public","").startswith("PASS_ACTUAL_")
                       and x.get("fixture_rc")==0 and r.get("scope")=="WINDOWS_NORMAL_MBB_SAME_WINTUN"
                       and a.get("continuity")=="PASS_ZERO_MISSING_SAME_SOCKET" and a.get("ready")==3
                       and a.get("os_applies")==a.get("rx_stops")==1 and a.get("missing")==0
                       and (r.get("kernel_netem") or {}).get("rtt_ms")==400 and (r.get("kernel_netem") or {}).get("loss_pct")==0):
-                      passes.append(root.name)
+                      functional.append(root.name)
+                      if eligible:passes.append(root.name)
+          print("WINXDP_NORMAL_MBB_FUNCTIONAL_PASSES "+json.dumps(functional))
           print("WINXDP_NORMAL_MBB_REAL_9V45_PASSES "+json.dumps(passes))
           sys.exit(0 if len(set(passes))>=2 else 2)

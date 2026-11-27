@@ -1,0 +1,3 @@
+# Normal MBB functional coverage independent of CPU availability
+
+390cf00 source built in 46032770931 and Game build 46032770875 passed. All eight Normal slots were SKIPPED_CPU (no 9V45), so no real test of the same-epoch correction occurred. No product change justified. Keep the exact original 400ms/loss0 100pps three-generation, two-retirement, zero-missing, <=100ms gap scene and two 9V45 pass requirement; run fixed A/B slots on whatever CPU is assigned for functional diagnosis, with all other slots still gated. Report functional rows separately with actual CPU and do not credit non-9V45 rows toward the original qualification. This is not a performance ABBA/BAAB comparison. No Linux or Windows production code changes.
