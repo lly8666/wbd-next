@@ -153,3 +153,18 @@ if arch in ("arch-reclaim","arch-wake","arch-cipher"):
             dict(name="cipher-duplex175",direction="duplex",rate=175,delay=20,streams=4,mtu=1460)],
     }[arch]
     CASES=[dict(base,**w,arm=arm,group=w["name"],policy="rx-single" if arm=="A" else "rx-single-"+arch[5:],budget=w["rate"]) for w in workloads for arm in seq]
+
+# Repeat both counterbalanced orders on each qualified runner. Distinct
+# group names retain the original per-quartet receipts without averaging
+# across orders. Use the exact already-built candidate DLL.
+if os.environ.get("WBD_XDP_ARCH_REPEAT")=="1":
+    assert arch in ("arch-reclaim","arch-cipher")
+    if arch=="arch-reclaim":
+        # Earlier Maximum TCP was neutral; prioritize upload replication.
+        workloads=[w for w in workloads if w["name"]=="reclaim-up350"]
+    orders=("BAAB","ABBA") if seq=="BAAB" else ("ABBA","BAAB")
+    CASES=[dict(dict(base,**w),name=w["name"]+"-"+order.lower(),
+                group=w["name"]+"-"+order.lower(),arm=arm,
+                policy="rx-single" if arm=="A" else "rx-single-"+arch[5:],
+                budget=w["rate"])
+           for w in workloads for order in orders for arm in order]

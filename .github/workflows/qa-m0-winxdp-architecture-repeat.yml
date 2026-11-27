@@ -1,0 +1,58 @@
+name: M0 WinXDP repeat two surviving architecture candidates
+run-name: "M0 repeat completion and cipher ABBA BAAB | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-winxdp']
+    paths: ['.github/workflows/qa-m0-winxdp-architecture-repeat.yml']
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  completion-refill:
+    uses: ./.github/workflows/qa-m0-winxdp-architecture-repeat-pairs.yml
+    with: {candidate: arch-reclaim}
+  immutable-cipher-copy:
+    uses: ./.github/workflows/qa-m0-winxdp-architecture-repeat-pairs.yml
+    with: {candidate: arch-cipher}
+  coverage:
+    if: always()
+    needs: [completion-refill, immutable-cipher-copy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c80933
+        with: {pattern: 'winxdp-repeat-*', path: evidence}
+      - name: Count complete counterbalanced groups on actual 9V45
+        shell: python
+        run: |
+          import json,pathlib,statistics,sys
+          expected={
+              "arch-reclaim-tcp":{"reclaim-up350"},
+              "arch-reclaim-udp":{"normal-small100","maximum-large150-loss5"},
+              "arch-cipher-tcp":{"cipher-up350","cipher-duplex175"},
+              "arch-cipher-udp":{"normal-large175","normal-small100"},
+          }
+          coverage={k:{g:[] for g in gs} for k,gs in expected.items()}
+          for root in pathlib.Path("evidence").glob("winxdp-repeat-*"):
+              key=root.name.removeprefix("winxdp-repeat-").rsplit("-",1)[0]
+              if key not in expected:continue
+              gates=list(root.rglob("cpu-gate.json"))
+              if len(gates)!=1 or not json.loads(gates[0].read_text(encoding="utf-8-sig")).get("eligible"):continue
+              pairs={}
+              for f in root.rglob("pair-*.json"):
+                  x=json.loads(f.read_text(encoding="utf-8-sig"))
+                  if x.get("scope")!="MATCHED_TARGET" or not x.get("valid") or not x.get("mechanism_exercised"):continue
+                  g,order=x["group"].rsplit("-",1)
+                  if g not in expected[key] or x.get("sequence")!=order.upper():continue
+                  if order not in ("abba","baab"):continue
+                  if "A" in x:
+                      a,b=x["A"]["cpu_s_per_gib"],x["B"]["cpu_s_per_gib"]
+                  else:
+                      a,b=x["A_cpu_s_per_gib"],x["B_cpu_s_per_gib"]
+                  if a and b is not None:pairs[(g,order)]=100*(b/a-1)
+              for g in expected[key]:
+                  if (g,"abba") in pairs and (g,"baab") in pairs:
+                      coverage[key][g].append({"runner":root.name,"ABBA_cpu_pct":pairs[(g,"abba")],"BAAB_cpu_pct":pairs[(g,"baab")]})
+          print("WINXDP_COUNTERBALANCED_COVERAGE "+json.dumps(coverage,sort_keys=True))
+          # Coverage only: a real negative result is valid evidence, not a
+          # fixture failure. Never pass by counting skipped CPU jobs.
+          sys.exit(0 if all(v for groups in coverage.values() for v in groups.values()) else 2)

@@ -237,7 +237,7 @@ def main():
     global CURRENT
     rows=[]
     log=(OUT/"server-control.log").open("w")
-    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"WBD_XDP_STRESS_PHASE="+os.environ.get("WBD_XDP_STRESS_PHASE",""),"WBD_XDP_SINGLE_WIDE="+os.environ.get("WBD_XDP_SINGLE_WIDE","0"),"WBD_XDP_SINGLE_RSS="+os.environ.get("WBD_XDP_SINGLE_RSS","0"),"H2478_REPLICA="+os.environ["H2478_REPLICA"],"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
+    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"WBD_XDP_STRESS_PHASE="+os.environ.get("WBD_XDP_STRESS_PHASE",""),"WBD_XDP_SINGLE_WIDE="+os.environ.get("WBD_XDP_SINGLE_WIDE","0"),"WBD_XDP_SINGLE_RSS="+os.environ.get("WBD_XDP_SINGLE_RSS","0"),"WBD_XDP_ARCH_REPEAT="+os.environ.get("WBD_XDP_ARCH_REPEAT","0"),"H2478_REPLICA="+os.environ["H2478_REPLICA"],"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
     try:
         deadline=time.monotonic()+60
         while "H2442_SERVER_CONTROL_READY" not in (OUT/"server-control.log").read_text(errors="replace"):

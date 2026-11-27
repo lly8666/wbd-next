@@ -85,6 +85,12 @@ def main():
                 "arch-cipher":[("normal-large175","normal",175,0,20,1200),("normal-small100","normal",100,0,20,288)],
             }[arch]
         CASES=[[name+"-"+str(i),mode,16384,2048,32,("rx-single" if arm=="A" else "rx-single-"+arch[5:]) if arch.startswith("arch-") else "original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),rate,loss,delay,size] for name,mode,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
+        if os.environ.get("WBD_XDP_ARCH_REPEAT")=="1":
+            assert arch in ("arch-reclaim","arch-cipher")
+            orders=("BAAB","ABBA") if seq=="BAAB" else ("ABBA","BAAB")
+            CASES=[[name+"-"+order.lower()+"-"+str(i),mode,16384,2048,32,
+                    "rx-single" if arm=="A" else "rx-single-"+arch[5:],rate,loss,delay,size]
+                   for name,mode,rate,loss,delay,size in workloads for order in orders for i,arm in enumerate(order)]
     rows=[]
     order=list(range(len(CASES)))
     if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
@@ -108,7 +114,8 @@ def main():
         name,mode,rx,tx,q,policy,rate,loss,delay,size=CASES[i]
         case=E/name;case.mkdir(exist_ok=False)
         group=name.rsplit("-",1)[0] if tune and (maximum_memory or pool or i<8) else name
-        path=ROOT/"scenarios"/("xdp-pressure-"+group+".json")
+        scenario_group=group.rsplit("-",1)[0] if os.environ.get("WBD_XDP_ARCH_REPEAT")=="1" else group
+        path=ROOT/"scenarios"/("xdp-pressure-"+scenario_group+".json")
         shutil.copyfile(path,case/"scenario.json")
         expected=read_scenario(path)["scenario_sha256"]
         env=dict(os.environ,WBD_WL_PUBLIC_MODE=mode,WBD_WL_PUBLIC_MODES=mode,WBD_WL_V2_SCENARIO=str(path.relative_to(ROOT)).replace(chr(92),"/"),WBD_XDP_LAB_RX=str(rx),WBD_XDP_LAB_TX=str(tx),WBD_XDP_LAB_QUANTUM=str(q),WBD_XDP_LAB_POLICY=policy)
