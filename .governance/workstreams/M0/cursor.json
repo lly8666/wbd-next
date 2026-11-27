@@ -4,28 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2479,
-  "checkpoint_sha": "015d532de15239d52460592bdda326e2e32df4a1",
+  "sequence": 2480,
+  "checkpoint_sha": "7232884cc113cb287228164f7043a7b64234b34c",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "核对05bb056d776eedaa9b17e917f29f8f11c3d5b9f7精确双ISA原生/late ACK RST回归与ARM BBR0 ABBA；495586c x86 parity并发reset FAIL，ARM性能NOT_RUN。真实业务与收据通过后再推inner attempt/IO。",
+  "next_action": "核对c732dfd精确双ISA原生、local GSO专项真实groups/segments与ARM BBR0 ABBA；以实际业务、CPU/GiB、本地丢包和提交收据判断，勿重复派单。后续inner retransmit实际记账及本地IO按证据推进。",
   "unverified": true,
-  "last_tested_source": "392ee066c8bbcea96c20dea0ef76d73f497f6b87",
+  "last_tested_source": "05bb056d776eedaa9b17e917f29f8f11c3d5b9f7",
   "evidence_refs": [
-    "docs/evidence/M0/20261127-DUAL-RUST-TCP-M4-CLOCK-NATIVE-RESULT.json"
+    "docs/evidence/M0/20261127-DUAL-TCP-TIMEWAIT-AND-BBR0-RESULT.json"
   ],
   "context_refs": [
-    "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
     "docs/devlog/M0/20261127-M4-CLOCK-AND-OFFLOAD-PLAN-HANDOFF.md",
     "docs/evidence/M0/20261127-DUAL-RUST-TCP-NATIVE-ADMISSION-RESULT.json",
     "docs/devlog/M0/20261127-M0-M4-CLOCK-RECOVERY-HANDOFF.md",
     "docs/evidence/M0/20261127-DUAL-RUST-TCP-NATIVE-REGRESSION-REPAIR-RESULT.json",
     "docs/devlog/M0/20261127-M0-M4-CLOCK-NATIVE-RESULT-HANDOFF.md",
-    "docs/devlog/M0/20261127-M0-DUAL-TCP-LATE-RST-HANDOFF.md"
+    "docs/devlog/M0/20261127-M0-DUAL-TCP-LATE-RST-HANDOFF.md",
+    "docs/evidence/M0/20261127-DUAL-RUST-TCP-M4-CLOCK-NATIVE-RESULT.json",
+    "docs/devlog/M0/20261127-M0-LOCAL-TUN-GSO-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "392ee06原生限域PASS；495586c产品相同但x86 parity并发reset FAIL，ARM性能NOT_RUN。失败ZIP定位TIME_WAIT晚RST触发异常关闭；05bb056保持原TIME_WAIT并加回归，未验证。H2478治理PASS；旧splice保留。"
+  "partial_summary": "05bb056双ISA345核心+M4专项、Normal原生PASS；ARM BBR0 ABBA4/4，裸564.37，splice291.48 vs Rust151.12，CPU/GiB26.77 vs40.43，性能FAIL。c732dfd客户端本地VNET GSO候选已触发，未验；旧splice保留。"
 }
