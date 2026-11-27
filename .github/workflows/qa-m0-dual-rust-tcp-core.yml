@@ -69,10 +69,13 @@ jobs:
       - name: Explicit middle CUBIC, same selected owner and GSO defaults
         run: |
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/cubic WBD_M0_MIDDLE_CC=cubic WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
-      - name: Adjacent relay credit native bidirectional, eight concurrent and UDP functionality
+      - name: Explicit old relay admission rollback native functionality
         run: |
-          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/credit WBD_M0_RELAY_PENDING_CREDIT=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
-      - name: Adjacent relay credit actual 0.5 percent loss ABBA
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/credit-off WBD_M0_RELAY_PENDING_CREDIT=0 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+      - name: Client ingress-first candidate native bidirectional concurrent and UDP
+        run: |
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/client-first WBD_M0_CLIENT_INGRESS_FIRST=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+      - name: Selected relay credit client ingress-first normal pause and loss checks
         if: matrix.arch == 'aarch64'
         run: |
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py

@@ -50,7 +50,8 @@ impl Endpoint {
             native_owner_turn: parity,
             rack_keep_reo_window:middle&&parity&&std::env::var_os("WBD_M0_RACK_KEEP_WINDOW").as_deref()==Some(std::ffi::OsStr::new("1")),
             native_pace_quantum_mss:quantum_mss,
-            relay_pending_limit:if parity&&std::env::var_os("WBD_M0_RELAY_PENDING_CREDIT").as_deref()==Some(std::ffi::OsStr::new("1")){Some(2*TURN_BYTES)}else{None},
+            // Selected paired research default; explicit 0 retains the old admission.
+            relay_pending_limit:if parity&&std::env::var_os("WBD_M0_RELAY_PENDING_CREDIT").as_deref()!=Some(std::ffi::OsStr::new("0")){Some(2*TURN_BYTES)}else{None},
             native_pace_ceiling:if middle&&parity{
                 match std::env::var_os("WBD_M0_NATIVE_PACE_MBPS").as_deref().and_then(|s|s.to_str()){
                     Some("160")=>Some(20_000_000),

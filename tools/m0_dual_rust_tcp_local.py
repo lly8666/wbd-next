@@ -109,18 +109,22 @@ def functional():
             assert int(parts["groups"])>0 and int(parts["segments"])>=2*int(parts["groups"]),gso
             row["local_gso"]={k:int(v) for k,v in parts.items()}
         if os.environ.get("WBD_M0_LINUX_PARITY")!="0":
-            for log,expected in ((sl,"true"),(cl,"false")):
+            client_first=os.environ.get("WBD_M0_CLIENT_INGRESS_FIRST")=="1"
+            for log,expected in ((sl,"true"),(cl,"true" if client_first else "false")):
                 pub=next(s for s in log.splitlines() if "WBD_M0_TCP_PUBLISH " in s)
                 assert " ingress_first="+expected+" " in pub and "admission_drain_before_service=true" in pub,pub
+                turns=int(re.search(r"\bingress_first_service_turns=(\d+)",pub).group(1))
+                assert (turns>0)==(expected=="true"),pub
                 m4=next(s for s in log.splitlines() if "WBD_M0_TCP_M4_CLOCK " in s)
                 vals=dict(x.split("=",1) for x in m4.split() if "=" in x)
                 assert int(vals["copied"])>0,m4
             row["selected_default_receipts"]=True
-        if os.environ.get("WBD_M0_RELAY_PENDING_CREDIT")=="1":
+        if os.environ.get("WBD_M0_LINUX_PARITY")!="0":
+            pending_limit=0 if os.environ.get("WBD_M0_RELAY_PENDING_CREDIT")=="0" else 131072
             credit=[]
             for role,log in (("server",sl),("client",cl)):
                 samples=[(int(m.group(1)),int(m.group(2))) for x in log.splitlines() if "WBD_M0_TCP_INFO " in x and (m:=re.search(r" relay_pending_limit=(\d+) relay_pending_bytes=(\d+) ",x))]
-                assert samples and all(l==131072 and p<=l for l,p in samples),role
+                assert samples and all(l==pending_limit and (not l or p<=l) for l,p in samples),role
                 credit.append({"role":role,"samples":len(samples),"max_pending":max(p for l,p in samples)})
             row["relay_credit_receipts"]=credit
         expected_slots=2048 if os.environ.get("WBD_M0_NATIVE_INBOX_DOUBLE")=="1" else 1024
@@ -158,14 +162,15 @@ def controlled_recovery():
     rows=[]
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--dual-rust-tcp"]
-    # Normal and paused clean cases have two reviewed repetitions.
-    # Qualify the candidate under true data-path loss before selection.
-    credit={"WBD_M0_RELAY_PENDING_CREDIT":"1"}
+    # Selected adjacent credit on all cases; isolate client scheduling.
+    first={"WBD_M0_CLIENT_INGRESS_FIRST":"1"}
     cases=[
-        ("loss-A1",True,120_000_000,{},0,0.5,96),
-        ("loss-B1",True,120_000_000,credit,0,0.5,96),
-        ("loss-B2",True,120_000_000,credit,0,0.5,96),
-        ("loss-A2",True,120_000_000,{},0,0.5,96),
+        ("normal-A",True,600_000_000,{},0,0,512),
+        ("normal-B",True,600_000_000,first,0,0,512),
+        ("pause-A",True,600_000_000,{},0,0,512),
+        ("pause-B",True,600_000_000,first,0,0,512),
+        ("loss-A",True,120_000_000,{},0,0.5,96),
+        ("loss-B",True,120_000_000,first,0,0.5,96),
     ]
     for label,paired,offered,profile,jitter,loss,mib in cases:
         target_bytes=mib*1024*1024
@@ -183,7 +188,7 @@ def controlled_recovery():
                     "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--users-file",O/"users.json",
                     "--lease-pool","10.66.0.128/25","--tls-cert",O/"cert.pem","--tls-key",O/"key.pem",*common)
                 until(server,lambda:"V4_PUBLIC_MULTI_SERVER_READY role=server port=443" in (d/"server.log").read_text())
-                client=spawn(C,d/"client.log","env",*[k+"="+v for k,v in profile.items() if k in ("WBD_M0_MIDDLE_CC","WBD_M0_RELAY_PENDING_CREDIT")],"LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-client",
+                client=spawn(C,d/"client.log","env",*[k+"="+v for k,v in profile.items() if k in ("WBD_M0_MIDDLE_CC","WBD_M0_RELAY_PENDING_CREDIT","WBD_M0_CLIENT_INGRESS_FIRST")],"LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-client",
                     "--raw-interface","wan0","--local-ip","10.248.81.2","--local-port","44100",
                     "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
                     "--username","bench","--password","DUAL-TCP-FIXTURE","--auto-ip","--installation-id-file",d/"install",*common)
@@ -298,14 +303,18 @@ def controlled_recovery():
                 gain_ok=bool(bbr) and all(" startup_pacing_gain="+gain+" " in x for x in bbr) and any(" phase=Startup " in x and " pacing_gain="+gain+" " in x for x in bbr)
                 rates=[int(m.group(1)) for x in info if (m:=re.search(r"\bpacing_rate: Some\((\d+)\)",x))]
                 row["actual_pacing_max_bytes_s"]=max(rates,default=0)
-                pending_limit=131072 if profile.get("WBD_M0_RELAY_PENDING_CREDIT")=="1" else 0
+                pending_limit=0 if profile.get("WBD_M0_RELAY_PENDING_CREDIT")=="0" else 131072
+                expected_first=profile.get("WBD_M0_CLIENT_INGRESS_FIRST")=="1"
+                pub=next(x for x in cl.splitlines() if "WBD_M0_TCP_PUBLISH " in x)
+                row["client_ingress_first_service_turns"]=int(re.search(r"\bingress_first_service_turns=(\d+)",pub).group(1))
+                first_ok=(" ingress_first="+str(expected_first).lower()+" ") in pub and ((row["client_ingress_first_service_turns"]>0)==expected_first)
                 all_info=info+[x for x in cl.splitlines() if "WBD_M0_TCP_INFO " in x and ("leg=client-middle " in x or "leg=client-local " in x)]
                 credit_samples=[(int(m.group(1)),int(m.group(2)),int(m.group(3))) for x in all_info if (m:=re.search(r" relay_pending_limit=(\d+) relay_pending_bytes=(\d+) relay_available=(\d+) ",x))]
                 row["relay_credit_samples"]=len(credit_samples)
                 row["relay_pending_max_sample"]=max((p for _,p,_ in credit_samples),default=None)
                 row["relay_credit_full_samples"]=sum(p==pending_limit and a==0 for _,p,a in credit_samples) if pending_limit else 0
                 credit_ok=bool(credit_samples) and len(credit_samples)==len(all_info) and all(l==pending_limit and (not l or p<=l) for l,p,a in credit_samples)
-                row["profile_valid"]=credit_ok and gain_ok and bool(info and origin_info and rates) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x and " native_pace_ceiling_bytes_s="+str(ceiling)+" " in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true")) and (not ceiling or row["actual_pacing_max_bytes_s"]<=ceiling)
+                row["profile_valid"]=first_ok and credit_ok and gain_ok and bool(info and origin_info and rates) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x and " native_pace_ceiling_bytes_s="+str(ceiling)+" " in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true")) and (not ceiling or row["actual_pacing_max_bytes_s"]<=ceiling)
                 row["receipt_present"]=all(any("WBD_M0_RAW_RX_PACKET_STATS " in line and " drops=" in line for line in log.splitlines()) and
                     "WBD_M0_TCP_INGRESS " in log for log in (cl,sl)) and "WBD_M0_TCP_M4_CLOCK " in sl and "WBD_M0_LOCAL_TUN_GSO " in cl and bool(latest)
             row["qdisc_after_stop"]=path_counts()
@@ -319,7 +328,7 @@ def controlled_recovery():
             save(d/"result.json",row)
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, fixed96MiB exact app at120M offer, uncapped adjacent-leg relay credit ABBA,0.5% IID both directions after control setup,400ms added RTT; actual profile/rate, qdisc delta and final-or-Stop sample; seed capability recorded","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, selected adjacent credit both endpoints; client ingress-first single A/B normal and paused fixed512MiB/600M offer, and 0.5% IID loss fixed96MiB/120M offer;400ms added RTT, exact application and actual service turns, qdisc and Stop","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)
