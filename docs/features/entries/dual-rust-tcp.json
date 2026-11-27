@@ -43,7 +43,8 @@
     "docs/devlog/M0/20261127-RELAY-CREDIT-NAGLE-TEST-CORRECTION.md",
     "docs/devlog/M0/20261127-RELAY-CREDIT-LOCAL-PASS-CROSS-HOST.md",
     "docs/devlog/M0/20261127-RELAY-CREDIT-CROSS-HOST-PASS-REQUALIFY.md",
-    "docs/devlog/M0/20261127-SELECT-RELAY-CREDIT-CLIENT-INGRESS-FIRST.md"
+    "docs/devlog/M0/20261127-SELECT-RELAY-CREDIT-CLIENT-INGRESS-FIRST.md",
+    "docs/devlog/M0/20261127-CLIENT-FIRST-AND-NAPI-READY-DRAIN.md"
   ],
   "verification": [
     {
@@ -97,7 +98,8 @@
     "d09f615 both ISA core350/351, same new relay-credit unit failed pending96 vs expected0 after 4x1000 MSS; Nagle-tail test assumption corrected, runtime untouched. Native normal/paused and cross-host ABBA not run on failed source.",
     "ff19c06 exact dual ISA351, six native and four local cases PASS; normal339.41 vs344.48M, server full2994→0; paused159.32 vs93.05M, pending64MiB→128KiB, zero window sampled12s, origin single write stall13.45s, exact payload and Stop. No cross-host result yet; opt-in only.",
     "f7614b6 native and cross-host6/6 measured; uncapped relay credit mean235.86→254.34M, CPU/GiB30.50→25.36, weighted final retrans6.351→4.343%, server full5672→0. Useful partial mitigation; weak loss, candidate native profiles and reverse order requalification pending, not default.",
-    "e66a42b native351 both ISA +8 profiles, loss ABBA complete (throughput -8.96%, recovery similar), reverse clean ABBA retrans11.795→6.824%, CPU30.08→28.595, throughput -3.42%; select relay credit in paired research mode with rollback, new client ingress-first opt-in pending. Residual long-flow high retrans unqualified."
+    "e66a42b native351 both ISA +8 profiles, loss ABBA complete (throughput -8.96%, recovery similar), reverse clean ABBA retrans11.795→6.824%, CPU30.08→28.595, throughput -3.42%; select relay credit in paired research mode with rollback, new client ingress-first opt-in pending. Residual long-flow high retrans unqualified.",
+    "4490614 selected relay credit and rollback dual ISA PASS; client-first cross-host throughput +11.79%, CPU/GiB -8.11%, retrans4.2645→3.5662% but client full increased, opt-in retained. Independent reverse and bounded ready RX drain candidate pending."
   ],
   "promotion": null
 }

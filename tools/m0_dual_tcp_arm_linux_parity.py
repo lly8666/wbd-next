@@ -9,11 +9,12 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# Selected relay credit on both ends, isolate client ingress-first.
-# Same binary, no pacing ceiling, one A/B/B/A block.
-ORDER=("A","B","B","A")
-CASES=(-1,0,1,2,3,-2)
-PROFILES={"A":"selected-relay-credit","B":"selected-credit-client-ingress-first"}
+# Independent reverse-order client-first repeat, then isolate ready RX drain.
+# Same binary, no pacing ceiling, selected relay credit throughout.
+ORDER=("B","A","A","B","B","C","C","B")
+CASES=(-1,0,1,2,3,4,5,6,7,-2)
+PROFILES={"A":"selected-relay-credit","B":"selected-credit-client-ingress-first",
+          "C":"client-first-plus-bounded-ready-rx-drain"}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
@@ -23,7 +24,9 @@ def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
 def offer(i):return 600_000_000
 def target_bytes(i):return 1024*1024*1024
-def profile_env(k,server):return ["WBD_M0_CLIENT_INGRESS_FIRST=1"] if not server and k=="B" else []
+def profile_env(k,server):
+    if server or k=="A":return []
+    return ["WBD_M0_CLIENT_INGRESS_FIRST=1"]+(["WBD_M0_CLIENT_RX_DRAIN=1"] if k=="C" else [])
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
@@ -254,7 +257,7 @@ def bulk_tcp_sample(log,leg):
 
 def probe_receipt(log,leg,k,i):
     rows=[s for s in log.splitlines() if "WBD_M0_TCP_INFO " in s and "leg="+leg+" " in s]
-    expected_first="true" if leg=="server-middle" or k=="B" else "false"
+    expected_first="true" if leg=="server-middle" or k in ("B","C") else "false"
     pub=next((s for s in log.splitlines() if "WBD_M0_TCP_PUBLISH " in s),"")
     slots=1024
     quantum=32
@@ -280,7 +283,13 @@ def probe_receipt(log,leg,k,i):
     ack_ok=bool(grants) and ((actual_grant_max>0)==(expected_ack=="true")) and (not server or (bool(origin_rows) and all(" ack_drain="+expected_ack in s for s in origin_rows)))
     bound=next((s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND " in s),"")
     rx=next((s for s in log.splitlines() if "WBD_M0_RAW_RX_PACKET_STATS " in s),"")
-    mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and ack_ok and ceiling_ok and gain_ok and credit_ok and first_ok and all(" pace_quantum_mss="+str(quantum)+" " in s and " rack_keep_reo_window="+expected_rack+" " in s for s in rows)
+    rx_drain=next((s for s in log.splitlines() if "WBD_M0_CLIENT_RX_DRAIN " in s),"")
+    dv=dict(w.split("=",1) for w in rx_drain.split() if "=" in w)
+    drain_expected=not server and k=="C"
+    drain_packets=int(dv.get("packets",-1))
+    drain_skipped=int(dv.get("skipped_polls",-1))
+    drain_ok=dv.get("enabled")==str(drain_expected).lower() and ((drain_packets>0 and drain_skipped>0) if drain_expected else drain_packets==drain_skipped==0)
+    mode_ok=drain_ok and (" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and ack_ok and ceiling_ok and gain_ok and credit_ok and first_ok and all(" pace_quantum_mss="+str(quantum)+" " in s and " rack_keep_reo_window="+expected_rack+" " in s for s in rows)
     gso_ok=True
     if leg=="client-middle":
         receipt=next((s for s in log.splitlines() if "WBD_M0_LOCAL_TUN_GSO groups=" in s),"")
@@ -288,7 +297,7 @@ def probe_receipt(log,leg,k,i):
         gso_ok=int(vals.get("groups",0))>0
     expected='congestion: "'+rust_cc(i)+'"'
     return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows),
-            "ingress_first_expected":expected_first,"ingress_first_service_turns":actual_first_turns,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,"pacing_ceiling_bytes_s":ceiling,"actual_pacing_max_bytes_s":max(rates,default=0),"startup_pacing_gain":gain,"startup_gain_verified":gain_ok,"relay_pending_limit":limit,"relay_credit_samples":len(credit),"relay_pending_max_sample":max((p for _,p,_ in credit),default=None),"relay_credit_full_samples":sum(p==limit and a==0 for _,p,a in credit) if limit else 0,
+            "ingress_first_expected":expected_first,"ingress_first_service_turns":actual_first_turns,"rx_drain":dv,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,"pacing_ceiling_bytes_s":ceiling,"actual_pacing_max_bytes_s":max(rates,default=0),"startup_pacing_gain":gain,"startup_gain_verified":gain_ok,"relay_pending_limit":limit,"relay_credit_samples":len(credit),"relay_pending_max_sample":max((p for _,p,_ in credit),default=None),"relay_credit_full_samples":sum(p==limit and a==0 for _,p,a in credit) if limit else 0,
             "valid":mode_ok and gso_ok and len(rows)>=10 and all(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows)}
 def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
@@ -407,7 +416,7 @@ def client():
                 sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                 recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary selected adjacent credit, client ingress-first A/B/B/A; fixed1GiB/600M offered, same-RTT bare brackets; actual deferred service turns, pending credit and final-or-Stop recovery; lab only","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary selected credit, reverse client-first B/A/A/B then client-first vs bounded ready RX drain B/C/C/B; fixed1GiB/600M, bare brackets, actual service turns/drain packets and final-or-Stop recovery; compare blocks separately, lab only","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

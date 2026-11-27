@@ -6043,6 +6043,8 @@ fn background_raw_once(
     authenticated_client_ip:Option<[u8;4]>,
     raw:&ScopedRawIpv4Rx,tun:&ScopedTunSink,stop:&AtomicBool,
     rx_pending:&mut Vec<crate::memory::UniqueBuffer>,
+    // Actual kernel receive count and would-block, not delivered IP count.
+    raw_batch_receipt:&mut (usize,bool),
     mut native_tcp:Option<&mut dyn FnMut(&[u8])->bool>,
     mature:&Arc<Mutex<NormalFirstSendM2>>,
     #[cfg(feature="fec2_product_record")]
@@ -6097,6 +6099,7 @@ fn background_raw_once(
         generation,&mut slots[..slot_count],tuple,peer_persona
     ).map_err(|_|INVALID)?;
     drop(slots);
+    *raw_batch_receipt=(batch.observed,batch.status==wbd_platform::linux_raw_carrier::RawReadyStatus::WouldBlock);
     if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
     if batch.observed==0{return Err(INVALID)}
     let mut delivered_total=0u32;
@@ -8276,6 +8279,18 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             #[cfg(feature="fec2_product_record")]
             let mut rx_prev_loop_start=Instant::now();
             let mut rx_pending=Vec::<crate::memory::UniqueBuffer>::with_capacity(32);
+            // NAPI-inspired bounded ready drain: only a successful full
+            // existing 32-slot batch permits another nonblocking receive.
+            // A short/empty/error turn returns to the original readiness
+            // wait; at most three follow-ups before checking readiness.
+            let client_rx_drain=native_tcp_rx.is_some()&&!rx_server_side&&
+                std::env::var_os("WBD_M0_CLIENT_RX_DRAIN").as_deref()==Some(std::ffi::OsStr::new("1"));
+            let mut rx_followup=false;
+            let mut rx_followup_budget=0u8;
+            let mut rx_drain_skipped_polls=0u64;
+            let mut rx_drain_empty=0u64;
+            let mut rx_drain_packets=0u64;
+            let mut rx_drain_full=0u64;
             let mut middle_offered=0u64;
             let mut middle_full=0u64;
             let mut middle_closed=0u64;
@@ -8336,20 +8351,30 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
                 }
-                let ready=loop_readiness(raw_fd,&stop_rx,10);
+                let followup=rx_followup;
+                rx_followup=false;
+                let ready=if followup{
+                    rx_followup_budget-=1;
+                    rx_drain_skipped_polls+=1;
+                    true
+                }else{
+                    rx_followup_budget=if client_rx_drain{3}else{0};
+                    loop_readiness(raw_fd,&stop_rx,10)
+                };
                 #[cfg(feature="fec2_product_record")]
-                if egress_diag{
+                if egress_diag&&!followup{
                     if ready{rx_poll_ready_total=rx_poll_ready_total.saturating_add(1)}
                     else{rx_poll_idle_total=rx_poll_idle_total.saturating_add(1)}
                 }
                 if !ready{continue}
                 #[cfg(feature="fec2_product_record")]
                 let processing_started=if egress_diag{Some(Instant::now())}else{None};
+                let mut raw_batch_receipt=(0usize,false);
                 let result=background_raw_once(
                     &mut original_rx,&mut rx_arena,&mut rx_anchor,
                     rx_flow,generation,rx_server_side,rx_peer_persona,
                     rx_assigned_ip,&raw_for_rx,&tun_for_rx,
-                    &stop_rx,&mut rx_pending,
+                    &stop_rx,&mut rx_pending,&mut raw_batch_receipt,
                     if native_tcp_rx.is_some(){Some(&mut native_tcp_input)}else{None},&mature,
                     #[cfg(feature="fec2_product_record")]
                     &stats_rx,
@@ -8377,6 +8402,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     rx_processing_max_ns=rx_processing_max_ns.max(
                         t.elapsed().as_nanos().min(u64::MAX as u128) as u64);
                 }
+                if followup{
+                    rx_drain_packets+=raw_batch_receipt.0 as u64;
+                    if raw_batch_receipt.1{rx_drain_empty+=1;}
+                    if raw_batch_receipt.0==32{rx_drain_full+=1;}
+                }
+                rx_followup=client_rx_drain&&result.is_ok()&&raw_batch_receipt.0==32&&rx_followup_budget!=0;
                 match result{
                     Ok(n)=>{
                         stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);
@@ -8385,6 +8416,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             rx_processed_total=rx_processed_total.saturating_add(u64::from(n));
                         }
                     }
+                    // A speculative nonblocking EAGAIN is not an RX
+                    // error; preserve every other existing error path.
+                    Err(_) if followup&&raw_batch_receipt.0==0&&raw_batch_receipt.1=>{},
                     Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
                 }
             }
@@ -8402,6 +8436,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             }
             if native_tcp_rx.is_some(){
                 eprintln!("WBD_M0_TCP_INGRESS offered={} full={} disconnected={}",middle_offered,middle_full,middle_closed);
+                eprintln!("WBD_M0_CLIENT_RX_DRAIN enabled={} skipped_polls={} packets={} full_batches={} empty={}",client_rx_drain,rx_drain_skipped_polls,rx_drain_packets,rx_drain_full,rx_drain_empty);
                 // Fixture-only boundary receipt, once at existing RX Stop.
                 // It is not a delivery/controller input or periodic monitor.
                 if std::env::var_os("WBD_M0_RX_PACKET_STATS").as_deref()==Some(std::ffi::OsStr::new("1")){
