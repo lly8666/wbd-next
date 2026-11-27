@@ -1,0 +1,924 @@
+{
+  "schema": "winxdp-freeze-historical-pairs-v1",
+  "scope": "Selected original matched and negative paired receipts; cancelled runs remain cancelled, not release qualification.",
+  "jobs": [
+    {
+      "run_id": 45938163202,
+      "job_id": 140306068461,
+      "cpu_gate": {
+        "source_sha": "ce538af39f0dbd0df19d8a52817ead7a3ae86fce",
+        "run_id": "45938163202",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "single-max-loss5",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 50.01798240000001,
+          "B_rx_mbps": 49.95997128,
+          "rx_mbps_delta_pct": -0.11598052783514667,
+          "A_server_rx_mbps": 56.83784176,
+          "B_server_rx_mbps": 54.547668560000005,
+          "server_rx_mbps_delta_pct": -4.029310630178995,
+          "A_cpu_s_per_gib": 18.201001569541255,
+          "B_cpu_s_per_gib": 18.125835386711074,
+          "cpu_s_per_gib_delta_pct": -0.41297827783262075,
+          "target_mbps": 50,
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET",
+          "A_rx_peak_sampled": 107,
+          "A_rx_drops": 0,
+          "A_tx_credit_limited": 0,
+          "A_pool_backing_bytes": 536870912,
+          "A_pool_expanded_samples": 0,
+          "A_pool_max_queue_posted": 16384,
+          "A_pool_borrowed": 0,
+          "A_pool_returned": 0,
+          "A_steady_peak_working_set_bytes": 602095616,
+          "A_steady_peak_private_bytes": 598515712,
+          "B_rx_peak_sampled": 101,
+          "B_rx_drops": 0,
+          "B_tx_credit_limited": 0,
+          "B_pool_backing_bytes": 33554432,
+          "B_pool_expanded_samples": 0,
+          "B_pool_max_queue_posted": 16384,
+          "B_pool_borrowed": 0,
+          "B_pool_returned": 0,
+          "B_steady_peak_working_set_bytes": 99301376,
+          "B_steady_peak_private_bytes": 94711808
+        },
+        {
+          "group": "single-up350",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 0,
+          "B_rx_mbps": 0,
+          "rx_mbps_delta_pct": null,
+          "A_server_rx_mbps": 349.98267192000003,
+          "B_server_rx_mbps": 349.96948815999997,
+          "server_rx_mbps_delta_pct": -0.003766975069863232,
+          "A_cpu_s_per_gib": 2.8009453721364928,
+          "B_cpu_s_per_gib": 2.93493981141821,
+          "cpu_s_per_gib_delta_pct": 4.783900486410042,
+          "target_mbps": 350,
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET",
+          "A_rx_peak_sampled": 85,
+          "A_rx_drops": 0,
+          "A_tx_credit_limited": 0,
+          "A_pool_backing_bytes": 536870912,
+          "A_pool_expanded_samples": 0,
+          "A_pool_max_queue_posted": 16384,
+          "A_pool_borrowed": 0,
+          "A_pool_returned": 0,
+          "A_steady_peak_working_set_bytes": 598509568,
+          "A_steady_peak_private_bytes": 595697664,
+          "B_rx_peak_sampled": 70,
+          "B_rx_drops": 0,
+          "B_tx_credit_limited": 0,
+          "B_pool_backing_bytes": 33554432,
+          "B_pool_expanded_samples": 0,
+          "B_pool_max_queue_posted": 16384,
+          "B_pool_borrowed": 0,
+          "B_pool_returned": 0,
+          "B_steady_peak_working_set_bytes": 95424512,
+          "B_steady_peak_private_bytes": 91854848
+        }
+      ]
+    },
+    {
+      "run_id": 45938163202,
+      "job_id": 140306068470,
+      "cpu_gate": {
+        "source_sha": "ce538af39f0dbd0df19d8a52817ead7a3ae86fce",
+        "run_id": "45938163202",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "single-down350-mtu1460",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 349.962976,
+          "B_rx_mbps": 349.86552424,
+          "rx_mbps_delta_pct": -0.02784630566178281,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 5.904693615422609,
+          "B_cpu_s_per_gib": 5.580095573941883,
+          "cpu_s_per_gib_delta_pct": -5.497288472900608,
+          "target_mbps": 350,
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET",
+          "A_rx_peak_sampled": 62,
+          "A_rx_drops": 0,
+          "A_tx_credit_limited": 0,
+          "A_pool_backing_bytes": 536870912,
+          "A_pool_expanded_samples": 0,
+          "A_pool_max_queue_posted": 16384,
+          "A_pool_borrowed": 0,
+          "A_pool_returned": 0,
+          "A_steady_peak_working_set_bytes": 598554624,
+          "A_steady_peak_private_bytes": 595187712,
+          "B_rx_peak_sampled": 306,
+          "B_rx_drops": 0,
+          "B_tx_credit_limited": 0,
+          "B_pool_backing_bytes": 33554432,
+          "B_pool_expanded_samples": 0,
+          "B_pool_max_queue_posted": 16384,
+          "B_pool_borrowed": 0,
+          "B_pool_returned": 0,
+          "B_steady_peak_working_set_bytes": 95346688,
+          "B_steady_peak_private_bytes": 91033600
+        },
+        {
+          "group": "single-max-loss1",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 97.58577768,
+          "B_rx_mbps": 98.85266136,
+          "rx_mbps_delta_pct": 1.2982257354696936,
+          "A_server_rx_mbps": 104.86552992,
+          "B_server_rx_mbps": 108.12697488,
+          "server_rx_mbps_delta_pct": 3.110121087919082,
+          "A_cpu_s_per_gib": 14.74262625506082,
+          "B_cpu_s_per_gib": 15.002772059676438,
+          "cpu_s_per_gib_delta_pct": 1.764582511384738,
+          "target_mbps": 100,
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET",
+          "A_rx_peak_sampled": 217,
+          "A_rx_drops": 0,
+          "A_tx_credit_limited": 0,
+          "A_pool_backing_bytes": 536870912,
+          "A_pool_expanded_samples": 0,
+          "A_pool_max_queue_posted": 16384,
+          "A_pool_borrowed": 0,
+          "A_pool_returned": 0,
+          "A_steady_peak_working_set_bytes": 603267072,
+          "A_steady_peak_private_bytes": 599918592,
+          "B_rx_peak_sampled": 144,
+          "B_rx_drops": 0,
+          "B_tx_credit_limited": 0,
+          "B_pool_backing_bytes": 33554432,
+          "B_pool_expanded_samples": 0,
+          "B_pool_max_queue_posted": 16384,
+          "B_pool_borrowed": 0,
+          "B_pool_returned": 0,
+          "B_steady_peak_working_set_bytes": 99631104,
+          "B_steady_peak_private_bytes": 94971904
+        }
+      ]
+    },
+    {
+      "run_id": 45938163202,
+      "job_id": 140306068504,
+      "cpu_gate": {
+        "source_sha": "ce538af39f0dbd0df19d8a52817ead7a3ae86fce",
+        "run_id": "45938163202",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "fixed-small16384-100",
+          "sequence": "BAAB",
+          "valid": true,
+          "A": {
+            "delivered": {
+              "windows": 97.15090000000001,
+              "linux": 99.97415
+            },
+            "offered": {
+              "windows": 99.97415,
+              "linux": 99.9995
+            },
+            "cpu_s_per_gib": 11.425551524415646,
+            "rx_peak_sampled": 774,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 603553792,
+            "steady_peak_private_bytes": 600526848,
+            "pool_backing_bytes": 536870912,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "B": {
+            "delivered": {
+              "windows": 97.5989,
+              "linux": 99.9733
+            },
+            "offered": {
+              "windows": 99.9733,
+              "linux": 99.9998
+            },
+            "cpu_s_per_gib": 10.912173922765191,
+            "rx_peak_sampled": 541,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 101541888,
+            "steady_peak_private_bytes": 97015808,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "all_arms_offered_at_target": true,
+          "scope": "MATCHED_OFFER"
+        },
+        {
+          "group": "normal-small100",
+          "sequence": "BAAB",
+          "valid": true,
+          "A": {
+            "delivered": {
+              "windows": 99.9697,
+              "linux": 99.97415
+            },
+            "offered": {
+              "windows": 99.97415,
+              "linux": 99.9949
+            },
+            "cpu_s_per_gib": 6.485552506827555,
+            "rx_peak_sampled": 745,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 597694464,
+            "steady_peak_private_bytes": 594851840,
+            "pool_backing_bytes": 536870912,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "B": {
+            "delivered": {
+              "windows": 99.96064999999999,
+              "linux": 99.9733
+            },
+            "offered": {
+              "windows": 99.9733,
+              "linux": 99.9724
+            },
+            "cpu_s_per_gib": 7.014278676406869,
+            "rx_peak_sampled": 274,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 94195712,
+            "steady_peak_private_bytes": 90228736,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "all_arms_offered_at_target": true,
+          "scope": "MATCHED_OFFER"
+        }
+      ]
+    },
+    {
+      "run_id": 45938163202,
+      "job_id": 140306068506,
+      "cpu_gate": {
+        "source_sha": "ce538af39f0dbd0df19d8a52817ead7a3ae86fce",
+        "run_id": "45938163202",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "normal-large175",
+          "sequence": "ABBA",
+          "valid": true,
+          "A": {
+            "delivered": {
+              "windows": 174.9955,
+              "linux": 174.9533
+            },
+            "offered": {
+              "windows": 174.9533,
+              "linux": 174.99975
+            },
+            "cpu_s_per_gib": 4.341240745552219,
+            "rx_peak_sampled": 215,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 597430272,
+            "steady_peak_private_bytes": 594192384,
+            "pool_backing_bytes": 536870912,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "B": {
+            "delivered": {
+              "windows": 174.9995,
+              "linux": 174.95475
+            },
+            "offered": {
+              "windows": 174.95475,
+              "linux": 174.9995
+            },
+            "cpu_s_per_gib": 3.5170790252414963,
+            "rx_peak_sampled": 179,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 93796352,
+            "steady_peak_private_bytes": 89821184,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "all_arms_offered_at_target": true,
+          "scope": "MATCHED_OFFER"
+        },
+        {
+          "group": "maximum-large100-loss1",
+          "sequence": "ABBA",
+          "valid": true,
+          "A": {
+            "delivered": {
+              "windows": 99.99879999999999,
+              "linux": 99.9749
+            },
+            "offered": {
+              "windows": 99.9749,
+              "linux": 99.9998
+            },
+            "cpu_s_per_gib": 10.424216929180897,
+            "rx_peak_sampled": 228,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 603113472,
+            "steady_peak_private_bytes": 599586816,
+            "pool_backing_bytes": 536870912,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "B": {
+            "delivered": {
+              "windows": 99.99955,
+              "linux": 99.9733
+            },
+            "offered": {
+              "windows": 99.9733,
+              "linux": 99.99975
+            },
+            "cpu_s_per_gib": 9.69803168421854,
+            "rx_peak_sampled": 118,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 99665920,
+            "steady_peak_private_bytes": 95178752,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "all_arms_offered_at_target": true,
+          "scope": "MATCHED_OFFER"
+        }
+      ]
+    },
+    {
+      "run_id": 45938163202,
+      "job_id": 140306068549,
+      "cpu_gate": {
+        "source_sha": "ce538af39f0dbd0df19d8a52817ead7a3ae86fce",
+        "run_id": "45938163202",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "normal-small100",
+          "sequence": "ABBA",
+          "valid": true,
+          "A": {
+            "delivered": {
+              "windows": 99.9825,
+              "linux": 99.97415
+            },
+            "offered": {
+              "windows": 99.97415,
+              "linux": 99.98375
+            },
+            "cpu_s_per_gib": 7.588398049043281,
+            "rx_peak_sampled": 316,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 597598208,
+            "steady_peak_private_bytes": 594595840,
+            "pool_backing_bytes": 536870912,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "B": {
+            "delivered": {
+              "windows": 99.99825,
+              "linux": 99.9733
+            },
+            "offered": {
+              "windows": 99.9733,
+              "linux": 99.99825
+            },
+            "cpu_s_per_gib": 7.058718963336512,
+            "rx_peak_sampled": 424,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 93990912,
+            "steady_peak_private_bytes": 89899008,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "all_arms_offered_at_target": true,
+          "scope": "MATCHED_OFFER"
+        },
+        {
+          "group": "fixed-small16384-100",
+          "sequence": "ABBA",
+          "valid": true,
+          "A": {
+            "delivered": {
+              "windows": 89.1114,
+              "linux": 99.97415
+            },
+            "offered": {
+              "windows": 99.97415,
+              "linux": 99.98124999999999
+            },
+            "cpu_s_per_gib": 12.48301498749719,
+            "rx_peak_sampled": 698,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 603809792,
+            "steady_peak_private_bytes": 600879104,
+            "pool_backing_bytes": 536870912,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "B": {
+            "delivered": {
+              "windows": 86.6212,
+              "linux": 95.80615
+            },
+            "offered": {
+              "windows": 99.9733,
+              "linux": 99.9268
+            },
+            "cpu_s_per_gib": 12.928449270117035,
+            "rx_peak_sampled": 1039,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 101253120,
+            "steady_peak_private_bytes": 97017856,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "all_arms_offered_at_target": true,
+          "scope": "MATCHED_OFFER"
+        }
+      ]
+    },
+    {
+      "run_id": 45938323496,
+      "job_id": 140307440898,
+      "cpu_gate": {
+        "source_sha": "f679ae56f2a4996364736dd91e7234fac4b0655e",
+        "run_id": "45938323496",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "single-loan-up350",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 0,
+          "B_rx_mbps": 0,
+          "rx_mbps_delta_pct": null,
+          "A_server_rx_mbps": 349.97272576,
+          "B_server_rx_mbps": 349.95054960000004,
+          "server_rx_mbps_delta_pct": -0.006336539497986404,
+          "A_cpu_s_per_gib": 3.0793410706492983,
+          "B_cpu_s_per_gib": 3.089105536923462,
+          "cpu_s_per_gib_delta_pct": 0.31709596469302603,
+          "target_mbps": 350,
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET",
+          "A_rx_peak_sampled": 53,
+          "A_rx_drops": 0,
+          "A_tx_credit_limited": 0,
+          "A_pool_backing_bytes": 33554432,
+          "A_pool_expanded_samples": 0,
+          "A_pool_max_queue_posted": 16384,
+          "A_pool_borrowed": 0,
+          "A_pool_returned": 0,
+          "A_steady_peak_working_set_bytes": 95326208,
+          "A_steady_peak_private_bytes": 91363328,
+          "B_rx_peak_sampled": 48,
+          "B_rx_drops": 0,
+          "B_tx_credit_limited": 0,
+          "B_pool_backing_bytes": 33554432,
+          "B_pool_expanded_samples": 0,
+          "B_pool_max_queue_posted": 16384,
+          "B_pool_borrowed": 0,
+          "B_pool_returned": 0,
+          "B_steady_peak_working_set_bytes": 95342592,
+          "B_steady_peak_private_bytes": 91187200
+        }
+      ]
+    },
+    {
+      "run_id": 45938323496,
+      "job_id": 140307440924,
+      "cpu_gate": {
+        "source_sha": "f679ae56f2a4996364736dd91e7234fac4b0655e",
+        "run_id": "45938323496",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "normal-small50",
+          "sequence": "BAAB",
+          "valid": true,
+          "A": {
+            "delivered": {
+              "windows": 49.9999,
+              "linux": 49.9867
+            },
+            "offered": {
+              "windows": 49.9867,
+              "linux": 49.9999
+            },
+            "cpu_s_per_gib": 10.13027994255238,
+            "rx_peak_sampled": 72,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 93321216,
+            "steady_peak_private_bytes": 89470976,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "B": {
+            "delivered": {
+              "windows": 49.9999,
+              "linux": 49.9871
+            },
+            "offered": {
+              "windows": 49.9871,
+              "linux": 49.9999
+            },
+            "cpu_s_per_gib": 10.736938596811127,
+            "rx_peak_sampled": 55,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 93515776,
+            "steady_peak_private_bytes": 89298944,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "all_arms_offered_at_target": true,
+          "scope": "MATCHED_OFFER"
+        }
+      ]
+    },
+    {
+      "run_id": 45938323496,
+      "job_id": 140307440939,
+      "cpu_gate": {
+        "source_sha": "f679ae56f2a4996364736dd91e7234fac4b0655e",
+        "run_id": "45938323496",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "single-loan-up350",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 0,
+          "B_rx_mbps": 0,
+          "rx_mbps_delta_pct": null,
+          "A_server_rx_mbps": 349.97593568,
+          "B_server_rx_mbps": 349.97272576,
+          "server_rx_mbps_delta_pct": -0.0009171830611109932,
+          "A_cpu_s_per_gib": 2.138263136548919,
+          "B_cpu_s_per_gib": 2.6307028606358314,
+          "cpu_s_per_gib_delta_pct": 23.0298935462963,
+          "target_mbps": 350,
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET",
+          "A_rx_peak_sampled": 72,
+          "A_rx_drops": 0,
+          "A_tx_credit_limited": 0,
+          "A_pool_backing_bytes": 33554432,
+          "A_pool_expanded_samples": 0,
+          "A_pool_max_queue_posted": 16384,
+          "A_pool_borrowed": 0,
+          "A_pool_returned": 0,
+          "A_steady_peak_working_set_bytes": 95395840,
+          "A_steady_peak_private_bytes": 91797504,
+          "B_rx_peak_sampled": 74,
+          "B_rx_drops": 0,
+          "B_tx_credit_limited": 0,
+          "B_pool_backing_bytes": 33554432,
+          "B_pool_expanded_samples": 0,
+          "B_pool_max_queue_posted": 16384,
+          "B_pool_borrowed": 0,
+          "B_pool_returned": 0,
+          "B_steady_peak_working_set_bytes": 95305728,
+          "B_steady_peak_private_bytes": 91926528
+        }
+      ]
+    },
+    {
+      "run_id": 45938323496,
+      "job_id": 140307440994,
+      "cpu_gate": {
+        "source_sha": "f679ae56f2a4996364736dd91e7234fac4b0655e",
+        "run_id": "45938323496",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "single-loan-up350",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 0,
+          "B_rx_mbps": 0,
+          "rx_mbps_delta_pct": null,
+          "A_server_rx_mbps": 349.957474,
+          "B_server_rx_mbps": 349.9965032,
+          "server_rx_mbps_delta_pct": 0.011152555067317493,
+          "A_cpu_s_per_gib": 2.4951904389892263,
+          "B_cpu_s_per_gib": 2.736591546743239,
+          "cpu_s_per_gib_delta_pct": 9.674656650728487,
+          "target_mbps": 350,
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET",
+          "A_rx_peak_sampled": 47,
+          "A_rx_drops": 0,
+          "A_tx_credit_limited": 0,
+          "A_pool_backing_bytes": 33554432,
+          "A_pool_expanded_samples": 0,
+          "A_pool_max_queue_posted": 16384,
+          "A_pool_borrowed": 0,
+          "A_pool_returned": 0,
+          "A_steady_peak_working_set_bytes": 95469568,
+          "A_steady_peak_private_bytes": 91557888,
+          "B_rx_peak_sampled": 61,
+          "B_rx_drops": 0,
+          "B_tx_credit_limited": 0,
+          "B_pool_backing_bytes": 33554432,
+          "B_pool_expanded_samples": 0,
+          "B_pool_max_queue_posted": 16384,
+          "B_pool_borrowed": 0,
+          "B_pool_returned": 0,
+          "B_steady_peak_working_set_bytes": 95232000,
+          "B_steady_peak_private_bytes": 91727872
+        }
+      ]
+    },
+    {
+      "run_id": 45938323496,
+      "job_id": 140307440998,
+      "cpu_gate": {
+        "source_sha": "f679ae56f2a4996364736dd91e7234fac4b0655e",
+        "run_id": "45938323496",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "normal-small50",
+          "sequence": "BAAB",
+          "valid": true,
+          "A": {
+            "delivered": {
+              "windows": 49.9999,
+              "linux": 49.9871
+            },
+            "offered": {
+              "windows": 49.9871,
+              "linux": 49.9999
+            },
+            "cpu_s_per_gib": 13.139813349568136,
+            "rx_peak_sampled": 141,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 93042688,
+            "steady_peak_private_bytes": 89262080,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "B": {
+            "delivered": {
+              "windows": 49.999849999999995,
+              "linux": 49.9867
+            },
+            "offered": {
+              "windows": 49.9867,
+              "linux": 49.999849999999995
+            },
+            "cpu_s_per_gib": 12.436267753658052,
+            "rx_peak_sampled": 70,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 93140992,
+            "steady_peak_private_bytes": 89249792,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "all_arms_offered_at_target": true,
+          "scope": "MATCHED_OFFER"
+        }
+      ]
+    },
+    {
+      "run_id": 45938323496,
+      "job_id": 140307441036,
+      "cpu_gate": {
+        "source_sha": "f679ae56f2a4996364736dd91e7234fac4b0655e",
+        "run_id": "45938323496",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "normal-large175",
+          "sequence": "ABBA",
+          "valid": true,
+          "A": {
+            "delivered": {
+              "windows": 174.99945000000002,
+              "linux": 174.9533
+            },
+            "offered": {
+              "windows": 174.9533,
+              "linux": 174.99945000000002
+            },
+            "cpu_s_per_gib": 3.451853642934865,
+            "rx_peak_sampled": 66,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 94148608,
+            "steady_peak_private_bytes": 89817088,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "B": {
+            "delivered": {
+              "windows": 174.99965,
+              "linux": 174.95475
+            },
+            "offered": {
+              "windows": 174.95475,
+              "linux": 174.99965
+            },
+            "cpu_s_per_gib": 3.953625176974706,
+            "rx_peak_sampled": 35,
+            "rx_drops": 0,
+            "tx_credit_limited": 0,
+            "steady_peak_working_set_bytes": 93812736,
+            "steady_peak_private_bytes": 89929728,
+            "pool_backing_bytes": 33554432,
+            "pool_expanded_samples": 0,
+            "pool_max_queue_posted": 16384,
+            "pool_borrowed": 0,
+            "pool_returned": 0
+          },
+          "all_arms_offered_at_target": true,
+          "scope": "MATCHED_OFFER"
+        }
+      ]
+    },
+    {
+      "run_id": 45938323496,
+      "job_id": 140307441040,
+      "cpu_gate": {
+        "source_sha": "f679ae56f2a4996364736dd91e7234fac4b0655e",
+        "run_id": "45938323496",
+        "names": [
+          "AMD EPYC 9V45 96-Core Processor                "
+        ],
+        "eligible": true,
+        "status": "MATCHED_9V45"
+      },
+      "pairs": [
+        {
+          "group": "single-loan-up350",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 0,
+          "B_rx_mbps": 0,
+          "rx_mbps_delta_pct": null,
+          "A_server_rx_mbps": 349.97272576,
+          "B_server_rx_mbps": 349.98942568,
+          "server_rx_mbps_delta_pct": 0.004771777561729529,
+          "A_cpu_s_per_gib": 3.0585911924505975,
+          "B_cpu_s_per_gib": 2.796616861650694,
+          "cpu_s_per_gib_delta_pct": -8.565196010716459,
+          "target_mbps": 350,
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET",
+          "A_rx_peak_sampled": 51,
+          "A_rx_drops": 0,
+          "A_tx_credit_limited": 0,
+          "A_pool_backing_bytes": 33554432,
+          "A_pool_expanded_samples": 0,
+          "A_pool_max_queue_posted": 16384,
+          "A_pool_borrowed": 0,
+          "A_pool_returned": 0,
+          "A_steady_peak_working_set_bytes": 95733760,
+          "A_steady_peak_private_bytes": 91574272,
+          "B_rx_peak_sampled": 99,
+          "B_rx_drops": 0,
+          "B_tx_credit_limited": 0,
+          "B_pool_backing_bytes": 33554432,
+          "B_pool_expanded_samples": 0,
+          "B_pool_max_queue_posted": 16384,
+          "B_pool_borrowed": 0,
+          "B_pool_returned": 0,
+          "B_steady_peak_working_set_bytes": 95043584,
+          "B_steady_peak_private_bytes": 91541504
+        }
+      ]
+    }
+  ],
+  "unavailable": []
+}
