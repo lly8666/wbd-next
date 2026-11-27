@@ -199,6 +199,18 @@ impl Owner{
         let e=self.flows.get_mut(&id).unwrap();let changed=match &mut e.flow{Flow::Client(f)=>f.admit(local,seq,len,now),Flow::Server(f)=>f.admit(seq,len,now)};
         if changed{self.refresh(id)?;}Ok(())
     }
+    // Only native-generated middle DATA uses this before its existing M3
+    // seal; already ACKed/SACKed or retired flow attempts never get a new PN.
+    pub(crate) fn middle_data_outstanding(&self,ip:&[u8])->bool{
+        if ip.len()<40||ip[0]!=0x45||ip[9]!=6{return true}
+        let h=20+usize::from(ip[32]>>4)*4;
+        if h>=ip.len()||ip[33]&(flags::SYN|flags::FIN|flags::RST)!=0{return true}
+        let tuple=Tuple{src:SocketAddrV4::new(Ipv4Addr::new(ip[12],ip[13],ip[14],ip[15]),u16::from_be_bytes([ip[20],ip[21]])),dst:SocketAddrV4::new(Ipv4Addr::new(ip[16],ip[17],ip[18],ip[19]),u16::from_be_bytes([ip[22],ip[23]]))};
+        let tuple=if self.server{tuple.reverse()}else{tuple};
+        let Some(&id)=self.keys.get(&tuple)else{return false};
+        let seq=u32::from_be_bytes(ip[24..28].try_into().unwrap());let len=(ip.len()-h) as u32;
+        match &self.flows[&id].flow{Flow::Client(f)=>f.middle_data_outstanding(seq,len),Flow::Server(f)=>f.middle_data_outstanding(seq,len)}
+    }
     // Experiment only: sample during existing owner service turns; no extra wake/deadline.
     fn probe(&mut self,now:Instant) {
         if !self.probe_next.is_some_and(|next|now>=next){return}

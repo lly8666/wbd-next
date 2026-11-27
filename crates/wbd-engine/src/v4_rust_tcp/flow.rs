@@ -43,6 +43,7 @@ impl Endpoint {
             middle_ack_three: !parity && middle && std::env::var_os("WBD_M0_ACK_PROBE").as_deref() != Some(std::ffi::OsStr::new("2")),
             middle_sack_compress: parity || middle && std::env::var_os("WBD_M0_SACK_COMPRESS").as_deref() == Some(std::ffi::OsStr::new("1")),
             native_owner_turn: parity,
+            native_fast_retrans_clock: parity&&middle&&std::env::var_os("WBD_M0_NATIVE_FAST_RETRANS_CLOCK").as_deref()==Some(std::ffi::OsStr::new("1")),
             native_bounded_pacing: parity || std::env::var_os("WBD_M0_BOUNDED_PACE").as_deref() == Some(std::ffi::OsStr::new("1")),
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()
@@ -132,6 +133,7 @@ impl ClientFlow {
     }
     pub(crate) fn tuple(&self) -> Tuple { self.middle.tuple }
     fn begin_turn(&mut self){self.local.conn.begin_native_turn();self.middle.conn.begin_native_turn();}
+    pub(crate) fn middle_data_outstanding(&self,seq:u32,len:u32)->bool{self.middle.conn.native_data_outstanding(seq,len)}
     pub(crate) fn admit(&mut self,local:bool,seq:u32,len:u32,now:Instant)->bool{
         if local{self.local.conn.native_admit(seq,len,now)}else{self.middle.conn.native_admit(seq,len,now)}
     }
@@ -248,6 +250,7 @@ impl ServerFlow {
             write: !self.origin_write_closed && self.middle.conn.readable() != 0,
         }
     }
+    pub(crate) fn middle_data_outstanding(&self,seq:u32,len:u32)->bool{self.middle.conn.native_data_outstanding(seq,len)}
     pub(crate) fn admit(&mut self,seq:u32,len:u32,now:Instant)->bool{self.middle.conn.native_admit(seq,len,now)}
     pub(crate) fn on_packet(&mut self, p: &Packet) -> io::Result<Packets> {
         self.middle.conn.begin_native_turn();let mut out = Vec::new();

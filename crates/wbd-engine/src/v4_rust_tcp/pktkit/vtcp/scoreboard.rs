@@ -22,6 +22,9 @@ const LOST: u8 = 2;
 const RETRANS: u8 = 4;
 const FIN: u8 = 8;
 const NATIVE_PENDING: u8 = 16;
+// Lost DATA selected for a real native resubmit; retains the prior sample.
+const NATIVE_RETRANS_PENDING: u8 = 32;
+const NATIVE_ANY_PENDING: u8 = NATIVE_PENDING | NATIVE_RETRANS_PENDING;
 
 /// DupThresh (RFC 6675 §2): SACKed segments that show a loss without
 /// waiting out the reordering window, while no reordering has been seen.
@@ -49,6 +52,7 @@ struct Seg {
     xmit: u64,
     /// The TSval it last carried.
     tsval: u32,
+    pending_tsval: u32,
     /// Which transmission that was.
     tx: u64,
     flags: u8,
@@ -321,7 +325,7 @@ impl Scoreboard {
 
     pub(crate) fn native_pending(&self)->u32{self.native_pending as u32}
     pub(crate) fn native_pending_count(&self)->usize{self.native_pending_count}
-    pub(crate) fn head_native_pending(&self)->bool{self.segs.front().is_some_and(|s|s.has(NATIVE_PENDING))}
+    pub(crate) fn head_native_pending(&self)->bool{self.segs.front().is_some_and(|s|s.has(NATIVE_ANY_PENDING))}
     pub(crate) fn admitted_pipe(&self)->u32{self.pipe().saturating_sub(self.native_pending())}
 
     /// RACK.segs_sacked.
@@ -370,7 +374,7 @@ impl Scoreboard {
         debug_assert!(second.start < at && at < second.end);
         second.start = at;
         self.segs[i].end = at;
-        if second.has(NATIVE_PENDING){self.native_pending_count+=1;}
+        if second.has(NATIVE_ANY_PENDING){self.native_pending_count+=1;}
         if second.has(LOST) {
             self.lost_set.insert(at);
         }
@@ -393,6 +397,7 @@ impl Scoreboard {
             b.flags & (SACKED | LOST | FIN),
         );
         a.tx == b.tx && fa == fb && fa & (SACKED | FIN) == 0
+            && !a.has(NATIVE_ANY_PENDING) && !b.has(NATIVE_ANY_PENDING)
     }
 
     /// Join segment `i` and the next, which are [`mergeable`](Self::mergeable),
@@ -443,6 +448,7 @@ impl Scoreboard {
             end: start + u64::from(len),
             xmit,
             tsval,
+            pending_tsval: 0,
             tx,
             flags: if deferred {NATIVE_PENDING}else if fin { FIN } else { 0 },
             rate,
@@ -466,15 +472,13 @@ impl Scoreboard {
         self.push_tx(old.start,old.end,xmit,old.tx);true
     }
 
-    /// `[seq, seq+len)`, the start of a segment, was sent again at `now`
-    /// carrying `tsval`: what is left of the segment past `len` stays as it
-    /// was (RFC 8985 §6.1).
-    pub fn on_retransmit(&mut self, seq: u32, len: u32, now: Instant, tsval: u32) {
+    // Select the same scoreboard range for legacy submission or a deferred
+    // native lost-DATA attempt. Pieces of one previous attempt may coalesce.
+    fn retrans_range(&mut self, seq:u32,len:u32)->Option<usize>{
+        if seq_before(seq,self.una){return None}
         let start = self.off(seq);
-        let Some(mut i) = self.idx(start) else {
-            return;
-        };
-        if self.segs[i].has(NATIVE_PENDING){return;}
+        let mut i = self.idx(start)?;
+        if self.segs[i].has(NATIVE_ANY_PENDING){return None;}
         if self.segs[i].start < start {
             self.split(i, start);
             i += 1;
@@ -488,6 +492,55 @@ impl Scoreboard {
         if end < self.segs[i].end && !self.segs[i].has(FIN) {
             self.split(i, end);
         }
+        Some(i)
+    }
+
+    /// Reserve a lost DATA attempt without replacing its previous RACK/rate
+    /// snapshot. Charge the existing congestion/owner seats, not a new window.
+    pub(crate) fn reserve_native_retrans(&mut self,seq:u32,len:u32,tsval:u32)->bool{
+        if seq_before(seq,self.una){return false}
+        let Some(i)=self.idx(self.off(seq))else{return false};
+        if !self.segs[i].has(LOST)||self.segs[i].has(FIN|SACKED|NATIVE_ANY_PENDING){return false}
+        let Some(i)=self.retrans_range(seq,len)else{return false};
+        let s=&mut self.segs[i];
+        if s.len()!=u64::from(len){return false}
+        self.lost-=s.len();self.lost_set.remove(&s.start);
+        s.flags=(s.flags&!LOST)|NATIVE_RETRANS_PENDING;
+        s.pending_tsval=tsval;
+        self.native_pending+=s.len();self.native_pending_count+=1;
+        true
+    }
+
+    /// A cumulative ACK or SACK before actual submission settles the old
+    /// transmission; the new attempt has no sample to publish in that case.
+    pub(crate) fn native_data_outstanding(&self,seq:u32,len:u32)->bool{
+        let end=seq.wrapping_add(len);
+        if len==0||seq_before_eq(end,self.una){return false}
+        let start=self.off(if seq_before(seq,self.una){self.una}else{seq});
+        let end=self.off(end);
+        let Some(i)=self.idx(start)else{return false};
+        self.segs.iter().skip(i).take_while(|s|s.start<end).any(|s|!s.has(SACKED))
+    }
+
+    /// Settle the remaining outstanding portion of a reserved fast retransmit.
+    /// The timestamp option is the one actually serialized, not a new TSval.
+    pub(crate) fn admit_native_retrans(&mut self,seq:u32,len:u32,now:Instant)->Option<(u32,u32,u32)>{
+        let end=seq.wrapping_add(len);
+        if seq_before_eq(end,self.una){return None}
+        let seq=if seq_before(seq,self.una){self.una}else{seq};
+        let off=self.off(seq);let i=self.idx(off)?;let old=self.segs[i];
+        if !old.has(NATIVE_RETRANS_PENDING)||old.start!=off||old.len()!=u64::from(end.wrapping_sub(seq)){return None}
+        self.native_pending-=old.len();self.native_pending_count-=1;
+        self.segs[i].flags&=!NATIVE_RETRANS_PENDING;
+        self.record_retransmit(i,now,old.pending_tsval);
+        Some((seq,old.len() as u32,old.pending_tsval))
+    }
+
+    /// `[seq, seq+len)` was actually sent again (RFC 8985 §6.1).
+    pub fn on_retransmit(&mut self,seq:u32,len:u32,now:Instant,tsval:u32){
+        if let Some(i)=self.retrans_range(seq,len){self.record_retransmit(i,now,tsval);}
+    }
+    fn record_retransmit(&mut self,i:usize,now:Instant,tsval:u32){
         let xmit = self.ns(now);
         let tx = self.next_tx;
         self.next_tx += 1;
@@ -564,7 +617,7 @@ impl Scoreboard {
         while let Some(&front) = self.segs.front() {
             if front.end <= ack_off {
                 self.segs.pop_front();
-                if front.has(NATIVE_PENDING){self.native_pending-=front.len();self.native_pending_count-=1;}
+                if front.has(NATIVE_ANY_PENDING){self.native_pending-=front.len();self.native_pending_count-=1;}
                 if front.has(LOST) {
                     self.lost -= front.len();
                     self.lost_set.remove(&front.start);
@@ -588,7 +641,7 @@ impl Scoreboard {
                     let cut = ack_off - front.start;
                     let f = &mut self.segs[0];
                     f.start = ack_off;
-                    if f.has(NATIVE_PENDING){self.native_pending-=cut;}
+                    if f.has(NATIVE_ANY_PENDING){self.native_pending-=cut;}
                     if f.has(SACKED) {
                         self.sacked -= cut;
                     } else {
@@ -725,6 +778,10 @@ impl Scoreboard {
             let s = self.segs[i];
             let seg = &mut self.segs[i];
             seg.flags |= SACKED;
+            if s.has(NATIVE_RETRANS_PENDING){
+                seg.flags&=!NATIVE_RETRANS_PENDING;
+                self.native_pending-=s.len();self.native_pending_count-=1;
+            }
             if s.has(LOST) {
                 seg.flags &= !LOST;
                 self.lost -= s.len();
@@ -849,7 +906,7 @@ impl Scoreboard {
 
     fn mark_lost(&mut self, i: usize) -> bool {
         let s = &mut self.segs[i];
-        if s.has(LOST) || s.has(SACKED) || s.has(NATIVE_PENDING) {
+        if s.has(LOST) || s.has(SACKED) || s.has(NATIVE_ANY_PENDING) {
             return false;
         }
         s.flags |= LOST;
@@ -923,7 +980,7 @@ impl Scoreboard {
         let mut any = false;
         while last < self.segs.len() && self.segs[last].start < rec.end {
             let s = &self.segs[last];
-            if s.tx == rec.tx && s.flags & (SACKED | LOST) == 0 {
+            if s.tx == rec.tx && s.flags & (SACKED | LOST | NATIVE_ANY_PENDING) == 0 {
                 any = true;
             }
             last += 1;
@@ -999,7 +1056,7 @@ impl Scoreboard {
         }
         let mut marked = false;
         while i < self.segs.len() && self.segs[i].start < end {
-            if self.segs[i].has(NATIVE_PENDING){i+=1;continue;}
+            if self.segs[i].has(NATIVE_ANY_PENDING){i+=1;continue;}
             if self.segs[i].end > end && !self.segs[i].has(FIN) {
                 self.split(i, end);
             }
@@ -1145,10 +1202,12 @@ impl Scoreboard {
         let (mut sacked, mut lost, mut segs) = (0, 0, 0);
         let mut at = self.una_off;
         let mut lost_starts = BTreeSet::new();
+        let (mut pending,mut pending_count)=(0,0);
         for s in &self.segs {
             assert_eq!(s.start, at, "segments do not tile");
             assert!(s.end > s.start);
             at = s.end;
+            if s.has(NATIVE_ANY_PENDING){pending+=s.len();pending_count+=1;assert!(!s.has(LOST|SACKED));}
             if s.has(SACKED) {
                 sacked += s.len();
                 segs += 1;
@@ -1163,6 +1222,7 @@ impl Scoreboard {
         assert_eq!(segs, self.sacked_segs);
         assert_eq!(lost, self.lost);
         assert_eq!(lost_starts, self.lost_set);
+        assert_eq!(pending,self.native_pending);assert_eq!(pending_count,self.native_pending_count);
     }
 }
 
@@ -1214,6 +1274,37 @@ mod tests {
         assert_eq!(s.rate_sample().unwrap().delivery_rate,10_000);
     }
 
+
+    #[test]
+    fn native_fast_retransmit_retains_old_sample_until_actual_attempt(){
+        let t=Instant::now();let mut b=Scoreboard::new(100,t);b.set_rack(true);
+        b.on_send(100,1000,false,t,7);b.mark_all_lost();
+        assert!(b.reserve_native_retrans(100,1000,8));assert_eq!(b.segs[0].tsval,7);
+        assert_eq!(b.segs[0].xmit,0);assert!(!b.segs[0].has(RETRANS));
+        assert_eq!(b.pipe(),1000);assert_eq!(b.admitted_pipe(),0);assert!(b.next_lost(1000).is_none());b.check();
+        assert_eq!(b.admit_native_retrans(100,1000,t+Duration::from_millis(10)),Some((100,1000,8)));
+        assert_eq!(b.segs[0].xmit,10_000_000);assert_eq!(b.segs[0].tsval,8);assert!(b.segs[0].has(RETRANS));
+        assert!(b.admit_native_retrans(100,1000,t+Duration::from_millis(11)).is_none());b.check();
+    }
+    #[test]
+    fn native_fast_retransmit_ack_and_sack_before_submit_keep_original_delivery(){
+        let t=Instant::now();let mut b=Scoreboard::new(100,t);b.set_rack(true);b.set_mss(1000);
+        b.on_send(100,1000,false,t,7);b.on_send(1100,1000,false,t,7);b.mark_all_lost();
+        assert!(b.reserve_native_retrans(100,1000,8));assert!(b.reserve_native_retrans(1100,1000,8));
+        let now=t+Duration::from_millis(100);b.begin_ack();
+        let d=b.ack(1100,now,None);assert_eq!(d.orig_min_end,Some(1100));assert!(!b.native_data_outstanding(100,1000));
+        let d=b.sack(&[SackBlock{left:1100,right:2100}],now,None);assert_eq!(d.orig_min_end,Some(2100));
+        assert!(!b.native_data_outstanding(1100,1000));assert_eq!(b.native_pending(),0);
+        assert!(b.admit_native_retrans(100,1000,now).is_none());assert!(b.admit_native_retrans(1100,1000,now).is_none());b.check();
+    }
+    #[test]
+    fn native_fast_retransmit_partial_ack_settles_only_outstanding_suffix(){
+        let t=Instant::now();let mut b=Scoreboard::new(100,t);
+        b.on_send(100,1000,false,t,7);b.mark_all_lost();assert!(b.reserve_native_retrans(100,1000,8));
+        b.begin_ack();b.ack(500,t+Duration::from_millis(10),None);
+        assert_eq!(b.native_pending(),600);assert!(b.native_data_outstanding(100,1000));
+        assert_eq!(b.admit_native_retrans(100,1000,t+Duration::from_millis(20)),Some((500,600,8)));b.check();
+    }
 
     const MSS: u32 = 1000;
 

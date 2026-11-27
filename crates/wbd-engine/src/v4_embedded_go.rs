@@ -6843,7 +6843,7 @@ fn original_fixed_stage_due(e:&mut Entry,
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,ifname:&str,tx_storage:&mut Vec<TxDispatch>,
     dedicated_ingress:bool,
-    pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
+    pending:&mut Vec<(crate::memory::UniqueBuffer,usize,bool)>,
     prefetched:&mut Vec<crate::memory::UniqueBuffer>,
     ready_records:&mut Vec<crate::memory::FrozenRecord>,
     presentations:&mut Vec<Presentation>,
@@ -6999,7 +6999,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                         // kernel TUN consumption. No post-read slot failure.
                         reserved.writable()[14..14+len]
                             .copy_from_slice(&jumbo_read[..len]);
-                        pending.push((reserved,len));
+                        pending.push((reserved,len,false));
                         #[cfg(feature="fec2_product_record")]
                         if fec_ingress_on{
                             ingress.fec_m1_ingress[1].fetch_add(1,Ordering::Relaxed);
@@ -7134,7 +7134,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             // new turn may allocate new encrypted FEC PNs.
             if !e.fec2_staged_pns.is_empty(){return Err(BAD_STAGE)}
         }
-        for (mut slab,n) in pending.drain(..){
+        for (mut slab,n,_) in pending.drain(..){
             if stop.load(Ordering::Acquire){failed=true;break}
             let native_receipt=if native_m4_clock{
                 NativeM4Clock::from_inner(&slab.writable()[14..14+n],started).map(|r|{
@@ -8486,13 +8486,14 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             #[cfg(feature="fec2_product_record")]
             let mut socket_snapshot_errors=0u64;
             let mut tx_storage=Vec::<TxDispatch>::with_capacity(32);
-            let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
+            let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize,bool)>::with_capacity(32);
             let mut tx_prefetched=Vec::<crate::memory::UniqueBuffer>::with_capacity(8);
             let mut tx_records=Vec::<crate::memory::FrozenRecord>::with_capacity(32);
             let mut tx_presentations=Vec::<Presentation>::with_capacity(32);
             let mut tx_actual_firstsend=Vec::<(wbd_types::RecordPn,u64)>::with_capacity(32);
             let mut native_clock_receipts=Vec::<NativeM4Clock>::with_capacity(32);
             let mut native_m4_counts=[0u64;3];
+            let mut native_stale_cancelled=0u64;
             // One reusable TUN read slot, not 128 enlarged M1 owner slabs.
             let mut jumbo_read=vec![0u8;M0_TUN_IPV4_MAX];
             let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
@@ -8506,6 +8507,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             // Server ACKs already authenticated and queued must get a turn
             // before the next origin read generates another full M4 batch.
             let native_server_ingress_first=tx_server_side&&native_round_robin&&fair_native_turn;
+            let native_fast_retrans_clock=native_m4_clock&&std::env::var_os("WBD_M0_NATIVE_FAST_RETRANS_CLOCK").as_deref()==Some(std::ffi::OsStr::new("1"));
             let mut ingress_turn_peak=0usize;
             let mut ingress_with_pending=0u64;
             let mut publish_calls=0u64;
@@ -8627,7 +8629,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             }
                             slab.writable()[14..14+n].copy_from_slice(frame);
                             if native_round_robin&&!native_m4_clock&&frame.len()>40&&frame.len()>20+usize::from(frame[32]>>4)*4{if let Some(owner)=native_tcp_owner.as_mut(){if owner.admit(false,frame,Instant::now()).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}}
-                            tcp_out.pop_front();tx_pending.push((slab,n));continue
+                            tcp_out.pop_front();tx_pending.push((slab,n,native_fast_retrans_clock));continue
                         }
                         if input_turns==32{
                             tcp_input_exhausted=native_tcp_owner.is_some();
@@ -8656,7 +8658,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             ingress_with_pending+=u64::from(!tcp_out.is_empty());
                         }
                         match next{
-                            Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n)),
+                            Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n,false)),
                             Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),
                             Ok(OriginalTunIngress::MiddleTcp(frame))=>{
                                 let Some(owner)=native_tcp_owner.as_mut()else{continue};
@@ -8690,7 +8692,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                         Ok(mut slab)=>{
                                             let n=buf.len();
                                             slab.writable()[14..14+n].copy_from_slice(buf.as_slice());
-                                            tx_pending.push((slab,n));
+                                            tx_pending.push((slab,n,false));
                                         },
                                         Err(_)=>{deferred_shared=Some(buf);break}
                                     }
@@ -8874,6 +8876,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     }
                     continue
                 }
+                if native_fast_retrans_clock{
+                    if let Some(owner)=native_tcp_owner.as_ref(){
+                        let before=tx_pending.len();
+                        tx_pending.retain_mut(|(slab,n,native)|!*native||owner.middle_data_outstanding(&slab.writable()[14..14+*n]));
+                        native_stale_cancelled+=(before-tx_pending.len()) as u64;
+                    }
+                }
                 let slice_start=Instant::now();
                 // Unused ready loans return before sealing, same original owner rule.
                 tx_prefetched.clear();native_clock_receipts.clear();
@@ -8992,6 +9001,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             active_jumbo.take();
             jumbo_queue.clear();
             if native_tcp_owner.is_some(){
+                if native_fast_retrans_clock{eprintln!("WBD_M0_TCP_FAST_RETRANS_CLOCK stale_cancelled={}",native_stale_cancelled);}
                 if native_m4_clock{eprintln!("WBD_M0_TCP_M4_CLOCK copied={} not_proven_copied={} no_normal_pn={}",native_m4_counts[0],native_m4_counts[1],native_m4_counts[2]);}
                 if local_gso_groups!=0||std::env::var_os("WBD_M0_LOCAL_TUN_GSO").as_deref()==Some(std::ffi::OsStr::new("1")){eprintln!("WBD_M0_LOCAL_TUN_GSO groups={} segments={}",local_gso_groups,local_gso_segments);}
                 eprintln!("WBD_M0_TCP_PUBLISH calls={} local_batch_max={} middle_batch_max={} pending_peak={} local_write_failed={} ingress_first={} ingress_turn_peak={} ingress_with_pending={} admission_drain_before_service={}",publish_calls,local_batch_max,middle_batch_max,pending_peak,local_write_failed,fair_native_turn,ingress_turn_peak,ingress_with_pending,native_round_robin);

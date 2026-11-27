@@ -438,6 +438,7 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Product owner reserves no more than one native batch per flow event.
     pub(crate) native_owner_turn: bool,
+    pub(crate) native_fast_retrans_clock: bool,
     /// Opt-in M0 behavior-alignment profile; not a claim of Linux equivalence.
     pub(crate) linux_parity: bool,
     /// Explicit Congestion Notification (RFC 3168, and RFC 9768's
@@ -540,6 +541,7 @@ impl Default for ConnConfig {
             middle_sack_compress: false,
             native_bounded_pacing: false,
             native_owner_turn: false,
+            native_fast_retrans_clock: false,
             linux_parity: false,
             ecn: EcnMode::default(),
             mtu_probing: MtuProbing::default(),
@@ -4342,7 +4344,8 @@ impl Conn {
     }
 
     /// Send `[seq, seq+len)` again, or the FIN at `seq` if `fin`.
-    fn resend(&mut self, seq: u32, len: u32, fin: bool) {
+    fn resend(&mut self,seq:u32,len:u32,fin:bool){self.resend_impl(seq,len,fin,false);}
+    fn resend_impl(&mut self, seq: u32, len: u32, fin: bool, defer_lost:bool) {
         let rcv_nxt = self.recv_buf.as_ref().unwrap().nxt();
         let sb = self.send_buf.as_ref().unwrap();
         let una = sb.una();
@@ -4380,8 +4383,10 @@ impl Conn {
         let payload=if fin{&[][..]}else{self.send_buf.as_ref().unwrap().data_at(seq,payload_len)};
         self.outgoing.push(seg.marshal_payload(payload));
         let tsval = self.ts_now();
-        self.score.on_retransmit(seq, len, self.now, tsval);
+        let deferred=defer_lost&&!fin&&self.cfg.native_owner_turn&&self.score.reserve_native_retrans(seq,len,tsval);
         self.note_sent(len);
+        if deferred{return;}
+        self.score.on_retransmit(seq, len, self.now, tsval);
         self.stats.total_retrans += 1;
         if !fin {
             self.stats.data_segs_out += 1;
@@ -4432,7 +4437,7 @@ impl Conn {
                 self.pace_wait();
                 break;
             }
-            self.resend(seq, len, fin);
+            self.resend_impl(seq,len,fin,self.cfg.native_fast_retrans_clock);
         }
     }
 
@@ -4479,19 +4484,34 @@ impl Conn {
         }
     }
 
+    pub(crate) fn native_data_outstanding(&self,seq:u32,len:u32)->bool{
+        self.score.native_data_outstanding(seq,len)
+    }
     pub(crate) fn native_admit(&mut self,seq:u32,len:u32,now:Instant)->bool{
-        if !self.cfg.native_owner_turn||!self.score.admit_native(seq,len,now){return false}
-        self.now=self.now.max(now);
-        self.last_data_sent=Some(self.now);
-        self.rto.start_timing(seq,self.now);
+        if !self.cfg.native_owner_turn{return false}
         let first=self.rto_deadline.is_none();
-        if first{self.start_rto();}
+        if let Some((start,remaining,tsval))=self.score.admit_native_retrans(seq,len,now){
+            self.now=self.now.max(now);
+            self.stats.total_retrans+=1;self.stats.data_segs_out+=1;
+            self.stats.bytes_sent+=u64::from(len);self.stats.bytes_retrans+=u64::from(len);
+            self.note_retransmission(start,remaining,tsval);
+            self.rto.invalidate_timing();
+            if first||self.send_buf.as_ref().is_some_and(|s|s.una()==start){self.start_rto();}
+        }else{
+            if !self.score.admit_native(seq,len,now){return false}
+            self.now=self.now.max(now);
+            self.rto.start_timing(seq,self.now);
+            if first{self.start_rto();}
+        }
+        self.last_data_sent=Some(self.now);
         let resume=(self.native_waiting&&self.score.native_pending_count()<32)||
             (self.fin_queued&&self.score.native_pending()==0&&self.send_buf.as_ref().is_some_and(|s|s.pending()==0));
         if resume{self.native_waiting=false;self.native_resume=Some(self.now);}
         let last=self.score.native_pending()==0;
         if last{self.schedule_loss_probe();}
-        first||resume||last
+        // A retransmitted head may rearm an existing deadline; refresh the
+        // owner's existing indexed deadline even if it was not the first.
+        first||resume||last||self.cfg.native_fast_retrans_clock
     }
 
     fn flush_send_queue(&mut self) {

@@ -50,7 +50,8 @@
     "docs/devlog/M0/20261127-DUAL-TCP-TIMEWAIT-LATE-RESET-RECOVERY.md",
     "docs/devlog/M0/20261127-LOCAL-TUN-GSO-CANDIDATE.md",
     "docs/devlog/M0/20261127-NATIVE-SERVER-INGRESS-FIRST-CAUSAL.md",
-    "docs/devlog/M0/20261127-SELECTED-GSO-INGRESS-SPLICE-REQUALIFICATION.md"
+    "docs/devlog/M0/20261127-SELECTED-GSO-INGRESS-SPLICE-REQUALIFICATION.md",
+    "docs/devlog/M0/20261127-NATIVE-FAST-RETRANS-ACTUAL-CLOCK.md"
   ],
   "verification": [
     {
@@ -268,7 +269,8 @@
     "495586c ARM native PASS; x86 original/core/M4 unit PASS but parity concurrent reset FAIL; ARM performance NOT_RUN. TIME_WAIT late-RST correction and regression candidate unverified.",
     "05bb056 native PASS, ARM BBR0 ABBA 4/4: 291.48→151.12 Mbps, 26.77→40.43 CPU s/GiB; local ingress losses remain, no parity. Client-only VNET write GSO candidate unverified.",
     "c732dfd native PASS; ARM BBR0 4/4 old282.07 vs Rust182.82 Mbps, CPU/GiB27.86 vs36.13; actual GSO removed 853169/1005663 local DATA writes, client Shared-TUN drops0/0 but server ingress full22364/17507. Next same-binary server ingress-first causal candidate unverified.",
-    "5536d9c same-binary ARM BBR0 ABBA A221.06→B281.33 Mbps, total CPU/GiB32.02→30.09; server ingress full 30422/29498→8092/6924. Candidate selected for old splice requalification only, no product promotion. ACK2/SACK compression retained; 0/1% BBR requalification pending."
+    "5536d9c same-binary ARM BBR0 ABBA A221.06→B281.33 Mbps, total CPU/GiB32.02→30.09; server ingress full 30422/29498→8092/6924. Candidate selected for old splice requalification only, no product promotion. ACK2/SACK compression retained; 0/1% BBR requalification pending.",
+    "c6b33c1 dual ISA scoped PASS; ARM BBR0 splice206.96→Rust273.76 Mbps, CPU/GiB+16.8%; 1% splice68.74→Rust72.69 but B34.65/110.73 unstable, CPU/GiB+55.1%. Native middle fast retransmit actual-attempt candidate unverified; TLP/RTO/FIN remain generation-accounted."
   ],
   "promotion": null
 }
