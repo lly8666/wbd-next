@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "source_sha": "c732dfd312967efb84442b6dbc917bb9d5a07752",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Native dual-ISA paired Normal original/parity and opt-in client local GSO functional only; real groups, app hashes, 8 concurrent TCP, half-close, UDP and joined Stop; no performance promotion.",
+  "run_id": 45935209571,
+  "run_attempt": 1,
+  "artifacts": [
+    {
+      "architecture": "x86_64",
+      "job_id": 140296726376,
+      "artifact_id": 15170376820,
+      "core_pass": 345,
+      "gso_unit_pass": 1,
+      "m4_unit_pass": 1,
+      "local_gso": {
+        "groups": 116,
+        "segments": 1285
+      }
+    },
+    {
+      "architecture": "aarch64",
+      "job_id": 140296726155,
+      "artifact_id": 15170516274,
+      "core_pass": 345,
+      "gso_unit_pass": 1,
+      "m4_unit_pass": 1,
+      "local_gso": {
+        "groups": 111,
+        "segments": 1152
+      }
+    }
+  ],
+  "performance": {
+    "result": "FAIL",
+    "scope": "ARM three distinct runner direct endpoint snapshots, BBR0 400ms added RTT 45s single reverse stream ABBA. All 4 measured, joined Stop; not full performance/physical qualification.",
+    "run_id": 45935209572,
+    "client_job": 140298151853,
+    "server_job": 140298151861,
+    "relay_job": 140298151768,
+    "artifact_ids": {
+      "client": 15170751433,
+      "server": 15171060271,
+      "relay": 15170711581
+    },
+    "baseline_sha": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "bare_mbps": 339.3820847702481,
+    "legs_mbps": [
+      319.3454805378428,
+      170.8943128802105,
+      194.75502668182187,
+      244.80194022225714
+    ],
+    "means": {
+      "splice_mbps": 282.07371038005,
+      "rust_mbps": 182.82466978101618,
+      "splice_client_cpu_s_per_gib": 13.408767096899789,
+      "splice_server_cpu_s_per_gib": 14.452665455843825,
+      "rust_client_cpu_s_per_gib": 15.686278032676398,
+      "rust_server_cpu_s_per_gib": 20.44330025730872
+    },
+    "rust_client": {
+      "gso_groups": [
+        38961,
+        40202
+      ],
+      "gso_segments": [
+        892130,
+        1045865
+      ],
+      "local_data": [
+        980966,
+        1094492
+      ],
+      "derived_local_data_writes_removed": [
+        853169,
+        1005663
+      ],
+      "publish_calls": [
+        1530038,
+        1682677
+      ],
+      "middle_ingress_offered": [
+        1024331,
+        1155492
+      ],
+      "middle_ingress_full": [
+        3376,
+        1504
+      ],
+      "shared_tun_full": [
+        0,
+        0
+      ],
+      "local_write_failed": [
+        0,
+        0
+      ]
+    },
+    "rust_server": {
+      "middle_ingress_offered": [
+        124574,
+        106795
+      ],
+      "middle_ingress_full": [
+        22364,
+        17507
+      ],
+      "middle_in_ack_only": [
+        102194,
+        89271
+      ],
+      "m4_copied": [
+        1160851,
+        1295071
+      ],
+      "m4_not_proven_copied": [
+        0,
+        0
+      ],
+      "m4_no_normal_pn": [
+        0,
+        0
+      ]
+    },
+    "relay_final_qdisc_drops": 0,
+    "review": "Both native source.txt, original/parity/GSO summary and original job logs checked; all three raw performance ZIPs checked, client summary, endpoint Stop logs and relay final qdisc. Bare precheck no added RTT; A legs vary and bare lower than 05bb056 run. Cross-run comparison not isolated GSO causal evidence; actual GSO write reduction directly evidenced."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "5536d9c16fa650e9bcc2d477b20d437517a11cd2"
+}
