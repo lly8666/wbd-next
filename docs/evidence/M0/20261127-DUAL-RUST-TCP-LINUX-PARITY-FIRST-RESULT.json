@@ -1,0 +1,129 @@
+{
+  "scope": "First consolidated Linux parity candidate; raw artifact reviewed, partial performance only; no default promotion",
+  "source_sha": "edc0d11a374f5185315814f8a940933638b7149e",
+  "native": {
+    "run": 45862140433,
+    "x86_64": {
+      "core_pass": 337,
+      "fail": 0,
+      "normal_and_parity_functional": "PASS"
+    },
+    "aarch64": {
+      "core_pass": 337,
+      "fail": 0,
+      "normal_and_parity_functional": "PASS"
+    }
+  },
+  "performance": {
+    "run": 45862140460,
+    "artifact": 15140771872,
+    "status": "INCOMPLETE",
+    "measured": 23,
+    "planned": 24,
+    "baseline_source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "rtt_added_ms": 400,
+    "rows_mbps": [
+      [
+        112.61453482932939,
+        103.3190341794502,
+        101.01057665385214,
+        7.106883238944343
+      ],
+      [
+        0.9320456007036279,
+        0.6990345733373783,
+        0.5592276835238941,
+        0.30292062943635556
+      ],
+      [
+        null,
+        0.16310807073659528,
+        0.18640948052389889,
+        0.1631080743611358
+      ],
+      [
+        217.30903945109966,
+        156.37669934817498,
+        144.74676541876792,
+        194.26236409044765
+      ],
+      [
+        66.03556287786685,
+        143.95453899610743,
+        157.79712605702886,
+        65.05681184257074
+      ],
+      [
+        9.040878489487316,
+        24.303626405872972,
+        60.956991915163336,
+        1.9806165311433308
+      ]
+    ],
+    "blocks": [
+      "CUBIC0",
+      "CUBIC1",
+      "CUBIC5",
+      "BBR0",
+      "BBR1",
+      "BBR5"
+    ],
+    "order": "ABBA",
+    "missing": "CUBIC5 A1 case8 ConnectionResetError(104)",
+    "bbro_cpu_product_seconds_per_gib_sum": {
+      "A": 25.48381778712627,
+      "B": 39.273116858531466
+    },
+    "bbro_zero_injected_loss": {
+      "server_rx_tun_failed": [
+        17766,
+        25858
+      ],
+      "client_middle_ingress_full": [
+        2615,
+        206
+      ],
+      "client_shared_tun_full": [
+        15,
+        10
+      ],
+      "client_middle_recv_buf_max": [
+        67108864,
+        67108864
+      ],
+      "client_middle_unread_peak": [
+        49882611,
+        36074987
+      ]
+    },
+    "kernel": {
+      "client": {
+        "abi": "7.0.0-1020-azure",
+        "image_version": "7.0.0-1020.21~24.04.2",
+        "config_sha256": "fa2592ae124f19a371718488e2e1057481d99574ed32a6e3efacbd76e4235503"
+      },
+      "server": {
+        "abi": "7.0.0-1017-azure",
+        "image_version": "7.0.0-1017.17~24.04.1",
+        "config_sha256": "3a68127626c42ac011fe3e28fa813b6b5c225897d3062255d1178493ed32c588"
+      },
+      "bbr_srcversion": "5B6C12777290291DF28F230",
+      "patched_source": "NOT independently retrieved"
+    }
+  },
+  "next": {
+    "source": "935a6317969486846fec60fe98f35d2429dfedcb",
+    "branch": "experiment/m0-dual-rust-tcp",
+    "pr": 80,
+    "native_run": 45914393727,
+    "abba_run": 45914393841,
+    "status": "UNVERIFIED",
+    "scope": "receiver growth and borrowed fresh DATA; old Rust parity vs candidate, BBR0 and CUBIC0 only; grouped effect"
+  },
+  "governance": {
+    "run": 45914393776,
+    "feature_check": "PASS, DECLARED_UPDATED",
+    "structure": "BLOCKED verified cursor lacks reviewed PASS evidence"
+  },
+  "decision": "Do not promote, retire old splice or proceed Windows. Review in-flight exact candidate, then continue actual owner service gap and Linux baseline comparison."
+}
