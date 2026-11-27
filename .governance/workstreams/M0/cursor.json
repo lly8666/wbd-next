@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2504,
-  "checkpoint_sha": "b38f35d4978168a5043b45f4d577a4ec6714858a",
+  "sequence": 2505,
+  "checkpoint_sha": "a36801e1832df9db21c0f77f00c9485aeee46152",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收f7614b6精确双ISA及三ARM不限速邻段credit ABBA，实际credit/业务hash/Stop/路径/退役重传/CPU；核对H2504治理，不重复派单，不提前晋级。",
+  "next_action": "验收e66a42b双ISA候选双向/8并发/UDP及真实0.5% loss ABBA、三机逆序BAAB，核对实际credit/哈希/退役/CPU；合格才选择paired分支默认，剩余跨机重传独立定位。",
   "unverified": true,
-  "last_tested_source": "ff19c06b0279b480947f34d669c484b2f9455c87",
+  "last_tested_source": "f7614b6d76d26c184e58b5a33174a820b1a5aae0",
   "evidence_refs": [
-    "docs/evidence/M0/20261127-RELAY-CREDIT-LOCAL-PASS-RESULT.json"
+    "docs/evidence/M0/20261127-RELAY-CREDIT-CROSS-HOST-RESULT.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261127-M0-PACING-CEILING-HANDOFF.md",
-    "docs/evidence/M0/20261127-MATCHED-SUSTAINED-RECOVERY-RESULT.json",
     "docs/devlog/M0/20261127-M0-STARTUP-AND-PACING160-HANDOFF.md",
     "docs/evidence/M0/20261127-PACING80-BACKLOG-RESULT.json",
     "docs/devlog/M0/20261127-M0-ADJACENT-LEG-RELAY-CREDIT-HANDOFF.md",
     "docs/devlog/M0/20261127-M0-RELAY-CREDIT-CORE-FAIL-HANDOFF.md",
     "docs/evidence/M0/20261127-STARTUP-AND-PACING160-RESULT.json",
-    "docs/devlog/M0/20261127-M0-RELAY-CREDIT-CROSS-HOST-HANDOFF.md"
+    "docs/devlog/M0/20261127-M0-RELAY-CREDIT-CROSS-HOST-HANDOFF.md",
+    "docs/evidence/M0/20261127-RELAY-CREDIT-LOCAL-PASS-RESULT.json",
+    "docs/devlog/M0/20261127-M0-RELAY-CREDIT-REQUALIFICATION-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "ff19c06双ISA351、6原生及4本地反压PASS；normal339.41 vs344.48M，pause159.32 vs93.05M、待发64MiB→128KiB、零窗口采样12s、Origin阻塞13.45s；f7614b6仅触发规则，三机待验；H2503证据SOURCE不匹配修正。"
+  "partial_summary": "f7614b6双ISA351与6原生、4本地及6三机合格；三机反压235.86→254.34M、CPU/GiB30.50→25.36、最终重传6.351→4.343%、服务端full5672→0；同机pause重传23.26MB→0但CPU变差。e66a42b仅追加验收，未晋级；H2504治理PASS。"
 }
