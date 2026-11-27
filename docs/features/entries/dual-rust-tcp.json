@@ -35,7 +35,8 @@
     "docs/devlog/M0/20261127-RECOVERY-BATCH-FIXED-APP.md",
     "docs/devlog/M0/20261127-RECOVERY-CONTROLLED-IMPAIRMENT-SCREEN.md",
     "docs/devlog/M0/20261127-RECOVERY-ACCEPTANCE-AND-ACK-STATE-AUDIT.md",
-    "docs/devlog/M0/20261127-ACK-GRANT-LOCAL-PASS-CROSS-HOST-ABBA.md"
+    "docs/devlog/M0/20261127-ACK-GRANT-LOCAL-PASS-CROSS-HOST-ABBA.md",
+    "docs/devlog/M0/20261127-SUSTAINED-RECOVERY-PATH-DURATION-AUDIT.md"
   ],
   "verification": [
     {
@@ -81,7 +82,8 @@
     "Three-host prior high retrans and intermittent RST remain unresolved. Cross-host candidate screen pending; single-leg candidates are screening only, no physical or CPU parity claim.",
     "afcaaa8 exact native six and ARM eight fixed-byte PASS, sampled retrans/DSACK/full/reset0. Three-runner screen PATH_NOT_QUALIFIED before paired cases (server cold direct receipt absent). Controlled high-offer/jitter/0.5% loss screen pending; no candidate selected.",
     "74f7927 six native PASS, local 11/12; default clean207.67Mbps and jitter78.01 with zero sampled retrans; 0.5% loss69.05Mbps/0.539% retrans. Combined weak loss timeout; no RACK/CUBIC/combined promotion. Prior ACK candidate only Established, bulk CloseWait; corrected opt-in state and actual grant receipt pending targeted ABBA.",
-    "4bb9808 exact native348 and local ACK ABBA8/8; high clean server full6684→0, throughput -1.19%, CPU/GiB +1.26%; 0.5% loss completes, no obvious regression. Candidate retained opt-in for peak/200M cross-host ABBA; not default yet. Prior 273.76 vs207.67 different path/duration, same effective baseline profile."
+    "4bb9808 exact native348 and local ACK ABBA8/8; high clean server full6684→0, throughput -1.19%, CPU/GiB +1.26%; 0.5% loss completes, no obvious regression. Candidate retained opt-in for peak/200M cross-host ABBA; not default yet. Prior 273.76 vs207.67 different path/duration, same effective baseline profile.",
+    "90de1b2 exact native PASS, cross-host10/10 measured but peak weighted retrans11.54→11.20%, 200M6.20→10.01%; no ACK default promotion. All eight zero near10s, high near20s; matched sustained30/120 finite app both topologies and actual retirement diagnostic pending."
   ],
   "promotion": null
 }

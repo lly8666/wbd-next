@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One ARM client / ARM routed impairment VM / ARM server, sequential same-binary peak and matched-offer ACK grant ABBA.
+"""One ARM client / ARM routed impairment VM / ARM server, matched sustained finite application across three hosts.
 Reuse H2228 real two L2 networks and the existing H2442 preset HTTP control.
 """
 import hashlib,http.client,http.server,json,os,pathlib,re,signal,subprocess,sys,time,statistics
@@ -9,11 +9,11 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# Isolate the only retained recovery candidate. Both paired blocks
-# use the same binary; the offer control is a workload, not product pacing.
-ORDER=("A","B","B","A","L","K","K","L")
-PROFILES={"A":"selected-default-peak","B":"ack-drain-peak",
-          "L":"selected-default-offer200M","K":"ack-drain-offer200M"}
+# Same application and exact byte count as local recovery. No product
+# intervention: separate path/duration from short-flow and ACK experiments.
+ORDER=("L","H","L")
+CASES=(-1,0,1,-2,2,-3)
+PROFILES={"L":"selected-default-offer30M","H":"selected-default-offer120M"}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
@@ -21,14 +21,17 @@ def rust_cc(i):return "bbr1"
 def ack_for(k):return "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
-def offer(k):return 200_000_000 if k in ("L","K") else None
-def profile_env(k,server):
-    return ["WBD_M0_SERVER_ACK_DRAIN=1"] if server and k in ("B","K") else []
+def offer(i):return 120_000_000 if i in (1,-2) else 30_000_000
+def target_bytes(i):return (512 if i in (1,-2) else 256)*1024*1024
+def profile_env(k,server):return []
+def app_args(i,role):
+    return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
+            str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
+            str(target_bytes(i)),str(offer(i))]
 def set_cc(ns,i):
     cc=cc_for(i)
     h.ns(ns,"sysctl","-qw","net.ipv4.tcp_congestion_control="+cc)
     assert h.ns(ns,"sysctl","-n","net.ipv4.tcp_congestion_control").stdout.strip()==cc
-DURATION=45
 TARGET="192.0.2.2"
 PORT=5400
 PEERS=ROOT/"h2228-peer"
@@ -131,12 +134,12 @@ def common():
             "--mode","normal","--outer-repair","on","--outer-mtu","1160"]
 def server_start(i):
     global CURRENT,FOLDER
-    assert CURRENT is None and -2<=i<len(ORDER)
+    assert CURRENT is None and i in CASES
     CURRENT=fixture.current=i
     FOLDER=OUT/("case-"+str(i));FOLDER.mkdir()
     set_cc(N,i);set_cc(ORIGIN,i)
     if i<0:
-        source=spawn("origin",N,FOLDER/"origin.log","iperf3","-s","-1","-J","-B","10.248.82.2","-p","5202")
+        source=spawn("origin",N,FOLDER/"origin.log",*app_args(i,"recovery-origin"))
         where=N;port=5202
     else:
         k=ORDER[i];b=bundle(k)
@@ -147,7 +150,7 @@ def server_start(i):
                 "--lease-pool","10.66.0.128/25","--tls-cert",OUT/"cert.pem","--tls-key",fixture.TMP/"key.pem",
                 *common(),*flags)
         waitmark(p,FOLDER/"server.log","V4_PUBLIC_MULTI_SERVER_READY role=server port=443")
-        source=spawn("origin",ORIGIN,FOLDER/"origin.log","iperf3","-s","-1","-J","-B",TARGET,"-p",str(PORT))
+        source=spawn("origin",ORIGIN,FOLDER/"origin.log",*app_args(i,"recovery-origin"))
         where=ORIGIN;port=PORT
     until=time.monotonic()+15
     while f":{port} " not in h.ns(where,"ss","-ltn").stdout:
@@ -177,14 +180,16 @@ def server_close():
         except subprocess.TimeoutExpired:pass
     rc={key:stop(key) for key in list(PROCS)}
     result={"case":i,"rc":rc,"final_sample":sample,"final_sample_error":sample_error}
-    try:result["iperf"]=load(d/"origin.log")
-    except Exception as e:result["iperf_error"]=repr(e)
+    try:result["origin_app"]=load(d/"origin.log")
+    except Exception as e:result["origin_app_error"]=repr(e)
     if i>=0:
         log=(d/"server.log").read_text(errors="replace")
         result["joined_stop"]=rc.get("server")==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in log and "WBD_DUAL_RUST_TCP_OWNER_STOP" in log
         result["wire"]=[s for s in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in s]
         result["probe"]=probe_receipt(log,"server-middle",ORDER[i],i)
         result["bulk_tcp_sample"]=bulk_tcp_sample(log,"server-middle")
+        bulk=result["bulk_tcp_sample"]
+        result["bulk_retired"]=bool(bulk and any("WBD_M0_TCP_FLOW_FINAL " in s and (" id="+str(bulk["flow_id"])+" ") in s and "leg=server-middle" in s for s in log.splitlines()))
         result["experiment"]=profile(i,ORDER[i])
         result["native_counters"]=[s for s in log.splitlines() if "V4_PUBLIC_RX_CHAIN role=" in s or "V4_PUBLIC_TX_CHAIN role=" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s or "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s]
     save(d/"result.json",result);CURRENT=fixture.current=None
@@ -254,7 +259,7 @@ def probe_receipt(log,leg,k,i):
     quantum=32
     server=leg=="server-middle"
     expected_rack="false"
-    expected_ack="true" if server and k in ("B","K") else "false"
+    expected_ack="false"
     origin_rows=[s for s in log.splitlines() if "WBD_M0_TCP_ORIGIN " in s]
     grants=[int(m.group(1)) for s in rows if (m:=re.search(r"\bnative_ack_grant_deferred=(\d+)",s))]
     actual_grant_max=max(grants,default=0)
@@ -275,7 +280,7 @@ def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()
     started=False;pre=post=before=after=None
-    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if i>=0 else None,"server_ingress_first":i>=0,"client_local_gso":i>=0,"inbox_slots":1024 if i>=0 else None,"server_middle_pace_quantum_mss":32 if i>=0 else None,"offered_bps":offer(k),"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400,"status":"INCOMPLETE"}
+    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if i>=0 else None,"server_ingress_first":i>=0,"client_local_gso":i>=0,"inbox_slots":1024 if i>=0 else None,"server_middle_pace_quantum_mss":32 if i>=0 else None,"offered_bps":offer(i),"target_bytes":target_bytes(i),"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400,"status":"INCOMPLETE"}
     try:
         shape(0,0)
         set_cc(N,i)
@@ -304,14 +309,13 @@ def client_case(i):
             row["status"]="PATH_NOT_QUALIFIED"
             raise RuntimeError("cold endpoint path at actual pre-app snapshot")
         row["start_wall_ns"]=time.time_ns()
-        cmd=["ip","netns","exec",N,"iperf3","-J","-c",TARGET if i>=0 else "10.248.82.2","-p",str(PORT if i>=0 else 5202),"-P","1","-R","-C",cc_for(i),"-t",str(DURATION)]
-        if offer(k):cmd.extend(["-b",str(offer(k))])
-        save(d/"iperf-argv.json",cmd)
-        with (d/"iperf.json").open("w") as f,(d/"iperf.err").open("w") as err:
+        cmd=["ip","netns","exec",N,*app_args(i,"recovery-client")]
+        save(d/"app-argv.json",cmd)
+        with (d/"app-client.json").open("w") as f,(d/"app-client.err").open("w") as err:
             p=subprocess.Popen(cmd,stdout=f,stderr=err)
             t=time.monotonic()
             try:
-                for at in ((4,12,24,36) if i>=0 else ()):
+                for at in (5,15,30,45,60,90,120):
                     try:
                         p.wait(timeout=max(0.01,t+at-time.monotonic()))
                         break
@@ -321,24 +325,24 @@ def client_case(i):
                         try:sample[name]=read()
                         except Exception as e:sample[name+"_error"]=repr(e)
                     save(d/("live-"+str(at)+".json"),sample)
-                p.wait(timeout=max(1,155-(time.monotonic()-t)))
+                p.wait(timeout=max(1,180-(time.monotonic()-t)))
             finally:
                 if p.poll() is None:p.kill();p.wait()
         row["end_wall_ns"]=time.time_ns()
-        app=load(d/"iperf.json");row["iperf_rc"]=p.returncode
-        if p.returncode or app.get("error"):raise RuntimeError(str(app.get("error",p.returncode)))
-        a=app["end"];r=a["sum_received"];s=a["sum_sent"];gib=r["bytes"]/2**30
-        # Preserve successful application measurements before remote snapshots.
-        row["application_result"]={"mbps":r["bits_per_second"]/1e6,"bytes":r["bytes"],"seconds":r["seconds"],"sender_bytes":s["bytes"],"sender_retrans":s.get("retransmits")}
-        save(d/"application-result.json",row["application_result"])
+        row["app_rc"]=p.returncode
+        if p.returncode:raise RuntimeError("finite app rc="+str(p.returncode))
+        r=load(d/"app-client.json")
+        assert r["received_bytes"]==target_bytes(i) and r["eof"]
+        gib=r["received_bytes"]/2**30
+        row["application_result"]=r
+        save(d/"application-result.json",r)
         post=snapshot("client");save(d/"client-after.json",post)
         after=control("/sample");save(d/"server-after.json",after)
         save(d/"relay-after.json",relay("snapshot"))
         row["endpoint_path_samples"]=[x["paths"] for x in (pre,post,before,after)]
         row["endpoint_direct_snapshots"]=all(all(y["direct"] for y in x.values()) for x in row["endpoint_path_samples"])
-        row.update(status="MEASURED",mbps=r["bits_per_second"]/1e6,bytes=r["bytes"],seconds=r["seconds"],sender_bytes=s["bytes"],sender_retrans=s.get("retransmits"),
-                   client=delta(pre,post,gib),server=delta(before,after,gib),
-                   sender_cc=a.get("sender_tcp_congestion"),receiver_cc=a.get("receiver_tcp_congestion"))
+        row.update(status="MEASURED",mbps=r["mbps"],bytes=r["received_bytes"],seconds=r["seconds"],
+                   client=delta(pre,post,gib),server=delta(before,after,gib))
     except Exception as e:row["error"]=repr(e)
     finally:
         try:shape(0,0)
@@ -353,6 +357,11 @@ def client_case(i):
         if started:
             try:row["server_receipt"]=control("/stop")
             except Exception as e:row["server_stop_error"]=repr(e)
+        if row["status"]=="MEASURED":
+            origin=row.get("server_receipt",{}).get("origin_app",{})
+            app=row.get("application_result",{})
+            row["hash_match"]=origin.get("sha256")==app.get("sha256") and origin.get("sent_bytes")==app.get("received_bytes")==target_bytes(i) and row.get("server_receipt",{}).get("rc",{}).get("origin")==0
+            if not row["hash_match"]:row["status"]="INCOMPLETE_APP_HASH"
         if row["status"]=="MEASURED" and i>=0 and (not row.get("client_stop") or not row.get("server_receipt",{}).get("joined_stop")):row["status"]="INCOMPLETE_STOP"
         if row["status"]=="MEASURED" and i>=0 and not (row.get("probe",{}).get("valid") and row.get("server_receipt",{}).get("probe",{}).get("valid")):row["status"]="INCOMPLETE_PROBE"
         if row["status"]=="MEASURED" and (not row.get("endpoint_direct_snapshots") or row.get("server_receipt",{}).get("final_sample_error")):row["status"]="INCOMPLETE_PATH_OR_SAMPLE"
@@ -369,9 +378,8 @@ def client():
     try:
         rows.append(client_case(-1));save(OUT/"rows.json",rows)
         if rows[0]["status"]=="MEASURED" and rows[0].get("endpoint_direct_snapshots"):
-            for i in range(len(ORDER)):
+            for i in CASES[1:]:
                 rows.append(client_case(i));save(OUT/"rows.json",rows)
-            rows.append(client_case(-2));save(OUT/"rows.json",rows)
         means={};recovery={}
         for k in PROFILES:
             v=[x for x in rows if x["leg"]==k and x["status"]=="MEASURED"]
@@ -384,8 +392,8 @@ def client():
             if all(s and s["bytes_sent"]>0 for s in samples):
                 sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                 recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
-        complete=len(rows)==len(ORDER)+2 and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary ACK grant ABBA at peak and 200M application offer; same RTT bare peak brackets; 1024 slots/32 MSS all, actual branch receipt; matched offer not guaranteed delivered throughput","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"matched same finite application 30M/256MiB and120M/512MiB with bare controls and repeat30, 1024/32 all, same selected defaults as local, actual retirement marker distinguishes final/live","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

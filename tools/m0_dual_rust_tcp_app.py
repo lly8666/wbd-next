@@ -12,7 +12,7 @@ if role in ("recovery-origin","recovery-client"):
     if role=="recovery-origin":
         with socket.socket() as listener:
             listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-            listener.bind((host,port));listener.listen(1);listener.settimeout(30)
+            listener.bind((host,port));listener.listen(1);listener.settimeout(120) # fixture waits for cold path readiness, not a product timer
             c,_=listener.accept()
             with c:
                 c.settimeout(30);req=bytearray()

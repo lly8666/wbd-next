@@ -151,18 +151,16 @@ def controlled_recovery():
     rows=[]
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--dual-rust-tcp"]
-    ack={"WBD_M0_SERVER_ACK_DRAIN":"1"}
-    # No repeat of floor-limited jitter or rejected CUBIC/RACK combination.
-    # Same-binary ACK grant A/B/B/A, first clean high offer, then true loss.
+    # Same finite application, bytes, offer, and delay as the cross-host
+    # experiment. Long low offered rate, then sustained 120M. A diagnostic
+    # topology comparison, not a short-stream or peak performance claim.
     cases=[
-        ("clean-A1",True,600_000_000,{},0,0,192),
-        ("clean-B1",True,600_000_000,ack,0,0,192),
-        ("clean-B2",True,600_000_000,ack,0,0,192),
-        ("clean-A2",True,600_000_000,{},0,0,192),
-        ("loss-A1",True,120_000_000,{},0,0.5,96),
-        ("loss-B1",True,120_000_000,ack,0,0.5,96),
-        ("loss-B2",True,120_000_000,ack,0,0.5,96),
-        ("loss-A2",True,120_000_000,{},0,0.5,96),
+        ("bare30",False,30_000_000,{},0,0,256),
+        ("paired30",True,30_000_000,{},0,0,256),
+        ("paired120",True,120_000_000,{},0,0,512),
+        ("bare120",False,120_000_000,{},0,0,512),
+        ("paired30-repeat",True,30_000_000,{},0,0,256),
+        ("bare30-repeat",False,30_000_000,{},0,0,256),
     ]
     for label,paired,offered,profile,jitter,loss,mib in cases:
         target_bytes=mib*1024*1024
@@ -231,7 +229,7 @@ def controlled_recovery():
             cpu_before=endpoint_cpu()
             app=spawn(C,d/"app-client.json",*argv)
             samples=[]
-            deadline=time.monotonic()+100
+            deadline=time.monotonic()+180
             while app.poll() is None:
                 try:app.wait(timeout=2)
                 except subprocess.TimeoutExpired:
@@ -275,6 +273,7 @@ def controlled_recovery():
                 if latest:
                     bulk=max(latest.values(),key=lambda x:x["bytes_sent"])
                     row["bulk_tcp_sample"]=bulk
+                    row["bulk_retired"]=any("WBD_M0_TCP_FLOW_FINAL " in x and (" id="+str(bulk["flow_id"])+" ") in x and "leg=server-middle" in x for x in sl.splitlines())
                     row["bulk_snapshot_retrans_ratio"]=bulk["bytes_retrans"]/bulk["bytes_sent"] if bulk["bytes_sent"] else None
                 info=[x for x in sl.splitlines() if "WBD_M0_TCP_INFO " in x and "leg=server-middle " in x]
                 origin_info=[x for x in sl.splitlines() if "WBD_M0_TCP_ORIGIN " in x]
@@ -297,7 +296,7 @@ def controlled_recovery():
             save(d/"result.json",row)
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, actual four kernel netns, same-binary server ACK grant A/B/B/A clean high offer and independent 0.5% IID loss, actual branch-execution sample, fixed bytes within each condition, not physical/old-splice qualification","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, matched sustained finite application with cross-host fixture: 30M/256MiB and 120M/512MiB, repeat30, zero injection,400ms added RTT, same selected profile; actual retirement marker distinguishes final from live sample; not physical or peak qualification","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)

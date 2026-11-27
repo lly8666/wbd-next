@@ -119,6 +119,13 @@ impl Owner{
         if e.finished(){
             if let Some(d)=e.deadline.take(){self.deadlines.remove(&(d,id));}
             if let Flow::Server(f)=&e.flow{
+                // Existing experiment probe, once at actual flow retirement.
+                // Retain cumulative recovery after the last periodic sample.
+                if self.probe_next.is_some(){
+                    let wall_ns=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos();
+                    eprintln!("WBD_M0_TCP_FLOW_FINAL wall_ns={} id={} leg=server-middle",wall_ns,id);
+                    f.probe(id,wall_ns);
+                }
                 if e.interest!=0{change(self.ep.as_raw_fd(),2,f.socket().as_raw_fd(),id,0)?;}
             }
             self.keys.remove(&e.tuple);self.flows.remove(&id);return Ok(())
