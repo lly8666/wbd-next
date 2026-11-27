@@ -1,0 +1,9 @@
+# Native qualification restored; freeze pacing ABBA
+
+675ab84ef833d344bf294a33df0c30f62e00624b run45956534713 attempt2 success, only failed x86 job rerun; ARM attempt1 retained. x86 job140367274504 ZIP15179622210, ARM original140364204590 ZIP15179820090, both exact source and CRC opened. Core345/345 each, GSO/M4 exact unit pass. All six default/2048+8/CUBIC native real app profiles pass (3MiB download/2MiB upload, concurrent eight, UDP, half-close, joined Stop, selected default receipts). GSO groups/segments x86 272/1952,119/1073,173/1410; ARM163/1338,163/1889,138/1265. No origin terminal errors or AF_PACKET drops in any six. Prior x86 concurrent RST not reproduced, listen backlog confounder not proven causal; original infrastructure failure retained. Main H2491 governance PASS; work-branch historic governance FAIL.
+
+No product change. Freeze same-binary ARM peak BBR0 ABBA 400ms added RTT, 45s single reverse, outer IP MTU1160; both endpoints2048, default GSO/M4/ingress-first, server quantum32 A vs8 B, client32, same RTT naked BBR brackets. Fixture now exposes existing live server-middle bulk flow snapshot (latest sampled row per flow, largest sent byte count, raw line retained), bytes_sent/bytes_retrans/DSACK/reorder/timeouts when present, and weighted per-leg retrans byte ratio. No runtime probe or gating change; sample not a final delivery or physical loss receipt. Missing sample means no recovery ratio, not zero. Exact new SOURCE native gate remains; do not duplicate dispatch. Evaluate actual loss/retrans/DSACK with throughput and CPU, accept modest peak cost for meaningful stability. No defaults promotion until evidence; no queue enlargement, outer change, merge, physical or Windows.
+
+```feature-impact
+{"kind":"updated","ids":["dual-rust-tcp"],"reason":"Restore exact native qualification, report existing bulk TCP recovery snapshots and execute unchanged 32/8 pacing comparison."}
+```

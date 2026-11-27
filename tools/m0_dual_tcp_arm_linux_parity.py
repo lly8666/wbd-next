@@ -2,7 +2,7 @@
 """One ARM client / ARM routed impairment VM / ARM server, sequential A B B A.
 Reuse H2228 real two L2 networks and the existing H2442 preset HTTP control.
 """
-import hashlib,http.client,http.server,json,os,pathlib,signal,subprocess,sys,time,statistics
+import hashlib,http.client,http.server,json,os,pathlib,re,signal,subprocess,sys,time,statistics
 import m0_h2228_three_runner_relay as h
 import m0_h2442_server as fixture
 
@@ -156,6 +156,7 @@ def server_close():
         result["joined_stop"]=rc.get("server")==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in log and "WBD_DUAL_RUST_TCP_OWNER_STOP" in log
         result["wire"]=[s for s in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in s]
         result["probe"]=probe_receipt(log,"server-middle",ORDER[i],i)
+        result["bulk_tcp_sample"]=bulk_tcp_sample(log,"server-middle")
         result["experiment"]=profile(i,ORDER[i])
         result["native_counters"]=[s for s in log.splitlines() if "V4_PUBLIC_RX_CHAIN role=" in s or "V4_PUBLIC_TX_CHAIN role=" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s or "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s]
     save(d/"result.json",result);CURRENT=fixture.current=None
@@ -198,6 +199,25 @@ def delta(a,b,gib):
     result["host_cpu_s"]=ticks/TICK
     if gib:result["host_cpu_s_per_gib"]=ticks/TICK/gib
     return result
+def bulk_tcp_sample(log,leg):
+    # Use the latest retained sample of the flow with the largest observed
+    # sent byte count. These are live snapshots, not final packet receipts.
+    latest={}
+    for line in log.splitlines():
+        if "WBD_M0_TCP_INFO " not in line or "leg="+leg+" " not in line:continue
+        ident=re.search(r"\bid=(\d+)",line)
+        if not ident:continue
+        fields={}
+        for key in ("bytes_sent","bytes_retrans","dsack_dups","reord_seen","timeouts"):
+            match=re.search(r"\b"+key+r": (\d+)\b",line)
+            if match:fields[key]=int(match.group(1))
+        if "bytes_sent" not in fields or "bytes_retrans" not in fields:continue
+        latest[ident.group(1)]={"flow_id":int(ident.group(1)),**fields,"sample_line":line}
+    if not latest:return None
+    sample=max(latest.values(),key=lambda x:x["bytes_sent"])
+    sample["retrans_byte_ratio"]=sample["bytes_retrans"]/sample["bytes_sent"] if sample["bytes_sent"] else None
+    return sample
+
 def probe_receipt(log,leg,k,i):
     rows=[s for s in log.splitlines() if "WBD_M0_TCP_INFO " in s and "leg="+leg+" " in s]
     expected_first="true" if leg=="server-middle" else "false"
@@ -309,7 +329,14 @@ def client():
             for k in "AB":
                 v=[x for x in rows if x["leg"]==k and x["kernel_cc"]==cc and x["loss_pct"]==loss and x["status"]=="MEASURED"]
                 if len(v)==2:means[cc+"-"+str(loss)+"-"+k]={"mbps":statistics.mean(x["mbps"] for x in v),"client_product_cpu_s_per_gib":statistics.mean(x["client"]["product"]["cpu_s_per_gib"] for x in v),"server_product_cpu_s_per_gib":statistics.mean(x["server"]["product"]["cpu_s_per_gib"] for x in v)}
-        summary={"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary selected defaults, 2048 both endpoints, server middle pacing quantum cap 32 A vs 8 B MSS; zero injected loss; bare BBR same RTT brackets","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","blocks":BLOCKS,"added_rtt_ms":400,"streams":1,"order":ORDER,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if len(means)==2*len(BLOCKS) else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        recovery={}
+        for k in "AB":
+            legs=[x for x in rows if x["leg"]==k and x["status"]=="MEASURED"]
+            samples=[x.get("server_receipt",{}).get("bulk_tcp_sample") for x in legs]
+            if len(samples)==2 and all(s and s["bytes_sent"]>0 for s in samples):
+                sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
+                recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss", "recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary selected defaults, 2048 both endpoints, server middle pacing quantum cap 32 A vs 8 B MSS; zero injected loss; bare BBR same RTT brackets","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","blocks":BLOCKS,"added_rtt_ms":400,"streams":1,"order":ORDER,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if len(means)==2*len(BLOCKS) else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
