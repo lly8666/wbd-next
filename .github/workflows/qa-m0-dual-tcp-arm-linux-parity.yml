@@ -2,7 +2,14 @@ name: M0 ARM uncapped adjacent-leg relay credit ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
-    paths: ['.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml', 'tools/m0_dual_tcp_arm_linux_parity.py']
+    # Include the actual relay candidate implementation so a core-only
+    # correction cannot silently omit its exact-source performance gate.
+    paths:
+      - '.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml'
+      - 'tools/m0_dual_tcp_arm_linux_parity.py'
+      - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs'
+      - 'crates/wbd-engine/src/v4_rust_tcp/flow.rs'
+      - 'crates/wbd-engine/src/v4_rust_tcp/mod.rs'
 permissions:
   contents: read
   actions: read
