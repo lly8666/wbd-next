@@ -19,6 +19,7 @@ MANIFEST = "r0/go_overlay/assembly/manifest-plan020-m0.json"
 EXTRA_BRIDGES = {
     "realityfront": (
         "admission_v4.go", "bridge_v4_windows_private_owner.go",
+        "bridge_v4_game_cold_set.go", # shared protected Game cohort validation
         "bridge_v4_windows_game_group.go", "bridge_v4_windows_game_server_group.go",
         "bridge_v4_windows_game_group_test.go",
         "bridge_v4_windows_fec2_abi_status_test.go", "bridge_v4_windows_auto_cohort_test.go",
