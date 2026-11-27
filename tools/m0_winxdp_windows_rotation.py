@@ -25,7 +25,7 @@ def measure_rotation(root,out,unix,win,server):
             # 100pps independent offered packets; no stop-and-wait at
             # a 400ms RTT, no app retry, and no catch-up send burst.
             start=time.monotonic();seq=0;receipts=[];errors=[];gen_receipts={}
-            sent={};seen=set();ready=0;last_log=0.;next_send=start;drain_until=None
+            sent={};seen=set();ready=0;retired=0;mbb=False;last_log=0.;next_send=start;drain_until=None
             prefix=b"WBD_WINDOWS_TIMER_NATIVE/"
             with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
                 sock.bind(("10.66.0.2",0));sock.setblocking(False)
@@ -33,9 +33,12 @@ def measure_rotation(root,out,unix,win,server):
                     now=time.monotonic()
                     if win.poll() is not None or server.poll() is not None:raise RuntimeError("owner exited during timer rotation")
                     if now-last_log>=.05:
-                        ready=(out/"client.log").read_text(errors="replace").count("WBD_WINDOWS_CLIENT_READY")
+                        client=(out/"client.log").read_text(errors="replace")
+                        ready=client.count("WBD_WINDOWS_CLIENT_READY")+client.count("WBD_WINDOWS_NORMAL_MBB_GENERATION_READY")
+                        retired=client.count("WBD_WINDOWS_NORMAL_MBB_OLD_EXACT_STOP")
+                        mbb="scope=normal_mbb" in client
                         last_log=now
-                    if drain_until is None and (now-start>=110 or (ready>=3 and gen_receipts.get(3,0)>=20)):
+                    if drain_until is None and (now-start>=110 or (ready>=3 and gen_receipts.get(3,0)>=20 and (not mbb or retired>=2))):
                         drain_until=now+1.5
                     if drain_until is not None and now>=drain_until:break
                     if drain_until is None and now>=next_send:
@@ -65,7 +68,7 @@ def measure_rotation(root,out,unix,win,server):
                             "rtt_ms":round((at-sent_at)*1000,3),"ready_generation":gen})
                         gen_receipts[gen]=gen_receipts.get(gen,0)+1
             rtts=sorted(r["rtt_ms"] for r in receipts)
-            result={"scope":"WINDOWS_FULL_GENERATION_RENEWAL_NOT_HOT_LANE",
+            result={"scope":"WINDOWS_NORMAL_MBB_SAME_WINTUN" if mbb else "WINDOWS_FULL_GENERATION_RENEWAL_NOT_HOT_LANE",
                 "sent":seq,"socket_accepted":len(sent),"received":len(receipts),
                 "missing":seq-len(receipts),"generation_receipts":gen_receipts,
                 "socket_errors":errors,"same_socket":True,"send_interval_ms":10,
@@ -76,6 +79,8 @@ def measure_rotation(root,out,unix,win,server):
             (out/"windows-timer-business.json").write_text(json.dumps(result,indent=2))
             if not all(gen_receipts.get(i,0)>0 for i in (1,2,3)):
                 raise RuntimeError("missing same-socket business in each of three generations: "+str(gen_receipts))
+            # Save diagnostic evidence even on continuity failure. Final
+            # post-Stop audit enforces zero missing and exact retirement.
             return {k:v for k,v in result.items() if k!="receipts"}
         finally:
             if p.poll() is None:p.terminate()
@@ -85,6 +90,7 @@ def measure_rotation(root,out,unix,win,server):
 def audit_stop(out):
     client=(out/"client.log").read_text(errors="replace")
     server=(out/"server.log").read_text(errors="replace")
+    if "scope=normal_mbb" in client:return audit_normal_mbb(out,client,server)
     arms=[tuple(map(int,x)) for x in re.findall(r"WBD_WINDOWS_TIMER_ROTATION_ARMED min_ms=(\d+) max_ms=(\d+) actual_delay_ms=(\d+) scope=full_generation unix_ms=(\d+)",client)]
     dues=[int(x) for x in re.findall(r"WBD_WINDOWS_TIMER_ROTATION_DUE scope=full_generation unix_ms=(\d+)",client)]
     generations=[int(x) for x in re.findall(r"WBD_WINDOWS_TIMER_ROTATION_REAUTHORIZE generation=(\d+) previous_native_joined=1",client)]
@@ -113,6 +119,50 @@ def audit_stop(out):
     else:
         from m0_wl_public_mss_contract import verified_plan028_shared_manual_two_generation_v4_mss
         result["server_authenticated_generations"]=verified_plan028_shared_manual_two_generation_v4_mss(client,server,1460,expected_sessions=(1,2,2))
+    (out/"windows-timer-audit.json").write_text(json.dumps(result,indent=2))
+    return result
+
+def audit_normal_mbb(out,client,server):
+    from m0_wl_public_mss_contract import verified_plan028_shared_manual_two_generation_v4_mss
+    business=json.loads((out/"windows-timer-business.json").read_text())
+    ready=[tuple(map(int,x)) for x in re.findall(r"WBD_WINDOWS_NORMAL_MBB_GENERATION_READY generation=(\d+) local_port=(\d+) grace_ms=(\d+) unix_ms=(\d+) original_tls=1 authenticated_candidate_rx=1 same_wintun=1",client)]
+    retired=[(int(g),anchor=="true",int(at)) for g,anchor,at in re.findall(r"WBD_WINDOWS_NORMAL_MBB_OLD_EXACT_STOP generation=(\d+) os_anchor_retained=(true|false) native_rx_joined=1 unix_ms=(\d+)",client)]
+    arms=[tuple(map(int,x)) for x in re.findall(r"WBD_WINDOWS_TIMER_ROTATION_ARMED min_ms=(\d+) max_ms=(\d+) actual_delay_ms=(\d+) scope=normal_mbb unix_ms=(\d+)",client)]
+    dues=[int(x) for x in re.findall(r"WBD_WINDOWS_TIMER_ROTATION_DUE scope=normal_mbb unix_ms=(\d+)",client)]
+    native=[tuple(map(int,x)) for x in re.findall(r"WBD_WINDOWS_NORMAL_MBB_PROMOTED old_owner=(\d+) new_owner=(\d+) old_rx_alive=1 same_wintun=1 grace_ms=(\d+)",client)]
+    native_retired=[tuple(map(int,x)) for x in re.findall(r"WBD_WINDOWS_NORMAL_MBB_OLD_RX_RETIRED owner=(\d+) old_port=(\d+) native_rx_joined=1",client)]
+    changes=[(int(p),int(a)) for p,a in re.findall(r"WBD_XDP_RX_PORT_CHANGE port=(\d+) add=(\d+) same_program_umem=1",client)]
+    rss=[tuple(map(int,x)) for x in re.findall(r"WBD_XDP_RX_READY ifindex=(\d+) queues=(\d+) port=(\d+) ports=(\d+) slots_per_queue=",client)]
+    ports=[tuple(map(int,x)) for x in re.findall(r"WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=(\d+) configured_port=\d+ source_port=(\d+)",client)]
+    result={"scope":"WINDOWS_NORMAL_MBB_SAME_WINTUN","ready":1+len(ready),"promotions":ready,
+      "retired":retired,"native_promotions":native,"native_retired":native_retired,"armed":arms,
+      "due_unix_ms":dues,"cold_ports":ports,"port_changes":changes,"rss":rss,
+      "os_applies":client.count("WBD_WINDOWS_NATIVE_APPLIED_V1"),
+      "initial_ready":client.count("WBD_WINDOWS_CLIENT_READY"),"os_stops":client.count("WBD_WINDOWS_NATIVE_DISCONNECTED_V1"),
+      "rx_stops":client.count("WBD_XDP_RX_STOP "),"tx_stops":client.count("WBD_XDP_TX_STOP "),
+      "server_promotions":server.count("source=authenticated_client_native_Health old_route_promoted=1"),
+      "physical_path_events":client.count("WBD_WINDOWS_NATIVE_PATH_REAUTHORIZE"),
+      "missing":business["missing"],"socket_errors":len(business["socket_errors"]),
+      "max_gap_ms":business["max_successful_receive_gap_ms"]}
+    (out/"windows-timer-audit.json").write_text(json.dumps(result,indent=2))
+    assert len(ready)==len(retired)==len(native)==len(native_retired)==2,result
+    assert [x[0] for x in ready]==[2,3] and [x[0] for x in retired]==[1,2],result
+    assert [x[1] for x in retired]==[True,False],result
+    assert len(arms)>=3 and len(dues)==2 and all(lo==30000 and hi==35000 and lo<=d<=hi for lo,hi,d,_ in arms),result
+    assert all(0<=due-(arm[3]+arm[2])<=2000 for due,arm in zip(dues,arms)),result
+    assert len(ports)==3 and len({p for _,p in ports})==3,result
+    assert changes==[(ports[1][1],1),(ports[0][1],0),(ports[2][1],1),(ports[1][1],0)],result
+    assert native[0][1]==native[1][0] and all(native_retired[i]==(native[i][0],ports[i][1]) for i in range(2)),result
+    for i,(g,port,grace,at) in enumerate(ready):
+        assert 10000<=grace<=20000 and native[i][2]==grace and port==ports[i+1][1],result
+        assert grace-500<=retired[i][2]-at<=grace+5000,result
+    assert len(rss)==1 and rss[0][1]==1 and rss[0][2]==ports[0][1],result
+    assert result["os_applies"]==result["initial_ready"]==result["os_stops"]==result["rx_stops"]==result["tx_stops"]==1,result
+    assert result["server_promotions"]==2 and result["physical_path_events"]==0,result
+    result["server_authenticated_generations"]=verified_plan028_shared_manual_two_generation_v4_mss(client,server,1460,expected_sessions=(1,2,2))
+    assert business["missing"]==0 and not business["socket_errors"] and business["socket_accepted"]==business["sent"],result
+    assert 350<=business["rtt_p50_ms"]<=500 and result["max_gap_ms"]<=100,result
+    result["continuity"]="PASS_ZERO_MISSING_SAME_SOCKET"
     (out/"windows-timer-audit.json").write_text(json.dumps(result,indent=2))
     return result
 
