@@ -49,7 +49,8 @@
     "docs/devlog/M0/20261127-M4-CLOCK-NATIVE-RESULT-BBR-INTENT.md",
     "docs/devlog/M0/20261127-DUAL-TCP-TIMEWAIT-LATE-RESET-RECOVERY.md",
     "docs/devlog/M0/20261127-LOCAL-TUN-GSO-CANDIDATE.md",
-    "docs/devlog/M0/20261127-NATIVE-SERVER-INGRESS-FIRST-CAUSAL.md"
+    "docs/devlog/M0/20261127-NATIVE-SERVER-INGRESS-FIRST-CAUSAL.md",
+    "docs/devlog/M0/20261127-SELECTED-GSO-INGRESS-SPLICE-REQUALIFICATION.md"
   ],
   "verification": [
     {
@@ -233,6 +234,20 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "c732dfd312967efb84442b6dbc917bb9d5a07752",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45935209571"
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "5536d9c original/parity and GSO+server ingress-first scoped native Normal",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "5536d9c16fa650e9bcc2d477b20d437517a11cd2",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45936754713"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "5536d9c original/parity and GSO+server ingress-first scoped native Normal",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "5536d9c16fa650e9bcc2d477b20d437517a11cd2",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45936754713"
     }
   ],
   "limitations": [
@@ -252,7 +267,8 @@
     "392ee06 scoped native M4 clock PASS with positive copied receipts; no performance run for that SOURCE. Next narrow BBR0 ABBA source unverified.",
     "495586c ARM native PASS; x86 original/core/M4 unit PASS but parity concurrent reset FAIL; ARM performance NOT_RUN. TIME_WAIT late-RST correction and regression candidate unverified.",
     "05bb056 native PASS, ARM BBR0 ABBA 4/4: 291.48→151.12 Mbps, 26.77→40.43 CPU s/GiB; local ingress losses remain, no parity. Client-only VNET write GSO candidate unverified.",
-    "c732dfd native PASS; ARM BBR0 4/4 old282.07 vs Rust182.82 Mbps, CPU/GiB27.86 vs36.13; actual GSO removed 853169/1005663 local DATA writes, client Shared-TUN drops0/0 but server ingress full22364/17507. Next same-binary server ingress-first causal candidate unverified."
+    "c732dfd native PASS; ARM BBR0 4/4 old282.07 vs Rust182.82 Mbps, CPU/GiB27.86 vs36.13; actual GSO removed 853169/1005663 local DATA writes, client Shared-TUN drops0/0 but server ingress full22364/17507. Next same-binary server ingress-first causal candidate unverified.",
+    "5536d9c same-binary ARM BBR0 ABBA A221.06→B281.33 Mbps, total CPU/GiB32.02→30.09; server ingress full 30422/29498→8092/6924. Candidate selected for old splice requalification only, no product promotion. ACK2/SACK compression retained; 0/1% BBR requalification pending."
   ],
   "promotion": null
 }
