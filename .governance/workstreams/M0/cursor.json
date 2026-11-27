@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2498,
-  "checkpoint_sha": "d6f2470cf88ab413bbb8b6a5bda6da1a500ddfc7",
+  "sequence": 2499,
+  "checkpoint_sha": "6ed1ec647bdcd063f23b16242a456cba3605043b",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "核对90de1b2精确双ISA、三ARM峰值及200M供给两组ACK ABBA，真实grant/路径/业务/重传DSACK/入口/CPU/Stop；实际速率可比才称等负载，不重复派单，复盘有效产品改动。",
+  "next_action": "核对ed9171b精确双ISA、同机与三ARM同一有限业务30M/256MiB、120M/512MiB及重复30，实际hash/EOF、时长、最终/采样重传、边界及Stop；区分持续时间与跨机路径；不重复派单。",
   "unverified": true,
-  "last_tested_source": "4bb9808167cac120170ba7e17d7ad07085a721a9",
+  "last_tested_source": "90de1b2791b62fe4440ca3f709b7f35cf5107167",
   "evidence_refs": [
-    "docs/evidence/M0/20261127-ACK-GRANT-HALFCLOSE-ABBA-RESULT.json"
+    "docs/evidence/M0/20261127-ACK-GRANT-CROSS-HOST-SUSTAINED-RESULT.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261127-CONTROLLED-RECOVERY-INCOMPLETE-RESULT.json",
-    "docs/devlog/M0/20261127-M0-CROSS-HOST-RECOVERY-SCREEN-HANDOFF.md",
     "docs/evidence/M0/20261127-RECOVERY-BATCH-EXACT-BYTE-RESULT.json",
     "docs/devlog/M0/20261127-M0-CONTROLLED-IMPAIRMENT-SCREEN-HANDOFF.md",
     "docs/evidence/M0/20261127-CROSS-HOST-RECOVERY-PATH-BLOCKED-RESULT.json",
     "docs/devlog/M0/20261127-M0-RECOVERY-ACCEPTANCE-ACK-STATE-HANDOFF.md",
     "docs/evidence/M0/20261127-CONTROLLED-IMPAIRMENT-RECOVERY-RESULT.json",
-    "docs/devlog/M0/20261127-M0-ACK-GRANT-CROSS-HOST-HANDOFF.md"
+    "docs/devlog/M0/20261127-M0-ACK-GRANT-CROSS-HOST-HANDOFF.md",
+    "docs/evidence/M0/20261127-ACK-GRANT-HALFCLOSE-ABBA-RESULT.json",
+    "docs/devlog/M0/20261127-M0-SUSTAINED-PATH-DURATION-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "4bb9808双ISA348及6原生+8 ACK ABBA PASS；clean server full6684→0、吞吐-1.19% CPU/GiB+1.26%，0.5%损失无明显退化，候选待跨机复验。273.76 vs207.67有效配置相同但不同拓扑/负载时长，非代码因果。90de1b2产品不变峰值/200M跨机ABBA待验。"
+  "partial_summary": "90de1b2原生PASS三机10/10；峰值重传11.54→11.20%，200M6.20→10.01%，ACK不晋级；八长流约10s重传0至20s40.9–69MB，历史120M无full仍重传。ed9171b两拓扑同有限长流30/120与退役诊断待验。"
 }
