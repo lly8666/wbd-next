@@ -72,6 +72,11 @@ def main():
                 ("maximum-large50-loss10","fixed",50,10,200,1200),
                 ("maximum-small75-loss5","fixed",75,5,20,288),
             ]
+        if os.environ.get("WBD_XDP_SINGLE_WIDE")=="wire":
+            workloads=[
+                ("fixed-small16384-100","fixed",100,5,20,288),
+                ("maximum-large150-loss5","fixed",150,5,20,1200),
+            ]
         CASES=[[name+"-"+str(i),mode,16384,2048,32,"original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),rate,loss,delay,size] for name,mode,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
     rows=[]
     order=list(range(len(CASES)))
@@ -139,6 +144,21 @@ def main():
              "status":v.get("status"),"target":v.get("target_mbps"),"offered":v.get("offered_mbps"),"delivered":v.get("first_delivered_mbps"),"first":v.get("first_delivery_fraction"),
              "tx":receipts("WBD_XDP_TX_STOP "),"rx":receipts("WBD_XDP_RX_STOP "),"tx_lab":receipts("WBD_XDP_TX_LAB "),"rx_lab":receipts("WBD_XDP_RX_LAB "),
              "fatal":[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC_ARENA_FULL" in l or "WBD_WINDOWS_NATIVE_WORKER_FAILURE" in l],"stats":stats,"tun_fq":r.get("linux_tun_fq_kernel"),"tun_link":r.get("linux_tun_link_kernel")}
+        # The qdisc snapshot window is not the application measurement window.
+        try:
+            first=json.loads((case/"wl-n0-netem-before.json").read_text())
+            last=json.loads((case/"wl-n0-netem-after.json").read_text())
+            dt=last["utc"]-first["utc"]
+            wire={"scope":"POST_NETEM_QDISC_SETUP_TO_SNAPSHOT_NOT_PHY","elapsed_s":dt,"directions":{}}
+            for side,dev in (("linux_to_windows","eth0"),("windows_to_linux","ifb")):
+                old=[q for q in first[dev] if q.get("kind")=="netem"]
+                new=[q for q in last[dev] if q.get("kind")=="netem"]
+                if len(old)==len(new)==1 and old[0].get("handle")==new[0].get("handle") and dt>0:
+                    vals={k:int(new[0][k])-int(old[0][k]) for k in ("bytes","packets","drops")}
+                    if min(vals.values())>=0:
+                        wire["directions"][side]=dict(vals,mbps=vals["bytes"]*8/dt/1e6,pps=vals["packets"]/dt)
+            row["outer_netem"]=wire
+        except (OSError,ValueError,KeyError,TypeError):pass
         if tune:
             row.update(resource,group=group,arm=("A" if policy=="original" else "B") if (efficiency or pool) else ("A" if rx==16384 else "B"),rx_slots=rx)
             row["lab_ok"]=bool(row["tx_lab"] and row["rx_lab"]) and all(q.get("slots")==tx for q in row["tx_lab"]) and all(q.get("slots")==rx and q.get("quantum")==32 for q in row["rx_lab"])
@@ -155,6 +175,8 @@ def main():
                     row["lab_ok"]=row["lab_ok"] and bool(row["rss_map_before"]) and all(x.get("processors",0)>1 for x in row["rss_map_before"]) and bool(row["rx_pool"]) and all(q.get("single")==int(row["arm"]=="B") and (row["arm"]=="A" or (q.get("queues")==1 and q.get("backing_bytes")==33554432)) for q in row["rx_pool"]) and (row["arm"]=="A" or "WBD_XDP_SINGLE_RSS_READY processors=1 queues=1" in s) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
                 else:
                     row["lab_ok"]=row["lab_ok"] and bool(row["rx_pool"]) and all(q.get("enabled")==int(row["arm"]=="B") and q.get("recycle")==int(row["arm"]=="B") and (q.get("posted",0)+q.get("reserve_remaining",0))*2048==q.get("backing_bytes") and q.get("posted",0)>=q.get("base",0)*q.get("queues",0) for q in row["rx_pool"]) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
+            if os.environ.get("WBD_XDP_SINGLE_WIDE")=="wire":
+                row["lab_ok"]=row["lab_ok"] and len(row.get("outer_netem",{}).get("directions",{}))==2
             if efficiency:
                 row["pending_lab"]=receipts("WBD_XDP_RX_PENDING_LAB ")
                 row["lab_ok"]=row["lab_ok"] and bool(row["pending_lab"]) and all(q.get("enabled")==int(row["arm"]=="B") and (row["arm"]=="A" or q.get("skipped",0)>0) for q in row["pending_lab"])
@@ -173,6 +195,10 @@ def main():
                         "rx_peak_sampled":max(x["rx_peak_sampled"] for x in ar),
                         "rx_drops":sum(q.get("dropped",0) for x in ar for q in x["rx"]),
                         "tx_credit_limited":sum(q.get("credit_limited",0) for x in ar for q in x["tx"])}
+                    if all(len(x.get("outer_netem",{}).get("directions",{}))==2 for x in ar):
+                        result[arm]["outer_netem_mbps"]={side:statistics.mean(x["outer_netem"]["directions"][side]["mbps"] for x in ar) for side in ("linux_to_windows","windows_to_linux")}
+                        result[arm]["outer_netem_pps"]={side:statistics.mean(x["outer_netem"]["directions"][side]["pps"] for x in ar) for side in ("linux_to_windows","windows_to_linux")}
+                        result[arm]["outer_counter_scope"]="POST_NETEM_QDISC_SETUP_TO_SNAPSHOT_NOT_PHY"
                     if maximum_memory or pool:
                         for key in ("steady_peak_working_set_bytes","steady_peak_private_bytes"):
                             vals=[x.get(key) for x in ar]
