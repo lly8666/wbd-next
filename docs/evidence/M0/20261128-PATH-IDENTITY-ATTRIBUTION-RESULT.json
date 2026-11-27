@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "source_sha": "136d66fb79139144dd4e08a5e742ceccd493896c",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact source three ARM64 VM path identity diagnostic; measurement and capture qualification only, no physical loss or performance parity claim.",
+  "run_id": 46024068630,
+  "attempt": 2,
+  "prior_attempt": "prepare failed; no measurement",
+  "artifacts": [
+    {
+      "role": "server",
+      "job_id": 140609639529,
+      "artifact_id": 15214450867
+    },
+    {
+      "role": "relay",
+      "job_id": 140609639587,
+      "artifact_id": 15213618287
+    },
+    {
+      "role": "client",
+      "job_id": 140609639585,
+      "artifact_id": 15214022334
+    }
+  ],
+  "order": [
+    "A1",
+    "L1",
+    "L2",
+    "A2"
+  ],
+  "profile": "both selected relay credit; A uncapped, L server existing 160M payload pacing ceiling; 400ms added RTT, zero injected loss, 1GiB / 600M offered",
+  "bare_mbps": [
+    267.1565234726652,
+    230.97441525465794
+  ],
+  "mbps": [
+    249.71992901610602,
+    141.30176093228593,
+    139.1233985543828,
+    213.21291522650282
+  ],
+  "product_cpu_s_per_gib": [
+    29.55,
+    55.94,
+    54.13,
+    30.11
+  ],
+  "bytes_sent": [
+    1120589412,
+    1073850709,
+    1073983445,
+    1137467548
+  ],
+  "bytes_retrans": [
+    46847588,
+    108885,
+    241621,
+    63725724
+  ],
+  "dsack": [
+    2550,
+    41,
+    73,
+    3269
+  ],
+  "timeouts": [
+    0,
+    0,
+    0,
+    2
+  ],
+  "server_ingress_full": [
+    0,
+    0,
+    0,
+    32
+  ],
+  "client_ingress_full": [
+    1376,
+    0,
+    0,
+    3044
+  ],
+  "server_m4_copied": [
+    1080621,
+    1035537,
+    1035665,
+    1096896
+  ],
+  "server_m4_not_proven": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "all_exact_hash_eof_direct_profile_joined_stop_retired": true,
+  "all_endpoint_raw_drops_zero": true,
+  "path_sample": {
+    "points": [
+      "server_tx",
+      "relay_rx",
+      "relay_tx",
+      "client_rx"
+    ],
+    "counts": [
+      [
+        17031,
+        16993,
+        16993,
+        16372
+      ],
+      [
+        16181,
+        16180,
+        16180,
+        16180
+      ],
+      [
+        16183,
+        16179,
+        16179,
+        16179
+      ],
+      [
+        17302,
+        17180,
+        17180,
+        16437
+      ]
+    ],
+    "adjacent_missing_multiset": [
+      [
+        38,
+        0,
+        621
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        4,
+        0,
+        0
+      ],
+      [
+        122,
+        0,
+        743
+      ]
+    ],
+    "adjacent_extra_multiset": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "all_ready": true,
+    "capture_kernel_drops": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "ready_source_sha_missing": true,
+    "qualification": "Action exact HEAD and product manifest identify source; readiness JSON source_sha null; deterministic sequence-filtered synthetic WAN tap samples, no physical link or inner TCP sequence attribution."
+  },
+  "interpretation": "Uncapped sample gaps mostly relay TX to client RX; reduced rate reduces gap and inner retrans but costs ~39% throughput and much higher CPU/GiB. Existing endpoint ingress loss also present. Not a spurious-only or TCP-core-only diagnosis; no fixed ceiling selected.",
+  "physical": "NOT_RUN",
+  "next_source": "117d0f82450adfdf879ddffef856564bd32a3b73"
+}
