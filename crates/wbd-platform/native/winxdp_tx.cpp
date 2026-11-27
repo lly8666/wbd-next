@@ -415,27 +415,75 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     if(FAILED(hr)){CloseHandle(adapter);adapter=nullptr;goto fail;}
     o->count=caps.NumberOfReceiveQueues?caps.NumberOfReceiveQueues:1;
 #ifdef WBD_XDP_PRESSURE_LAB
-    // Isolated runner experiment only. Change the actual interface RSS
-    // setting, not merely the number of XSKs. Keep ownership until Stop.
-    if(!udp&&port_count==1&&!std::strcmp(policy,"rx-single")){
-        XDP_RSS_CONFIGURATION config{};
-        XdpInitializeRssConfiguration(&config,sizeof(config));
-        config.Flags=XDP_RSS_FLAG_DISABLED;
-        hr=XdpRssSet(adapter,&config,sizeof(config));
+    // Isolated runner only. Official v1.4 offload.c sets State=Enabled
+    // unconditionally (TODO disable). Keep the existing hash/key and
+    // table length; set every entry to one currently valid processor.
+    // Generic rss.c assigns one queue per distinct processor, starting
+    // at queue0. The scoped interface handle restores the original table.
+    if(!udp&&port_count==1&&(!std::strcmp(policy,"rx-single")||
+        GetEnvironmentVariableA("WBD_XDP_SINGLE_RSS",nullptr,0)>0)){
+        const bool single=!std::strcmp(policy,"rx-single");
+        alignas(XDP_RSS_CONFIGURATION) unsigned char buf[4096]{};
+        auto* cfg=reinterpret_cast<XDP_RSS_CONFIGURATION*>(buf);
+        UINT32 bytes=sizeof(buf);
+        hr=XdpRssGet(adapter,cfg,&bytes);
+        std::fprintf(stderr,"WBD_XDP_RSS_GET_BEFORE hr=0x%08lx bytes=%u hash=%u table_bytes=%u\n",
+            (unsigned long)hr,bytes,cfg->HashType,unsigned(cfg->IndirectionTableSize));
         if(SUCCEEDED(hr)){
-            alignas(XDP_RSS_CONFIGURATION) unsigned char buf[4096]{};
-            UINT32 bytes=sizeof(buf);
-            auto* actual=reinterpret_cast<XDP_RSS_CONFIGURATION*>(buf);
-            hr=XdpRssGet(adapter,actual,&bytes);
-            if(SUCCEEDED(hr)&&!(actual->Flags&XDP_RSS_FLAG_DISABLED)&&actual->HashType!=0)hr=E_FAIL;
+            if(cfg->IndirectionTableSize<sizeof(PROCESSOR_NUMBER)||
+               cfg->IndirectionTableSize%sizeof(PROCESSOR_NUMBER)||
+               UINT32(cfg->IndirectionTableOffset)+cfg->IndirectionTableSize>bytes)
+                hr=E_INVALIDARG;
         }
-        if(FAILED(hr)){
-            std::fprintf(stderr,"WBD_XDP_SINGLE_RSS_UNAVAILABLE hr=0x%08lx\n",(unsigned long)hr);
-            CloseHandle(adapter);adapter=nullptr;goto fail;
+        if(FAILED(hr)){CloseHandle(adapter);adapter=nullptr;goto fail;}
+        auto* table=buf+cfg->IndirectionTableOffset;
+        const UINT32 entries=cfg->IndirectionTableSize/sizeof(PROCESSOR_NUMBER);
+        PROCESSOR_NUMBER selected{};
+        std::memcpy(&selected,table,sizeof(selected));
+        UINT32 distinct=0;
+        for(UINT32 i=0;i<entries;++i){
+            PROCESSOR_NUMBER a{};std::memcpy(&a,table+i*sizeof(a),sizeof(a));
+            bool first=true;
+            for(UINT32 j=0;j<i;++j){
+                PROCESSOR_NUMBER b{};std::memcpy(&b,table+j*sizeof(b),sizeof(b));
+                if(a.Group==b.Group&&a.Number==b.Number){first=false;break;}
+            }
+            if(first)++distinct;
         }
-        o->rss_scope=adapter;adapter=nullptr;
-        o->single=true;o->count=1;
-        std::fprintf(stderr,"WBD_XDP_SINGLE_RSS_READY disabled=1 queues=1\n");
+        std::fprintf(stderr,"WBD_XDP_RSS_MAP_BEFORE single=%u processors=%u entries=%u group=%u processor=%u\n",
+            single?1u:0u,distinct,entries,unsigned(selected.Group),unsigned(selected.Number));
+        if(single){
+            // The XDP 1.4 official rssconfig sample uses exactly this flag.
+            cfg->Flags=XDP_RSS_FLAG_SET_INDIRECTION_TABLE;
+            for(UINT32 i=0;i<entries;++i)std::memcpy(table+i*sizeof(selected),&selected,sizeof(selected));
+            hr=XdpRssSet(adapter,cfg,bytes);
+            std::fprintf(stderr,"WBD_XDP_RSS_SET_TABLE hr=0x%08lx entries=%u\n",(unsigned long)hr,entries);
+            if(SUCCEEDED(hr)){
+                bytes=sizeof(buf);
+                std::memset(buf,0,sizeof(buf));
+                hr=XdpRssGet(adapter,cfg,&bytes);
+                std::fprintf(stderr,"WBD_XDP_RSS_GET_AFTER hr=0x%08lx bytes=%u hash=%u table_bytes=%u\n",
+                    (unsigned long)hr,bytes,cfg->HashType,unsigned(cfg->IndirectionTableSize));
+                if(SUCCEEDED(hr)){
+                    if(cfg->IndirectionTableSize!=entries*sizeof(PROCESSOR_NUMBER)||
+                       UINT32(cfg->IndirectionTableOffset)+cfg->IndirectionTableSize>bytes)hr=E_FAIL;
+                    else{
+                        table=buf+cfg->IndirectionTableOffset;
+                        for(UINT32 i=0;i<entries;++i){
+                            PROCESSOR_NUMBER a{};std::memcpy(&a,table+i*sizeof(a),sizeof(a));
+                            if(a.Group!=selected.Group||a.Number!=selected.Number){hr=E_FAIL;break;}
+                        }
+                    }
+                }
+            }
+            if(FAILED(hr)){
+                std::fprintf(stderr,"WBD_XDP_SINGLE_RSS_UNAVAILABLE hr=0x%08lx\n",(unsigned long)hr);
+                CloseHandle(adapter);adapter=nullptr;goto fail;
+            }
+            o->rss_scope=adapter;adapter=nullptr;
+            o->single=true;o->count=1;
+            std::fprintf(stderr,"WBD_XDP_SINGLE_RSS_READY processors=1 queues=1 entries=%u\n",entries);
+        }
     }
 #endif
     if(adapter){CloseHandle(adapter);adapter=nullptr;}

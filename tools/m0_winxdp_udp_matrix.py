@@ -129,7 +129,8 @@ def main():
             if pool:
                 row["rx_pool"]=receipts("WBD_XDP_RX_POOL_STOP ")
                 if os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
-                    row["lab_ok"]=row["lab_ok"] and bool(row["rx_pool"]) and all(q.get("single")==int(row["arm"]=="B") and (row["arm"]=="A" or (q.get("queues")==1 and q.get("backing_bytes")==33554432)) for q in row["rx_pool"]) and (row["arm"]=="A" or "WBD_XDP_SINGLE_RSS_READY disabled=1" in s) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
+                    row["rss_map_before"]=receipts("WBD_XDP_RSS_MAP_BEFORE ")
+                    row["lab_ok"]=row["lab_ok"] and bool(row["rss_map_before"]) and all(x.get("processors",0)>1 for x in row["rss_map_before"]) and bool(row["rx_pool"]) and all(q.get("single")==int(row["arm"]=="B") and (row["arm"]=="A" or (q.get("queues")==1 and q.get("backing_bytes")==33554432)) for q in row["rx_pool"]) and (row["arm"]=="A" or "WBD_XDP_SINGLE_RSS_READY processors=1 queues=1" in s) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
                 else:
                     row["lab_ok"]=row["lab_ok"] and bool(row["rx_pool"]) and all(q.get("enabled")==int(row["arm"]=="B") and q.get("recycle")==int(row["arm"]=="B") and (q.get("posted",0)+q.get("reserve_remaining",0))*2048==q.get("backing_bytes") and q.get("posted",0)>=q.get("base",0)*q.get("queues",0) for q in row["rx_pool"]) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
             if efficiency:
