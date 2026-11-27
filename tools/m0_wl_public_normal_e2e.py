@@ -2711,224 +2711,235 @@ print(json.dumps(result),flush=True)
       "scenario_sha256":scenario["scenario_sha256"]}
     print("H491_ORIGINAL_TUN_QUEUE_ACTUAL "+json.dumps(report["linux_tun_queue_control"]),flush=True)
    print(netem("arm"),flush=True)
-   # Existing 1Hz owner telemetry only: distinguish pre-run cumulative NPF
-   # drops from measurements and never fabricate zero if no sample exists.
-   npf_before=latest_counter(out/"client.log")
-   (out/"wl-n0-start.flag").unlink(missing_ok=True)
-   rate=unix(root/"tools"/"m0_wl_public_rate_app.py")
-   output=unix(out)
-   lrate=(out/"wl-n0-linux-app.log").open("w");logs.append(lrate)
-   wrate=(out/"wl-n0-windows-app.log").open("w");logs.append(wrate)
-   p1_rate_tunnel_ip=p029_tunnel_alias if p029_p1_policy else "10.66.0.1"
-   linuxrate=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
-       "python3","-u",rate,p1_rate_tunnel_ip,"10.66.0.2",
-       "linux",unix(out/"wl-n0-start.flag"),output,seconds,profile_name]+
-       ([unix(v2_path)] if scenario else []),stdout=lrate,stderr=subprocess.STDOUT)
-   windowsrate=subprocess.Popen([sys.executable,"-u",str(root/"tools"/"m0_wl_public_rate_app.py"),
-       "10.66.0.2",p1_rate_tunnel_ip,"windows",str(out/"wl-n0-start.flag"),str(out),seconds,profile_name]+
-       ([str(v2_path)] if scenario else []),
-       stdout=wrate,stderr=subprocess.STDOUT)
-   try:
-    ready(out/"wl-n0-linux-app.log",'"phase": "bound"',linuxrate,25)
-    ready(out/"wl-n0-windows-app.log",'"phase": "bound"',windowsrate,25)
-    (out/"wl-n0-start.flag").write_text("REAL_TWO_OS_KERNEL_APPLICATIONS_BOUND\n")
-    phase_events=[]
-    phase_schedule=scenario.get("impairment_stages") if scenario else None
-    kernel_bursts=scenario.get("kernel_loss_bursts") if scenario else None
-    kernel_burst_index=0
-    observed_kernel_bursts=[]
-    phase_clock=time.monotonic()
-    phase_next_index=1 if phase_schedule else 0
-    if phase_schedule:
-     phase_events.append({"index":0,"scheduled_s":0,"elapsed_s":0,
-                          "source":"REAL_KERNEL_TC_ARM_BEFORE_APPLICATION_BARRIER",
-                          "scenario_sha256":scenario["scenario_sha256"]})
-    # Poll process liveness, never relay/transform tested traffic.
-    until=time.monotonic()+int(seconds)+25
-    while linuxrate.poll() is None or windowsrate.poll() is None:
-     if w.poll() is not None or s.poll() is not None:
-      # Do not replace the first native owner failure with a generic perf
-      # timeout. This summary is allowlisted: never upload raw TLS/packet logs.
-      markers=("WBD_WINDOWS_NATIVE_FAILURE_SOURCE",
-               "WBD_WINDOWS_NATIVE_DISCONNECTED_V1",
-               "WBD_WINDOWS_NATIVE_APPLIED_V1",
-               "V4_PUBLIC_NATIVE_STOP_DRAINED")
-      diagnostic={}
-      for key,path in (("windows",out/"client.log"),("linux",out/"server.log")):
-       rows=[]
-       if path.is_file():
-        with path.open("rb") as stream:
-         stream.seek(0,2)
-         stream.seek(max(0,stream.tell()-131072))
-         for raw in stream.read().decode("utf-8","replace").splitlines():
-          for marker in markers:
-           if marker in raw:
-            # A line digest can be matched to a private runner log if
-            # necessary; only allowlisted code-stage tokens are public.
-            allowed=("Npcap","Wintun","M1","M2","M3","M4","WAL",
-                     "Stop","source","batch","peer","owner","route",
-                     "expired","timeout","closed","ring","failure",
-                     "capacity","kernel","NET","OS","backpressure")
-            item={"marker":marker,
-                  "sha256":hashlib.sha256(raw.encode("utf-8")).hexdigest(),
-                  "tokens":[t for t in allowed if t.lower() in raw.lower()]}
-            rows.append(item)
-        diagnostic[key]=rows[-6:]
-       else:diagnostic[key]=[]
-      report["native_early_exit"]={
-       "windows_rc":w.poll(),"linux_rc":s.poll(),
-       "observed_marker_signatures":diagnostic,
-       "phase":"real_kernel_sustained_udp",
-       "status":"FAIL_EXIT_DURING_REQUIRED_60S"}
-      print("WL_V2_FIRST_NATIVE_EXIT "+json.dumps(report["native_early_exit"],sort_keys=True),flush=True)
-      raise RuntimeError("real public product exited during WL-N0")
-     if phase_schedule and phase_next_index<len(phase_schedule):
-      target_phase=phase_schedule[phase_next_index]
-      if time.monotonic()-phase_clock>=target_phase["start_s"]:
-       print(netem("stage",phase_next_index),flush=True)
-       phase_events.append({"index":phase_next_index,
-                            "scheduled_s":target_phase["start_s"],
-                            "elapsed_s":round(time.monotonic()-phase_clock,3),
-                            "source":"REAL_ETH0_IFB_OWNED_TC_QDISC_CHANGE",
-                            "scenario_sha256":scenario["scenario_sha256"],
-                            "readback_file":f"wl-v2-kernel-stage-{phase_next_index:02}.json"})
-       phase_next_index+=1
-     if kernel_bursts and kernel_burst_index<len(kernel_bursts):
-      pulse=kernel_bursts[kernel_burst_index]
-      if time.monotonic()-phase_clock>=pulse["start_s"]:
-       raw=netem("burst",kernel_burst_index)
-       mark="WL_V2_BURST_PULSE_MEASURED "
-       if mark not in raw:raise RuntimeError("true kernel burst missing tc readback")
-       receipt=json.loads(raw.split(mark,1)[1].splitlines()[0])
-       if (receipt.get("index")!=kernel_burst_index or
-           receipt.get("requested_duration_ms")!=pulse["duration_ms"] or
-           receipt.get("min_bilateral_100pct_active_ms",0)<pulse["duration_ms"]):
-        raise RuntimeError("native tc burst measured duration shorter than declared")
-       observed_kernel_bursts.append(receipt)
-       kernel_burst_index+=1
-     if time.monotonic()>until:
-      raise RuntimeError("bounded WL-N0 "+seconds+"s native app duration exceeded")
-     time.sleep(.2)
-    if linuxrate.returncode or windowsrate.returncode:
-     raise RuntimeError("real kernel generator error windows="+str(windowsrate.returncode)+
-                        " linux="+str(linuxrate.returncode))
-   finally:
-    for p in (linuxrate,windowsrate):
-     if p.poll() is None:p.terminate()
-   if h2441:
-    from m0_h2441_windows_forwarded_tcp import measure
-    report["h2441_forwarded_tcp"]=measure(root,out,wsl,unix,w,s,h2441_cc,scenario)
-    print("H2441_REAL_FORWARDED_TCP "+json.dumps(report["h2441_forwarded_tcp"],sort_keys=True),flush=True)
-   print(netem("snapshot"),flush=True)
-   if scenario:
-    tun_fq_after=tun_fq_snapshot("after")
-    tun_link_after=tun_link_snapshot("after")
-    report["linux_tun_link_kernel"]=link_delta(tun_link_before,tun_link_after)
-    print("WL_V2_LINUX_TUN_IFACE_KERNEL "+json.dumps(report["linux_tun_link_kernel"],sort_keys=True),flush=True)
-    report["linux_tun_fq_kernel"]=fq_delta(tun_fq_before,tun_fq_after)
-    print("WL_V2_LINUX_TUN_FQ_KERNEL "+json.dumps(report["linux_tun_fq_kernel"],sort_keys=True),flush=True)
-   npf_after=latest_counter(out/"client.log")
-   npf_delta=measured_delta(npf_before,npf_after)
-   report["wl_n0_npcap_drop"]={
-    "before":npf_before,"after":npf_after,"delta":npf_delta,
-    "scope":"WINDOWS_OWNER_1HZ_APPROX_BOUNDARY_NOT_PRECISE_KERNEL_COUNTER",
-    "status":"OBSERVED" if npf_delta is not None else "UNKNOWN"}
-   print("WL_N0_NPF_MEASUREMENT_DROP "+json.dumps(report["wl_n0_npcap_drop"]),flush=True)
-   wl={}
-   for role in ("windows","linux"):
-    wl[role]=json.loads((out/("wl-n0-"+role+"-app.json")).read_text())
-   report["wl_n0_measured"]=wl
-   report["wl_n0_tc_after"]="wl-n0-netem-after.json"
-   after=json.loads((out/"wl-n0-netem-after.json").read_text())
-   def count_packets(qdiscs):
-    def find_counts(obj):
-     if isinstance(obj,dict):
-      if "packets" in obj and isinstance(obj["packets"],int):
-       return [obj["packets"]]
-      return sum((find_counts(v) for v in obj.values()),[])
-     if isinstance(obj,list):
-      return sum((find_counts(v) for v in obj),[])
-     return []
-    return max(find_counts(qdiscs) or [0])
-   if scenario:
-    declared=json.loads((out/"wl-n0-netem-before.json").read_text())
-    target={"windows":scenario["windows_to_linux"]["offered_mbps"],
-            "linux":scenario["linux_to_windows"]["offered_mbps"]}
-    offered={role:row["sent_payload_mbps"] for role,row in wl.items()}
-    delivery={role:row["received_payload_mbps"] for role,row in wl.items()}
-    loss_fraction={
-      "windows":round(wl["windows"]["received_first_packets"]/max(1,wl["linux"]["sent_packets"]),6),
-      "linux":round(wl["linux"]["received_first_packets"]/max(1,wl["windows"]["sent_packets"]),6)}
-    valid=all(row.get("scenario_sha256")==scenario["scenario_sha256"] and
-              row["measurement_duration_s"]==float(seconds) for row in wl.values())
-    tc_seen=count_packets(after["eth0"])>0 and count_packets(after["ifb"])>0
-    offered_ok=all(offered[k]>=.95*v for k,v in target.items())
-    status=("INCONCLUSIVE_SCENARIO_OR_MEASUREMENT" if not valid
-            else "INCONCLUSIVE_TC_CARRIER_NOT_OBSERVED" if not tc_seen
-            else "CAPACITY_LIMITED_GENERATOR_OFFER" if not offered_ok
-            else "MEASURED_BOTH_OS_KERNEL")
-    report["WL_V2"]={
-      "status":status,"scenario_id":scenario["scenario_id"],
-      "scenario_sha256":scenario["scenario_sha256"],
-      "declared":scenario,"offered_mbps":offered,"target_mbps":target,
-      "first_delivered_mbps":delivery,"first_delivery_fraction":loss_fraction,
-      "generator_cpu_s":{k:v["sender_cpu_seconds"] for k,v in wl.items()},
-      "kernel_qdisc":"wl-n0-netem-after.json",
-      "scope":"REAL_WINDOWS_WINTUN_NPF_GO_TLS_AND_LINUX_TUN_NOT_ONEWAY_P99"}
-    if kernel_bursts:
-     if len(observed_kernel_bursts)!=len(kernel_bursts):
-      raise RuntimeError("WL_V2_REAL_KERNEL_BURST_SCOPE_NOT_COMPLETED")
-     report["WL_V2"]["kernel_bursts_applied"]=observed_kernel_bursts
-    if phase_schedule:
-     if len(phase_events)!=len(phase_schedule):
-      raise RuntimeError("WL_V2_AUTO_KERNEL_PHASE_NOT_APPLIED "+
-                         str(len(phase_events))+"/"+str(len(phase_schedule)))
-     report["WL_V2"]["kernel_phases_applied"]=phase_events
-     report["WL_V2"]["a4_auto_mature_grade"]="NOT_PROVEN_UNTIL_NATIVE_QUALITY_AND_APPLIED_READBACK"
-    print("WL_V2_TRUE_KERNEL_MEASUREMENT "+status,flush=True)
-   elif stress:
-    declared=json.loads((out/"wl-n0-netem-before.json").read_text())
-    requested=declared.get("requested_kernel_profile")
-    if declared.get("declared_profile")!=profile_name or requested!=get_profile(profile_name):
-     report["WL_P200"]="FAIL_KERNEL_IMPAIRMENT_PROFILE_NOT_READ_BACK"
-    elif any(row.get("measurement_duration_s")!=float(seconds) or
-             row.get("kernel_impairment_profile")!=profile_name for row in wl.values()):
-     report["WL_P200"]="FAIL_MISMATCHED_TWO_OS_GENERATOR_HORIZON"
-    elif count_packets(after["eth0"])==0 or count_packets(after["ifb"])==0:
-     report["WL_P200"]="INCONCLUSIVE_KERNEL_TC_DIRECTION_COUNTS_UNOBSERVED"
-    elif not all(x["received_first_packets"]>0 for x in wl.values()):
-     report["WL_P200"]="FAIL_NO_REAL_TWO_OS_APPLICATION_DELIVERY"
-    elif min(x["sent_payload_mbps"] for x in wl.values())<225:
-     report["WL_P200"]="CAPACITY_LIMITED_OFFERED_BELOW_90PCT_250MBPS"
-    else:
-     report["WL_P200"]="PASS_SCOPED_KERNEL_200MS_30PCT_250MBIT_60S_BOTH_DIRECTIONS"
-    report["wl_p200_measured"]={
-     "declared":requested,
-     "offered_mbps":{side:row["sent_payload_mbps"] for side,row in wl.items()},
-     "delivered_mbps":{side:row["received_payload_mbps"] for side,row in wl.items()},
-     "unique_received_fraction":{
-      "windows":round(wl["windows"]["received_first_packets"]/max(1,wl["linux"]["sent_packets"]),5),
-      "linux":round(wl["linux"]["received_first_packets"]/max(1,wl["windows"]["sent_packets"]),5)},
-     "kernel_qdisc":report["wl_n0_tc_after"],
-     "interpretation":"250 Mbit/s is offered generator target and kernel link rate, not guaranteed end-to-end goodput",
-    }
-    print("WL_P200_TRUE_KERNEL_MEASUREMENT "+report["WL_P200"],flush=True)
-   elif any(row.get("measurement_duration_s")!=float(seconds) for row in wl.values()):
-    report["WL_N0"]="FAIL_MISMATCHED_OS_MEASUREMENT_DURATION"
-   elif count_packets(after["eth0"])==0 or count_packets(after["ifb"])==0:
-    report["WL_N0"]="INCONCLUSIVE_KERNEL_TC_DIRECTION_COUNTS_UNOBSERVED"
-   elif min(x["sent_payload_mbps"] for x in wl.values())<9.7:
-    report["WL_N0"]="HOST_OR_GENERATOR_OR_PRODUCT_CAPACITY_LIMITED"
-   elif min(wl["windows"]["received_first_packets"]/max(wl["linux"]["sent_packets"],1),
-            wl["linux"]["received_first_packets"]/max(wl["windows"]["sent_packets"],1))<.999:
-    report["WL_N0"]="VALID_OBSERVATION_LOSSLESS_DELIVERY_BELOW_99_9_PCT"
-   elif npf_delta is None:
-    report["WL_N0"]="INCONCLUSIVE_NPCAP_MEASUREMENT_DELTA_UNKNOWN"
-   elif npf_delta>0:
-    report["WL_N0"]="LOCAL_NPCAP_DROPS_DURING_ZERO_INJECTED_LOSS"
+   if os.environ.get("WBD_XDP_GAME_DOWNLOAD_TRANSPORT")=="tcp":
+    from m0_winxdp_game_download import measure_tcp
+    measured=measure_tcp(root,out,unix,w,s,scenario)
+    print(netem("snapshot"),flush=True)
+    report["linux_tun_link_kernel"]=link_delta(tun_link_before,tun_link_snapshot("after"))
+    report["linux_tun_fq_kernel"]=fq_delta(tun_fq_before,tun_fq_snapshot("after"))
+    report["WL_V2"]={"status":measured["status"],"protocol":"tcp",
+      "scenario_sha256":scenario["scenario_sha256"],"scenario_id":scenario["scenario_id"],
+      "measurement_duration_s":30,"tcp_download":measured}
+    print("WINXDP_GAME_TCP_DOWNLOAD "+json.dumps(measured),flush=True)
    else:
-    report["WL_N0"]="PASS_SCOPED_300MS_0PCT_10MBPS_"+seconds+"S_BOTH_DIRECTIONS"
-   print("WL_N0_TRUE_KERNEL_MEASUREMENT "+report["WL_N0"],flush=True)
+    # Existing 1Hz owner telemetry only: distinguish pre-run cumulative NPF
+    # drops from measurements and never fabricate zero if no sample exists.
+    npf_before=latest_counter(out/"client.log")
+    (out/"wl-n0-start.flag").unlink(missing_ok=True)
+    rate=unix(root/"tools"/"m0_wl_public_rate_app.py")
+    output=unix(out)
+    lrate=(out/"wl-n0-linux-app.log").open("w");logs.append(lrate)
+    wrate=(out/"wl-n0-windows-app.log").open("w");logs.append(wrate)
+    p1_rate_tunnel_ip=p029_tunnel_alias if p029_p1_policy else "10.66.0.1"
+    linuxrate=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+        "python3","-u",rate,p1_rate_tunnel_ip,"10.66.0.2",
+        "linux",unix(out/"wl-n0-start.flag"),output,seconds,profile_name]+
+        ([unix(v2_path)] if scenario else []),stdout=lrate,stderr=subprocess.STDOUT)
+    windowsrate=subprocess.Popen([sys.executable,"-u",str(root/"tools"/"m0_wl_public_rate_app.py"),
+        "10.66.0.2",p1_rate_tunnel_ip,"windows",str(out/"wl-n0-start.flag"),str(out),seconds,profile_name]+
+        ([str(v2_path)] if scenario else []),
+        stdout=wrate,stderr=subprocess.STDOUT)
+    try:
+     ready(out/"wl-n0-linux-app.log",'"phase": "bound"',linuxrate,25)
+     ready(out/"wl-n0-windows-app.log",'"phase": "bound"',windowsrate,25)
+     (out/"wl-n0-start.flag").write_text("REAL_TWO_OS_KERNEL_APPLICATIONS_BOUND\n")
+     phase_events=[]
+     phase_schedule=scenario.get("impairment_stages") if scenario else None
+     kernel_bursts=scenario.get("kernel_loss_bursts") if scenario else None
+     kernel_burst_index=0
+     observed_kernel_bursts=[]
+     phase_clock=time.monotonic()
+     phase_next_index=1 if phase_schedule else 0
+     if phase_schedule:
+      phase_events.append({"index":0,"scheduled_s":0,"elapsed_s":0,
+                           "source":"REAL_KERNEL_TC_ARM_BEFORE_APPLICATION_BARRIER",
+                           "scenario_sha256":scenario["scenario_sha256"]})
+     # Poll process liveness, never relay/transform tested traffic.
+     until=time.monotonic()+int(seconds)+25
+     while linuxrate.poll() is None or windowsrate.poll() is None:
+      if w.poll() is not None or s.poll() is not None:
+       # Do not replace the first native owner failure with a generic perf
+       # timeout. This summary is allowlisted: never upload raw TLS/packet logs.
+       markers=("WBD_WINDOWS_NATIVE_FAILURE_SOURCE",
+                "WBD_WINDOWS_NATIVE_DISCONNECTED_V1",
+                "WBD_WINDOWS_NATIVE_APPLIED_V1",
+                "V4_PUBLIC_NATIVE_STOP_DRAINED")
+       diagnostic={}
+       for key,path in (("windows",out/"client.log"),("linux",out/"server.log")):
+        rows=[]
+        if path.is_file():
+         with path.open("rb") as stream:
+          stream.seek(0,2)
+          stream.seek(max(0,stream.tell()-131072))
+          for raw in stream.read().decode("utf-8","replace").splitlines():
+           for marker in markers:
+            if marker in raw:
+             # A line digest can be matched to a private runner log if
+             # necessary; only allowlisted code-stage tokens are public.
+             allowed=("Npcap","Wintun","M1","M2","M3","M4","WAL",
+                      "Stop","source","batch","peer","owner","route",
+                      "expired","timeout","closed","ring","failure",
+                      "capacity","kernel","NET","OS","backpressure")
+             item={"marker":marker,
+                   "sha256":hashlib.sha256(raw.encode("utf-8")).hexdigest(),
+                   "tokens":[t for t in allowed if t.lower() in raw.lower()]}
+             rows.append(item)
+         diagnostic[key]=rows[-6:]
+        else:diagnostic[key]=[]
+       report["native_early_exit"]={
+        "windows_rc":w.poll(),"linux_rc":s.poll(),
+        "observed_marker_signatures":diagnostic,
+        "phase":"real_kernel_sustained_udp",
+        "status":"FAIL_EXIT_DURING_REQUIRED_60S"}
+       print("WL_V2_FIRST_NATIVE_EXIT "+json.dumps(report["native_early_exit"],sort_keys=True),flush=True)
+       raise RuntimeError("real public product exited during WL-N0")
+      if phase_schedule and phase_next_index<len(phase_schedule):
+       target_phase=phase_schedule[phase_next_index]
+       if time.monotonic()-phase_clock>=target_phase["start_s"]:
+        print(netem("stage",phase_next_index),flush=True)
+        phase_events.append({"index":phase_next_index,
+                             "scheduled_s":target_phase["start_s"],
+                             "elapsed_s":round(time.monotonic()-phase_clock,3),
+                             "source":"REAL_ETH0_IFB_OWNED_TC_QDISC_CHANGE",
+                             "scenario_sha256":scenario["scenario_sha256"],
+                             "readback_file":f"wl-v2-kernel-stage-{phase_next_index:02}.json"})
+        phase_next_index+=1
+      if kernel_bursts and kernel_burst_index<len(kernel_bursts):
+       pulse=kernel_bursts[kernel_burst_index]
+       if time.monotonic()-phase_clock>=pulse["start_s"]:
+        raw=netem("burst",kernel_burst_index)
+        mark="WL_V2_BURST_PULSE_MEASURED "
+        if mark not in raw:raise RuntimeError("true kernel burst missing tc readback")
+        receipt=json.loads(raw.split(mark,1)[1].splitlines()[0])
+        if (receipt.get("index")!=kernel_burst_index or
+            receipt.get("requested_duration_ms")!=pulse["duration_ms"] or
+            receipt.get("min_bilateral_100pct_active_ms",0)<pulse["duration_ms"]):
+         raise RuntimeError("native tc burst measured duration shorter than declared")
+        observed_kernel_bursts.append(receipt)
+        kernel_burst_index+=1
+      if time.monotonic()>until:
+       raise RuntimeError("bounded WL-N0 "+seconds+"s native app duration exceeded")
+      time.sleep(.2)
+     if linuxrate.returncode or windowsrate.returncode:
+      raise RuntimeError("real kernel generator error windows="+str(windowsrate.returncode)+
+                         " linux="+str(linuxrate.returncode))
+    finally:
+     for p in (linuxrate,windowsrate):
+      if p.poll() is None:p.terminate()
+    if h2441:
+     from m0_h2441_windows_forwarded_tcp import measure
+     report["h2441_forwarded_tcp"]=measure(root,out,wsl,unix,w,s,h2441_cc,scenario)
+     print("H2441_REAL_FORWARDED_TCP "+json.dumps(report["h2441_forwarded_tcp"],sort_keys=True),flush=True)
+    print(netem("snapshot"),flush=True)
+    if scenario:
+     tun_fq_after=tun_fq_snapshot("after")
+     tun_link_after=tun_link_snapshot("after")
+     report["linux_tun_link_kernel"]=link_delta(tun_link_before,tun_link_after)
+     print("WL_V2_LINUX_TUN_IFACE_KERNEL "+json.dumps(report["linux_tun_link_kernel"],sort_keys=True),flush=True)
+     report["linux_tun_fq_kernel"]=fq_delta(tun_fq_before,tun_fq_after)
+     print("WL_V2_LINUX_TUN_FQ_KERNEL "+json.dumps(report["linux_tun_fq_kernel"],sort_keys=True),flush=True)
+    npf_after=latest_counter(out/"client.log")
+    npf_delta=measured_delta(npf_before,npf_after)
+    report["wl_n0_npcap_drop"]={
+     "before":npf_before,"after":npf_after,"delta":npf_delta,
+     "scope":"WINDOWS_OWNER_1HZ_APPROX_BOUNDARY_NOT_PRECISE_KERNEL_COUNTER",
+     "status":"OBSERVED" if npf_delta is not None else "UNKNOWN"}
+    print("WL_N0_NPF_MEASUREMENT_DROP "+json.dumps(report["wl_n0_npcap_drop"]),flush=True)
+    wl={}
+    for role in ("windows","linux"):
+     wl[role]=json.loads((out/("wl-n0-"+role+"-app.json")).read_text())
+    report["wl_n0_measured"]=wl
+    report["wl_n0_tc_after"]="wl-n0-netem-after.json"
+    after=json.loads((out/"wl-n0-netem-after.json").read_text())
+    def count_packets(qdiscs):
+     def find_counts(obj):
+      if isinstance(obj,dict):
+       if "packets" in obj and isinstance(obj["packets"],int):
+        return [obj["packets"]]
+       return sum((find_counts(v) for v in obj.values()),[])
+      if isinstance(obj,list):
+       return sum((find_counts(v) for v in obj),[])
+      return []
+     return max(find_counts(qdiscs) or [0])
+    if scenario:
+     declared=json.loads((out/"wl-n0-netem-before.json").read_text())
+     target={"windows":scenario["windows_to_linux"]["offered_mbps"],
+             "linux":scenario["linux_to_windows"]["offered_mbps"]}
+     offered={role:row["sent_payload_mbps"] for role,row in wl.items()}
+     delivery={role:row["received_payload_mbps"] for role,row in wl.items()}
+     loss_fraction={
+       "windows":round(wl["windows"]["received_first_packets"]/max(1,wl["linux"]["sent_packets"]),6),
+       "linux":round(wl["linux"]["received_first_packets"]/max(1,wl["windows"]["sent_packets"]),6) if target["windows"]>0 else None}
+     valid=all(row.get("scenario_sha256")==scenario["scenario_sha256"] and
+               row["measurement_duration_s"]==float(seconds) for row in wl.values())
+     tc_seen=count_packets(after["eth0"])>0 and count_packets(after["ifb"])>0
+     offered_ok=all(offered[k]>=.95*v for k,v in target.items())
+     status=("INCONCLUSIVE_SCENARIO_OR_MEASUREMENT" if not valid
+             else "INCONCLUSIVE_TC_CARRIER_NOT_OBSERVED" if not tc_seen
+             else "CAPACITY_LIMITED_GENERATOR_OFFER" if not offered_ok
+             else "MEASURED_BOTH_OS_KERNEL")
+     report["WL_V2"]={
+       "status":status,"scenario_id":scenario["scenario_id"],
+       "scenario_sha256":scenario["scenario_sha256"],
+       "declared":scenario,"offered_mbps":offered,"target_mbps":target,
+       "first_delivered_mbps":delivery,"first_delivery_fraction":loss_fraction,
+       "generator_cpu_s":{k:v["sender_cpu_seconds"] for k,v in wl.items()},
+       "kernel_qdisc":"wl-n0-netem-after.json",
+       "scope":"REAL_WINDOWS_WINTUN_NPF_GO_TLS_AND_LINUX_TUN_NOT_ONEWAY_P99"}
+     if kernel_bursts:
+      if len(observed_kernel_bursts)!=len(kernel_bursts):
+       raise RuntimeError("WL_V2_REAL_KERNEL_BURST_SCOPE_NOT_COMPLETED")
+      report["WL_V2"]["kernel_bursts_applied"]=observed_kernel_bursts
+     if phase_schedule:
+      if len(phase_events)!=len(phase_schedule):
+       raise RuntimeError("WL_V2_AUTO_KERNEL_PHASE_NOT_APPLIED "+
+                          str(len(phase_events))+"/"+str(len(phase_schedule)))
+      report["WL_V2"]["kernel_phases_applied"]=phase_events
+      report["WL_V2"]["a4_auto_mature_grade"]="NOT_PROVEN_UNTIL_NATIVE_QUALITY_AND_APPLIED_READBACK"
+     print("WL_V2_TRUE_KERNEL_MEASUREMENT "+status,flush=True)
+    elif stress:
+     declared=json.loads((out/"wl-n0-netem-before.json").read_text())
+     requested=declared.get("requested_kernel_profile")
+     if declared.get("declared_profile")!=profile_name or requested!=get_profile(profile_name):
+      report["WL_P200"]="FAIL_KERNEL_IMPAIRMENT_PROFILE_NOT_READ_BACK"
+     elif any(row.get("measurement_duration_s")!=float(seconds) or
+              row.get("kernel_impairment_profile")!=profile_name for row in wl.values()):
+      report["WL_P200"]="FAIL_MISMATCHED_TWO_OS_GENERATOR_HORIZON"
+     elif count_packets(after["eth0"])==0 or count_packets(after["ifb"])==0:
+      report["WL_P200"]="INCONCLUSIVE_KERNEL_TC_DIRECTION_COUNTS_UNOBSERVED"
+     elif not all(x["received_first_packets"]>0 for x in wl.values()):
+      report["WL_P200"]="FAIL_NO_REAL_TWO_OS_APPLICATION_DELIVERY"
+     elif min(x["sent_payload_mbps"] for x in wl.values())<225:
+      report["WL_P200"]="CAPACITY_LIMITED_OFFERED_BELOW_90PCT_250MBPS"
+     else:
+      report["WL_P200"]="PASS_SCOPED_KERNEL_200MS_30PCT_250MBIT_60S_BOTH_DIRECTIONS"
+     report["wl_p200_measured"]={
+      "declared":requested,
+      "offered_mbps":{side:row["sent_payload_mbps"] for side,row in wl.items()},
+      "delivered_mbps":{side:row["received_payload_mbps"] for side,row in wl.items()},
+      "unique_received_fraction":{
+       "windows":round(wl["windows"]["received_first_packets"]/max(1,wl["linux"]["sent_packets"]),5),
+       "linux":round(wl["linux"]["received_first_packets"]/max(1,wl["windows"]["sent_packets"]),5)},
+      "kernel_qdisc":report["wl_n0_tc_after"],
+      "interpretation":"250 Mbit/s is offered generator target and kernel link rate, not guaranteed end-to-end goodput",
+     }
+     print("WL_P200_TRUE_KERNEL_MEASUREMENT "+report["WL_P200"],flush=True)
+    elif any(row.get("measurement_duration_s")!=float(seconds) for row in wl.values()):
+     report["WL_N0"]="FAIL_MISMATCHED_OS_MEASUREMENT_DURATION"
+    elif count_packets(after["eth0"])==0 or count_packets(after["ifb"])==0:
+     report["WL_N0"]="INCONCLUSIVE_KERNEL_TC_DIRECTION_COUNTS_UNOBSERVED"
+    elif min(x["sent_payload_mbps"] for x in wl.values())<9.7:
+     report["WL_N0"]="HOST_OR_GENERATOR_OR_PRODUCT_CAPACITY_LIMITED"
+    elif min(wl["windows"]["received_first_packets"]/max(wl["linux"]["sent_packets"],1),
+             wl["linux"]["received_first_packets"]/max(wl["windows"]["sent_packets"],1))<.999:
+     report["WL_N0"]="VALID_OBSERVATION_LOSSLESS_DELIVERY_BELOW_99_9_PCT"
+    elif npf_delta is None:
+     report["WL_N0"]="INCONCLUSIVE_NPCAP_MEASUREMENT_DELTA_UNKNOWN"
+    elif npf_delta>0:
+     report["WL_N0"]="LOCAL_NPCAP_DROPS_DURING_ZERO_INJECTED_LOSS"
+    else:
+     report["WL_N0"]="PASS_SCOPED_300MS_0PCT_10MBPS_"+seconds+"S_BOTH_DIRECTIONS"
+    print("WL_N0_TRUE_KERNEL_MEASUREMENT "+report["WL_N0"],flush=True)
   finally:
    try:
     if tun_queue_lease is not None:

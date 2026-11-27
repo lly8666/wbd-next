@@ -67,7 +67,11 @@ drain=5.0
 # Declare the existing two-OS barrier ready after all per-side cold setup;
 # no data packets, protocol controls or statistical exclusions are added.
 socket_start=udp_socket_probe(sock) if profile_name=="v2" else None
-first=FirstDeliveryBitmap(bounded_sequence_limit(rate_bytes_per_sec,duration,min(sizes)))
+if profile_name=="v2":
+    peer_profile=get_profile(profile_name,side="linux" if side=="windows" else "windows",configfile=scenario_path)
+    first=FirstDeliveryBitmap(bounded_sequence_limit(max(1,int(peer_profile["offered_mbps"]*125000)),duration,min(x["udp_payload_bytes"] for x in peer_profile["packet_mix"])))
+else:
+    first=FirstDeliveryBitmap(bounded_sequence_limit(rate_bytes_per_sec,duration,min(sizes)))
 recv_slabs=bytearray(2048) if stress else None
 recv_view=memoryview(recv_slabs) if stress else None
 print(json.dumps({"phase":"bound","side":side,"address":local,

@@ -91,7 +91,7 @@ def _thread_cpu_snapshot(kernel, pid, previous):
             valid=kernel.Thread32Next(snapshot,ctypes.byref(entry))
     finally:
         kernel.CloseHandle(snapshot)
-    named=[row for row in samples if row["name"] in ("wbd-native-tx","wbd-native-rx")]
+    named=[row for row in samples if row["name"] in ("wbd-native-tx","wbd-native-rx","wbd-game-native-tx","wbd-game-native-rx")]
     return {
         "status":"MEASURED" if samples else "NO_THREAD_SAMPLES",
         "thread_count_sampled":len(samples),
@@ -103,13 +103,13 @@ def _thread_cpu_snapshot(kernel, pid, previous):
         "all_thread_cpu_kernel_delta_s":round(sum(x["cpu_kernel_delta_s"] for x in samples),6),
         "all_thread_cpu_user_delta_s":round(sum(x["cpu_user_delta_s"] for x in samples),6),
         "all_thread_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in samples),6),
-        "rust_tx_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in named if x["name"]=="wbd-native-tx"),6),
-        "rust_tx_kernel_delta_s":round(sum(x["cpu_kernel_delta_s"] for x in named if x["name"]=="wbd-native-tx"),6),
-        "rust_tx_user_delta_s":round(sum(x["cpu_user_delta_s"] for x in named if x["name"]=="wbd-native-tx"),6),
-        "rust_rx_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in named if x["name"]=="wbd-native-rx"),6),
-        "rust_rx_kernel_delta_s":round(sum(x["cpu_kernel_delta_s"] for x in named if x["name"]=="wbd-native-rx"),6),
-        "rust_rx_user_delta_s":round(sum(x["cpu_user_delta_s"] for x in named if x["name"]=="wbd-native-rx"),6),
-        "other_threads_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in samples if x["name"] not in ("wbd-native-tx","wbd-native-rx")),6),
+        "rust_tx_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in named if x["name"] in ("wbd-native-tx","wbd-game-native-tx")),6),
+        "rust_tx_kernel_delta_s":round(sum(x["cpu_kernel_delta_s"] for x in named if x["name"] in ("wbd-native-tx","wbd-game-native-tx")),6),
+        "rust_tx_user_delta_s":round(sum(x["cpu_user_delta_s"] for x in named if x["name"] in ("wbd-native-tx","wbd-game-native-tx")),6),
+        "rust_rx_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in named if x["name"] in ("wbd-native-rx","wbd-game-native-rx")),6),
+        "rust_rx_kernel_delta_s":round(sum(x["cpu_kernel_delta_s"] for x in named if x["name"] in ("wbd-native-rx","wbd-game-native-rx")),6),
+        "rust_rx_user_delta_s":round(sum(x["cpu_user_delta_s"] for x in named if x["name"] in ("wbd-native-rx","wbd-game-native-rx")),6),
+        "other_threads_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in samples if x["name"] not in ("wbd-native-tx","wbd-native-rx","wbd-game-native-tx","wbd-game-native-rx")),6),
         "hottest_threads":sorted(samples,key=lambda x:x["cpu_delta_s"],reverse=True)[:6],
         "interpretation":"Exact Win32 thread kernel/user CPU only. NAMELESS THREADS ARE NOT GO. Native driver execution beyond this process and syscall substage attribution are NOT measured.",
     },current

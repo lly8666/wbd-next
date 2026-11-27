@@ -41,8 +41,8 @@ def rate_wait_seconds(now,send_end,drain_end,credit,next_payload,rate,next_probe
     if now<send_end and credit>=next_payload:return 0.0
     deadline=min(now+.05,drain_end)
     if now<send_end:
-        deadline=min(deadline,send_end,
-                     now+max(0.0,next_payload-credit)/rate,next_probe)
+        deadline=min(deadline,send_end,next_probe)
+        if rate>0:deadline=min(deadline,now+max(0.0,next_payload-credit)/rate)
     return max(0.0,deadline-now)
 
 def receiver_buffer_request_bytes(platform,is_v2):

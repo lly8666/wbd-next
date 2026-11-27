@@ -108,6 +108,10 @@ struct GameCounters{
     authenticated_future:[AtomicU32;4],
     sack:[[AtomicU64;4];4],
     first_due_entry:AtomicBool,first_send_failure:AtomicBool,
+    #[cfg(feature="winxdp_native_trial")]
+    download_diag:bool,
+    #[cfg(feature="winxdp_native_trial")]
+    download_bp:[AtomicU64;6],
 }
 impl GameCounters{
     fn new(lanes:&[LaneConfig])->Self{
@@ -120,6 +124,10 @@ impl GameCounters{
             authenticated_future:std::array::from_fn(|_|AtomicU32::new(0)),
             sack:std::array::from_fn(|_|std::array::from_fn(|_|AtomicU64::new(0))),
             first_due_entry:AtomicBool::new(false),first_send_failure:AtomicBool::new(false),
+            #[cfg(feature="winxdp_native_trial")]
+            download_diag:std::env::var_os("WBD_XDP_GAME_DOWNLOAD_DIAG").is_some(),
+            #[cfg(feature="winxdp_native_trial")]
+            download_bp:std::array::from_fn(|_|AtomicU64::new(0)),
         }
     }
     fn snapshot(&self)->WbdWinNativeStatsV1{
@@ -900,6 +908,8 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
                 // this bounded packet cannot be copied right now. Release
                 // its prepared Game first-delivery reservation as NOT copied;
                 // later authenticated sibling lanes may still deliver it.
+                #[cfg(feature="winxdp_native_trial")]
+                if c.download_diag{c.download_bp[0].fetch_add(1,Ordering::Relaxed);}
                 backpressure=true;break
             },
             Err(err)=>{
@@ -915,6 +925,8 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
         // remaining payloads and their exact accepted kernel prefix instead.
         let slot=deferred.get_mut(lane).ok_or(INVALID)?;
         if slot.is_some(){return Err(BAD_STAGE)}
+        #[cfg(feature="winxdp_native_trial")]
+        if c.download_diag{c.download_bp[1].fetch_add(1,Ordering::Relaxed);}
         *slot=Some(DeferredFec{copied,frames});
         return Ok(())
     }
@@ -961,7 +973,11 @@ fn flush_deferred_fec(
                     row.copied+=1;
                     c.rx.fetch_add(1,Ordering::Release);
                 },
-                Err(NativeIoError::BufferTooSmall)=>break,
+                Err(NativeIoError::BufferTooSmall)=>{
+                    #[cfg(feature="winxdp_native_trial")]
+                    if c.download_diag{c.download_bp[2].fetch_add(1,Ordering::Relaxed);}
+                    break
+                },
                 Err(err)=>{
                     eprintln!("M0_PLAN027_GAME_FEC_DEFERRED_TUN_FATAL lane={} copied={} error={err:?}",i+1,row.copied);
                     return Err(BAD_STAGE)
@@ -978,6 +994,8 @@ fn flush_deferred_fec(
             if rc!=OK{return Err(rc)}
             // Physical ACK already advanced when the original ciphertext
             // was opened; deferred Wintun completion is a separate ledger.
+            #[cfg(feature="winxdp_native_trial")]
+            if c.download_diag{c.download_bp[3].fetch_add(1,Ordering::Relaxed);}
             *slot=None;
             finished_any=true;
         }
@@ -1032,8 +1050,15 @@ fn receive_game_carrier_frame(cfg:&WbdWinGameNativeAttachV3,lanes:&[LaneConfig],
                 // Reuse the existing bounded early FIFO only for the blocked lane.
                 if deferred[i].is_some(){
                     let mut q=early.lock().map_err(|_|BAD_STAGE)?;
-                    if q.len()<EARLY_CAP{q.push_back((i,p.seq32,p.ciphertext.to_vec()));}
-                    else{c.rejected.fetch_add(1,Ordering::Relaxed);}
+                    if q.len()<EARLY_CAP{
+                        q.push_back((i,p.seq32,p.ciphertext.to_vec()));
+                        #[cfg(feature="winxdp_native_trial")]
+                        if c.download_diag{c.download_bp[4].fetch_add(1,Ordering::Relaxed);}
+                    }else{
+                        #[cfg(feature="winxdp_native_trial")]
+                        if c.download_diag{c.download_bp[5].fetch_add(1,Ordering::Relaxed);}
+                        c.rejected.fetch_add(1,Ordering::Relaxed);
+                    }
                     return Ok(false)
                 }
                 match receive_one(cfg,group,tun,c,ledgers,
@@ -1544,6 +1569,11 @@ pub extern "C" fn wbd_m0_win_game_native_v3_stop(h:u64)->i32{
     // their owning sessions were removed from the single original registry.
     let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
     let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
+    #[cfg(feature="winxdp_native_trial")]
+    if counters.download_diag{
+        let v=counters.download_bp.each_ref().map(|x|x.load(Ordering::Relaxed));
+        eprintln!("WBD_XDP_GAME_DOWNLOAD_STOP wintun_full={} deferred_created={} deferred_retry_full={} deferred_finished={} deferred_early_queued={} deferred_early_full={}",v[0],v[1],v[2],v[3],v[4],v[5]);
+    }
     eprintln!("M0_PLAN027_GAME_NATIVE_STOP_JOIN group={h} tx_finished=true rx_finished=true tx_rc={tx} rx_rc={rx}");
     if tx!=OK&&tx!=BAD_STAGE&&tx!=AUTHENTICATED_PEER_DEAD{return tx}
     if rx!=OK&&rx!=BAD_STAGE{return rx}
