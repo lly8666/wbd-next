@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2476,
-  "checkpoint_sha": "ed3a9ede975c50ab97eedb4b69c2fbcce9e70346",
+  "sequence": 2477,
+  "checkpoint_sha": "c3a70a9c5f7fcbd1a6fc5e2ad1af5750932eb5fd",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "刷新75c47a5 native45926991269与ARM45926991260，核真实M4 copied/not_proven/no_normal_pn和业务/Stop/本机损失；嵌入模块单测未由core过滤器选中，不报PASS。后续统一fresh/重传attempt、同流TUN GSO/GRO冷ABI、AccECN内层扩展，保留原外层/MTU、不引入HOL。不重派。",
+  "next_action": "查询392ee066c8bbcea96c20dea0ef76d73f497f6b87精确原生双ISA构建、M4 copied-prefix专项单测、ARM资格及ABBA实际结果；75c47a5双ISA E0308，ARM NOT_RUN，不重派旧SOURCE。后续按实证推进inner attempt时钟、原生IO与剩余模式。",
   "unverified": true,
   "last_tested_source": "9ede62e1aa3e2a1396c73d899f78e21db1db4920",
   "evidence_refs": [
@@ -20,8 +20,9 @@
   "context_refs": [
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
     "docs/devlog/M0/20261127-M4-CLOCK-AND-OFFLOAD-PLAN-HANDOFF.md",
-    "docs/evidence/M0/20261127-DUAL-RUST-TCP-NATIVE-ADMISSION-RESULT.json"
+    "docs/evidence/M0/20261127-DUAL-RUST-TCP-NATIVE-ADMISSION-RESULT.json",
+    "docs/devlog/M0/20261127-M0-M4-CLOCK-RECOVERY-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "9ede62e双ISA344 core与原生功能PASS，8/8零损ABBA BBR325.66→201.74Mbps，仍本机丢包；bare13.54未达容量资格。75c47a5已施工Normal小DATA实际M4 PN成功前缀时钟与M1 ready批借用，未验证；重传、实际GSO、AccECN待施工。PR80 Draft，无main产品合入。"
+  "partial_summary": "9ede62e原生限域PASS，性能未达相当，本机损失仍存在。75c47a5双ISA编译FAIL，ARM NOT_RUN。392ee06修PN类型与显式单测选中，未验证；原PR80 Draft，未合main产品。"
 }
