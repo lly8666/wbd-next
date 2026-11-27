@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "source_sha": "ddc6b5dd5df59972bd1cfa2c00353417622aa7ef",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native dual ISA six original Normal functional profiles and local two backlogged finite app cases only. Cross-host ABBA incomplete; both low-retrans candidate cases qualified.",
+  "run_id": 45980217514,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140441924478,
+      "artifact_id": 15188389643,
+      "gso_groups": [
+        91,
+        82,
+        88
+      ],
+      "gso_segments": [
+        1023,
+        792,
+        842
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140441923993,
+      "artifact_id": 15190080296,
+      "gso_groups": [
+        109,
+        175,
+        291
+      ],
+      "gso_segments": [
+        1161,
+        1952,
+        2599
+      ]
+    }
+  ],
+  "local": {
+    "order": [
+      "uncapped",
+      "cap80"
+    ],
+    "bytes": 536870912,
+    "offered_bps": 600000000,
+    "mbps": [
+      343.7142307625987,
+      71.39805573961968
+    ],
+    "seconds": [
+      12.495750573,
+      60.155241645
+    ],
+    "stop_sample_bytes_sent": [
+      536870912,
+      536870912
+    ],
+    "stop_sample_retrans_bytes": [
+      0,
+      0
+    ],
+    "cpu_s_per_gib": [
+      31.36,
+      51.18
+    ],
+    "actual_max_pacing_bytes_s": [
+      275578159,
+      10000000
+    ],
+    "both_measured": true
+  },
+  "performance": {
+    "result": "INCOMPLETE",
+    "run_id": 45980217430,
+    "job_ids": {
+      "client": 140444873664,
+      "server": 140444873682,
+      "relay": 140444873636
+    },
+    "artifact_ids": {
+      "client": 15189618141,
+      "server": 15190126406,
+      "relay": 15189113447
+    },
+    "scope": "Three ARM, same binary1GiB fixed exact bytes, 600M offered, 400ms added RTT, zero injected, selected defaults, B only server pacing cap80. Bare brackets measured.",
+    "bare_mbps": [
+      301.05311858253054,
+      314.4208490356492
+    ],
+    "order": [
+      "A1",
+      "B1",
+      "B2",
+      "A2"
+    ],
+    "status": [
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "INCOMPLETE"
+    ],
+    "actual_app_mbps": [
+      245.92236492371123,
+      72.66498112171801,
+      73.10997195456535,
+      195.67220133372953
+    ],
+    "actual_app_seconds": [
+      34.929456679,
+      118.212851079,
+      117.493337261,
+      43.899616468
+    ],
+    "all_app_actual_exact_bytes_hash_eof": true,
+    "a2_error": "Post-app remote sampling ConnectionResetError104; raw endpoint app hashes match; no qualified performance row; no RESET_ACCEPT logged, one late server RESET_NO_FLOW; cause of control failure not proven.",
+    "bulk_retired": {
+      "bytes_sent": [
+        1166545474,
+        1073759453,
+        1073756342,
+        1269175261
+      ],
+      "bytes_retrans": [
+        92803650,
+        17629,
+        14518,
+        195433437
+      ],
+      "dsack": [
+        5807,
+        9,
+        8,
+        17554
+      ],
+      "timeouts": [
+        1,
+        0,
+        0,
+        2
+      ],
+      "reorder": [
+        831,
+        1439,
+        1228,
+        914
+      ]
+    },
+    "actual_max_server_pacing_bytes_s": [
+      220286676,
+      10000000,
+      10000000,
+      214834089
+    ],
+    "server_send_queued_median_bytes": [
+      4238401,
+      34230693,
+      34491568,
+      900116
+    ],
+    "server_ingress_full": [
+      17773,
+      0,
+      0,
+      15764
+    ],
+    "client_ingress_full": [
+      1675,
+      0,
+      0,
+      163
+    ],
+    "both_packet_socket_drops_zero": true,
+    "relay_qdisc_drops_zero": true,
+    "server_cpu_s_per_gib": [
+      16.75,
+      38.08,
+      38.56,
+      null
+    ],
+    "client_cpu_s_per_gib": [
+      14.23,
+      47.46,
+      46.91,
+      null
+    ],
+    "interpretation": "Both cap80 backlogged >117s, final retrans0.00164%/0.00135%; credible sustained low-retrans point at high app offer; throughput ~73Mbps CPU/GiB~85.5, not a full ABBA or final default. Uncapped startup target~208–211MB/s by9s and max~215–220MB/s, cwnd max~93/97MB, target not actual wire rate. Hypothesis Startup overshoot/recovery feedback; no causal claim. Next independent Startup gain and cap80/160 comparisons."
+  },
+  "physical": "NOT_RUN",
+  "review": "All five original ZIPs CRC opened, exact native source and six summaries, local two recovery rows, cross-host summary, per-case raw server/client logs, retired counters, sender/receiver hashes, actual pacing and queued samples, relay end. Main H2500 governance PASS, inherited branch evidence red remains.",
+  "next_source": "bd36c2e19244a3fd6646c44342740a8a73f2f8e6"
+}
