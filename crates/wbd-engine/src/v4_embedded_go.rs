@@ -5708,8 +5708,10 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     let ip=if e.server_side{lease}else{[0u8;4]};
     // Cold readback confirms the exact Normal client/server queue size once,
     // before native M4 activation; no per-DATA probe or heap growth loop.
-    // H2437: same selected burst headroom for both Normal endpoints.
-    let inbox_slots=1024;
+    // H2437: 1024 on both Normal endpoints. Explicit paired-TCP
+    // capacity experiment only; never alter Game or nondual Normal.
+    let inbox_slots=if std::env::var_os("WBD_M0_DUAL_RUST_TCP").as_deref()==Some(std::ffi::OsStr::new("1"))
+        &&std::env::var_os("WBD_M0_NATIVE_INBOX_DOUBLE").as_deref()==Some(std::ffi::OsStr::new("1")){2048}else{1024};
     eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=0 flow_fair=1",
         if e.server_side{"server"}else{"client"},e.generation,inbox_slots);
     let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(inbox_slots);

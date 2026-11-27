@@ -347,8 +347,53 @@ mod tests {
     use super::super::pktkit::vtcp::flags;
     use std::{net::TcpListener,time::Duration};
     fn parse(p: &[u8]) -> Packet { Packet::parse(p).unwrap().unwrap() }
-    fn exchange_client_to_server(server: &mut ServerFlow, packets: Packets) {
-        for p in packets { server.on_packet(&parse(&p)).unwrap(); }
+    // Emulated wire is the actual test send attempt, before delivery.
+    enum Leg { App, Local, Up, Down }
+    fn enqueue(q:&mut std::collections::VecDeque<(Leg,Vec<u8>)>,out:ClientOutput){
+        q.extend(out.local.into_iter().map(|p|(Leg::Local,p)));
+        q.extend(out.tunnel.into_iter().map(|p|(Leg::Up,p)));
+    }
+    fn pump(app:&mut Endpoint,client:&mut ClientFlow,server:&mut ServerFlow,
+        mut q:std::collections::VecDeque<(Leg,Vec<u8>)>){
+        for _ in 0..64{
+            while let Some((leg,wire))=q.pop_front(){
+                let p=parse(&wire);
+                let n=p.segment.payload.len() as u32;
+                let now=Instant::now();
+                match leg{
+                    Leg::App=>{
+                        if n!=0{app.conn.native_admit(p.segment.seq,n,now);}
+                        enqueue(&mut q,client.on_local(&p).unwrap());
+                    },
+                    Leg::Local=>{
+                        if n!=0{client.admit(true,p.segment.seq,n,now);}
+                        let mut out=Vec::new();app.receive(&p,&mut out).unwrap();
+                        q.extend(out.into_iter().map(|p|(Leg::App,p)));
+                    },
+                    Leg::Up=>{
+                        if n!=0{client.admit(false,p.segment.seq,n,now);}
+                        q.extend(server.on_packet(&p).unwrap().into_iter().map(|p|(Leg::Down,p)));
+                    },
+                    Leg::Down=>{
+                        if n!=0{server.admit(p.segment.seq,n,now);}
+                        enqueue(&mut q,client.on_middle(&p).unwrap());
+                    },
+                }
+            }
+            let now=Instant::now();
+            if client.next_deadline().is_some_and(|d|d<=now){
+                enqueue(&mut q,client.tick(now).unwrap());
+            }
+            if server.next_deadline().is_some_and(|d|d<=now){
+                q.extend(server.tick(now).unwrap().into_iter().map(|p|(Leg::Down,p)));
+            }
+            if app.deadline().is_some_and(|d|d<=now){
+                let mut out=Vec::new();app.conn.begin_native_turn();app.tick(now,&mut out).unwrap();
+                q.extend(out.into_iter().map(|p|(Leg::App,p)));
+            }
+            if q.is_empty(){return}
+        }
+        panic!("test wire did not quiesce");
     }
     #[test]
     fn dual_leg_wire_and_real_nonblocking_origin_bidirectional() {
@@ -363,28 +408,22 @@ mod tests {
         let (mut origin, _) = listener.accept().unwrap();
         origin.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
         let mut scratch = [0; 65536];
-        server.on_socket_ready(false, true, &mut scratch).unwrap();
-
-        let mut ack = Vec::new();
-        for p in out.local { app.receive(&parse(&p), &mut ack).unwrap(); }
-        for p in ack { client.on_local(&parse(&p)).unwrap(); }
-        for p in reverse_syn {
-            let out = client.on_middle(&parse(&p)).unwrap();
-            exchange_client_to_server(&mut server, out.tunnel);
-        }
+        let ready=server.on_socket_ready(false, true, &mut scratch).unwrap();
+        let mut q=std::collections::VecDeque::new();
+        q.extend(out.local.into_iter().map(|p|(Leg::Local,p)));
+        q.extend(reverse_syn.into_iter().chain(ready).map(|p|(Leg::Down,p)));
+        pump(&mut app,&mut client,&mut server,q);
 
         let request = b"real origin request / first payload";
+        app.conn.begin_native_turn();
         let (n, data) = app.conn.write(request);
         assert_eq!(n, request.len());
         let mut wire = Vec::new();
         app.emit(data, &mut wire).unwrap();
-        for p in wire {
-            let out = client.on_local(&parse(&p)).unwrap();
-            exchange_client_to_server(&mut server, out.tunnel);
-        }
+        pump(&mut app,&mut client,&mut server,wire.into_iter().map(|p|(Leg::App,p)).collect());
         assert!(server.interest().write);
         let response = server.on_socket_ready(false, true, &mut scratch).unwrap();
-        for p in response { client.on_middle(&parse(&p)).unwrap(); }
+        pump(&mut app,&mut client,&mut server,response.into_iter().map(|p|(Leg::Down,p)).collect());
         let mut got = vec![0; request.len()];
         origin.read_exact(&mut got).unwrap();
         assert_eq!(got, request);
@@ -393,16 +432,7 @@ mod tests {
         origin.write_all(reply).unwrap();
         origin.shutdown(Shutdown::Write).unwrap();
         let response = server.on_socket_ready(true, false, &mut scratch).unwrap();
-        let mut client_ack = Vec::new();
-        for p in response {
-            let out = client.on_middle(&parse(&p)).unwrap();
-            exchange_client_to_server(&mut server, out.tunnel);
-            for p in out.local { app.receive(&parse(&p), &mut client_ack).unwrap(); }
-        }
-        for p in client_ack {
-            let out = client.on_local(&parse(&p)).unwrap();
-            exchange_client_to_server(&mut server, out.tunnel);
-        }
+        pump(&mut app,&mut client,&mut server,response.into_iter().map(|p|(Leg::Down,p)).collect());
         let mut got = vec![0; reply.len()];
         assert_eq!(app.conn.read(&mut got), reply.len());
         assert_eq!(got, reply);
@@ -410,6 +440,7 @@ mod tests {
         // remains writable until the app itself closes.
         assert!(app.conn.fin_received());
         assert!(!app.conn.abnormal_end());
+        app.conn.begin_native_turn();
         let close = app.conn.close();
         assert!(close.iter().any(|p| super::super::pktkit::vtcp::Segment::parse(p)
             .unwrap().has_flag(flags::FIN)));

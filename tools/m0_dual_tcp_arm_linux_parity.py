@@ -9,7 +9,7 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-SOURCES={"A":"26b11e2da236e909b73f461964c52d5a86d42dca","B":os.environ["GITHUB_SHA"]}
+SOURCES={k:os.environ["GITHUB_SHA"] for k in "AB"}
 BLOCKS=(("bbr",0.0),)
 ORDER="ABBA"*len(BLOCKS)
 def loss_for(i):return BLOCKS[i//4][1] if i>=0 else 0.0
@@ -33,7 +33,7 @@ TICK=os.sysconf("SC_CLK_TCK")
 def load(p):return json.loads(p.read_text())
 def save(p,d):h.save(p,d)
 def peer(role):return load(PEERS/(role+".json"))
-def bundle(k):return ROOT/"bundles"/k
+def bundle(k):return ROOT/"bundles"/"B"
 def manifests():
     rows={}
     for k,source in SOURCES.items():
@@ -118,14 +118,13 @@ def server_start(i):
         where=N;port=5202
     else:
         k=ORDER[i];b=bundle(k)
-        flags=["--tcp-proxy-cc",cc_for(i),"--tcp-proxy-port","46180"] if k=="A" else ["--dual-rust-tcp"]
-        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1","LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
+        flags=["--dual-rust-tcp"]
+        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1","WBD_M0_NATIVE_INBOX_DOUBLE="+("1" if k=="B" else "0"),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
                 "--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443",
                 "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--users-file",fixture.TMP/"users.json",
                 "--lease-pool","10.66.0.128/25","--tls-cert",OUT/"cert.pem","--tls-key",fixture.TMP/"key.pem",
                 *common(),*flags)
         waitmark(p,FOLDER/"server.log","V4_PUBLIC_MULTI_SERVER_READY role=server port=443")
-        if k=="A":waitmark(p,FOLDER/"server.log","WBD_TCP_SPLICE_READY")
         source=spawn("origin",ORIGIN,FOLDER/"origin.log","iperf3","-s","-1","-J","-B",TARGET,"-p",str(PORT))
         where=ORIGIN;port=PORT
     until=time.monotonic()+15
@@ -154,11 +153,11 @@ def server_close():
     except Exception as e:result["iperf_error"]=repr(e)
     if i>=0:
         log=(d/"server.log").read_text(errors="replace")
-        result["joined_stop"]=rc.get("server")==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in log and ("WBD_TCP_SPLICE_STOP error=<nil>" in log if ORDER[i]=="A" else "WBD_DUAL_RUST_TCP_OWNER_STOP" in log)
+        result["joined_stop"]=rc.get("server")==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in log and "WBD_DUAL_RUST_TCP_OWNER_STOP" in log
         result["wire"]=[s for s in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in s]
         result["probe"]=probe_receipt(log,"server-middle",ORDER[i],i)
         result["experiment"]=profile(i,ORDER[i])
-        result["native_counters"]=[s for s in log.splitlines() if "V4_PUBLIC_RX_CHAIN role=" in s or "V4_PUBLIC_TX_CHAIN role=" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s]
+        result["native_counters"]=[s for s in log.splitlines() if "V4_PUBLIC_RX_CHAIN role=" in s or "V4_PUBLIC_TX_CHAIN role=" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s or "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s]
     save(d/"result.json",result);CURRENT=fixture.current=None
     return result
 def server():
@@ -200,15 +199,13 @@ def delta(a,b,gib):
     if gib:result["host_cpu_s_per_gib"]=ticks/TICK/gib
     return result
 def probe_receipt(log,leg,k,i):
-    if k=="A":
-        # Server accept is an actual socket receipt; live ss retained on both endpoints.
-        accepted=[s for s in log.splitlines() if "WBD_TCP_SPLICE_ACCEPT target=192.0.2.2:5400 " in s]
-        valid=leg!="server-middle" or any("cc="+cc_for(i) in s for s in accepted)
-        return {"kernel_cc":cc_for(i),"accepts":accepted,"valid":valid}
     rows=[s for s in log.splitlines() if "WBD_M0_TCP_INFO " in s and "leg="+leg+" " in s]
     expected_first="true" if leg=="server-middle" else "false"
     pub=next((s for s in log.splitlines() if "WBD_M0_TCP_PUBLISH " in s),"")
-    mode_ok=(" ingress_first="+expected_first+" ") in pub
+    slots=2048 if k=="B" else 1024
+    bound=next((s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND " in s),"")
+    rx=next((s for s in log.splitlines() if "WBD_M0_RAW_RX_PACKET_STATS " in s),"")
+    mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx
     gso_ok=True
     if leg=="client-middle":
         receipt=next((s for s in log.splitlines() if "WBD_M0_LOCAL_TUN_GSO groups=" in s),"")
@@ -222,14 +219,14 @@ def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()
     started=False;pre=post=before=after=None
-    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if k=="B" else None,"server_ingress_first":k=="B","client_local_gso":k=="B","experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400,"status":"INCOMPLETE"}
+    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if i>=0 else None,"server_ingress_first":i>=0,"client_local_gso":i>=0,"inbox_slots":(2048 if k=="B" else 1024) if i>=0 else None,"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400,"status":"INCOMPLETE"}
     try:
         shape(0,0)
         set_cc(N,i)
         control("/start",{"case":i});started=True
         if i>=0:
-            b=bundle(k);flags=[] if k=="A" else ["--dual-rust-tcp"]
-            p=spawn("client",N,d/"client.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1","LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
+            b=bundle(k);flags=["--dual-rust-tcp"]
+            p=spawn("client",N,d/"client.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1","WBD_M0_NATIVE_INBOX_DOUBLE="+("1" if k=="B" else "0"),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
                     "--raw-interface","wan0","--local-ip","10.248.81.2","--local-port",str(44100+2*i),
                     "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
                     "--username","bench","--password","H2442-ONLY","--auto-ip","--installation-id-file",fixture.TMP/("install-"+str(i)),
@@ -282,10 +279,10 @@ def client_case(i):
         rc=stop("client")
         if i>=0 and (d/"client.log").exists():
             log=(d/"client.log").read_text(errors="replace")
-            row["client_stop"]=rc==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and log.count("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client")==1 and (k=="A" or "WBD_DUAL_RUST_TCP_OWNER_STOP" in log)
+            row["client_stop"]=rc==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and log.count("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client")==1 and "WBD_DUAL_RUST_TCP_OWNER_STOP" in log
             row["wire"]=[s for s in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in s]
             row["probe"]=probe_receipt(log,"client-middle",k,i)
-            row["native_counters"]=[s for s in log.splitlines() if "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s or "WBD_M0_LOCAL_TUN_GSO" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s]
+            row["native_counters"]=[s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s or "WBD_M0_LOCAL_TUN_GSO" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s]
         if started:
             try:row["server_receipt"]=control("/stop")
             except Exception as e:row["server_stop_error"]=repr(e)
@@ -311,7 +308,7 @@ def client():
             for k in "AB":
                 v=[x for x in rows if x["leg"]==k and x["kernel_cc"]==cc and x["loss_pct"]==loss and x["status"]=="MEASURED"]
                 if len(v)==2:means[cc+"-"+str(loss)+"-"+k]={"mbps":statistics.mean(x["mbps"] for x in v),"client_product_cpu_s_per_gib":statistics.mean(x["client"]["product"]["cpu_s_per_gib"] for x in v),"server_product_cpu_s_per_gib":statistics.mean(x["server"]["product"]["cpu_s_per_gib"] for x in v)}
-        summary={"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"old splice A vs current Rust B with client GSO and server ingress-first; BBR0/1% blocks","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","blocks":BLOCKS,"added_rtt_ms":400,"streams":1,"order":ORDER,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if len(means)==2*len(BLOCKS) else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary selected defaults, 1024 A vs 2048 B both Normal endpoints; zero injected loss; bare BBR same RTT brackets","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","blocks":BLOCKS,"added_rtt_ms":400,"streams":1,"order":ORDER,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if len(means)==2*len(BLOCKS) else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

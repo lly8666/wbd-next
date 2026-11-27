@@ -116,6 +116,11 @@ def functional():
                 vals=dict(x.split("=",1) for x in m4.split() if "=" in x)
                 assert int(vals["copied"])>0,m4
             row["selected_default_receipts"]=True
+        expected_slots=2048 if os.environ.get("WBD_M0_NATIVE_INBOX_DOUBLE")=="1" else 1024
+        for log in (sl,cl):
+            receipt=next(s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND " in s)
+            assert " slots="+str(expected_slots)+" " in receipt,receipt
+        row["inbox_slots"]=expected_slots
         if os.environ.get("WBD_M0_RX_PACKET_STATS")=="1":
             row["packet_rx_stats"]={}
             for log,role in ((sl,"server"),(cl,"client")):
