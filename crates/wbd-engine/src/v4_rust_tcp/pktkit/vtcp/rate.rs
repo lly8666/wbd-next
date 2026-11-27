@@ -86,8 +86,6 @@ pub(crate) struct Rate {
     /// While application-limited, `delivered` at which the bubble ends;
     /// zero otherwise.
     app_limited: u64,
-    pub(crate) fn epoch_preserved(&self) -> u64 { self.epoch_preserved }
-
     /// Bytes marked lost over the connection's life.
     lost: u64,
     /// Bytes delivered that ECN feedback reported CE-marked (Linux's
@@ -99,6 +97,8 @@ pub(crate) struct Rate {
 }
 
 impl Rate {
+    pub(crate) fn epoch_preserved(&self) -> u64 { self.epoch_preserved }
+
     /// Bytes delivered so far (C.delivered).
     #[inline]
     pub fn delivered(&self) -> u64 {
