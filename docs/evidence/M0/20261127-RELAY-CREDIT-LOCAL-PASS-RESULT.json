@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "source_sha": "ff19c06b0279b480947f34d669c484b2f9455c87",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA core351, six original Normal native profiles, four ARM same-host normal/paused consumer single A/B cases. No cross-host performance qualification.",
+  "run_id": 45993948282,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140488513533,
+      "artifact_id": 15194579244,
+      "core_pass": 351,
+      "gso_groups": [
+        113,
+        129,
+        99
+      ],
+      "gso_segments": [
+        902,
+        1110,
+        992
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140488513892,
+      "artifact_id": 15194549681,
+      "core_pass": 351,
+      "gso_groups": [
+        241,
+        114,
+        223
+      ],
+      "gso_segments": [
+        2356,
+        1301,
+        1591
+      ]
+    }
+  ],
+  "local": {
+    "order": [
+      "normal-default",
+      "normal-credit",
+      "pause-default",
+      "pause-credit"
+    ],
+    "status": [
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "MEASURED"
+    ],
+    "offered_bps": 600000000,
+    "target_bytes": 536870912,
+    "added_rtt_ms": 400,
+    "loss_pct": 0,
+    "mbps": [
+      344.4752923281386,
+      339.41469463974266,
+      93.0540758386906,
+      159.31946754741406
+    ],
+    "seconds": [
+      12.468143265000037,
+      12.654040511000005,
+      46.15560637499999,
+      26.958207695
+    ],
+    "first_data_seconds": [
+      0.8010470930000224,
+      0.8013415039999927,
+      0.8014671650000196,
+      0.8011129200000369
+    ],
+    "actual_paused_seconds": [
+      0,
+      0,
+      15.000075227000025,
+      15.00007667899996
+    ],
+    "origin_max_sendall_seconds": [
+      1.334756213999981,
+      0.8360404579999567,
+      4.578001781000012,
+      13.454089627999963
+    ],
+    "origin_sendall_over_250ms_seconds": [
+      2.0506515010000044,
+      1.3561809829999447,
+      22.522281888000066,
+      15.332280201999936
+    ],
+    "relay_pending_max_sample_bytes": [
+      26812151,
+      131072,
+      67104716,
+      131072
+    ],
+    "relay_credit_samples": [
+      37,
+      40,
+      139,
+      82
+    ],
+    "relay_credit_full_samples": [
+      0,
+      2,
+      0,
+      32
+    ],
+    "paused_server_zero_window_samples": [
+      0,
+      13
+    ],
+    "paused_credit_zero_window_sample_span_seconds": 12.061292086,
+    "client_cpu_s_per_gib": [
+      16.32,
+      16.58,
+      17.5,
+      15.86
+    ],
+    "server_cpu_s_per_gib": [
+      14.46,
+      14.62,
+      17.12,
+      14.84
+    ],
+    "server_ingress_full": [
+      2994,
+      0,
+      2084,
+      0
+    ],
+    "client_ingress_full": [
+      0,
+      0,
+      162,
+      0
+    ],
+    "bulk_stop_sample": {
+      "bytes_sent": [
+        536870912,
+        536870912,
+        537092830,
+        536870912
+      ],
+      "bytes_retrans": [
+        0,
+        0,
+        221918,
+        0
+      ],
+      "dsack": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "reorder": [
+        1709,
+        2106,
+        1400,
+        1402
+      ],
+      "timeouts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "retired": false,
+      "stop_sample": true
+    },
+    "all_exact_hash_eof_profile_joined_stop": true,
+    "all_raw_drops_reset_relay_qdisc_zero": true,
+    "interpretation": "Actual adjacent-leg backpressure under paused consumer: 128KiB pending, zero window sampled for12s, longer origin sendall stall, recovery and exact application. Single A/B each condition, not repeated ABBA. Normal near-equal throughput and local admission full eliminated. No cross-host high sustained retrans conclusion."
+  },
+  "governance": {
+    "main_failed_run": 45994015127,
+    "artifact_ids": [
+      15194633428,
+      15194508720
+    ],
+    "reason": "evidence is for a different SOURCE",
+    "cause": "H2503 last_tested_source advanced to failed d09f615 while previous positive evidence retained",
+    "branch_failed_run": 45993948275,
+    "branch_artifact": 15194343685,
+    "branch_reason": "verified cursor lacks reviewed PASS evidence",
+    "feature_catalog": "PASS both; structure separate"
+  },
+  "review": "Two original native ZIPs CRC and exact source/six summaries/four rows checked; raw server TcpInfo and zero-window span, Stop samples and qdisc, both core logs351. Three governance ZIPs CRC and actual structure.json checked. Preserve failed histories. No fixed pacing cap or default promotion.",
+  "physical": "NOT_RUN",
+  "next_source": "f7614b6d76d26c184e58b5a33174a820b1a5aae0"
+}
