@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "source_sha": "25eca47ef9634415b359f5b3a0de97c2a5b0c65a",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native dual ISA selected paired Normal default/2048/CUBIC functional only; 345 core + GSO/M4 unit, exact product bytes concurrent UDP and joined Stop.",
+  "run_id": 45953281728,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140353846195,
+      "artifact_id": 15176809477,
+      "core_pass": 345,
+      "profiles": [
+        "default",
+        "inbox2048",
+        "cubic"
+      ],
+      "gso_groups": [
+        297,
+        291,
+        192
+      ],
+      "gso_segments": [
+        1909,
+        1844,
+        1603
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140353846460,
+      "artifact_id": 15176919307,
+      "core_pass": 345,
+      "profiles": [
+        "default",
+        "inbox2048",
+        "cubic"
+      ],
+      "gso_groups": [
+        341,
+        440,
+        154
+      ],
+      "gso_segments": [
+        3561,
+        3972,
+        1419
+      ]
+    }
+  ],
+  "performance": {
+    "result": "INCONCLUSIVE",
+    "scope": "ARM same-binary BBR0 injected loss, 400ms added RTT, 45s reverse single stream, outer IP MTU1160, 1024 A vs2048 B both Normal endpoints; naked same RTT brackets; capacity candidate not selected.",
+    "run_id": 45953281718,
+    "job_ids": {
+      "client": 140355484152,
+      "server": 140355484139,
+      "relay": 140355484112
+    },
+    "artifact_ids": {
+      "client": 15178156874,
+      "server": 15177848325,
+      "relay": 15178381262
+    },
+    "bare_mbps": [
+      258.5067937992425,
+      282.17760196216375
+    ],
+    "bare_bulk_server_ss_bytes_sent": [
+      1523105268,
+      1659119508
+    ],
+    "bare_bulk_server_ss_bytes_retrans": [
+      21494864,
+      22129700
+    ],
+    "legs_mbps": [
+      178.85965808829323,
+      275.210902259365,
+      169.00326619161686,
+      261.51104215014107
+    ],
+    "means": {
+      "A": {
+        "mbps": 220.18535011921716,
+        "client_cpu_s_per_gib": 13.996958442140588,
+        "server_cpu_s_per_gib": 18.883050758796387
+      },
+      "B": {
+        "mbps": 222.10708422549095,
+        "client_cpu_s_per_gib": 13.395816859691994,
+        "server_cpu_s_per_gib": 18.73631144639007
+      }
+    },
+    "server_ingress_offered": [
+      192396,
+      226909,
+      145779,
+      218199
+    ],
+    "server_ingress_full": [
+      10840,
+      11277,
+      4489,
+      4368
+    ],
+    "client_ingress_offered": [
+      1058945,
+      1577634,
+      1009900,
+      1505007
+    ],
+    "client_ingress_full": [
+      7029,
+      621,
+      267,
+      164
+    ],
+    "client_shared_tun_full": [
+      20,
+      0,
+      0,
+      0
+    ],
+    "client_local_write_failed": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_packet_socket_drops": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_packet_socket_drops": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_m4_copied": [
+      1165245,
+      1643451,
+      1183769,
+      1581396
+    ],
+    "server_m4_not_proven_copied": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_m4_no_normal_pn": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_raw_observed": [
+      1065697,
+      1584474,
+      1019748,
+      1514181
+    ],
+    "relay_qdisc_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "server_wan_tx_delta": [
+      1174013,
+      1652819,
+      1197956,
+      1593743
+    ],
+    "relay_server_rx_delta": [
+      1104008,
+      1614364,
+      1069940,
+      1567284
+    ],
+    "relay_client_tx_delta": [
+      1103735,
+      1614298,
+      1069933,
+      1567280
+    ],
+    "client_wan_rx_delta": [
+      1049548,
+      1584374,
+      1019648,
+      1514168
+    ],
+    "bulk_server_last_snapshot": {
+      "bytes_sent": [
+        1208302620,
+        1704240720,
+        1227516858,
+        1639873634
+      ],
+      "bytes_retrans": [
+        124861468,
+        75277904,
+        198077370,
+        86277218
+      ],
+      "dsack_dups": [
+        10044,
+        5418,
+        15083,
+        5543
+      ],
+      "reord_seen": [
+        5234,
+        11448,
+        5474,
+        10927
+      ],
+      "timeouts": [
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    "review": "Five original ZIPs opened and CRC checked, exact native six summaries and original core job logs, client summary and per-case Stop, both endpoint logs, bare bulk kernel ss, relay end and before/after interface counters. Native qualification PASS. 2048 reduces client full7193→888, server15208→15766, throughput +0.87%, CPU/GiB -2.27%; weighted retrans7.41→9.32%. High variance, no overall retrans benefit demonstrated. AF_PACKET and netem drops0, but large aggregate differences upstream; different packet boundaries and sampling windows, not exact packet identity/loss. Same RTT bare 1.411/1.334% retrans so zero injection not zero physical loss. Server wan fq throttled cumulative unchanged across four raw product legs. Keep 1024 selected default and hold2048 in both legs for next causal experiment."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "ca4cc4466fffe9a00da7d79a70ba0f6eb2e9be35"
+}
