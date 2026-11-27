@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One ARM client / ARM routed impairment VM / ARM server, sequential A B B A.
+"""One ARM client / ARM routed impairment VM / ARM server, sequential candidate screen with paired and bare brackets.
 Reuse H2228 real two L2 networks and the existing H2442 preset HTTP control.
 """
 import hashlib,http.client,http.server,json,os,pathlib,re,signal,subprocess,sys,time,statistics
@@ -9,15 +9,24 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-SOURCES={k:os.environ["GITHUB_SHA"] for k in "AB"}
-BLOCKS=(("bbr",0.0),)
-ORDER="ABBA"*len(BLOCKS)
-def loss_for(i):return BLOCKS[i//4][1] if i>=0 else 0.0
-def cc_for(i):return BLOCKS[i//4][0] if i>=0 else "bbr"
-def rust_cc(i):return "bbr1" if cc_for(i)=="bbr" else "cubic"
+# All paired profiles use exactly the same qualified native binary.
+# Single-leg candidates are a screen, not a causal ABBA or promotion.
+ORDER=("A","D","R","C","M","L","K","A")
+PROFILES={"A":"selected-default","D":"server-ack-drain","R":"server-rack-window",
+          "C":"middle-cubic","M":"combined","L":"default-offer120M","K":"combined-offer120M"}
+SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
+def loss_for(i):return 0.0
+def cc_for(i):return "bbr"
+def rust_cc(i):return "cubic" if i>=0 and ORDER[i] in ("C","M","K") else "bbr1"
 def ack_for(k):return "2"
-def profile(i,k):return "cap64"
+def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
+def offer(k):return 120_000_000 if k in ("L","K") else None
+def profile_env(k,server):
+    args=["WBD_M0_MIDDLE_CC=cubic"] if k in ("C","M","K") else []
+    if server and k in ("D","M","K"):args.append("WBD_M0_SERVER_ACK_DRAIN=1")
+    if server and k in ("R","M","K"):args.append("WBD_M0_RACK_KEEP_WINDOW=1")
+    return args
 def set_cc(ns,i):
     cc=cc_for(i)
     h.ns(ns,"sysctl","-qw","net.ipv4.tcp_congestion_control="+cc)
@@ -119,7 +128,7 @@ def server_start(i):
     else:
         k=ORDER[i];b=bundle(k)
         flags=["--dual-rust-tcp"]
-        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1","WBD_M0_NATIVE_INBOX_DOUBLE=1","WBD_M0_NATIVE_PACE_QUANTUM8="+("1" if k=="B" else "0"),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
+        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1",*profile_env(k,True),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
                 "--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443",
                 "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--users-file",fixture.TMP/"users.json",
                 "--lease-pool","10.66.0.128/25","--tls-cert",OUT/"cert.pem","--tls-key",fixture.TMP/"key.pem",
@@ -142,13 +151,15 @@ def server_close():
     global CURRENT
     assert CURRENT is not None
     i=CURRENT;d=FOLDER
-    sample=server_sample();save(d/"after.json",sample)
+    sample=None;sample_error=None
+    try:sample=server_sample();save(d/"after.json",sample)
+    except Exception as e:sample_error=repr(e)
     p=PROCS.get("origin")
     if p and p.poll() is None:
         try:p.wait(20)
         except subprocess.TimeoutExpired:pass
     rc={key:stop(key) for key in list(PROCS)}
-    result={"case":i,"rc":rc,"final_sample":sample}
+    result={"case":i,"rc":rc,"final_sample":sample,"final_sample_error":sample_error}
     try:result["iperf"]=load(d/"origin.log")
     except Exception as e:result["iperf_error"]=repr(e)
     if i>=0:
@@ -222,11 +233,16 @@ def probe_receipt(log,leg,k,i):
     rows=[s for s in log.splitlines() if "WBD_M0_TCP_INFO " in s and "leg="+leg+" " in s]
     expected_first="true" if leg=="server-middle" else "false"
     pub=next((s for s in log.splitlines() if "WBD_M0_TCP_PUBLISH " in s),"")
-    slots=2048
-    quantum=8 if leg=="server-middle" and k=="B" else 32
+    slots=1024
+    quantum=32
+    server=leg=="server-middle"
+    expected_rack="true" if server and k in ("R","M","K") else "false"
+    expected_ack="true" if k in ("D","M","K") else "false"
+    origin_rows=[s for s in log.splitlines() if "WBD_M0_TCP_ORIGIN " in s]
+    ack_ok=not server or (bool(origin_rows) and all(" ack_drain="+expected_ack in s for s in origin_rows))
     bound=next((s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND " in s),"")
     rx=next((s for s in log.splitlines() if "WBD_M0_RAW_RX_PACKET_STATS " in s),"")
-    mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and all(" pace_quantum_mss="+str(quantum)+" " in s for s in rows)
+    mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and ack_ok and all(" pace_quantum_mss="+str(quantum)+" " in s and " rack_keep_reo_window="+expected_rack+" " in s for s in rows)
     gso_ok=True
     if leg=="client-middle":
         receipt=next((s for s in log.splitlines() if "WBD_M0_LOCAL_TUN_GSO groups=" in s),"")
@@ -240,14 +256,14 @@ def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()
     started=False;pre=post=before=after=None
-    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if i>=0 else None,"server_ingress_first":i>=0,"client_local_gso":i>=0,"inbox_slots":2048 if i>=0 else None,"server_middle_pace_quantum_mss":(8 if k=="B" else 32) if i>=0 else None,"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400,"status":"INCOMPLETE"}
+    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if i>=0 else None,"server_ingress_first":i>=0,"client_local_gso":i>=0,"inbox_slots":1024 if i>=0 else None,"server_middle_pace_quantum_mss":32 if i>=0 else None,"offered_bps":offer(k),"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400,"status":"INCOMPLETE"}
     try:
         shape(0,0)
         set_cc(N,i)
         control("/start",{"case":i});started=True
         if i>=0:
             b=bundle(k);flags=["--dual-rust-tcp"]
-            p=spawn("client",N,d/"client.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1","WBD_M0_NATIVE_INBOX_DOUBLE=1","LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
+            p=spawn("client",N,d/"client.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1",*profile_env(k,False),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
                     "--raw-interface","wan0","--local-ip","10.248.81.2","--local-port",str(44100+2*i),
                     "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
                     "--username","bench","--password","H2442-ONLY","--auto-ip","--installation-id-file",fixture.TMP/("install-"+str(i)),
@@ -264,6 +280,8 @@ def client_case(i):
         pre=snapshot("client");save(d/"client-before.json",pre)
         row["start_wall_ns"]=time.time_ns()
         cmd=["ip","netns","exec",N,"iperf3","-J","-c",TARGET if i>=0 else "10.248.82.2","-p",str(PORT if i>=0 else 5202),"-P","1","-R","-C",cc_for(i),"-t",str(DURATION)]
+        if offer(k):cmd.extend(["-b",str(offer(k))])
+        save(d/"iperf-argv.json",cmd)
         with (d/"iperf.json").open("w") as f,(d/"iperf.err").open("w") as err:
             p=subprocess.Popen(cmd,stdout=f,stderr=err)
             t=time.monotonic()
@@ -282,12 +300,15 @@ def client_case(i):
             finally:
                 if p.poll() is None:p.kill();p.wait()
         row["end_wall_ns"]=time.time_ns()
-        post=snapshot("client");save(d/"client-after.json",post)
-        after=control("/sample");save(d/"server-after.json",after)
-        save(d/"relay-after.json",relay("snapshot"))
         app=load(d/"iperf.json");row["iperf_rc"]=p.returncode
         if p.returncode or app.get("error"):raise RuntimeError(str(app.get("error",p.returncode)))
         a=app["end"];r=a["sum_received"];s=a["sum_sent"];gib=r["bytes"]/2**30
+        # Preserve successful application measurements before remote snapshots.
+        row["application_result"]={"mbps":r["bits_per_second"]/1e6,"bytes":r["bytes"],"seconds":r["seconds"],"sender_bytes":s["bytes"],"sender_retrans":s.get("retransmits")}
+        save(d/"application-result.json",row["application_result"])
+        post=snapshot("client");save(d/"client-after.json",post)
+        after=control("/sample");save(d/"server-after.json",after)
+        save(d/"relay-after.json",relay("snapshot"))
         row["endpoint_path_samples"]=[x["paths"] for x in (pre,post,before,after)]
         row["endpoint_direct_snapshots"]=all(all(y["direct"] for y in x.values()) for x in row["endpoint_path_samples"])
         row.update(status="MEASURED",mbps=r["bits_per_second"]/1e6,bytes=r["bytes"],seconds=r["seconds"],sender_bytes=s["bytes"],sender_retrans=s.get("retransmits"),
@@ -309,6 +330,8 @@ def client_case(i):
             except Exception as e:row["server_stop_error"]=repr(e)
         if row["status"]=="MEASURED" and i>=0 and (not row.get("client_stop") or not row.get("server_receipt",{}).get("joined_stop")):row["status"]="INCOMPLETE_STOP"
         if row["status"]=="MEASURED" and i>=0 and not (row.get("probe",{}).get("valid") and row.get("server_receipt",{}).get("probe",{}).get("valid")):row["status"]="INCOMPLETE_PROBE"
+        if row["status"]=="MEASURED" and (not row.get("endpoint_direct_snapshots") or row.get("server_receipt",{}).get("final_sample_error")):row["status"]="INCOMPLETE_PATH_OR_SAMPLE"
+        if row["status"]=="MEASURED" and i>=0 and not row.get("server_receipt",{}).get("bulk_tcp_sample"):row["status"]="INCOMPLETE_RECOVERY_SAMPLE"
         save(d/"result.json",row)
         print("ARM_DUAL_RESULT "+json.dumps({k:v for k,v in row.items() if k not in ("server_receipt","wire")}),flush=True)
     return row
@@ -324,25 +347,26 @@ def client():
             for i in range(len(ORDER)):
                 rows.append(client_case(i));save(OUT/"rows.json",rows)
             rows.append(client_case(-2));save(OUT/"rows.json",rows)
-        means={}
-        for cc,loss in BLOCKS:
-            for k in "AB":
-                v=[x for x in rows if x["leg"]==k and x["kernel_cc"]==cc and x["loss_pct"]==loss and x["status"]=="MEASURED"]
-                if len(v)==2:means[cc+"-"+str(loss)+"-"+k]={"mbps":statistics.mean(x["mbps"] for x in v),"client_product_cpu_s_per_gib":statistics.mean(x["client"]["product"]["cpu_s_per_gib"] for x in v),"server_product_cpu_s_per_gib":statistics.mean(x["server"]["product"]["cpu_s_per_gib"] for x in v)}
-        recovery={}
-        for k in "AB":
-            legs=[x for x in rows if x["leg"]==k and x["status"]=="MEASURED"]
-            samples=[x.get("server_receipt",{}).get("bulk_tcp_sample") for x in legs]
-            if len(samples)==2 and all(s and s["bytes_sent"]>0 for s in samples):
+        means={};recovery={}
+        for k in PROFILES:
+            v=[x for x in rows if x["leg"]==k and x["status"]=="MEASURED"]
+            expected=ORDER.count(k)
+            if len(v)!=expected:continue
+            means[k]={"n":len(v),"profile":PROFILES[k],"mbps":statistics.mean(x["mbps"] for x in v),
+                "client_product_cpu_s_per_gib":statistics.mean(x["client"]["product"]["cpu_s_per_gib"] for x in v),
+                "server_product_cpu_s_per_gib":statistics.mean(x["server"]["product"]["cpu_s_per_gib"] for x in v)}
+            samples=[x.get("server_receipt",{}).get("bulk_tcp_sample") for x in v]
+            if all(s and s["bytes_sent"]>0 for s in samples):
                 sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                 recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
-        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss", "recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary selected defaults, 2048 both endpoints, server middle pacing quantum cap 32 A vs 8 B MSS; zero injected loss; bare BBR same RTT brackets","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","blocks":BLOCKS,"added_rtt_ms":400,"streams":1,"order":ORDER,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if len(means)==2*len(BLOCKS) else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        complete=len(rows)==len(ORDER)+2 and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary peak recovery candidate screen, paired default brackets and same-RTT bare brackets; 1024 slots/32 MSS all, 120M offer only L/K; no causal or promotion claim","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
         (fixture.TMP/"route-key.hex").unlink(missing_ok=True)
         for p in fixture.TMP.glob("install-*"):p.unlink(missing_ok=True)
-    if len(means)!=2*len(BLOCKS):raise SystemExit(2)
+    if not complete:raise SystemExit(2)
 if __name__=="__main__":
     assert os.uname().machine=="aarch64"
     if sys.argv[1]=="server":server()

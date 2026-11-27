@@ -28,227 +28,15 @@
     "crates/wbd-platform/src/linux_tun_sink.rs"
   ],
   "doc_refs": [
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-WIP.md",
+    "docs/devlog/M0/20261127-DUAL-RUST-TCP-FEATURE-CARD-HISTORY.md",
+    "docs/devlog/M0/20261127-CROSS-HOST-RECOVERY-SCREEN.md",
     "crates/wbd-engine/src/v4_rust_tcp/pktkit/UPSTREAM.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-WIP.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-WIP.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-TX-TURN-INTENT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-INTENT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-RESULT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-INTENT.md",
-    "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-INTENT.md",
-    "docs/devlog/M0/20261127-LINUX-TCP-PARITY-AUDIT-AND-CANDIDATE.md",
-    "docs/devlog/M0/20261127-LINUX-TCP-PARITY-RESULT-AND-HOTPATH.md",
-    "docs/devlog/M0/20261127-LINUX-TCP-PARITY-CONSOLIDATED-BEHAVIOR.md",
-    "docs/devlog/M0/20261127-LINUX-TCP-NATIVE-OWNER-ADMISSION.md",
-    "docs/devlog/M0/20261127-NATIVE-ADMISSION-REGRESSION-AND-READY-BATCH.md",
-    "docs/devlog/M0/20261127-M4-FRESH-DATA-CLOCK-AND-READY-LOANS.md",
-    "docs/devlog/M0/20261127-M4-CLOCK-BUILD-RECOVERY.md",
-    "docs/devlog/M0/20261127-M4-CLOCK-NATIVE-RESULT-BBR-INTENT.md",
-    "docs/devlog/M0/20261127-DUAL-TCP-TIMEWAIT-LATE-RESET-RECOVERY.md",
-    "docs/devlog/M0/20261127-LOCAL-TUN-GSO-CANDIDATE.md",
-    "docs/devlog/M0/20261127-NATIVE-SERVER-INGRESS-FIRST-CAUSAL.md",
-    "docs/devlog/M0/20261127-SELECTED-GSO-INGRESS-SPLICE-REQUALIFICATION.md",
-    "docs/devlog/M0/20261127-NATIVE-FAST-RETRANS-ACTUAL-CLOCK.md",
-    "docs/devlog/M0/20261127-DIRECT-ORIGIN-SENDBUF-READ.md",
-    "docs/devlog/M0/20261127-DIRECT-ORIGIN-READ-MATCHED-LOAD.md",
-    "docs/devlog/M0/20261127-NATIVE-IPV4-FINAL-OFFSET.md",
     "docs/devlog/M0/20261127-SELECTED-NATIVE-DEFAULTS-AND-LOSS-BOUNDARIES.md",
-    "docs/devlog/M0/20261127-PAIRED-NORMAL-INBOX-DOUBLING.md",
-    "docs/devlog/M0/20261127-NORMAL-INBOX-RESULT-AND-PACING-QUANTUM.md",
-    "docs/devlog/M0/20261127-PACING-NATIVE-RST-BLOCKER.md",
-    "docs/devlog/M0/20261127-PACING-NATIVE-QUALIFIED-ABBA.md",
-    "docs/devlog/M0/20261127-PACING-RESULT-CONTROLLED-RECOVERY.md",
-    "docs/devlog/M0/20261127-RECOVERY-ISOLATION-BATCH.md",
     "docs/devlog/M0/20261127-RECOVERY-BATCH-FIXED-APP.md"
   ],
   "verification": [
     {
       "platform": "linux/x86_64",
-      "scope": "Initial pinned TCP core (327 native unit tests)",
-      "status": "BUILD_PASS",
-      "source_sha": "105da799ad82b9423d778fd1850bf2503d9909a6",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45803683868"
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "Native component: inner TCP endpoints, actual kernel origin socket bidirectional bytes, origin-to-virtual-app FIN (not product TUN)",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "3e709e0c8577b56ca237a24e6d18fccf998e9965",
-      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-ENDPOINT-CORE.json"
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "Paired Normal actual product TCP bidirectional bytes, half-close, concurrency, UDP, owned Stop",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
-      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-TX-TURN-RESULT.json"
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "Experimental CUBIC middle SOURCE with original kernel BBR functional fixture, actual Normal business and Stop",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "f2b88695d062556fdb804c69041705beb5b64280",
-      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "Same-host splice performance",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "Other affected modes, multiple leases and generation handoff",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "Initial pinned TCP core (327 native unit tests)",
-      "status": "BUILD_PASS",
-      "source_sha": "105da799ad82b9423d778fd1850bf2503d9909a6",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45803683868"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "Native component: inner TCP endpoints, actual kernel origin socket bidirectional bytes, origin-to-virtual-app FIN (not product TUN)",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "3e709e0c8577b56ca237a24e6d18fccf998e9965",
-      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-ENDPOINT-CORE.json"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "Paired Normal actual product TCP bidirectional bytes, half-close, concurrency, UDP, owned Stop",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
-      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-TX-TURN-RESULT.json"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "Experimental CUBIC middle SOURCE with original kernel BBR functional fixture, actual Normal business and Stop",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "f2b88695d062556fdb804c69041705beb5b64280",
-      "evidence": "docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "Same-host splice performance",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "Other affected modes, multiple leases and generation handoff",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "ACK3 paired BBRv3 middle, actual Normal product TCP duplex/8 concurrent/half-close/UDP/owned Stop; performance unverified",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "8a6439bd0ec7b807957f35c978729cc86986e1f2",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45821912474"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "ACK3 paired BBRv3 middle, actual Normal product TCP duplex/8 concurrent/half-close/UDP/owned Stop; performance unverified",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "8a6439bd0ec7b807957f35c978729cc86986e1f2",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45821912474"
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "Opt-in Linux parity and original Normal actual TUN product duplex/UDP/concurrency/Stop, 337 core tests",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "edc0d11a374f5185315814f8a940933638b7149e",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45862140433"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "Opt-in Linux parity and original Normal actual TUN product duplex/UDP/concurrency/Stop, 337 core tests",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "edc0d11a374f5185315814f8a940933638b7149e",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45862140433"
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "935a631 scoped native original/parity and 339 core tests",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "935a6317969486846fec60fe98f35d2429dfedcb",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45914393727"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "935a631 scoped native original/parity and 339 core tests",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "935a6317969486846fec60fe98f35d2429dfedcb",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45914393727"
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "65aae40 native original/parity Normal and 342 core tests",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "65aae40cdbd99c0a9957518db1748ad533181bdc",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45916282014"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "65aae40 native original/parity Normal and 342 core tests",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "65aae40cdbd99c0a9957518db1748ad533181bdc",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45916282014"
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "392ee06 native Normal original/parity, 344 core and exact M4 unit, copied receipts and owned Stop",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "392ee066c8bbcea96c20dea0ef76d73f497f6b87",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45930085832"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "392ee06 native Normal original/parity, 344 core and exact M4 unit, copied receipts and owned Stop",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "392ee066c8bbcea96c20dea0ef76d73f497f6b87",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45930085832"
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "05bb056 native Normal original/parity, TIME_WAIT regression and M4 clock",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "05bb056d776eedaa9b17e917f29f8f11c3d5b9f7",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45932877384"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "05bb056 native Normal original/parity, TIME_WAIT regression and M4 clock",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "05bb056d776eedaa9b17e917f29f8f11c3d5b9f7",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45932877384"
-    },
-    {
-      "platform": "linux/x86_64",
-      "scope": "c732dfd original/parity/GSO native Normal, 345 core plus GSO and M4 units; real groups and joined Stop",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "c732dfd312967efb84442b6dbc917bb9d5a07752",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45935209571"
-    },
-    {
-      "platform": "linux/aarch64",
-      "scope": "c732dfd original/parity/GSO native Normal, 345 core plus GSO and M4 units; real groups and joined Stop",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "c732dfd312967efb84442b6dbc917bb9d5a07752",
-      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45935209571"
-    },
-    {
-      "platform": "linux/x86_64",
       "scope": "5536d9c original/parity and GSO+server ingress-first scoped native Normal",
       "status": "FUNCTIONAL_PASS",
       "source_sha": "5536d9c16fa650e9bcc2d477b20d437517a11cd2",
@@ -260,39 +48,34 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "5536d9c16fa650e9bcc2d477b20d437517a11cd2",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45936754713"
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "Exact native 347 core and three original paired Normal profiles",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "a153b50052e739b30ec8ec31e727189caec3d199",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45963914340"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "Exact native 347 core and three original paired Normal profiles",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "a153b50052e739b30ec8ec31e727189caec3d199",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45963914340"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "Same-host controlled 8 exact192MiB/EOF/SHA256 cases; six paired zero observed Middle retrans/DSACK/timeouts",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "a153b50052e739b30ec8ec31e727189caec3d199",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45963914340"
     }
   ],
   "limitations": [
-    "Paired Linux Normal/off only; FEC and Game modes not integrated, not interoperable with old TCP peer",
-    "Normal scoped product PASS; server-local/source-policy parity, multi-lease, generation handoff and performance unverified.",
-    "Old splice retained for same-host comparison; Windows unchanged",
-    "Clean x86 ABBA measured capped goodput parity, but client CPU +29.1%; full performance qualification NOT_RUN. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json",
-    "Matched CUBIC ABBA measured capped goodput parity, client CPU +47.45%, host +15.19%; mixed BBR same VM similar gap. CUBIC trial not selected for product; restore BBRv3 in next substantive candidate. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json",
-    "ACK3 BBRv3 middle candidate 8a6439b exact scoped functional dual ISA PASS; same-VM old splice/original Rust ABBA run45821912542 and ARM three-runner loss1/5 run45822382519/45822382479 in flight. No performance or default promotion.",
-    "edc0d11 ARM Linux parity ABBA 23/24 measured, CUBIC 5% baseline reset, BBR0 150.56 vs 205.79 Mbps and CPU/GiB higher; no performance promotion. New receive growth / borrowed DATA candidate unverified.",
-    "935a631 dual ISA 339/339; ARM hotpath ABBA BBR -11.6% throughput, CUBIC +24.7%; mixed. Consolidated candidate unverified.",
-    "65aae40 native342/342 scoped PASS, ARM24/24 performance unqualified BBR0 314.20→150.63; new owner admission candidate unverified, actual M4/TSO/EDT and complete recovery parity remain.",
-    "Native owner follow-up: per-flow credits account for generated unadmitted records, admission wakes blocked producer, ready ingress/output alternate; latest SOURCE requires native and full performance receipts.",
-    "586706c native PASS but ARM24/24 performance unqualified; ba5ed73 native parity concurrent reset on both ISA, ABBA blocked. New drain-before-service and ready-only local write batch candidate unverified.",
-    "9ede62e native scoped PASS, zero-loss ABBA unqualified; actual M4 clock and ready loan candidate unverified, only Normal small DATA has PN correspondence.",
-    "75c47a5 native build failed both ISA E0308; ARM parity was NOT_RUN. PN conversion and explicit M4 clock unit selection candidate unverified.",
-    "392ee06 scoped native M4 clock PASS with positive copied receipts; no performance run for that SOURCE. Next narrow BBR0 ABBA source unverified.",
-    "495586c ARM native PASS; x86 original/core/M4 unit PASS but parity concurrent reset FAIL; ARM performance NOT_RUN. TIME_WAIT late-RST correction and regression candidate unverified.",
-    "05bb056 native PASS, ARM BBR0 ABBA 4/4: 291.48→151.12 Mbps, 26.77→40.43 CPU s/GiB; local ingress losses remain, no parity. Client-only VNET write GSO candidate unverified.",
-    "c732dfd native PASS; ARM BBR0 4/4 old282.07 vs Rust182.82 Mbps, CPU/GiB27.86 vs36.13; actual GSO removed 853169/1005663 local DATA writes, client Shared-TUN drops0/0 but server ingress full22364/17507. Next same-binary server ingress-first causal candidate unverified.",
-    "5536d9c same-binary ARM BBR0 ABBA A221.06→B281.33 Mbps, total CPU/GiB32.02→30.09; server ingress full 30422/29498→8092/6924. Candidate selected for old splice requalification only, no product promotion. ACK2/SACK compression retained; 0/1% BBR requalification pending.",
-    "c6b33c1 dual ISA scoped PASS; ARM BBR0 splice206.96→Rust273.76 Mbps, CPU/GiB+16.8%; 1% splice68.74→Rust72.69 but B34.65/110.73 unstable, CPU/GiB+55.1%. Native middle fast retransmit actual-attempt candidate unverified; TLP/RTO/FIN remain generation-accounted.",
-    "014a902 native scoped PASS but BBR1% same-binary A150.60→B117.09 Mbps, CPU/GiB33.16→35.40; rejected, selected c6b33c1 product restored forward. Direct origin socket read into existing SendBuf candidate unverified.",
-    "31a3ac1 native scoped PASS; ARM BBR0 direct-origin peak A163.95/B213.02 Mbps, total CPU/GiB39.88→36.52, B legs divergent, bare94.54; inconclusive capacity/CPU. Fixed 120M ABBA and bracketed bare pre/post pending. No default promotion.",
-    "3ca7efd native PASS; fixed120M ABBA A1 90.50, B1/B2/A2 119.98 Mbps; CPU server three matched legs17.82/17.88/17.88; no demonstrated gain, direct-origin candidate withdrawn. Native IPv4 final-offset serialization candidate unverified; no default promotion.",
-    "b5c1520 native scoped PASS; headroom ABBA +6.06% throughput/+1.44% CPU/GiB, no demonstrated joint gain; candidate withdrawn. Selected paired defaults now implemented pending exact native/ARM validation. Zero-injected peak retrans7.61–13.54%, DSACK and actual ingress losses; no L2/default main promotion.",
-    "47a42a6 core344/345 each ISA failed component FIN assertion before native product fixture; selected default unqualified. Normal actual1024 since H2437, Game128; paired2048 capacity ABBA pending. Old splice c6b33c1 kernel middle retrans~0.97/0.91% despite zero SharedTun full.",
-    "25eca47 exact native selected default/2048/CUBIC scoped PASS; ARM 1024/2048 BBR0 ABBA +0.87% throughput/-2.27% CPU, client full7193→888, server15208→15766, weighted retrans7.41→9.32%; bare1.41/1.33% retrans. No capacity promotion; server pacing quantum32/8 candidate unverified.",
-    "ca4cc44 core345 both and ARM native all PASS; x86 default32 real concurrent app RST, performance NOT_RUN. Fixture listen backlog16 for eight concurrent flows and existing origin terminal-error receipts, exact new qualification pending; no pacing selection.",
-    "675ab84 dual ISA345 core and six actual native profiles PASS after x86 infrastructure-only retry; prior RST not reproduced, causal fix unproven. 32/8 server pacing ABBA pending, fixture reports existing bulk retrans/DSACK snapshots.",
-    "b99fb67 six native profiles PASS; ARM32/8 B1 incomplete after iperf, server full17104→1313 but retrans8.28/8.37/11.95/7.13%, no 8 MSS promotion. Controlled same-host fixed-byte bare/paired/bare recovery pending, not peak qualification.",
-    "Recovery batch unverified: server pure ACK grant deferral and RACK window shortcut control, existing CUBIC/30M offer and combined conservative case, fixed-byte local diagnostic only. Selected defaults unchanged.",
-    "5dda95b six original native profiles PASS; local iperf reverse fixed-byte diagnostic incomplete all 3 rows (including bare). Paired snapshot 216137728 sent/acked and 0 Middle retrans/DSACK/timeouts, ingress0/1862; strong scoped diagnostic signal not exact app qualification. Batch fixture now uses exact finite app and hash/EOF, candidate code unchanged."
+    "All prior verification and limitations preserved verbatim in feature card history archive; current card summarizes selected state, not retroactive qualification.",
+    "Paired mode requires explicit selection at both endpoints; selected parity, BBR1, ACK2/SACK compression, M4, GSO and server ingress-first unchanged. 1024 slots/32 MSS default. No old splice deletion or Windows construction yet.",
+    "a153b50 exact native and eight same-host fixed-byte cases pass. All six paired sampled retrans/DSACK/timeouts0, full0 and reset0; actual120M offer yielded94Mbps, not peak. No candidate promotion.",
+    "Three-host prior high retrans and intermittent RST remain unresolved. Cross-host candidate screen pending; single-leg candidates are screening only, no physical or CPU parity claim."
   ],
   "promotion": null
 }
