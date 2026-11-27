@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "source_sha": "31a3ac1696a6df7720a68cbfadb1a9f87ff9b8d4",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native dual-ISA scoped Normal original/parity/GSO+direct origin read functional only, real 3MiB download/2MiB upload SHA256, concurrent, UDP, half-close, joined Stop.",
+  "run_id": 45941326449,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140316071104,
+      "artifact_id": 15172778239,
+      "core_pass": 346,
+      "gso_groups": 140,
+      "gso_segments": 1266
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140316071387,
+      "artifact_id": 15172438101,
+      "core_pass": 346,
+      "gso_groups": 260,
+      "gso_segments": 2641
+    }
+  ],
+  "performance": {
+    "result": "INCONCLUSIVE",
+    "scope": "Same-binary ARM three VMs BBR0 400ms added RTT,45s single reverse stream,outer IP MTU1160; direct-origin-read off/on; both GSO and ingress-first. Four measured and direct/Stop/profile valid, bare preflight inconsistent with business throughput, not capacity-qualified.",
+    "run_id": 45941326427,
+    "job_ids": {
+      "client": 140317586016,
+      "server": 140317585999,
+      "relay": 140317586026
+    },
+    "artifact_ids": {
+      "client": 15172618181,
+      "server": 15172919208,
+      "relay": 15173053884
+    },
+    "bare_mbps": 94.53978004587336,
+    "legs_mbps": [
+      154.71966598454898,
+      274.35014043242535,
+      151.69344182834533,
+      173.17418036101927
+    ],
+    "means": {
+      "A": {
+        "mbps": 163.94692317278412,
+        "client_cpu_s_per_gib": 16.49793787853243,
+        "server_cpu_s_per_gib": 23.378002204728496
+      },
+      "B": {
+        "mbps": 213.02179113038534,
+        "client_cpu_s_per_gib": 17.216268512176455,
+        "server_cpu_s_per_gib": 19.299973500934264
+      }
+    },
+    "server_ingress_offered": [
+      138639,
+      238503,
+      195253,
+      182081
+    ],
+    "server_ingress_full": [
+      9707,
+      23904,
+      9906,
+      15955
+    ],
+    "client_ingress_full": [
+      6049,
+      3319,
+      0,
+      1036
+    ],
+    "client_shared_tun_full": [
+      0,
+      45,
+      0,
+      0
+    ],
+    "client_local_write_failed": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_m4_copied": [
+      1147698,
+      1666244,
+      1081929,
+      1267468
+    ],
+    "server_hwm_kib": [
+      172660,
+      170232,
+      170844,
+      171424
+    ],
+    "client_hwm_kib": [
+      239588,
+      296192,
+      233640,
+      209080
+    ],
+    "relay_qdisc_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "review": "All five actual ZIPs CRC tested in container. Native exact source.txt, original/parity/GSO summaries and job logs, client summary and per-case result, server origin mode/Stop/M4 and per-case receipts, relay-end qdisc reviewed. Both B server CPU/GiB below both A, but B peak throughput divergent and bare precheck unusually low. Cannot isolate copy cost at different achieved load. No performance promotion.",
+    "decision": "Retain opt-in candidate for matched-load 120M ABBA, same product code, bare before/after brackets. Not default."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "3ca7efdd998359f8cb16c8964360077ca83675ef"
+}
