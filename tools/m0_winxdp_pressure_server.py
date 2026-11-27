@@ -68,7 +68,7 @@ def setup():
         for k,v in (("net.ipv4.tcp_rmem","4096 87380 67108864"),("net.ipv4.tcp_wmem","4096 65536 67108864"),("net.core.rmem_max","67108864"),("net.core.wmem_max","67108864")):h.ns(ns,"sysctl","-qw",k+"="+v)
     h.ns(ORIGIN,"sysctl","-qw","net.ipv4.tcp_congestion_control=cubic")
     h.ns(ORIGIN,"tc","qdisc","replace","dev","h2442app","root","fq")
-    if PATH_MODE=="bbr":
+    if any(c.get("path_mode",PATH_MODE)=="bbr" for c in CASES):
         h.root("modprobe","tcp_bbr",allow_fail=True)
         if "bbr" not in h.root("sysctl","-n","net.ipv4.tcp_available_congestion_control").stdout.split():raise RuntimeError("WSL BBR unavailable; no fallback")
     subprocess.run(["openssl","req","-x509","-newkey","rsa:2048","-sha256","-days","1","-nodes","-keyout",str(TMP/"key.pem"),"-out",str(OUT/"cert.pem"),"-subj","/CN=wbd-h2228.example.test","-addext","subjectAltName=DNS:wbd-h2228.example.test"],check=True,capture_output=True)
@@ -90,10 +90,12 @@ def start(i):
         spawn("source",NODE,["env","H2479_BARE_MSS="+str(DIRECT_MSS[i]),sys.executable,ROOT/"tools/m0_h2479_tcp.py","source",PEER,5202,DIRECT_RATES.get(i,0),"bbr",DIRECT_SECONDS],folder);waitmark("source","SOURCE_READY")
     else:
         c=CASES[i];cap=c["rate"]*125000
-        proxy=["--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"] if PATH_MODE=="bbr" else []
-        spawn("server",NODE,["env","LD_LIBRARY_PATH="+str(BUNDLE),"WBD_SHARED_TUN_ROUTE_DIAG=1","WBD_M0_SPLICE_PACING_AB="+str(cap),BUNDLE/"wbd-v4-server","--raw-interface","eth0","--local-ip",PEER,"--local-port","443","--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--server-name","wbd-h2228.example.test","--route-key-hex-file",TMP/"route-key.hex","--users-file",TMP/"users.json","--lease-pool","10.66.0.128/25","--manual-client-leases-file",TMP/"leases.json","--tls-cert",OUT/"cert.pem","--tls-key",TMP/"key.pem","--mode","shared","--peer-persona","legacy" if os.environ.get("WBD_H2455_SEGMENTS")=="linux" else "windows11","--outer-repair","on","--outer-mtu",str(c["mtu"]),"--tun-fq-maxrate-mbps","0",*proxy],folder)
+        path=CASES[i].get("path_mode",PATH_MODE)
+        proxy=["--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"] if path=="bbr" else []
+        pacing=[] if os.environ.get("WBD_XDP_SINGLE_WIDE")=="bbr-path" else ["WBD_M0_SPLICE_PACING_AB="+str(cap)]
+        spawn("server",NODE,["env","LD_LIBRARY_PATH="+str(BUNDLE),"WBD_SHARED_TUN_ROUTE_DIAG=1",*pacing,BUNDLE/"wbd-v4-server","--raw-interface","eth0","--local-ip",PEER,"--local-port","443","--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--server-name","wbd-h2228.example.test","--route-key-hex-file",TMP/"route-key.hex","--users-file",TMP/"users.json","--lease-pool","10.66.0.128/25","--manual-client-leases-file",TMP/"leases.json","--tls-cert",OUT/"cert.pem","--tls-key",TMP/"key.pem","--mode","shared","--peer-persona","legacy" if os.environ.get("WBD_H2455_SEGMENTS")=="linux" else "windows11","--outer-repair","on","--outer-mtu",str(c["mtu"]),"--tun-fq-maxrate-mbps","0",*proxy],folder)
         waitmark("server","V4_PUBLIC_MIXED_MULTI_SERVER_READY")
-        if PATH_MODE=="bbr":waitmark("server","WBD_TCP_SPLICE_READY")
+        if path=="bbr":waitmark("server","WBD_TCP_SPLICE_READY")
         else:
             # Isolate only the owned test TUN's forwarding, not host traffic.
             h.ns(NODE,"iptables","-I","FORWARD","1","-i","wbds0","!","-d","192.0.2.2/32","-j","DROP")
@@ -120,9 +122,12 @@ def close():
     except Exception:result["source"]=None
     if current>=0:
         s=(folder/"server.log").read_text(errors="replace")
-        result.update(path_mode=PATH_MODE,
-            path_ok=("WBD_TCP_SPLICE_ACCEPT target=192.0.2.2:5400 cc=bbr" in s if PATH_MODE=="bbr" else "V4_PUBLIC_SERVER_MASQUERADE_APPLIED" in s and "WBD_TCP_SPLICE_READY" not in s),
-            pacing_ok=(PATH_MODE=="nat" or "bytes_per_s="+str(CASES[current]["rate"]*125000) in s),
+        path=CASES[current].get("path_mode",PATH_MODE)
+        accepts=s.count("WBD_TCP_SPLICE_ACCEPT target=192.0.2.2:5400 cc=bbr")
+        proxy_stop="WBD_TCP_SPLICE_STOP error=<nil>" in s
+        result.update(path_mode=path,splice_bbr_accepts=accepts,splice_stop=proxy_stop,
+            path_ok=(accepts>=CASES[current]["streams"] and proxy_stop if path=="bbr" else "V4_PUBLIC_SERVER_MASQUERADE_APPLIED" in s and "WBD_TCP_SPLICE_READY" not in s),
+            pacing_ok=(path=="nat" or ("WBD_TCP_SPLICE_PACING " not in s if os.environ.get("WBD_XDP_SINGLE_WIDE")=="bbr-path" else "bytes_per_s="+str(CASES[current]["rate"]*125000) in s)),
             stop="V4_PUBLIC_NATIVE_STOP_DRAINED" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s,
             panic="panicked at" in s,inbox1024="slots=1024 " in s)
     h.save(folder/"result.json",result);current=None;return result

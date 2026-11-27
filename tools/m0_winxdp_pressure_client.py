@@ -175,6 +175,15 @@ def case(i):
             print("WINXDP_TCP_BUSINESS_END case="+str(i)+" end="+str(result.get("end")),flush=True)
             after=snapshot()
             result["netem_packets"]={k:after["netem_packets"][k]-before["netem_packets"][k] for k in ("eth0","ifbwlm0")}
+            dt=after["wall_unix"]-before["wall_unix"]
+            wire={"scope":"POST_NETEM_QDISC_INCLUDES_DRAIN_NOT_PHY","elapsed_s":dt,"directions":{}}
+            for side,dev in (("linux_to_windows","eth0"),("windows_to_linux","ifbwlm0")):
+                qs=[(key,q) for key,q in after["qdiscs"].items() if q.get("dev")==dev and q.get("kind")=="netem"]
+                if len(qs)==1 and dt>0:
+                    key,q=qs[0];old=before["qdiscs"][key]
+                    vals={k:int(q[k])-int(old[k]) for k in ("bytes","packets","drops")}
+                    if min(vals.values())>=0:wire["directions"][side]=dict(vals,mbps=vals["bytes"]*8/dt/1e6,pps=vals["packets"]/dt)
+            result["outer_netem"]=wire
             result["kernel_counter_delta"]={k:v-before["counters"].get(k,v) for k,v in after["counters"].items()}
             save(d/"business-boundaries.json",{"before":before,"after":after})
             result.update(c)
@@ -292,6 +301,8 @@ def main():
             r["server_rc"]=r.get("server",{}).get("rc")
             r["server_stop"]=r.get("server",{}).get("stop")
             r["server_path_ok"]=r.get("server",{}).get("path_ok")
+            r["splice_bbr_accepts"]=r.get("server",{}).get("splice_bbr_accepts")
+            r["splice_stop"]=r.get("server",{}).get("splice_stop")
             r["server_rx_mbps"]=((r.get("server",{}).get("source") or {}).get("rx_mbps"))
             r["flow_gaps_s"]=[f.get("max_rx_gap_s") for f in r.get("flows",[])]
             r["flow_tail"]={side:[{k:x.get(k) for k in ("sent","received","tx_end","rx_end","last_rx_elapsed_s","rx_eof_elapsed_s","tx_shutdown_elapsed_s","rx_after_business_bytes","errors")} for x in flows] for side,flows in (("windows",r.get("flows",[])),("linux",(r.get("server",{}).get("source") or {}).get("flows",[])))}
@@ -338,7 +349,9 @@ def main():
                     r["rx_pool"]=receipt("WBD_XDP_RX_POOL_STOP ")
                     if os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
                         r["rss_map_before"]=receipt("WBD_XDP_RSS_MAP_BEFORE ")
-                        r["pressure_valid"]=r["pressure_valid"] and r["rss_map_before"].get("processors",0)>1 and r["rx_pool"].get("single")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and (r["arm"]=="A" or (r["rx_pool"].get("queues")==1 and r["rx_pool"].get("backing_bytes")==33554432 and "WBD_XDP_SINGLE_RSS_READY processors=1 queues=1" in s))
+                        same_single=os.environ.get("WBD_XDP_SINGLE_WIDE")=="bbr-path"
+                        expect_single=same_single or r["arm"]=="B"
+                        r["pressure_valid"]=r["pressure_valid"] and r["rss_map_before"].get("processors",0)>1 and r["rx_pool"].get("single")==int(expect_single) and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and (not expect_single or (r["rx_pool"].get("queues")==1 and r["rx_pool"].get("backing_bytes")==33554432 and "WBD_XDP_SINGLE_RSS_READY processors=1 queues=1" in s))
                     else:
                         r["pressure_valid"]=r["pressure_valid"] and r["rx_pool"].get("enabled")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and r["rx_pool"].get("recycle")==int(r["arm"]=="B") and (r["rx_pool"].get("posted",0)+r["rx_pool"].get("reserve_remaining",0))*2048==r["rx_pool"].get("backing_bytes") and r["rx_pool"].get("posted",0)>=r["rx_pool"].get("base",0)*r["rx_pool"].get("queues",0)
                 if efficiency:
@@ -362,6 +375,13 @@ def main():
                     # Complete receipts are not evidence that the offered rate
                     # was achieved. Report matched-load qualification separately.
                     pair["target_mbps"]=r["rate"]
+                    if os.environ.get("WBD_XDP_SINGLE_WIDE")=="bbr-path":
+                        pair["comparison"]="A=NAT B=transparent BBR; same single RSS and Maximum FEC"
+                    for arm in ("A","B"):
+                        ar=[x for x in group if x["arm"]==arm]
+                        if all(len(x.get("outer_netem",{}).get("directions",{}))==2 for x in ar):
+                            pair[arm+"_outer_netem_mbps"]={side:statistics.mean(x["outer_netem"]["directions"][side]["mbps"] for x in ar) for side in ("linux_to_windows","windows_to_linux")}
+                            pair[arm+"_outer_netem_pps"]={side:statistics.mean(x["outer_netem"]["directions"][side]["pps"] for x in ar) for side in ("linux_to_windows","windows_to_linux")}
                     pair["all_arms_at_target"]=all(
                         (v["direction"]=="up" or (v.get("rx_mbps") or 0)>=.95*v["rate"]) and
                         (v["direction"]=="down" or (v.get("server_rx_mbps") or 0)>=.95*v["rate"])
@@ -388,7 +408,7 @@ def main():
                     print(("WINXDP_NORMAL_TUNE_PAIR " if tune else "WINXDP_CARRIER_ABBA_PAIR ")+json.dumps(pair),flush=True)
                     save(OUT/("pair-"+r["group"]+".json"),pair)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
-            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","rx_pool","rss_map_before","pending_lab","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","fec_receipts","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
+            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","path_mode","splice_bbr_accepts","splice_stop","outer_netem","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","rx_pool","rss_map_before","pending_lab","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","fec_receipts","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
             if r.get("shape_clear_error") or not r.get("client_stop") or not r.get("server_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):
                 for pth in (SERVER/("case-"+str(i))/"server.log",SERVER/("case-"+str(i))/"source.log",d/"client.log"):
                     if pth.exists():

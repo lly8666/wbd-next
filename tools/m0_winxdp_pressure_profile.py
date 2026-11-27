@@ -131,3 +131,11 @@ if os.environ.get("WBD_XDP_STRESS_PHASE")=="pool-qualification":
         ]
     seq="BAAB" if os.environ.get("H2478_REPLICA") in "BDFHJL" else "ABBA"
     CASES=[dict(base,**w,arm=arm,group=w["name"],policy="original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),budget=w["rate"]) for w in workloads for arm in seq]
+
+# Same single RSS and Maximum FEC, NAT vs existing transparent BBR.
+if os.environ.get("WBD_XDP_SINGLE_WIDE")=="bbr-path":
+    workloads=[
+        dict(name="single-bbr-loss5-duplex100",direction="duplex",rate=100,delay=80,streams=4,mtu=1400,profile=6,loss=5),
+        dict(name="single-bbr-loss10-duplex50",direction="duplex",rate=50,delay=200,streams=4,mtu=1400,profile=6,loss=10),
+    ]
+    CASES=[dict(base,**w,arm=arm,group=w["name"],policy="rx-single",path_mode="nat" if arm=="A" else "bbr",budget=w["rate"]) for w in workloads for arm in seq]
