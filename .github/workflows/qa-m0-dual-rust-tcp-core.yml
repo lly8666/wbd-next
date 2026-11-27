@@ -9,6 +9,8 @@ on:
       - 'r0/go_overlay/internal/v4productcli/linux.go'
       - 'tools/m0_dual_rust_tcp_*.py'
       - '.github/workflows/qa-m0-dual-rust-tcp-core.yml'
+      - '.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml'
+      - 'tools/m0_dual_tcp_arm_linux_parity.py'
 permissions:
   contents: read
   actions: read

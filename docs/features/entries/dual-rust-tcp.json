@@ -45,7 +45,8 @@
     "docs/devlog/M0/20261127-LINUX-TCP-NATIVE-OWNER-ADMISSION.md",
     "docs/devlog/M0/20261127-NATIVE-ADMISSION-REGRESSION-AND-READY-BATCH.md",
     "docs/devlog/M0/20261127-M4-FRESH-DATA-CLOCK-AND-READY-LOANS.md",
-    "docs/devlog/M0/20261127-M4-CLOCK-BUILD-RECOVERY.md"
+    "docs/devlog/M0/20261127-M4-CLOCK-BUILD-RECOVERY.md",
+    "docs/devlog/M0/20261127-M4-CLOCK-NATIVE-RESULT-BBR-INTENT.md"
   ],
   "verification": [
     {
@@ -187,6 +188,20 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "65aae40cdbd99c0a9957518db1748ad533181bdc",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45916282014"
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "392ee06 native Normal original/parity, 344 core and exact M4 unit, copied receipts and owned Stop",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "392ee066c8bbcea96c20dea0ef76d73f497f6b87",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45930085832"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "392ee06 native Normal original/parity, 344 core and exact M4 unit, copied receipts and owned Stop",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "392ee066c8bbcea96c20dea0ef76d73f497f6b87",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45930085832"
     }
   ],
   "limitations": [
@@ -202,7 +217,8 @@
     "Native owner follow-up: per-flow credits account for generated unadmitted records, admission wakes blocked producer, ready ingress/output alternate; latest SOURCE requires native and full performance receipts.",
     "586706c native PASS but ARM24/24 performance unqualified; ba5ed73 native parity concurrent reset on both ISA, ABBA blocked. New drain-before-service and ready-only local write batch candidate unverified.",
     "9ede62e native scoped PASS, zero-loss ABBA unqualified; actual M4 clock and ready loan candidate unverified, only Normal small DATA has PN correspondence.",
-    "75c47a5 native build failed both ISA E0308; ARM parity was NOT_RUN. PN conversion and explicit M4 clock unit selection candidate unverified."
+    "75c47a5 native build failed both ISA E0308; ARM parity was NOT_RUN. PN conversion and explicit M4 clock unit selection candidate unverified.",
+    "392ee06 scoped native M4 clock PASS with positive copied receipts; no performance run for that SOURCE. Next narrow BBR0 ABBA source unverified."
   ],
   "promotion": null
 }
