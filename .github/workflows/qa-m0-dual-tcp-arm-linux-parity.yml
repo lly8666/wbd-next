@@ -1,4 +1,4 @@
-name: M0 ARM Linux parity native owner admission and fast path ABBA
+name: M0 ARM Linux parity per-flow admitted credit and ready turns ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]

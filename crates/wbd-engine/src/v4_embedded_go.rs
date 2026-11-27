@@ -8459,6 +8459,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut wakeup_shared=None::<OriginalTunIngress>;
             let mut tcp_out=VecDeque::<Vec<u8>>::new();
             let fair_native_turn=native_tcp_owner.is_some() && std::env::var_os("WBD_M0_NATIVE_INGRESS_FIRST").as_deref()==Some(std::ffi::OsStr::new("1"));
+            let native_round_robin=native_tcp_owner.is_some()&&std::env::var_os("WBD_M0_LINUX_PARITY").as_deref()==Some(std::ffi::OsStr::new("1"));
             let mut ingress_turn_peak=0usize;
             let mut ingress_with_pending=0u64;
             let mut publish_calls=0u64;
@@ -8473,7 +8474,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 local_batch_max=local_batch_max.max(out.local.len());
                 middle_batch_max=middle_batch_max.max(out.tunnel.len());
                 for frame in out.local{
-                    let attempted=if frame.len()>40&&frame.len()>20+usize::from(frame[32]>>4)*4{Some(Instant::now())}else{None};
+                    let attempted=if native_round_robin&&frame.len()>40&&frame.len()>20+usize::from(frame[32]>>4)*4{Some(Instant::now())}else{None};
                     if tun.write_authenticated_ipv4(generation,&frame).is_err(){local_write_failed+=1;stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                     if let Some(attempted)=attempted{if owner.admit(true,&frame,attempted).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
                 }
@@ -8516,7 +8517,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     }
                 }
                 if let Some(owner)=native_tcp_owner.as_mut(){
-                    if tcp_out.is_empty(){
+                    if tcp_out.is_empty()||native_round_robin{
                         match owner.service(Duration::ZERO){
                             Ok(out)=>publish_tcp(owner,out,&mut tcp_out),
                             Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break}
@@ -8531,6 +8532,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     // generated TCP output. M1 still has the same 32
                     // packet cap; drain only already-ready work.
                     let mut input_turns=0;
+                    let mut output_turns=0;
                     let mut input_empty=false;
                     loop {
                         if tx_pending.len()+jumbo_queue.len()>=32 ||
@@ -8540,8 +8542,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         // Above the soft watermark, drain output first; one
                         // normal owner event may exceed it, never drop frames.
                         // A failed try_recv immediately falls through to output.
-                        let output_first = !fair_native_turn || input_empty ||
-                            input_turns>=32 || tcp_out.len()>=64;
+                        let output_first = if native_round_robin {
+                            input_empty||input_turns>=32||output_turns<=input_turns
+                        }else{!fair_native_turn||input_empty||input_turns>=32||tcp_out.len()>=64};
                         if let Some(frame)=tcp_out.front().filter(|_|output_first){
                             let loan={let Ok(mut e)=tx_cell.lock()else{break};
                                 if e.phase!=PH_ACTIVE{break}
@@ -8553,12 +8556,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             let Ok(mut slab)=loan else{break};
                             let n=frame.len();
                             if n>M0_SMALL_ARENA_PAYLOAD{
-                                if let Some(owner)=native_tcp_owner.as_mut(){if owner.admit(false,frame,Instant::now()).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
-                                jumbo_queue.push_back(tcp_out.pop_front().unwrap());continue
+                                if native_round_robin&&frame.len()>40&&frame.len()>20+usize::from(frame[32]>>4)*4{if let Some(owner)=native_tcp_owner.as_mut(){if owner.admit(false,frame,Instant::now()).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}}
+                                jumbo_queue.push_back(tcp_out.pop_front().unwrap());output_turns+=1;continue
                             }
                             slab.writable()[14..14+n].copy_from_slice(frame);
-                            if let Some(owner)=native_tcp_owner.as_mut(){if owner.admit(false,frame,Instant::now()).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
-                            tcp_out.pop_front();tx_pending.push((slab,n));continue
+                            if native_round_robin&&frame.len()>40&&frame.len()>20+usize::from(frame[32]>>4)*4{if let Some(owner)=native_tcp_owner.as_mut(){if owner.admit(false,frame,Instant::now()).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}}
+                            tcp_out.pop_front();tx_pending.push((slab,n));output_turns+=1;continue
                         }
                         if input_turns==32{
                             tcp_input_exhausted=native_tcp_owner.is_some();
@@ -8616,7 +8619,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                 }
                             },
                             Err(_)=>{
-                                if fair_native_turn&&!tcp_out.is_empty()&&!input_empty{
+                                if (fair_native_turn||native_round_robin)&&!tcp_out.is_empty()&&!input_empty{
                                     input_empty=true;continue
                                 }
                                 break
@@ -8883,7 +8886,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             active_jumbo.take();
             jumbo_queue.clear();
             if native_tcp_owner.is_some(){
-                eprintln!("WBD_M0_TCP_PUBLISH calls={} local_batch_max={} middle_batch_max={} pending_peak={} local_write_failed={} ingress_first={} ingress_turn_peak={} ingress_with_pending={}",publish_calls,local_batch_max,middle_batch_max,pending_peak,local_write_failed,fair_native_turn,ingress_turn_peak,ingress_with_pending);
+                eprintln!("WBD_M0_TCP_PUBLISH calls={} local_batch_max={} middle_batch_max={} pending_peak={} local_write_failed={} ingress_first={} ingress_turn_peak={} ingress_with_pending={} ready_round_robin={}",publish_calls,local_batch_max,middle_batch_max,pending_peak,local_write_failed,fair_native_turn,ingress_turn_peak,ingress_with_pending,native_round_robin);
             }
             if native_tcp_owner.take().is_some(){eprintln!("WBD_DUAL_RUST_TCP_OWNER_STOP generation={} flows_and_sockets_dropped=1",generation);}
             #[cfg(feature="fec2_product_record")]

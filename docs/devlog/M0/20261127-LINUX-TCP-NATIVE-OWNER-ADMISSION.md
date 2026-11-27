@@ -11,3 +11,5 @@ Exact parent 65aae40cdbd99c0a9957518db1748ad533181bdc: dual ISA core342/342, sco
 ```feature-impact
 {"kind":"updated","ids":["dual-rust-tcp"],"reason":"Experimental parity owner per-flow send grant and fresh DATA admission timestamp, faster established parse/serialization and exact BBR admitted pipe; no outer protocol or default change."}
 ```
+
+Follow-up before qualification: same-flow grant subtracts outstanding reserved records, replenished by actual admission, not another ACK; if no seats, resume only on admission (no empty deadline loop). Native TX ready turns alternate one available M1 output with one already-ready ingress event, retain 32 M1 cap, and service per-flow timers/sockets even when prior output remains. BBR1 invalid short samples do not advance delivery rounds. Prior candidate 586706c was pushed before this call-site review and has distinct in-flight runs; do not promote it as current. No new product queues or threads. Source unverified.

@@ -194,7 +194,8 @@
     "ACK3 BBRv3 middle candidate 8a6439b exact scoped functional dual ISA PASS; same-VM old splice/original Rust ABBA run45821912542 and ARM three-runner loss1/5 run45822382519/45822382479 in flight. No performance or default promotion.",
     "edc0d11 ARM Linux parity ABBA 23/24 measured, CUBIC 5% baseline reset, BBR0 150.56 vs 205.79 Mbps and CPU/GiB higher; no performance promotion. New receive growth / borrowed DATA candidate unverified.",
     "935a631 dual ISA 339/339; ARM hotpath ABBA BBR -11.6% throughput, CUBIC +24.7%; mixed. Consolidated candidate unverified.",
-    "65aae40 native342/342 scoped PASS, ARM24/24 performance unqualified BBR0 314.20→150.63; new owner admission candidate unverified, actual M4/TSO/EDT and complete recovery parity remain."
+    "65aae40 native342/342 scoped PASS, ARM24/24 performance unqualified BBR0 314.20→150.63; new owner admission candidate unverified, actual M4/TSO/EDT and complete recovery parity remain.",
+    "Native owner follow-up: per-flow credits account for generated unadmitted records, admission wakes blocked producer, ready ingress/output alternate; latest SOURCE requires native and full performance receipts."
   ],
   "promotion": null
 }

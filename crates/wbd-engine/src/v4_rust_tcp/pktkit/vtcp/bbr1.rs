@@ -68,7 +68,7 @@ impl Bbr1 {
         self.cycle=2;self.cycle_at=now;
     }
     fn update_bw(&mut self,a:&Ack)->bool{
-        let Some(s)=a.rs else{return false};
+        let Some(s)=a.rs.filter(|s|s.delivery_rate>0&&!s.interval.is_zero()) else{return false};
         let start=s.prior_delivered>=self.next_round;
         if start{self.round+=1;self.next_round=a.delivered;}
         if s.delivery_rate>0&&(!s.is_app_limited||s.delivery_rate>=self.bw){

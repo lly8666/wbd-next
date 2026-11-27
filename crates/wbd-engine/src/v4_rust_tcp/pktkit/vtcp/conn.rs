@@ -710,6 +710,7 @@ pub struct Conn {
     pace_deadline: std::option::Option<Instant>,
     native_resume: Option<Instant>,
     native_credit: usize,
+    native_waiting: bool,
     /// The smoothed round trip pacing goes by: SRTT's average (1/8) of
     /// the send-to-ACK times of the newest segment each ACK delivers,
     /// taken to the nanosecond as Linux takes its SRTT to the microsecond.
@@ -976,6 +977,7 @@ impl Conn {
             pace_deadline: None,
             native_resume: None,
             native_credit: usize::MAX,
+            native_waiting:false,
             pace_srtt: None,
             pace_late: Duration::ZERO,
             delack_deadline: None,
@@ -1059,7 +1061,7 @@ impl Conn {
     /// Owner grants a ready turn, not an extra congestion window. Data stays
     /// in SendBuf when the turn ends; other flows and ingress can run first.
     pub(crate) fn begin_native_turn(&mut self) {
-        if self.cfg.native_owner_turn { self.native_credit=32; }
+        if self.cfg.native_owner_turn { self.native_credit=32usize.saturating_sub(self.score.native_pending_count()); }
     }
     pub(crate) fn native_turn_enabled(&self)->bool{self.cfg.native_owner_turn}
 
@@ -4245,6 +4247,7 @@ impl Conn {
     /// that lets RACK see a tail loss, rather than wait for the RTO.
     fn on_loss_probe(&mut self) {
         self.pto_deadline = None;
+        if self.score.native_pending()!=0{return;}
         let Some(sb) = self.send_buf.as_ref() else {
             return;
         };
@@ -4473,13 +4476,17 @@ impl Conn {
         self.now=self.now.max(now);
         self.last_data_sent=Some(self.now);
         self.rto.start_timing(seq,self.now);
-        if self.rto_deadline.is_none(){self.start_rto();}
-        if self.score.native_pending()==0{self.schedule_loss_probe();}
-        true
+        let first=self.rto_deadline.is_none();
+        if first{self.start_rto();}
+        let resume=self.native_waiting&&self.score.native_pending_count()<32;
+        if resume{self.native_waiting=false;self.native_resume=Some(self.now);}
+        let last=self.score.native_pending()==0;
+        if last{self.schedule_loss_probe();}
+        first||resume||last
     }
 
     fn flush_send_queue(&mut self) {
-        self.native_resume=None;
+        self.native_resume=None;self.native_waiting=false;
         // Anything held back by pacing is looked at again now.
         self.pace_late = self
             .pace_deadline
@@ -4713,7 +4720,8 @@ impl Conn {
     /// its rate. A sender idle for a while may burst two quanta, no more.
     fn pace_ready(&mut self) -> bool {
         if self.cfg.native_owner_turn && self.native_credit==0 {
-            self.native_resume=Some(self.now);return false;
+            if self.score.native_pending_count()!=0{self.native_waiting=true;}else{self.native_resume=Some(self.now);}
+            return false;
         }
         let Some(rate) = self.pace_rate() else {
             return true;
@@ -5577,6 +5585,7 @@ impl Conn {
         self.stop_rto();
         self.reo_deadline = None;
         self.pto_deadline = None;
+        self.native_resume=None;self.native_waiting=false;
         self.delack_deadline = None;
         self.stop_keepalive();
         self.stop_persist();

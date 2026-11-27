@@ -200,6 +200,7 @@ pub(crate) struct Scoreboard {
     sacked_segs: u32,
     lost: u64,
     native_pending: u64,
+    native_pending_count: usize,
     /// Starts of the segments marked lost and not sent since, which are
     /// what retransmission goes through, lowest first.
     lost_set: BTreeSet<u64>,
@@ -234,6 +235,7 @@ impl Scoreboard {
             sacked_segs: 0,
             lost: 0,
             native_pending:0,
+            native_pending_count:0,
             lost_set: BTreeSet::new(),
             rack_on: false,
             tq: VecDeque::new(),
@@ -318,6 +320,7 @@ impl Scoreboard {
     }
 
     pub(crate) fn native_pending(&self)->u32{self.native_pending as u32}
+    pub(crate) fn native_pending_count(&self)->usize{self.native_pending_count}
     pub(crate) fn admitted_pipe(&self)->u32{self.pipe().saturating_sub(self.native_pending())}
 
     /// RACK.segs_sacked.
@@ -366,6 +369,7 @@ impl Scoreboard {
         debug_assert!(second.start < at && at < second.end);
         second.start = at;
         self.segs[i].end = at;
+        if second.has(NATIVE_PENDING){self.native_pending_count+=1;}
         if second.has(LOST) {
             self.lost_set.insert(at);
         }
@@ -432,7 +436,7 @@ impl Scoreboard {
         let xmit = self.ns(now);
         let tx = self.next_tx;
         self.next_tx += 1;
-        let rate=if deferred{self.native_pending+=u64::from(len);TxState::default()}else{self.rate.on_send(xmit,self.admitted_pipe(),len)};
+        let rate=if deferred{self.native_pending+=u64::from(len);self.native_pending_count+=1;TxState::default()}else{self.rate.on_send(xmit,self.admitted_pipe(),len)};
         self.segs.push_back(Seg {
             start,
             end: start + u64::from(len),
@@ -454,7 +458,7 @@ impl Scoreboard {
         let Some(i)=self.idx(off)else{return false};
         let old=self.segs[i];
         if !old.has(NATIVE_PENDING)||old.start!=off||old.len()!=u64::from(len){return false}
-        self.native_pending-=old.len();
+        self.native_pending-=old.len();self.native_pending_count-=1;
         let xmit=self.ns(now);
         let rate=self.rate.on_send(xmit,self.admitted_pipe().saturating_sub(len),len);
         let record=&mut self.segs[i];record.flags&=!NATIVE_PENDING;record.xmit=xmit;record.rate=rate;
@@ -559,7 +563,7 @@ impl Scoreboard {
         while let Some(&front) = self.segs.front() {
             if front.end <= ack_off {
                 self.segs.pop_front();
-                if front.has(NATIVE_PENDING){self.native_pending-=front.len();}
+                if front.has(NATIVE_PENDING){self.native_pending-=front.len();self.native_pending_count-=1;}
                 if front.has(LOST) {
                     self.lost -= front.len();
                     self.lost_set.remove(&front.start);
@@ -688,7 +692,7 @@ impl Scoreboard {
         let (l, r) = block;
         while i < self.segs.len() && self.segs[i].start < pr {
             let s = self.segs[i];
-            if s.has(SACKED) {
+            if s.has(SACKED)||s.has(NATIVE_PENDING) {
                 i += 1;
                 continue;
             }
@@ -718,7 +722,6 @@ impl Scoreboard {
                 }
             }
             let s = self.segs[i];
-            if s.has(NATIVE_PENDING){i+=1;continue;}
             let seg = &mut self.segs[i];
             seg.flags |= SACKED;
             if s.has(LOST) {
@@ -995,6 +998,7 @@ impl Scoreboard {
         }
         let mut marked = false;
         while i < self.segs.len() && self.segs[i].start < end {
+            if self.segs[i].has(NATIVE_PENDING){i+=1;continue;}
             if self.segs[i].end > end && !self.segs[i].has(FIN) {
                 self.split(i, end);
             }
@@ -1197,12 +1201,12 @@ mod tests {
     fn native_reserved_data_is_not_in_delivery_clock_until_admitted(){
         let now=Instant::now();let mut s=Scoreboard::new(100,now);s.set_rack(true);
         s.reserve_native(100,1000,now,0);
-        assert_eq!(s.pipe(),1000);assert_eq!(s.admitted_pipe(),0);
+        assert_eq!(s.pipe(),1000);assert_eq!(s.admitted_pipe(),0);assert_eq!(s.native_pending_count(),1);
         assert!(s.tq.is_empty());
         let admitted=now+Duration::from_millis(10);
         assert!(s.admit_native(100,1000,admitted));
         assert!(!s.admit_native(100,1000,admitted));
-        assert_eq!(s.admitted_pipe(),1000);
+        assert_eq!(s.admitted_pipe(),1000);assert_eq!(s.native_pending_count(),0);
         assert_eq!(s.segs[0].xmit,10_000_000);
         s.begin_ack();let d=s.ack(1100,now+Duration::from_millis(110),None);
         assert_eq!(d.delivered,1000);assert_eq!(s.native_pending(),0);
