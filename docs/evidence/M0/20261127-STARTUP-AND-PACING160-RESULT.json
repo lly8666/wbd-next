@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "source_sha": "bd36c2e19244a3fd6646c44342740a8a73f2f8e6",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA six native Normal functional profiles, local two candidate cases, cross-host two ABBA blocks all ten measured. High-rate low-retrans product target still unresolved.",
+  "run_id": 45985127583,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140458666158,
+      "artifact_id": 15191711841,
+      "gso_groups": [
+        227,
+        79,
+        217
+      ],
+      "gso_segments": [
+        1672,
+        1033,
+        1498
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140458666547,
+      "artifact_id": 15192030611,
+      "gso_groups": [
+        291,
+        330,
+        199
+      ],
+      "gso_segments": [
+        2428,
+        2656,
+        2188
+      ]
+    }
+  ],
+  "local": {
+    "order": [
+      "cap160",
+      "gentle-startup"
+    ],
+    "mbps": [
+      133.62520545617843,
+      228.18586219510175
+    ],
+    "bytes": 536870912,
+    "both_measured": true,
+    "retrans_bytes": [
+      0,
+      0
+    ]
+  },
+  "performance": {
+    "result": "PASS",
+    "scope": "Measured qualification, not full product target. Same binary1GiB/600M offer, 400ms added RTT, zero injected, Startup A/G/G/A and ceiling L/H/H/L, actual phase/rate, bare brackets. All ten exact bytes/hash/EOF, path and Stop; all eight paired bulk retired.",
+    "run_id": 45985127492,
+    "job_ids": {
+      "client": 140461596547,
+      "server": 140461596561,
+      "relay": 140461596439
+    },
+    "artifact_ids": {
+      "client": 15190779910,
+      "server": 15192390712,
+      "relay": 15192315623
+    },
+    "bare_mbps": [
+      266.88310497428114,
+      327.27613520162373
+    ],
+    "order": [
+      "A1",
+      "G1",
+      "G2",
+      "A2",
+      "L1",
+      "H1",
+      "H2",
+      "L2"
+    ],
+    "mbps": [
+      275.0056830765329,
+      222.40075720918605,
+      198.75834925259397,
+      210.4327451440833,
+      73.03178860197414,
+      140.3715155860985,
+      138.8098145388791,
+      74.12652366255705
+    ],
+    "means": {
+      "A": {
+        "mbps": 242.7192141103081,
+        "cpu_s_per_gib": 31.01,
+        "weighted_final_retrans_ratio": 0.04832584786168827
+      },
+      "G": {
+        "mbps": 210.57955323089,
+        "cpu_s_per_gib": 32.545,
+        "weighted_final_retrans_ratio": 0.0900266988835121
+      },
+      "L": {
+        "mbps": 73.5791561322656,
+        "cpu_s_per_gib": 89.59,
+        "weighted_final_retrans_ratio": 0.000012555001998337042
+      },
+      "H": {
+        "mbps": 139.5906650624888,
+        "cpu_s_per_gib": 60.205,
+        "weighted_final_retrans_ratio": 0.00002221248132186755
+      }
+    },
+    "bulk_retired": {
+      "bytes_sent": [
+        1145343563,
+        1158232225,
+        1201709155,
+        1111188931,
+        1073745972,
+        1073751157,
+        1073780193,
+        1073764638
+      ],
+      "bytes_retrans": [
+        71601739,
+        84490401,
+        127967331,
+        37447107,
+        4148,
+        9333,
+        38369,
+        22814
+      ],
+      "dsack": [
+        7250,
+        6985,
+        11410,
+        4016,
+        2,
+        2,
+        7,
+        7
+      ]
+    },
+    "server_ingress_full": [
+      328,
+      4847,
+      4955,
+      305,
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_ingress_full": [
+      40,
+      1056,
+      786,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "both_packet_socket_drops_zero": true,
+    "interpretation": "Gentle Startup rejected. Cap160 retains near-zero retrans at 139.59Mbps and lower CPU/GiB than cap80; still slower and more CPU/GiB than uncapped, no promotion. Different ABBA blocks not direct matched workload comparison of A and H at same actual delivered rate. Evidence of low-retrans operating point, not proof all high-rate retrans caused by local CPU."
+  },
+  "review": "Five actual ZIPs opened with CRC, six native exact source summaries and two local recovery rows, all ten cross-host rows and weighted recovery, server ingress/raw and relay end. Main H2501 governance PASS, inherited branch red remains.",
+  "physical": "NOT_RUN",
+  "next_source": "d09f6158ca9fe1d587e9c57b4cd6fe1674ebba49"
+}
