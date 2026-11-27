@@ -1,0 +1,7 @@
+# WinXDP native candidate proof source increment
+
+Normal frozen baseline: validated ordinary native carrier and prior 350M duplex cases, 650M clean TCP target not achieved; timed cold renewal 400ms loss0 failed continuity (6.079/6.203s max gaps, 46001744551). Normal Windows MBB remains open: original Normal owner owns Wintun loan, split/DNS and both workers, so cannot just start a second competing Wintun reader. Linux whole-generation MBB and shared TUN ownership are the intended reference. No change to Normal runtime in this commit.
+
+Latest build 46023797543 failed before Go compile: shared cold-set Go source has no Windows tag; exact Windows assembler allowed only Windows-tagged bridges except admission. Fix 2c0a7dd enables that exact named shared source, does not loosen other checks. New build in progress.
+
+This increment stages a genuine committed candidate owner into the native Game4 runtime, uses existing TX worker for original Health and actual XDP acceptance receipt, and uses existing RX worker for candidate tuple AEAD proof and shared logical first delivery / FEC. Same group/TUN writer and deferred settlement, separate candidate presentation ledger. No additional worker or wire protocol. Candidate reads only while cold Go owns association; after stage, native RX handles it. Still no product caller or final selected-slot TX/RX promotion/old retirement; no end-to-end claim. Need exact command transaction, dynamic slot mapping, independent retiring RX ledger and random grace, and Go runtime timer. New source build and targeted tests required. 

@@ -251,6 +251,35 @@ pub(super) struct PreparedWinGameLane{
 impl PreparedWinGameLane{
     pub(super) fn index(&self)->usize{self.index}
     pub(super) fn new_handle(&self)->u64{self.new_handle}
+    pub(super) fn slot(&self)->usize{self.crypto.slot()}
+}
+/// DATA already opened by a candidate/retiring physical tuple still uses
+/// the same logical GameRx and FEC reservations and exact Wintun result.
+#[cfg(all(feature="winxdp_native_trial",feature="fec2_product_record"))]
+pub(super) fn prepare_opened_native_lane(game:&mut WinGameGroup,h:u64,
+    slot:usize,id:wbd_types::LogicalPacketId,payload:&[u8],
+)->Result<(Vec<Vec<u8>>,bool),i32>{
+    if slot>=game.handles.len()||!game_m4_members_active(game,h)||
+        game.off_pending[slot].is_some()||game.fec_pending[slot].is_some(){
+        return Err(BAD_STAGE)
+    }
+    let key=LaneKey{tunnel:TunnelKey{slot:14,generation:game.generation},
+        slot:slot as u32+1,generation:game.generation};
+    let handle=game.adapter.receiver_handle();
+    let mut rx=handle.lock().map_err(|_|BAD_STAGE)?;
+    if game.adapter.has_game_fec(){
+        let now=MonoNs(game.started.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
+        let batch=rx.prepare_opened_fec_batch(key,id,payload,now).map_err(|_|INVALID)?;
+        let Some(batch)=batch else{return Ok((Vec::new(),false))};
+        if batch.frames().len()>16||batch.frames().iter().any(|f|f.len()<20||f.len()>2048){return Err(INVALID)}
+        let frames=batch.frames().to_vec();
+        game.fec_pending[slot]=Some(batch);Ok((frames,true))
+    }else{
+        let Some(mut row)=rx.prepare_opened_receive(key,id,payload).map_err(|_|INVALID)?
+            else{return Ok((Vec::new(),false))};
+        let frame=row.payload().to_vec();
+        game.off_pending[slot]=Some(row);Ok((vec![frame],true))
+    }
 }
 #[cfg(all(feature="winxdp_native_trial",feature="fec2_product_record"))]
 pub(super) fn prepare_native_lane_candidate(
