@@ -384,58 +384,12 @@ pub unsafe fn split_borrowed_wintun(
         WintunTx { session: s, fns },
     ))
 }
-/// A read-only driver loan, held only by the existing single RX owner of
-/// the Wintun receive ring (the native carrier TX worker). The session
-/// cannot be dropped while a loan exists. Wintun 0.14.1 advances Head on
-/// receive and HeadRelease on contiguous released packets.
-pub struct WintunPacket<'a> {
-    owner: &'a WintunRx,
-    raw: *const u8,
-    len: usize,
-}
-impl WintunPacket<'_> {
-    #[inline]
-    pub fn bytes(&self) -> &[u8] {
-        unsafe { std::slice::from_raw_parts(self.raw,self.len) }
-    }
-}
-impl Drop for WintunPacket<'_> {
-    fn drop(&mut self) {
-        unsafe { (self.owner.fns.release)(self.owner.session.as_ptr(),self.raw) }
-    }
-}
-pub enum WintunLoanRead<'a> {
-    Packet(WintunPacket<'a>),
-    Other(ReadResult),
-}
 impl WintunRx {
     pub fn event(&self) -> usize { self.read_event }
-    /// Several already-ready loans may coexist on the same thread. No
-    /// mutable packet access, no release after session teardown.
-    pub fn borrow_packet(&self, capacity:usize) -> Result<WintunLoanRead<'_>,NativeIoError> {
-        let mut size=0u32;
-        let raw=unsafe{(self.fns.receive)(self.session.as_ptr(),&mut size)};
-        if raw.is_null(){
-            return match unsafe{GetLastError()}{
-                NO_MORE_ITEMS=>Ok(WintunLoanRead::Other(ReadResult::NoPacket)),
-                HANDLE_EOF=>Ok(WintunLoanRead::Other(ReadResult::EndOfStream)),
-                code=>Err(NativeIoError::Driver(code)),
-            }
-        }
-        let n=size as usize;
-        let packet=WintunPacket{owner:self,raw,len:n};
-        if n<20||n>65_535{return Ok(WintunLoanRead::Other(ReadResult::Skipped))}
-        let data=packet.bytes();
-        if data[0]>>4==6{return Ok(WintunLoanRead::Other(ReadResult::SkippedIpv6))}
-        if data[0]>>4!=4{return Ok(WintunLoanRead::Other(ReadResult::Skipped))}
-        if n>capacity{return Err(NativeIoError::BufferTooSmall)}
-        if ipv4_packet_size(data)!=Some(n){return Ok(WintunLoanRead::Other(ReadResult::Skipped))}
-        Ok(WintunLoanRead::Packet(packet))
-    }
     /// Each Wintun receive loan is copied once into an owned reusable buffer
     /// and always released BEFORE returning to the worker scheduler.
     /// IPv6/non-IPv4 control frames are skipped, not fed to Rust M1.
-    pub fn read(&self, dst: &mut [u8]) -> Result<ReadResult, NativeIoError> {
+    pub fn read(&mut self, dst: &mut [u8]) -> Result<ReadResult, NativeIoError> {
         let mut size = 0u32;
         let raw = unsafe { (self.fns.receive)(self.session.as_ptr(), &mut size) };
         if raw.is_null() {
@@ -593,29 +547,6 @@ mod tests {
         frame[14..34].copy_from_slice(&IPV4);
         frame[34..60].fill(0);
         assert_eq!(ethernet_ipv4(&frame[..60]),Some(IPV4.as_slice()));
-    }
-    #[test]
-    fn wintun_two_ready_loans_release_exactly_once() {
-        static READS:AtomicUsize=AtomicUsize::new(0);
-        static DROPS:AtomicUsize=AtomicUsize::new(0);
-        static NEXT:[u8;20]=[0x45,0,0,20,0,0,0,0,64,17,0,0,3,3,3,3,4,4,4,4];
-        unsafe extern "system" fn next(_: *mut c_void,size:*mut u32)->*const u8{
-            unsafe{*size=20};
-            if READS.fetch_add(1,Ordering::SeqCst)==0{IPV4.as_ptr()}else{NEXT.as_ptr()}
-        }
-        unsafe extern "system" fn done(_: *mut c_void,_:*const u8){
-            DROPS.fetch_add(1,Ordering::SeqCst);
-        }
-        READS.store(0,Ordering::SeqCst);DROPS.store(0,Ordering::SeqCst);
-        let fns=WintunFns{receive:next,release:done,allocate,send};
-        let (rx,_)=unsafe{split_borrowed_wintun(1,2,fns).unwrap()};
-        let WintunLoanRead::Packet(a)=rx.borrow_packet(2048).unwrap()else{panic!("first loan")};
-        let WintunLoanRead::Packet(b)=rx.borrow_packet(2048).unwrap()else{panic!("second loan")};
-        assert_eq!(a.bytes(),&IPV4);assert_eq!(b.bytes(),&NEXT);
-        assert_eq!(DROPS.load(Ordering::SeqCst),0);
-        drop(b);assert_eq!(DROPS.load(Ordering::SeqCst),1);
-        assert_eq!(a.bytes(),&IPV4);
-        drop(a);assert_eq!(DROPS.load(Ordering::SeqCst),2);
     }
     static MIXED_READS:AtomicUsize=AtomicUsize::new(0);
     static IPV6: [u8;40]=[

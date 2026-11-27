@@ -66,10 +66,13 @@ def main():
                 ("maximum-large50-loss10","fixed",50,10,200,1200),
                 ("fixed-small16384-100","fixed",100,5,20,288),
             ]
-        loan=os.environ.get("WBD_XDP_SOURCE_LOAN")=="1"
-        if loan:
-            workloads=[("normal-large175","normal",175,0,20,1200)] if os.environ["H2478_REPLICA"] in "ACEGIKS" else [("normal-small50","normal",50,0,20,288)]
-        CASES=[[name+"-"+str(i),mode,16384,2048,32,("rx-single" if arm=="A" else "rx-single-loan") if loan else "original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),rate,loss,delay,size] for name,mode,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
+        if os.environ.get("WBD_XDP_SINGLE_WIDE")=="gap":
+            workloads=[
+                ("normal-small50","normal",50,0,20,288),
+                ("maximum-large50-loss10","fixed",50,10,200,1200),
+                ("maximum-small75-loss5","fixed",75,5,20,288),
+            ]
+        CASES=[[name+"-"+str(i),mode,16384,2048,32,"original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),rate,loss,delay,size] for name,mode,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
     rows=[]
     order=list(range(len(CASES)))
     if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
@@ -137,7 +140,7 @@ def main():
              "tx":receipts("WBD_XDP_TX_STOP "),"rx":receipts("WBD_XDP_RX_STOP "),"tx_lab":receipts("WBD_XDP_TX_LAB "),"rx_lab":receipts("WBD_XDP_RX_LAB "),
              "fatal":[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC_ARENA_FULL" in l or "WBD_WINDOWS_NATIVE_WORKER_FAILURE" in l],"stats":stats,"tun_fq":r.get("linux_tun_fq_kernel"),"tun_link":r.get("linux_tun_link_kernel")}
         if tune:
-            row.update(resource,group=group,arm=("A" if policy in ("original","rx-single") and (os.environ.get("WBD_XDP_SOURCE_LOAN")=="1" or policy=="original") else "B") if (efficiency or pool) else ("A" if rx==16384 else "B"),rx_slots=rx)
+            row.update(resource,group=group,arm=("A" if policy=="original" else "B") if (efficiency or pool) else ("A" if rx==16384 else "B"),rx_slots=rx)
             row["lab_ok"]=bool(row["tx_lab"] and row["rx_lab"]) and all(q.get("slots")==tx for q in row["tx_lab"]) and all(q.get("slots")==rx and q.get("quantum")==32 for q in row["rx_lab"])
             row["carrier_ok"]=bool(row["tx"] and row["rx"]) and all(q.get("published",0)>0 and q.get("published")==q.get("completed_before_close") and q.get("invalid")==0 for q in row["tx"]) and all(q.get("truncated")==0 for q in row["rx"])
             row["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in row["rx_lab"]),default=0)
@@ -147,11 +150,7 @@ def main():
                 row["fec_receipts"]=[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC2_INSTALLED" in l or ("FEC" in l and ("STOP" in l or "PARITY" in l))][-20:]
             if pool:
                 row["rx_pool"]=receipts("WBD_XDP_RX_POOL_STOP ")
-                if os.environ.get("WBD_XDP_SOURCE_LOAN")=="1":
-                    row["rss_map_before"]=receipts("WBD_XDP_RSS_MAP_BEFORE ")
-                    row["source_loan"]=receipts("WBD_XDP_WINTUN_SOURCE_LOAN_STOP ")
-                    row["lab_ok"]=row["lab_ok"] and bool(row["rss_map_before"]) and all(x.get("processors",0)>1 for x in row["rss_map_before"]) and bool(row["rx_pool"]) and all(q.get("single")==1 and q.get("queues")==1 and q.get("backing_bytes")==33554432 for q in row["rx_pool"]) and bool(row["source_loan"]) and all((q.get("packets",0)>0)==(row["arm"]=="B") for q in row["source_loan"]) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
-                elif os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
+                if os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
                     row["rss_map_before"]=receipts("WBD_XDP_RSS_MAP_BEFORE ")
                     row["lab_ok"]=row["lab_ok"] and bool(row["rss_map_before"]) and all(x.get("processors",0)>1 for x in row["rss_map_before"]) and bool(row["rx_pool"]) and all(q.get("single")==int(row["arm"]=="B") and (row["arm"]=="A" or (q.get("queues")==1 and q.get("backing_bytes")==33554432)) for q in row["rx_pool"]) and (row["arm"]=="A" or "WBD_XDP_SINGLE_RSS_READY processors=1 queues=1" in s) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
                 else:
@@ -197,7 +196,11 @@ def main():
                         all(x["offered"].get(k,0)>=.95*x["target"][k] for k in ("windows","linux") if x["target"].get(k,0)>0)
                         for x in pair if isinstance(x.get("target"),dict) and isinstance(x.get("offered"),dict)
                     ) and all(isinstance(x.get("target"),dict) and isinstance(x.get("offered"),dict) for x in pair)
-                    result["scope"]="MATCHED_OFFER" if result["valid"] and result["all_arms_offered_at_target"] else "COMPLETE_BELOW_OFFER" if result["valid"] else "INCOMPLETE"
+                    result["all_arms_delivered_at_target"]=all(
+                        all(x["delivered"].get(k,0)>=.95*x["target"][k] for k in ("windows","linux") if x["target"].get(k,0)>0)
+                        for x in pair if isinstance(x.get("target"),dict) and isinstance(x.get("delivered"),dict)
+                    ) and all(isinstance(x.get("target"),dict) and isinstance(x.get("delivered"),dict) for x in pair)
+                    result["scope"]="MATCHED_TARGET" if result["valid"] and result["all_arms_offered_at_target"] and result["all_arms_delivered_at_target"] else "MATCHED_OFFER_BELOW_DELIVERY" if result["valid"] and result["all_arms_offered_at_target"] else "COMPLETE_BELOW_OFFER" if result["valid"] else "INCOMPLETE"
                 print("WINXDP_NORMAL_UDP_PAIR "+json.dumps(result),flush=True)
                 (E/("pair-"+group+".json")).write_text(json.dumps(result,indent=2))
         if os.environ.get("WBD_XDP_UDP_PHASE")=="game-batch":
