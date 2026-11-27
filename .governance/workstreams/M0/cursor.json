@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2487,
-  "checkpoint_sha": "5d69eb21716138ddf84a6c280752a31c1c2fbb0f",
+  "sequence": 2488,
+  "checkpoint_sha": "5c216cb01f45078fdb57fee70deeaed5a88b170c",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "核对47a42a6精确双ISA默认profile原生与旧splice BBR0 ABBA及同400ms裸TCP，读取实际AF_PACKET Stop计数、M4/RX/owner入口和TCP重传/DSACK；依据第一损失边界决定RX/owner/RACK修改，不重复派单。",
+  "next_action": "核对25eca47精确双ISA组件准入修复与默认/2048/CUBIC真实原生，再查1024/2048同二进制ARM BBR0 ABBA及同RTT裸TCP；AF_PACKET/入口/重传/DSACK/CPU/RSS，勿重复派单。",
   "unverified": true,
-  "last_tested_source": "b5c1520300359e008a7472a25db83fffc628e1b5",
+  "last_tested_source": "47a42a680d247ca185c6ab21351edee757b55bc4",
   "evidence_refs": [
-    "docs/evidence/M0/20261127-NATIVE-IPV4-HEADROOM-RESULT.json"
+    "docs/evidence/M0/20261127-SELECTED-DEFAULTS-CORE-FAILURE-RESULT.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261127-SELECTED-GSO-INGRESS-SPLICE-BBR01-RESULT.json",
-    "docs/devlog/M0/20261127-M0-DIRECT-ORIGIN-READ-HANDOFF.md",
     "docs/evidence/M0/20261127-FAST-RETRANS-CLOCK-REJECTED-RESULT.json",
     "docs/devlog/M0/20261127-M0-DIRECT-ORIGIN-MATCHED-LOAD-HANDOFF.md",
     "docs/evidence/M0/20261127-DIRECT-ORIGIN-READ-MIXED-RESULT.json",
     "docs/devlog/M0/20261127-M0-NATIVE-IPV4-HEADROOM-HANDOFF.md",
     "docs/evidence/M0/20261127-DIRECT-ORIGIN-MATCHED-LOAD-RESULT.json",
-    "docs/devlog/M0/20261127-M0-SELECTED-DEFAULTS-LOSS-BOUNDARY-HANDOFF.md"
+    "docs/devlog/M0/20261127-M0-SELECTED-DEFAULTS-LOSS-BOUNDARY-HANDOFF.md",
+    "docs/evidence/M0/20261127-NATIVE-IPV4-HEADROOM-RESULT.json",
+    "docs/devlog/M0/20261127-M0-NORMAL-INBOX-2048-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "b5c1520双ISA346 core及原生PASS；headroom BBR0 +6.06%吞吐/+1.44%CPU/GiB未选，零注入损失内层重传7.61–13.54%；47a42a6将已选parity/BBR1/ACK2/GSO/M4/server ingress-first设为分支配对模式默认，新原生/AF_PACKET损失边界/旧splice同RTT对照待验；main未合并。"
+  "partial_summary": "纠正Normal实际1024/Game128；旧splice真实中间TCP重传0.97/0.91%且DSACK885/554，SharedTun满0。47a42a6双ISA344/345组件FIN失败，原生业务/perf未跑；25eca47测试准入修复和用户授权Normal2048对照未验，已选默认保留。"
 }
