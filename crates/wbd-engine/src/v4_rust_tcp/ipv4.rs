@@ -82,7 +82,20 @@ pub(crate) fn encode(tuple: Tuple, mut tcp: Vec<u8>, ecn: IpEcn, mtu: u16) -> io
     let check = checksum(tcp_sum(src, dst, &tcp));
     tcp[16..18].copy_from_slice(&check.to_be_bytes());
     let tcp_len=tcp.len();tcp.resize(len,0);tcp.copy_within(..tcp_len,20);tcp[..20].fill(0);
-    let mut ip=tcp;
+    finish_ipv4(tuple,tcp,ecn)
+}
+
+/// TCP already occupies byte 20 onward in this owned datagram.
+pub(crate) fn encode_prefixed(tuple:Tuple,mut ip:Vec<u8>,ecn:IpEcn,mtu:u16)->io::Result<Vec<u8>>{
+    if ip.len()<40||ip.len()>mtu as usize{return Err(invalid())}
+    let tcp=&mut ip[20..];
+    tcp[16..18].fill(0);
+    let check=checksum(tcp_sum(*tuple.src.ip(),*tuple.dst.ip(),tcp));
+    tcp[16..18].copy_from_slice(&check.to_be_bytes());
+    finish_ipv4(tuple,ip,ecn)
+}
+fn finish_ipv4(tuple:Tuple,mut ip:Vec<u8>,ecn:IpEcn)->io::Result<Vec<u8>>{
+    let len=ip.len();let src=*tuple.src.ip();let dst=*tuple.dst.ip();
     ip[0] = 0x45;
     ip[1] = ecn.0;
     ip[2..4].copy_from_slice(&(len as u16).to_be_bytes());
@@ -112,6 +125,21 @@ pub(crate) fn reset_for(packet: &Packet, mtu: u16) -> io::Result<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn prefixed_native_datagrams_are_byte_identical(){
+        let tuple=Tuple{src:"10.66.0.2:43210".parse().unwrap(),dst:"192.0.2.1:443".parse().unwrap()};
+        for flags in [flags::SYN,flags::ACK,flags::ACK|flags::PSH,flags::FIN|flags::ACK,flags::RST]{
+            for n in [0,1,3,536,1037]{
+                let seg=Segment{src_port:43210,dst_port:443,seq:9,ack:3,flags,window:1234,
+                    options:vec![super::super::pktkit::vtcp::options::timestamp_option(11,22)],
+                    payload:(0..n).map(|i|i as u8).collect(),..Default::default()};
+                let pref=seg.marshal_payload_prefix(&seg.payload,20);
+                assert_eq!(&pref[20..],&seg.marshal());
+                assert_eq!(encode(tuple,seg.marshal(),IpEcn::CE,1460).unwrap(),encode_prefixed(tuple,pref.clone(),IpEcn::CE,1460).unwrap());
+                assert!(encode_prefixed(tuple,pref.clone(),IpEcn::CE,(pref.len()-1) as u16).is_err());
+            }
+        }
+    }
     #[test]
     fn real_tcp_checksum_odd_payload_ecn_mtu_and_corruption() {
         let tuple = Tuple { src:"10.66.0.2:43210".parse().unwrap(),

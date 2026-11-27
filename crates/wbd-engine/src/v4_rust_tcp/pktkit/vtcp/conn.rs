@@ -438,6 +438,8 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Product owner reserves no more than one native batch per flow event.
     pub(crate) native_owner_turn: bool,
+    // Native IPv4 flow adapter only: outgoing Vec contains 20 blank L3 bytes.
+    pub(crate) native_ipv4_headroom: bool,
     /// Opt-in M0 behavior-alignment profile; not a claim of Linux equivalence.
     pub(crate) linux_parity: bool,
     /// Explicit Congestion Notification (RFC 3168, and RFC 9768's
@@ -540,6 +542,7 @@ impl Default for ConnConfig {
             middle_sack_compress: false,
             native_bounded_pacing: false,
             native_owner_turn: false,
+            native_ipv4_headroom: false,
             linux_parity: false,
             ecn: EcnMode::default(),
             mtu_probing: MtuProbing::default(),
@@ -1064,6 +1067,7 @@ impl Conn {
         if self.cfg.native_owner_turn { self.native_credit=32usize.saturating_sub(self.score.native_pending_count()); }
     }
     pub(crate) fn native_turn_enabled(&self)->bool{self.cfg.native_owner_turn}
+    pub(crate) fn native_ipv4_prefix(&self)->usize{if self.cfg.native_ipv4_headroom{20}else{0}}
 
     // --- Accessors ---------------------------------------------------------
 
@@ -2118,7 +2122,7 @@ impl Conn {
     fn queue_seg(&mut self, mut seg: Segment) {
         let has_payload = !seg.payload.is_empty();
         self.prepare_seg(&mut seg, has_payload);
-        self.outgoing.push(seg.marshal());
+        self.outgoing.push(seg.marshal_payload_prefix(&seg.payload,self.native_ipv4_prefix()));
     }
 
     fn prepare_seg(&mut self, seg: &mut Segment, has_payload: bool) {
@@ -3745,13 +3749,10 @@ impl Conn {
         let Some(sb) = self.send_buf.as_ref() else {
             return;
         };
-        self.check_app_limited_pending(sb.pending());
-    }
-    fn check_app_limited_pending(&mut self,pending:usize){
         if !self.state.is_synchronized() {
             return;
         }
-        if pending < self.mss as usize
+        if sb.pending() < self.mss as usize
             && self.score.native_pending()==0
             && self.in_flight() < self.cc.cwnd()
             && self.score.lost_bytes() == 0
@@ -4381,7 +4382,7 @@ impl Conn {
         self.add_options(&mut seg);
         self.prepare_seg(&mut seg,!fin);
         let payload=if fin{&[][..]}else{self.send_buf.as_ref().unwrap().data_at(seq,payload_len)};
-        self.outgoing.push(seg.marshal_payload(payload));
+        self.outgoing.push(seg.marshal_payload_prefix(payload,self.native_ipv4_prefix()));
         let tsval = self.ts_now();
         self.score.on_retransmit(seq, len, self.now, tsval);
         self.note_sent(len);
@@ -4458,7 +4459,7 @@ impl Conn {
             ..Default::default()
         };
         self.prepare_seg(&mut seg, true);
-        let wire = seg.marshal_payload(self.send_buf.as_ref().unwrap().peek_unsent(len));
+        let wire = seg.marshal_payload_prefix(self.send_buf.as_ref().unwrap().peek_unsent(len),self.native_ipv4_prefix());
         self.outgoing.push(wire);
         self.send_buf.as_mut().unwrap().advance_sent(len);
         let tsval = self.ts_now();
@@ -5458,23 +5459,6 @@ impl Conn {
             self.flush_send_queue();
         }
         (n, self.take_outgoing())
-    }
-
-    /// Native origin read into SendBuf. Preserve write()'s post-read
-    /// clock and its pre-enqueue application-limited predicate.
-    #[cfg(target_os="linux")]
-    pub(crate) fn write_origin(&mut self,stream:&std::net::TcpStream,limit:usize)->std::io::Result<(usize,Vec<Vec<u8>>)>{
-        let limit=limit.min(self.send_available());
-        if limit==0{return Ok((0,Vec::new()))}
-        let sb=self.send_buf.as_mut().unwrap();
-        let pending=sb.pending();
-        let n=sb.read_origin(stream,limit)?;
-        if n==0{return Ok((0,Vec::new()))}
-        self.clock();
-        self.check_app_limited_pending(pending);
-        self.snd_nospace=self.send_buf.as_ref().unwrap().available()==0;
-        self.flush_send_queue();
-        Ok((n,self.take_outgoing()))
     }
 
     /// Whether the Nagle algorithm is off (see [`ConnConfig::nodelay`]).

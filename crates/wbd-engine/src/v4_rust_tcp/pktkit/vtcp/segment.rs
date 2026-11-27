@@ -101,21 +101,25 @@ impl Segment {
 
     /// Serialize the header with borrowed payload already owned by SendBuf.
     pub(crate) fn marshal_payload(&self, payload: &[u8]) -> Vec<u8> {
+        self.marshal_payload_prefix(payload,0)
+    }
+
+    /// The native IPv4 endpoint already owns the final L3 allocation.
+    /// Place TCP at its final offset; no payload shift in the IP writer.
+    pub(crate) fn marshal_payload_prefix(&self,payload:&[u8],prefix:usize)->Vec<u8>{
         let hdr_len = 20 + options::options_len(&self.options);
-        let mut out = Vec::with_capacity(20 + hdr_len + payload.len());
-        out.resize(hdr_len, 0);
-        out[0..2].copy_from_slice(&self.src_port.to_be_bytes());
-        out[2..4].copy_from_slice(&self.dst_port.to_be_bytes());
-        out[4..8].copy_from_slice(&self.seq.to_be_bytes());
-        out[8..12].copy_from_slice(&self.ack.to_be_bytes());
-        out[12] = (((hdr_len / 4) as u8) << 4) | u8::from(self.ae);
-        out[13] = self.flags;
-        out[14..16].copy_from_slice(&self.window.to_be_bytes());
-        // checksum left at 0
-        out[18..20].copy_from_slice(&self.urgent.to_be_bytes());
-        // Straight into place: an intermediate buffer per segment cost
-        // more than the rest of the header together.
-        options::write_options(&self.options, &mut out[20..hdr_len]);
+        let mut out = Vec::with_capacity(20usize.max(prefix) + hdr_len + payload.len());
+        out.resize(prefix+hdr_len, 0);
+        let tcp=&mut out[prefix..];
+        tcp[0..2].copy_from_slice(&self.src_port.to_be_bytes());
+        tcp[2..4].copy_from_slice(&self.dst_port.to_be_bytes());
+        tcp[4..8].copy_from_slice(&self.seq.to_be_bytes());
+        tcp[8..12].copy_from_slice(&self.ack.to_be_bytes());
+        tcp[12] = (((hdr_len / 4) as u8) << 4) | u8::from(self.ae);
+        tcp[13] = self.flags;
+        tcp[14..16].copy_from_slice(&self.window.to_be_bytes());
+        tcp[18..20].copy_from_slice(&self.urgent.to_be_bytes());
+        options::write_options(&self.options, &mut tcp[20..hdr_len]);
         out.extend_from_slice(payload);
         out
     }

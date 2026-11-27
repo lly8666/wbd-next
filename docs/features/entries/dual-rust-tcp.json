@@ -53,7 +53,8 @@
     "docs/devlog/M0/20261127-SELECTED-GSO-INGRESS-SPLICE-REQUALIFICATION.md",
     "docs/devlog/M0/20261127-NATIVE-FAST-RETRANS-ACTUAL-CLOCK.md",
     "docs/devlog/M0/20261127-DIRECT-ORIGIN-SENDBUF-READ.md",
-    "docs/devlog/M0/20261127-DIRECT-ORIGIN-READ-MATCHED-LOAD.md"
+    "docs/devlog/M0/20261127-DIRECT-ORIGIN-READ-MATCHED-LOAD.md",
+    "docs/devlog/M0/20261127-NATIVE-IPV4-FINAL-OFFSET.md"
   ],
   "verification": [
     {
@@ -274,7 +275,8 @@
     "5536d9c same-binary ARM BBR0 ABBA A221.06→B281.33 Mbps, total CPU/GiB32.02→30.09; server ingress full 30422/29498→8092/6924. Candidate selected for old splice requalification only, no product promotion. ACK2/SACK compression retained; 0/1% BBR requalification pending.",
     "c6b33c1 dual ISA scoped PASS; ARM BBR0 splice206.96→Rust273.76 Mbps, CPU/GiB+16.8%; 1% splice68.74→Rust72.69 but B34.65/110.73 unstable, CPU/GiB+55.1%. Native middle fast retransmit actual-attempt candidate unverified; TLP/RTO/FIN remain generation-accounted.",
     "014a902 native scoped PASS but BBR1% same-binary A150.60→B117.09 Mbps, CPU/GiB33.16→35.40; rejected, selected c6b33c1 product restored forward. Direct origin socket read into existing SendBuf candidate unverified.",
-    "31a3ac1 native scoped PASS; ARM BBR0 direct-origin peak A163.95/B213.02 Mbps, total CPU/GiB39.88→36.52, B legs divergent, bare94.54; inconclusive capacity/CPU. Fixed 120M ABBA and bracketed bare pre/post pending. No default promotion."
+    "31a3ac1 native scoped PASS; ARM BBR0 direct-origin peak A163.95/B213.02 Mbps, total CPU/GiB39.88→36.52, B legs divergent, bare94.54; inconclusive capacity/CPU. Fixed 120M ABBA and bracketed bare pre/post pending. No default promotion.",
+    "3ca7efd native PASS; fixed120M ABBA A1 90.50, B1/B2/A2 119.98 Mbps; CPU server three matched legs17.82/17.88/17.88; no demonstrated gain, direct-origin candidate withdrawn. Native IPv4 final-offset serialization candidate unverified; no default promotion."
   ],
   "promotion": null
 }

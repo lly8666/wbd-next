@@ -108,6 +108,8 @@ def functional():
             parts=dict(x.split("=",1) for x in gso.split() if "=" in x)
             assert int(parts["groups"])>0 and int(parts["segments"])>=2*int(parts["groups"]),gso
             row["local_gso"]={k:int(v) for k,v in parts.items()}
+        if os.environ.get("WBD_M0_NATIVE_IPV4_HEADROOM")=="1":
+            assert "WBD_M0_TCP_IPV4_HEADROOM enabled=1" in cl and "WBD_M0_TCP_IPV4_HEADROOM enabled=1" in sl
         assert "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in sl
         assert "WBD_TCP_SPLICE_READY" not in sl
         assert server.returncode==0 and client.returncode==0

@@ -23,8 +23,6 @@ def set_cc(ns,i):
     h.ns(ns,"sysctl","-qw","net.ipv4.tcp_congestion_control="+cc)
     assert h.ns(ns,"sysctl","-n","net.ipv4.tcp_congestion_control").stdout.strip()==cc
 DURATION=45
-OFFER_BPS=120_000_000
-BARE_DURATION=20
 TARGET="192.0.2.2"
 PORT=5400
 PEERS=ROOT/"h2228-peer"
@@ -121,7 +119,7 @@ def server_start(i):
     else:
         k=ORDER[i];b=bundle(k)
         flags=["--dual-rust-tcp"]
-        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_NATIVE_INGRESS_FIRST=1","WBD_M0_DIRECT_ORIGIN_READ="+("1" if k=="B" else "0"),"WBD_M0_LINUX_PARITY=1","WBD_M0_NATIVE_M4_CLOCK=1","WBD_M0_MIDDLE_CC="+rust_cc(i),"WBD_M0_SACK_COMPRESS="+compress(k),"WBD_M0_TCP_EXPERIMENT="+profile(i,k),"WBD_M0_ACK_PROBE="+ack_for(k),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
+        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_NATIVE_INGRESS_FIRST=1","WBD_M0_NATIVE_IPV4_HEADROOM="+("1" if k=="B" else "0"),"WBD_M0_LINUX_PARITY=1","WBD_M0_NATIVE_M4_CLOCK=1","WBD_M0_MIDDLE_CC="+rust_cc(i),"WBD_M0_SACK_COMPRESS="+compress(k),"WBD_M0_TCP_EXPERIMENT="+profile(i,k),"WBD_M0_ACK_PROBE="+ack_for(k),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
                 "--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443",
                 "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--users-file",fixture.TMP/"users.json",
                 "--lease-pool","10.66.0.128/25","--tls-cert",OUT/"cert.pem","--tls-key",fixture.TMP/"key.pem",
@@ -203,13 +201,10 @@ def delta(a,b,gib):
     return result
 def probe_receipt(log,leg,k,i):
     # Both legs run the same native binary; the only intervention is
-    # direct origin read; both use server ingress-first. Verify Stop and GSO.
+    # server ingress-first ordering. Verify actual Stop receipt and GSO.
     expected_first="true" if leg=="server-middle" else "false"
     pub=next((s for s in log.splitlines() if "WBD_M0_TCP_PUBLISH " in s),"")
-    mode_ok=(" ingress_first="+expected_first+" ") in pub
-    if leg=="server-middle":
-        origin=[s for s in log.splitlines() if "WBD_M0_TCP_ORIGIN " in s]
-        mode_ok=mode_ok and len(origin)>=10 and all("direct_origin_read="+("true" if k=="B" else "false") in s for s in origin)
+    mode_ok=(" ingress_first="+expected_first+" ") in pub and (("WBD_M0_TCP_IPV4_HEADROOM enabled=1" in log)==(k=="B"))
     gso_ok=True
     if leg=="client-middle":
         receipt=next((s for s in log.splitlines() if "WBD_M0_LOCAL_TUN_GSO groups=" in s),"")
@@ -224,14 +219,14 @@ def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()
     started=False;pre=post=before=after=None
-    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if i>=0 else None,"server_ingress_first":True,"direct_origin_read":k=="B","experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400 if i>=0 else 0,"status":"INCOMPLETE"}
+    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if i>=0 else None,"server_ingress_first":True,"native_ipv4_headroom":k=="B","experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400 if i>=0 else 0,"status":"INCOMPLETE"}
     try:
         shape(0,0)
         set_cc(N,i)
         control("/start",{"case":i});started=True
         if i>=0:
             b=bundle(k);flags=["--dual-rust-tcp"]
-            p=spawn("client",N,d/"client.log","env","WBD_M0_LOCAL_TUN_GSO=1","WBD_M0_NATIVE_INGRESS_FIRST=0","WBD_M0_LINUX_PARITY=1","WBD_M0_NATIVE_M4_CLOCK=1","WBD_M0_MIDDLE_CC="+rust_cc(i),"WBD_M0_SACK_COMPRESS="+compress(k),"WBD_M0_TCP_EXPERIMENT="+profile(i,k),"WBD_M0_ACK_PROBE="+ack_for(k),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
+            p=spawn("client",N,d/"client.log","env","WBD_M0_LOCAL_TUN_GSO=1","WBD_M0_NATIVE_INGRESS_FIRST=0","WBD_M0_NATIVE_IPV4_HEADROOM="+("1" if k=="B" else "0"),"WBD_M0_LINUX_PARITY=1","WBD_M0_NATIVE_M4_CLOCK=1","WBD_M0_MIDDLE_CC="+rust_cc(i),"WBD_M0_SACK_COMPRESS="+compress(k),"WBD_M0_TCP_EXPERIMENT="+profile(i,k),"WBD_M0_ACK_PROBE="+ack_for(k),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
                     "--raw-interface","wan0","--local-ip","10.248.81.2","--local-port",str(44100+2*i),
                     "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
                     "--username","bench","--password","H2442-ONLY","--auto-ip","--installation-id-file",fixture.TMP/("install-"+str(i)),
@@ -247,10 +242,7 @@ def client_case(i):
         before=control("/sample");save(d/"server-before.json",before)
         pre=snapshot("client");save(d/"client-before.json",pre)
         row["start_wall_ns"]=time.time_ns()
-        cmd=["ip","netns","exec",N,"iperf3","-J","-c",TARGET if i>=0 else "10.248.82.2","-p",str(PORT if i>=0 else 5202),"-P","1","-R","-C",cc_for(i),"-t",str(DURATION if i>=0 else BARE_DURATION)]
-        if i>=0:cmd.extend(["-b",str(OFFER_BPS)])
-        row["offered_bps"]=OFFER_BPS if i>=0 else None
-        save(d/"iperf-argv.json",cmd)
+        cmd=["ip","netns","exec",N,"iperf3","-J","-c",TARGET if i>=0 else "10.248.82.2","-p",str(PORT if i>=0 else 5202),"-P","1","-R","-C",cc_for(i),"-t",str(DURATION if i>=0 else 12)]
         with (d/"iperf.json").open("w") as f,(d/"iperf.err").open("w") as err:
             p=subprocess.Popen(cmd,stdout=f,stderr=err)
             t=time.monotonic()
@@ -316,14 +308,7 @@ def client():
             for k in "AB":
                 v=[x for x in rows if x["leg"]==k and x["kernel_cc"]==cc and x["loss_pct"]==loss and x["status"]=="MEASURED"]
                 if len(v)==2:means[cc+"-"+str(loss)+"-"+k]={"mbps":statistics.mean(x["mbps"] for x in v),"client_product_cpu_s_per_gib":statistics.mean(x["client"]["product"]["cpu_s_per_gib"] for x in v),"server_product_cpu_s_per_gib":statistics.mean(x["server"]["product"]["cpu_s_per_gib"] for x in v)}
-        business=[x for x in rows if x["leg"] in "AB"]
-        bare=[x for x in rows if x["leg"]=="bare"]
-        # A bounded offered load is a causal CPU comparison, not a peak
-        # throughput qualification. Require actual delivered rates near the
-        # offer in all four legs; bracket capacity without asserting RTT parity.
-        load_ok=len(business)==4 and all(x["status"]=="MEASURED" and x.get("endpoint_direct_snapshots") and .95*OFFER_BPS<=x["mbps"]*1e6<=1.05*OFFER_BPS for x in business)
-        capacity_ok=len(bare)==2 and all(x["status"]=="MEASURED" and x.get("endpoint_direct_snapshots") and x["mbps"]*1e6>=OFFER_BPS for x in bare)
-        summary={"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"offered_bps":OFFER_BPS,"matched_delivered_load":load_ok,"bare_bracket_capacity":capacity_ok,"intervention":"origin socket direct SendBuf read only at fixed offered load; same binary, both client GSO/server ingress-first","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","blocks":BLOCKS,"added_rtt_ms":400,"streams":1,"order":ORDER,"status":"MATCHED_LOAD_MEASURED_REQUIRES_CPU_REVIEW" if load_ok and capacity_ok and len(means)==2*len(BLOCKS) else "LOAD_OR_CAPACITY_NOT_QUALIFIED" if len(means)==2*len(BLOCKS) else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"native IPv4 headroom only on both endpoints; same binary, client GSO and server ingress-first","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","blocks":BLOCKS,"added_rtt_ms":400,"streams":1,"order":ORDER,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if len(means)==2*len(BLOCKS) else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
