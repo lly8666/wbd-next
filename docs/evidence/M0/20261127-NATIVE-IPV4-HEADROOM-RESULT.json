@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "source_sha": "b5c1520300359e008a7472a25db83fffc628e1b5",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native dual ISA scoped Normal original/parity/GSO+headroom functional only, byte exact codec regression, app hashes, eight concurrent, UDP, half-close, joined Stop.",
+  "run_id": 45947090142,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140334163770,
+      "artifact_id": 15174899281,
+      "core_pass": 346,
+      "gso_groups": 166,
+      "gso_segments": 1461
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140334164027,
+      "artifact_id": 15175675336,
+      "core_pass": 346,
+      "gso_groups": 300,
+      "gso_segments": 2523
+    }
+  ],
+  "performance": {
+    "result": "INCONCLUSIVE",
+    "scope": "ARM same-binary peak BBR0 400ms added RTT,45s single reverse flow, outer IP MTU1160; A off/B final IPv4 headroom both endpoints; GSO and ingress-first both. Bare no added RTT.",
+    "run_id": 45947090172,
+    "job_ids": {
+      "client": 140335567717,
+      "server": 140335567714,
+      "relay": 140335567765
+    },
+    "artifact_ids": {
+      "client": 15175226915,
+      "server": 15176170015,
+      "relay": 15175476376
+    },
+    "bare_mbps": [
+      512.102434753582,
+      347.84688401307
+    ],
+    "legs_mbps": [
+      211.52892421269752,
+      207.870763484544,
+      225.30245775618366,
+      196.8983697541296
+    ],
+    "means": {
+      "A": {
+        "mbps": 204.21364698341355,
+        "client_cpu_s_per_gib": 15.294755577108845,
+        "server_cpu_s_per_gib": 18.91819625885325
+      },
+      "B": {
+        "mbps": 216.58661062036384,
+        "client_cpu_s_per_gib": 16.134086071404933,
+        "server_cpu_s_per_gib": 18.571787125493792
+      }
+    },
+    "server_ingress_offered": [
+      165956,
+      172918,
+      249412,
+      182116
+    ],
+    "server_ingress_full": [
+      25015,
+      19637,
+      9054,
+      7855
+    ],
+    "client_ingress_offered": [
+      1241444,
+      1214782,
+      1305010,
+      1102547
+    ],
+    "client_ingress_full": [
+      3606,
+      2364,
+      263,
+      8887
+    ],
+    "client_shared_tun_full": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_local_write_failed": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_m4_copied": [
+      1415799,
+      1356354,
+      1403050,
+      1212475
+    ],
+    "server_m4_not_proven_copied": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_m4_no_normal_pn": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_raw_observed": [
+      1254032,
+      1226226,
+      1314058,
+      1110050
+    ],
+    "client_data_unique": [
+      1241444,
+      1214782,
+      1305010,
+      1102547
+    ],
+    "relay_qdisc_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "bulk_server_last_snapshot": {
+      "bytes_sent": [
+        1455797076,
+        1406522968,
+        1454916737,
+        1256793117
+      ],
+      "bytes_retrans": [
+        197173407,
+        161863256,
+        110773377,
+        123482764
+      ],
+      "dsack_dups": [
+        13583,
+        8687,
+        6639,
+        7342
+      ],
+      "reord_seen": [
+        8225,
+        8625,
+        10256,
+        7696
+      ],
+      "min_rtt_ms": [
+        501.823665,
+        501.829931,
+        501.753021,
+        501.81696
+      ]
+    },
+    "review": "All five actual ZIPs materialized, opened and CRC tested; six native summaries exact source and FUNCTIONAL_PASS; both core346 and named regression in job logs. ARM client summary/per-case results, direct path and both Stop, actual profile; server RX/TX chain and bulk final TcpInfo; client RX chain; relay-end qdisc zero both. Headroom throughput +6.06%, combined CPU/GiB +1.44%; not joint gain, reject. Raw/M4 aggregates not matched packet identities, distinct Stop windows; no claim of exact physical loss. DSACK indicates possible spurious retransmission, not exact count. 7.61–13.54% inner retrans bytes severe."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "47a42a680d247ca185c6ab21351edee757b55bc4"
+}
