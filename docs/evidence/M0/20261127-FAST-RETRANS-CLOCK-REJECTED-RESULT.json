@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "source_sha": "014a902870d319e470dd8c440fc338a4f73e60c8",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Native dual-ISA paired Normal original/parity/GSO+fast retrans clock scoped functional only; no performance promotion.",
+  "run_id": 45939819052,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140311304914,
+      "artifact_id": 15171603881,
+      "core_pass": 348,
+      "gso_groups": 89,
+      "gso_segments": 1054
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140311304632,
+      "artifact_id": 15172525587,
+      "core_pass": 348,
+      "gso_groups": 173,
+      "gso_segments": 1298
+    }
+  ],
+  "performance": {
+    "result": "FAIL",
+    "scope": "Same-binary ARM 3 VMs BBR1 implementation 1% IID,400ms added RTT,45s 1 reverse stream,outer IP MTU1160; A clock-off/B clock-on; both client GSO/server ingress-first. Four measured, valid profile/direct/Stop.",
+    "run_id": 45939819934,
+    "job_ids": {
+      "client": 140312797877,
+      "server": 140312797794,
+      "relay": 140312797807
+    },
+    "artifact_ids": {
+      "client": 15173045916,
+      "server": 15172084777,
+      "relay": 15172481605
+    },
+    "bare_mbps": 224.4702246475695,
+    "legs_mbps": [
+      155.141575869144,
+      84.4672669918496,
+      149.711278441634,
+      146.0538369987045
+    ],
+    "means": {
+      "A": {
+        "mbps": 150.59770643392426,
+        "client_cpu_s_per_gib": 16.113082828992304,
+        "server_cpu_s_per_gib": 17.050345748132433
+      },
+      "B": {
+        "mbps": 117.08927271674179,
+        "client_cpu_s_per_gib": 16.945536154568632,
+        "server_cpu_s_per_gib": 18.45814889037971
+      }
+    },
+    "server_ingress_full": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_ingress_full": [
+      1866,
+      0,
+      538,
+      0
+    ],
+    "client_shared_tun_full": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_stale_cancelled_B": [
+      4,
+      1
+    ],
+    "client_stale_cancelled_B": [
+      0,
+      0
+    ],
+    "server_m4_copied": [
+      955498,
+      489061,
+      934146,
+      881015
+    ],
+    "relay_final_qdisc_drops": {
+      "client": 33464,
+      "server": 1817
+    },
+    "review": "All five original ZIPs opened with CRC test; native three summaries per ISA checked; core 348 and all three named regressions in native job logs; client summary every row measured/direct and both Stop/actual profile valid; server Stop wire/counter and relay-end qdisc checked. B1 weak; B2 near A; candidate extra refresh and per-DATA stale check mixed, positive deferred receipt count absent. Negative candidate, not isolate actual timestamp alone. Bare no-added-RTT precheck does not prove 400ms capacity.",
+    "decision": "Reject candidate. Restore c6b33c1 product source through forward commit; preserve rejected history."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "31a3ac1696a6df7720a68cbfadb1a9f87ff9b8d4"
+}
