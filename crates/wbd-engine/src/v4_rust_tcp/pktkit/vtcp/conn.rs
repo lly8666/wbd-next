@@ -438,7 +438,6 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Product owner reserves no more than one native batch per flow event.
     pub(crate) native_owner_turn: bool,
-    pub(crate) native_fast_retrans_clock: bool,
     /// Opt-in M0 behavior-alignment profile; not a claim of Linux equivalence.
     pub(crate) linux_parity: bool,
     /// Explicit Congestion Notification (RFC 3168, and RFC 9768's
@@ -541,7 +540,6 @@ impl Default for ConnConfig {
             middle_sack_compress: false,
             native_bounded_pacing: false,
             native_owner_turn: false,
-            native_fast_retrans_clock: false,
             linux_parity: false,
             ecn: EcnMode::default(),
             mtu_probing: MtuProbing::default(),
@@ -3747,10 +3745,13 @@ impl Conn {
         let Some(sb) = self.send_buf.as_ref() else {
             return;
         };
+        self.check_app_limited_pending(sb.pending());
+    }
+    fn check_app_limited_pending(&mut self,pending:usize){
         if !self.state.is_synchronized() {
             return;
         }
-        if sb.pending() < self.mss as usize
+        if pending < self.mss as usize
             && self.score.native_pending()==0
             && self.in_flight() < self.cc.cwnd()
             && self.score.lost_bytes() == 0
@@ -4344,8 +4345,7 @@ impl Conn {
     }
 
     /// Send `[seq, seq+len)` again, or the FIN at `seq` if `fin`.
-    fn resend(&mut self,seq:u32,len:u32,fin:bool){self.resend_impl(seq,len,fin,false);}
-    fn resend_impl(&mut self, seq: u32, len: u32, fin: bool, defer_lost:bool) {
+    fn resend(&mut self, seq: u32, len: u32, fin: bool) {
         let rcv_nxt = self.recv_buf.as_ref().unwrap().nxt();
         let sb = self.send_buf.as_ref().unwrap();
         let una = sb.una();
@@ -4383,10 +4383,8 @@ impl Conn {
         let payload=if fin{&[][..]}else{self.send_buf.as_ref().unwrap().data_at(seq,payload_len)};
         self.outgoing.push(seg.marshal_payload(payload));
         let tsval = self.ts_now();
-        let deferred=defer_lost&&!fin&&self.cfg.native_owner_turn&&self.score.reserve_native_retrans(seq,len,tsval);
-        self.note_sent(len);
-        if deferred{return;}
         self.score.on_retransmit(seq, len, self.now, tsval);
+        self.note_sent(len);
         self.stats.total_retrans += 1;
         if !fin {
             self.stats.data_segs_out += 1;
@@ -4437,7 +4435,7 @@ impl Conn {
                 self.pace_wait();
                 break;
             }
-            self.resend_impl(seq,len,fin,self.cfg.native_fast_retrans_clock);
+            self.resend(seq, len, fin);
         }
     }
 
@@ -4484,34 +4482,19 @@ impl Conn {
         }
     }
 
-    pub(crate) fn native_data_outstanding(&self,seq:u32,len:u32)->bool{
-        self.score.native_data_outstanding(seq,len)
-    }
     pub(crate) fn native_admit(&mut self,seq:u32,len:u32,now:Instant)->bool{
-        if !self.cfg.native_owner_turn{return false}
-        let first=self.rto_deadline.is_none();
-        if let Some((start,remaining,tsval))=self.score.admit_native_retrans(seq,len,now){
-            self.now=self.now.max(now);
-            self.stats.total_retrans+=1;self.stats.data_segs_out+=1;
-            self.stats.bytes_sent+=u64::from(len);self.stats.bytes_retrans+=u64::from(len);
-            self.note_retransmission(start,remaining,tsval);
-            self.rto.invalidate_timing();
-            if first||self.send_buf.as_ref().is_some_and(|s|s.una()==start){self.start_rto();}
-        }else{
-            if !self.score.admit_native(seq,len,now){return false}
-            self.now=self.now.max(now);
-            self.rto.start_timing(seq,self.now);
-            if first{self.start_rto();}
-        }
+        if !self.cfg.native_owner_turn||!self.score.admit_native(seq,len,now){return false}
+        self.now=self.now.max(now);
         self.last_data_sent=Some(self.now);
+        self.rto.start_timing(seq,self.now);
+        let first=self.rto_deadline.is_none();
+        if first{self.start_rto();}
         let resume=(self.native_waiting&&self.score.native_pending_count()<32)||
             (self.fin_queued&&self.score.native_pending()==0&&self.send_buf.as_ref().is_some_and(|s|s.pending()==0));
         if resume{self.native_waiting=false;self.native_resume=Some(self.now);}
         let last=self.score.native_pending()==0;
         if last{self.schedule_loss_probe();}
-        // A retransmitted head may rearm an existing deadline; refresh the
-        // owner's existing indexed deadline even if it was not the first.
-        first||resume||last||self.cfg.native_fast_retrans_clock
+        first||resume||last
     }
 
     fn flush_send_queue(&mut self) {
@@ -5475,6 +5458,23 @@ impl Conn {
             self.flush_send_queue();
         }
         (n, self.take_outgoing())
+    }
+
+    /// Native origin read into SendBuf. Preserve write()'s post-read
+    /// clock and its pre-enqueue application-limited predicate.
+    #[cfg(target_os="linux")]
+    pub(crate) fn write_origin(&mut self,stream:&std::net::TcpStream,limit:usize)->std::io::Result<(usize,Vec<Vec<u8>>)>{
+        let limit=limit.min(self.send_available());
+        if limit==0{return Ok((0,Vec::new()))}
+        let sb=self.send_buf.as_mut().unwrap();
+        let pending=sb.pending();
+        let n=sb.read_origin(stream,limit)?;
+        if n==0{return Ok((0,Vec::new()))}
+        self.clock();
+        self.check_app_limited_pending(pending);
+        self.snd_nospace=self.send_buf.as_ref().unwrap().available()==0;
+        self.flush_send_queue();
+        Ok((n,self.take_outgoing()))
     }
 
     /// Whether the Nagle algorithm is off (see [`ConnConfig::nodelay`]).

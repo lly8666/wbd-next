@@ -43,7 +43,6 @@ impl Endpoint {
             middle_ack_three: !parity && middle && std::env::var_os("WBD_M0_ACK_PROBE").as_deref() != Some(std::ffi::OsStr::new("2")),
             middle_sack_compress: parity || middle && std::env::var_os("WBD_M0_SACK_COMPRESS").as_deref() == Some(std::ffi::OsStr::new("1")),
             native_owner_turn: parity,
-            native_fast_retrans_clock: parity&&middle&&std::env::var_os("WBD_M0_NATIVE_FAST_RETRANS_CLOCK").as_deref()==Some(std::ffi::OsStr::new("1")),
             native_bounded_pacing: parity || std::env::var_os("WBD_M0_BOUNDED_PACE").as_deref() == Some(std::ffi::OsStr::new("1")),
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()
@@ -133,7 +132,6 @@ impl ClientFlow {
     }
     pub(crate) fn tuple(&self) -> Tuple { self.middle.tuple }
     fn begin_turn(&mut self){self.local.conn.begin_native_turn();self.middle.conn.begin_native_turn();}
-    pub(crate) fn middle_data_outstanding(&self,seq:u32,len:u32)->bool{self.middle.conn.native_data_outstanding(seq,len)}
     pub(crate) fn admit(&mut self,local:bool,seq:u32,len:u32,now:Instant)->bool{
         if local{self.local.conn.native_admit(seq,len,now)}else{self.middle.conn.native_admit(seq,len,now)}
     }
@@ -209,6 +207,7 @@ pub(crate) struct ServerFlow {
     connected: bool,
     origin_eof: bool,
     origin_write_closed: bool,
+    direct_origin_read: bool,
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct Interest {
@@ -233,12 +232,13 @@ impl ServerFlow {
         let mut middle = Endpoint::new(syn.tuple.reverse(), mtu, CongestionKind::Bbr, true)?;
         let mut out = Vec::new();
         middle.accept(syn, &mut out)?;
-        Ok((Self { middle, stream, connected, origin_eof: false, origin_write_closed: false }, out))
+        let direct_origin_read=middle.conn.native_turn_enabled()&&std::env::var_os("WBD_M0_DIRECT_ORIGIN_READ").as_deref()==Some(std::ffi::OsStr::new("1"));
+        Ok((Self { middle, stream, connected, origin_eof: false, origin_write_closed: false,direct_origin_read }, out))
     }
     pub(crate) fn probe(&self, id:u64, wall_ns:u128) {
         self.middle.conn.m0_probe("server-middle",id,wall_ns);
-        eprintln!("WBD_M0_TCP_ORIGIN wall_ns={} id={} connected={} interest={:?} eof={} write_closed={}",
-            wall_ns,id,self.connected,self.interest(),self.origin_eof,self.origin_write_closed);
+        eprintln!("WBD_M0_TCP_ORIGIN wall_ns={} id={} connected={} interest={:?} eof={} write_closed={} direct_origin_read={}",
+            wall_ns,id,self.connected,self.interest(),self.origin_eof,self.origin_write_closed,self.direct_origin_read);
     }
     pub(crate) fn tuple(&self) -> Tuple { self.middle.tuple.reverse() }
     pub(crate) fn socket(&self) -> &TcpStream { &self.stream }
@@ -250,7 +250,6 @@ impl ServerFlow {
             write: !self.origin_write_closed && self.middle.conn.readable() != 0,
         }
     }
-    pub(crate) fn middle_data_outstanding(&self,seq:u32,len:u32)->bool{self.middle.conn.native_data_outstanding(seq,len)}
     pub(crate) fn admit(&mut self,seq:u32,len:u32,now:Instant)->bool{self.middle.conn.native_admit(seq,len,now)}
     pub(crate) fn on_packet(&mut self, p: &Packet) -> io::Result<Packets> {
         self.middle.conn.begin_native_turn();let mut out = Vec::new();
@@ -319,15 +318,27 @@ impl ServerFlow {
             while budget != 0 {
                 let n = self.middle.conn.send_available().min(budget).min(scratch.len());
                 if n == 0 { break }
-                match self.stream.read(&mut scratch[..n]) {
-                    Ok(0) => {
+                #[cfg(target_os="linux")]
+                let result=if self.direct_origin_read{
+                    self.middle.conn.write_origin(&self.stream,n)
+                }else{
+                    self.stream.read(&mut scratch[..n]).map(|n|{
+                        if n==0{return (0,Vec::new())}
+                        let (accepted,packets)=self.middle.conn.write(&scratch[..n]);assert_eq!(accepted,n);(n,packets)
+                    })
+                };
+                #[cfg(not(target_os="linux"))]
+                let result=self.stream.read(&mut scratch[..n]).map(|n|{
+                    if n==0{return (0,Vec::new())}
+                    let (accepted,packets)=self.middle.conn.write(&scratch[..n]);assert_eq!(accepted,n);(n,packets)
+                });
+                match result {
+                    Ok((0,_)) => {
                         self.origin_eof = true;
                         self.middle.close(&mut out)?;
                         break
                     }
-                    Ok(n) => {
-                        let (accepted, packets) = self.middle.conn.write(&scratch[..n]);
-                        assert_eq!(accepted, n);
+                    Ok((n,packets)) => {
                         self.middle.emit(packets, &mut out)?;
                         budget -= n;
                     }

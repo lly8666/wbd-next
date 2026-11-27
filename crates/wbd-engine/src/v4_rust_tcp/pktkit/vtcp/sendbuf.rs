@@ -61,6 +61,14 @@ impl SendBuf {
         n
     }
 
+    /// Receive directly into the existing initialized-prefix/spare-tail
+    /// allocation. Only actual accepted bytes advance the tail.
+    #[cfg(target_os="linux")]
+    pub(crate) fn read_origin(&mut self,stream:&std::net::TcpStream,limit:usize)->std::io::Result<usize>{
+        let n=limit.min(self.available());
+        crate::v4_rust_tcp::linux_socket::recv_into_tail(stream,&mut self.buf,n)
+    }
+
     /// Bytes queued but not yet sent.
     pub fn pending(&self) -> usize {
         let sent = self.nxt.wrapping_sub(self.una) as usize;
@@ -200,6 +208,30 @@ mod tests {
         s.advance_sent(5);
         assert_eq!(s.pending(), 0);
         assert_eq!(s.unacked(), 5);
+    }
+
+    #[cfg(target_os="linux")]
+    #[test]
+    fn origin_read_into_send_tail_preserves_short_read_eagain_and_eof(){
+        use std::{io::Write,net::{TcpListener,TcpStream,Shutdown}};
+        let listener=TcpListener::bind("127.0.0.1:0").unwrap();
+        let mut writer=TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+        let (reader,_)=listener.accept().unwrap();
+        let mut s=SendBuf::new(8,1000);
+        assert_eq!(s.write(b"old"),3);
+        s.advance_sent(3);s.acknowledge(1001);
+        writer.write_all(b"abcdef").unwrap();
+        assert_eq!(s.read_origin(&reader,2).unwrap(),2);
+        assert_eq!(s.data_at(1001,2),b"ld");assert_eq!(s.peek_unsent(8),b"ab");
+        let mut n=0;
+        while n<4 {let r=s.read_origin(&reader,4-n).unwrap();assert!(r>0);n+=r;}
+        assert_eq!(s.peek_unsent(8),b"abcdef");assert_eq!(s.available(),0);
+        s.advance_sent(6);s.acknowledge(1009);
+        reader.set_nonblocking(true).unwrap();
+        assert_eq!(s.read_origin(&reader,8).unwrap_err().kind(),std::io::ErrorKind::WouldBlock);
+        assert_eq!(s.pending(),0);
+        reader.set_nonblocking(false).unwrap();writer.shutdown(Shutdown::Write).unwrap();
+        assert_eq!(s.read_origin(&reader,8).unwrap(),0);assert_eq!(s.pending(),0);
     }
 
     #[test]

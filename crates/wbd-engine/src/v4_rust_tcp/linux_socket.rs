@@ -5,6 +5,7 @@ struct Addr4 { family:u16,port:u16,addr:u32,pad:[u8;8] }
 unsafe extern "C" {
     fn socket(domain:c_int,kind:c_int,protocol:c_int)->c_int;
     fn connect(fd:c_int,addr:*const c_void,len:u32)->c_int;
+    fn recv(fd:c_int,buf:*mut c_void,len:usize,flags:c_int)->isize;
 }
 pub(crate) fn connect_origin(target:SocketAddrV4)->io::Result<(TcpStream,bool)> {
     let raw=unsafe{socket(2,1|0x800|0x80000,6)};
@@ -21,4 +22,20 @@ pub(crate) fn connect_origin(target:SocketAddrV4)->io::Result<(TcpStream,bool)> 
     let stream=TcpStream::from(fd);
     stream.set_nodelay(true)?;
     Ok((stream,ready))
+}
+
+/// Append only bytes actually read to existing send storage. The syscall
+/// receives writable spare capacity, never a reference to uninitialized u8s.
+/// The origin socket is already nonblocking and exclusively owner-driven.
+pub(crate) fn recv_into_tail(stream:&TcpStream,buf:&mut Vec<u8>,limit:usize)->io::Result<usize>{
+    if limit==0{return Ok(0)}
+    buf.reserve(limit);
+    let old=buf.len();
+    let spare=buf.spare_capacity_mut();
+    let n=unsafe{recv(stream.as_raw_fd(),spare.as_mut_ptr().cast(),limit,0)};
+    if n<0{return Err(io::Error::last_os_error())}
+    // recv initializes exactly the returned prefix (bounded by limit).
+    let n=n as usize;
+    unsafe{buf.set_len(old+n);}
+    Ok(n)
 }
