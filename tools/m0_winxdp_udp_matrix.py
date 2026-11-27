@@ -56,7 +56,7 @@ def main():
         CASES=[[name+"-"+str(i),"fixed",16384 if arm=="A" else 4096,2048,32,"original",rate,loss,delay,size] for name,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
     if pool:
         seq="BAAB" if os.environ["H2478_REPLICA"] in "BDFHJL" else "ABBA"
-        CASES=[["maximum-small50-loss5-"+str(i),"fixed",16384,2048,32,"original" if arm=="A" else "rx-pool",50,5,20,288] for i,arm in enumerate(seq)]
+        CASES=[["maximum-small50-loss5-"+str(i),"fixed",16384,2048,32,"original" if arm=="A" else "rx-pool-recycle",50,5,20,288] for i,arm in enumerate(seq)]
     rows=[]
     order=list(range(len(CASES)))
     if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
@@ -128,7 +128,7 @@ def main():
                 row["fec_receipts"]=[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC2_INSTALLED" in l or ("FEC" in l and ("STOP" in l or "PARITY" in l))][-20:]
             if pool:
                 row["rx_pool"]=receipts("WBD_XDP_RX_POOL_STOP ")
-                row["lab_ok"]=row["lab_ok"] and bool(row["rx_pool"]) and all(q.get("enabled")==int(row["arm"]=="B") and (row["arm"]=="A" or (q.get("max_queue_posted",0)>=8192 and q.get("expanded_samples",0)>0)) for q in row["rx_pool"]) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
+                row["lab_ok"]=row["lab_ok"] and bool(row["rx_pool"]) and all(q.get("enabled")==int(row["arm"]=="B") and q.get("recycle")==int(row["arm"]=="B") and (q.get("posted",0)+q.get("reserve_remaining",0))*2048==q.get("backing_bytes") and q.get("posted",0)>=q.get("base",0)*q.get("queues",0) for q in row["rx_pool"]) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
             if efficiency:
                 row["pending_lab"]=receipts("WBD_XDP_RX_PENDING_LAB ")
                 row["lab_ok"]=row["lab_ok"] and bool(row["pending_lab"]) and all(q.get("enabled")==int(row["arm"]=="B") and (row["arm"]=="A" or q.get("skipped",0)>0) for q in row["pending_lab"])
@@ -157,6 +157,8 @@ def main():
                         result[arm]["pool_backing_bytes"]=max(q["backing_bytes"] for x in ar for q in x["rx_pool"])
                         result[arm]["pool_expanded_samples"]=sum(q["expanded_samples"] for x in ar for q in x["rx_pool"])
                         result[arm]["pool_max_queue_posted"]=max(q["max_queue_posted"] for x in ar for q in x["rx_pool"])
+                        result[arm]["pool_borrowed"]=sum(q.get("borrowed",0) for x in ar for q in x["rx_pool"])
+                        result[arm]["pool_returned"]=sum(q.get("returned",0) for x in ar for q in x["rx_pool"])
                 if efficiency:
                     for arm in ("A","B"):
                         ar=[x for x in pair if x["arm"]==arm]

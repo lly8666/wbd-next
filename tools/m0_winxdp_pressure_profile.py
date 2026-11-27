@@ -116,4 +116,4 @@ if os.environ.get("WBD_XDP_STRESS_PHASE")=="pool-qualification":
     base=dict(CASES[0],rx_slots=16384,tx_slots=2048,quantum=32,sndbuf=16777216,streams=1,profile=-1,loss=0,mtu=1160)
     workloads=[dict(name="pool-down350",direction="down",rate=350,delay=200)]
     seq="BAAB" if os.environ.get("H2478_REPLICA") in "BDFHJL" else "ABBA"
-    CASES=[dict(base,**w,arm=arm,group=w["name"],policy="original" if arm=="A" else "rx-pool",budget=w["rate"]) for w in workloads for arm in seq]
+    CASES=[dict(base,**w,arm=arm,group=w["name"],policy="original" if arm=="A" else "rx-pool-recycle",budget=w["rate"]) for w in workloads for arm in seq]

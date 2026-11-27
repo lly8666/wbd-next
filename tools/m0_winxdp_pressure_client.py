@@ -330,7 +330,7 @@ def main():
                 r["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in r["rx_lab"]),default=0)
                 if pool:
                     r["rx_pool"]=receipt("WBD_XDP_RX_POOL_STOP ")
-                    r["pressure_valid"]=r["pressure_valid"] and r["rx_pool"].get("enabled")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and (r["arm"]=="A" or (r["rx_pool"].get("max_queue_posted",0)>=8192 and r["rx_pool"].get("expanded_samples",0)>0))
+                    r["pressure_valid"]=r["pressure_valid"] and r["rx_pool"].get("enabled")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and r["rx_pool"].get("recycle")==int(r["arm"]=="B") and (r["rx_pool"].get("posted",0)+r["rx_pool"].get("reserve_remaining",0))*2048==r["rx_pool"].get("backing_bytes") and r["rx_pool"].get("posted",0)>=r["rx_pool"].get("base",0)*r["rx_pool"].get("queues",0)
                 if efficiency:
                     r["pending_lab"]=receipt("WBD_XDP_RX_PENDING_LAB ")
                     r["pressure_valid"]=r["pressure_valid"] and r["pending_lab"].get("enabled")==int(r["arm"]=="B") and (r["arm"]=="A" or r["pending_lab"].get("skipped",0)>0)
@@ -367,6 +367,8 @@ def main():
                                 pair[arm+"_pool_backing_bytes"]=max(x["rx_pool"].get("backing_bytes",0) for x in ar)
                                 pair[arm+"_pool_expanded_samples"]=sum(x["rx_pool"].get("expanded_samples",0) for x in ar)
                                 pair[arm+"_pool_max_queue_posted"]=max(x["rx_pool"].get("max_queue_posted",0) for x in ar)
+                                pair[arm+"_pool_borrowed"]=sum(x["rx_pool"].get("borrowed",0) for x in ar)
+                                pair[arm+"_pool_returned"]=sum(x["rx_pool"].get("returned",0) for x in ar)
                             if efficiency:
                                 pair[arm+"_pending_skips"]=sum(x["pending_lab"].get("skipped",0) for x in ar)
                                 pair[arm+"_event_checks"]=sum(x["pending_lab"].get("event_checks",0) for x in ar)
