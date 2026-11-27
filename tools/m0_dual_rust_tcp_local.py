@@ -146,30 +146,41 @@ def functional():
 def controlled_recovery():
     # Diagnostic, not peak or CPU parity qualification. Same machine, actual
     # sockets and original carrier, no tailnet. Each case gets fresh netem.
-    global DELAY
+    global DELAY,LOSS
     DELAY=200
-    target_bytes=192*1024*1024
     rows=[]
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--dual-rust-tcp"]
-    # Each candidate changes one causal dimension. The final conservative
-    # combination is a diagnostic lower-pressure operating point, not a
-    # component-wise causal estimate. The two bare brackets remain 120M.
+    ack={"WBD_M0_SERVER_ACK_DRAIN":"1"}
+    rack={"WBD_M0_RACK_KEEP_WINDOW":"1"}
+    cubic={"WBD_M0_MIDDLE_CC":"cubic"}
+    combined={**ack,**rack,**cubic}
+    # One controlled screen, not a causal ABBA. Use the same target
+    # bytes and offered load within each path condition. Jitter is on
+    # forward DATA direction only, never coupled to the IID loss case.
     cases=[
-        ("bare-before",False,120_000_000,{}),
-        ("paired",True,120_000_000,{}),
-        ("ack-drain",True,120_000_000,{"WBD_M0_SERVER_ACK_DRAIN":"1"}),
-        ("rack-window",True,120_000_000,{"WBD_M0_RACK_KEEP_WINDOW":"1"}),
-        ("cubic",True,120_000_000,{"WBD_M0_MIDDLE_CC":"cubic"}),
-        ("lower-offer",True,30_000_000,{}),
-        ("combined-lower-offer",True,30_000_000,{"WBD_M0_SERVER_ACK_DRAIN":"1","WBD_M0_RACK_KEEP_WINDOW":"1","WBD_M0_MIDDLE_CC":"cubic"}),
-        ("bare-after",False,120_000_000,{}),
+        ("clean-bare",False,600_000_000,{},0,0,192),
+        ("clean-default",True,600_000_000,{},0,0,192),
+        ("clean-combined",True,600_000_000,combined,0,0,192),
+        ("jitter-bare",False,120_000_000,{},5,0,96),
+        ("jitter-default",True,120_000_000,{},5,0,96),
+        ("jitter-ack",True,120_000_000,ack,5,0,96),
+        ("jitter-rack",True,120_000_000,rack,5,0,96),
+        ("jitter-cubic",True,120_000_000,cubic,5,0,96),
+        ("jitter-combined",True,120_000_000,combined,5,0,96),
+        ("loss-bare",False,120_000_000,{},0,0.5,96),
+        ("loss-default",True,120_000_000,{},0,0.5,96),
+        ("loss-combined",True,120_000_000,combined,0,0.5,96),
     ]
-    for label,paired,offered,profile in cases:
+    for label,paired,offered,profile,jitter,loss,mib in cases:
+        target_bytes=mib*1024*1024
         d=O/label;d.mkdir()
         server=client=origin=app=None
-        row={"case":label,"paired":paired,"offered_bps":offered,"target_bytes":target_bytes,"added_rtt_ms":400,"injected_loss_pct":0,"profile":profile,"status":"INCOMPLETE"}
+        row={"case":label,"paired":paired,"offered_bps":offered,"target_bytes":target_bytes,"added_rtt_ms":400,"injected_loss_pct":loss,"forward_jitter_ms":jitter,"profile":profile,"status":"INCOMPLETE"}
         try:
+            # Establish the product/control connection on the clean
+            # 400ms path, then apply the requested data-phase impairment.
+            LOSS=0
             shape(True)
             if paired:
                 server=spawn(S,d/"server.log","env",*[k+"="+v for k,v in profile.items()],"LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-server",
@@ -199,8 +210,33 @@ def controlled_recovery():
             save(d/"argv.json",{"origin":origin_argv,"client":argv})
             def path_counts():
                 return {dev:json.loads(ns(R,"tc","-s","-j","qdisc","show","dev",dev)) for dev in ("rc0","rs0")}
+            seed_receipts={}
+            for index,dev in enumerate(("rc0","rs0")):
+                terms=["delay","200ms"]
+                if jitter and dev=="rc0":terms+= [str(jitter)+"ms","distribution","normal"]
+                args=["ip","netns","exec",R,"tc","qdisc","replace","dev",dev,"root","netem",*terms,"loss","random",str(loss)+"%","limit","65536"]
+                if loss or jitter:
+                    seed=20261126+index
+                    trial=subprocess.run([*args,"seed",str(seed)],capture_output=True,text=True)
+                    if trial.returncode:
+                        # Match existing relay fixture's kernel compatibility
+                        # behavior; record unavailable seed, never claim matched random outcomes.
+                        seed_receipts[dev]={"seed":None,"reason":trial.stderr[-300:]}
+                        run(*args)
+                    else:seed_receipts[dev]={"seed":seed}
+                else:
+                    run(*args);seed_receipts[dev]={"seed":None,"reason":"no random impairment"}
+            row["seed_receipts"]=seed_receipts
             row["qdisc_before"]=path_counts()
             save(d/"links-before.json",{n:json.loads(ns(n,"ip","-s","-j","link")) for n in N})
+            def endpoint_cpu():
+                result={}
+                for role,p in (("client",client),("server",server),("origin",origin)):
+                    if p and p.poll() is None:
+                        stat=pathlib.Path("/proc",str(p.pid),"stat").read_text().rsplit(")",1)[1].split()
+                        result[role]=int(stat[11])+int(stat[12])
+                return result
+            cpu_before=endpoint_cpu()
             app=spawn(C,d/"app-client.json",*argv)
             samples=[]
             deadline=time.monotonic()+100
@@ -219,6 +255,11 @@ def controlled_recovery():
                 sender_sha256=sent["sha256"],receiver_sha256=received["sha256"],
                 byte_match=sent["sent_bytes"]==received["received_bytes"]==target_bytes,
                 hash_match=sent["sha256"]==received["sha256"],eof=received["eof"])
+            # CPU snapshots bracket actual app completion, not process teardown.
+            cpu_after=endpoint_cpu()
+            row["endpoint_product_cpu_s_per_gib"]={role:(cpu_after[role]-cpu_before[role])/os.sysconf("SC_CLK_TCK")/(target_bytes/2**30)
+                for role in ("client","server") if role in cpu_before and role in cpu_after}
+            save(d/"application-result.json",row)
             # Preserve both the application completion and later owner state.
             row["qdisc_after_app"]=path_counts()
             save(d/"links-after-app.json",{n:json.loads(ns(n,"ip","-s","-j","link")) for n in N})
@@ -262,7 +303,7 @@ def controlled_recovery():
             save(d/"result.json",row)
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, actual four kernel netns, bare brackets and isolated ACK-grant/RACK-window/CC/offer candidates, plus conservative combination; fixed bytes, 400ms added RTT, zero injected loss; diagnostic not peak parity","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, actual four kernel netns: high offered clean, forward 5ms normal jitter without injected loss, separate 0.5% IID loss; isolated ACK-grant/RACK-window/CC candidates in jitter; fixed bytes per condition; diagnostic not peak or physical parity","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)

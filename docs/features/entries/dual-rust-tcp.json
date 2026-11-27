@@ -32,7 +32,8 @@
     "docs/devlog/M0/20261127-CROSS-HOST-RECOVERY-SCREEN.md",
     "crates/wbd-engine/src/v4_rust_tcp/pktkit/UPSTREAM.md",
     "docs/devlog/M0/20261127-SELECTED-NATIVE-DEFAULTS-AND-LOSS-BOUNDARIES.md",
-    "docs/devlog/M0/20261127-RECOVERY-BATCH-FIXED-APP.md"
+    "docs/devlog/M0/20261127-RECOVERY-BATCH-FIXED-APP.md",
+    "docs/devlog/M0/20261127-RECOVERY-CONTROLLED-IMPAIRMENT-SCREEN.md"
   ],
   "verification": [
     {
@@ -75,7 +76,8 @@
     "All prior verification and limitations preserved verbatim in feature card history archive; current card summarizes selected state, not retroactive qualification.",
     "Paired mode requires explicit selection at both endpoints; selected parity, BBR1, ACK2/SACK compression, M4, GSO and server ingress-first unchanged. 1024 slots/32 MSS default. No old splice deletion or Windows construction yet.",
     "a153b50 exact native and eight same-host fixed-byte cases pass. All six paired sampled retrans/DSACK/timeouts0, full0 and reset0; actual120M offer yielded94Mbps, not peak. No candidate promotion.",
-    "Three-host prior high retrans and intermittent RST remain unresolved. Cross-host candidate screen pending; single-leg candidates are screening only, no physical or CPU parity claim."
+    "Three-host prior high retrans and intermittent RST remain unresolved. Cross-host candidate screen pending; single-leg candidates are screening only, no physical or CPU parity claim.",
+    "afcaaa8 exact native six and ARM eight fixed-byte PASS, sampled retrans/DSACK/full/reset0. Three-runner screen PATH_NOT_QUALIFIED before paired cases (server cold direct receipt absent). Controlled high-offer/jitter/0.5% loss screen pending; no candidate selected."
   ],
   "promotion": null
 }
