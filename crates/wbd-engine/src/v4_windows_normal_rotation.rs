@@ -36,6 +36,7 @@ pub(super) struct NormalRotation{
     retiring_id:AtomicU64,
     last_retired:AtomicU64,
     last_promoted:AtomicU64,
+    early:Mutex<VecDeque<(u32,Vec<u8>)>>,
 }
 impl NormalRotation{
     pub(super) fn new(initial:NormalPath)->Self{
@@ -45,7 +46,7 @@ impl NormalRotation{
             paths:Mutex::new(Paths{current:initial,candidate:None,retiring:None,
                 grace:Duration::ZERO,deadline:None}),current_id:AtomicU64::new(id),
             candidate_id:AtomicU64::new(0),retiring_id:AtomicU64::new(0),
-            last_retired:AtomicU64::new(0),last_promoted:AtomicU64::new(0)}
+            last_retired:AtomicU64::new(0),last_promoted:AtomicU64::new(0),early:Mutex::new(VecDeque::with_capacity(64))}
     }
     fn phase(&self)->u32{self.phase.load(Ordering::Acquire)}
     pub(super) fn owns(&self,h:u64)->bool{
@@ -179,6 +180,7 @@ impl NormalRotation{
             self.fold(&c.counters);
         }else{return Err(BAD_STAGE)}
         self.candidate_id.store(0,Ordering::Release);
+        self.early.lock().map_err(|_|BAD_STAGE)?.clear();
         self.phase.store(IDLE,Ordering::Release);Ok(())
     }
     pub(super) fn rx_wait_ms(&self)->u32{
@@ -258,6 +260,12 @@ impl RotationRx{
                 if let Some(p)=r.rx_candidate()?{self.candidate=Some(RxPath::new(p));}
             }
             if let Some(p)=self.candidate.as_mut(){
+                for _ in 0..64{
+                    let row=r.early.lock().map_err(|_|BAD_STAGE)?.pop_front();
+                    let Some((seq,wire))=row else{break};
+                    if open_and_deliver(&p.path.cfg,&p.path.lane,tun,&p.path.counters,&mut p.ack,
+                        seq,&wire,plain,false,dns)?{flush_tx_wake(wake,&p.path.counters);}
+                }
                 for _ in 0..32{
                     let frame=r.transport.rx.lock().map_err(|_|BAD_STAGE)?.pop_front();
                     let Some(frame)=frame else{break};
@@ -348,6 +356,16 @@ pub extern "C" fn wbd_m0_win_normal_candidate_stage(h:u64,owner:u64,port:u16,tx_
     match r.stage(owner,entry,port,tx_seq,rx_seq,sack==1).and_then(|()|wake_both(&tx,&rx)){
         Ok(())=>OK,Err(e)=>e,
     }
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_normal_candidate_early(h:u64,port:u16,seq:u32,wire:*const u8,len:usize)->i32{
+    if wire.is_null()||len<31||len>2048{return INVALID}
+    let (r,_,rx)=match get(h){Ok(v)=>v,Err(e)=>return e};
+    if r.phase()!=PROBE||r.transport.port.load(Ordering::Acquire)!=u32::from(port){return BAD_STAGE}
+    let Ok(mut q)=r.early.lock()else{return BAD_STAGE};
+    if q.len()>=64{return FULL}
+    q.push_back((seq,unsafe{std::slice::from_raw_parts(wire,len)}.to_vec()));drop(q);
+    if rx.wake().is_err(){return BAD_STAGE}OK
 }
 #[no_mangle]
 pub extern "C" fn wbd_m0_win_normal_candidate_ready(h:u64,port:u16)->i32{

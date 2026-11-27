@@ -137,8 +137,10 @@ func m0WindowsRotationDelay(min,max time.Duration)time.Duration{
 func m0WindowsArmRotation(o m0NativeV4Options)(<-chan time.Time,func()){
  if o.RotateMin==0{return nil,func(){}}
  delay:=m0WindowsRotationDelay(o.RotateMin,o.RotateMax)
- fmt.Printf("WBD_WINDOWS_TIMER_ROTATION_ARMED min_ms=%d max_ms=%d actual_delay_ms=%d scope=full_generation unix_ms=%d\n",
-  o.RotateMin.Milliseconds(),o.RotateMax.Milliseconds(),delay.Milliseconds(),time.Now().UnixMilli())
+ scope:="full_generation"
+ if o.Mode==m0WinModeNormal{scope="normal_mbb"}
+ fmt.Printf("WBD_WINDOWS_TIMER_ROTATION_ARMED min_ms=%d max_ms=%d actual_delay_ms=%d scope=%s unix_ms=%d\n",
+  o.RotateMin.Milliseconds(),o.RotateMax.Milliseconds(),delay.Milliseconds(),scope,time.Now().UnixMilli())
  timer:=time.NewTimer(delay)
  return timer.C,func(){timer.Stop()}
 }
@@ -815,7 +817,10 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,selected.ifindex,configure,planForGame,pathChanged,applied)
  }
  // The Windows product uses the XDP carrier exclusively.
- endpoint,available,err:=faketcp.OpenXdpEndpoint(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),underlay.InterfaceIndex,ncfg)
+ normalMBB:=o.Mode==m0WinModeNormal&&o.RotateMin>0
+ openEndpoint:=faketcp.OpenXdpEndpoint
+ if normalMBB{openEndpoint=faketcp.OpenXdpRotatableEndpoint}
+ endpoint,available,err:=openEndpoint(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),underlay.InterfaceIndex,ncfg)
  if err!=nil{return err}
  if !available{return fmt.Errorf("WinXDP runtime entry missing from wbd_engine.dll")}
  defer endpoint.Close()
@@ -1108,6 +1113,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   if e!=nil{return e}
   nativePeer:=newM0WinRustNativePeer(owner,endpoint,ncfg,flow,
    nativeFrames,rustHandoff,&readers,o.Mode,initial,autoStart,autoPolicy)
+  if normalMBB{nativePeer.rotationCurrent=owner;nativePeer.rotationSession=session;nativePeer.rotationGeneration=generation}
   nativePeer.healthInterval=o.HealthIntervalSeconds
   nativePeer.healthDead=o.HealthDeadSeconds
   nativePeer.healthDormant=o.HealthDormantSeconds
@@ -1219,15 +1225,48 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  qualityTicker:=time.NewTicker(2*time.Second)
  defer qualityTicker.Stop()
  rotation,stopRotation:=m0WindowsArmRotation(o)
- defer stopRotation()
+ defer func(){stopRotation()}()
+ var retireTimer *time.Timer
+ var retireCh <-chan time.Time
+ defer func(){if retireTimer!=nil{retireTimer.Stop()}}()
+ var retireUntil time.Time
+ var mbb *m0WinRustNativePeer
+ if normalMBB{mbb=transport.(*m0WinRustNativePeer)}
  var runtimeErr error
 waitNative:
  for{
   select{
   case <-ctx.Done():break waitNative
   case <-rotation:
-   if ctx.Err()==nil{runtimeErr=m0WindowsTimedRotationDue()}
+   if ctx.Err()!=nil{break waitNative}
+   if mbb!=nil{
+    fmt.Printf("WBD_WINDOWS_TIMER_ROTATION_DUE scope=normal_mbb unix_ms=%d\n",time.Now().UnixMilli())
+    if mbb.rotationRetiring!=nil{
+     // Never launch a third incarnation before exact old RX retirement.
+     rotation=nil;continue
+    }
+    grace,fatal,turnErr:=mbb.rotateNormal(ctx,o,auth,paddingMode,physical,cold)
+    if turnErr!=nil{
+     fmt.Printf("WBD_WINDOWS_NORMAL_MBB_CANDIDATE_FAILED fatal=%t error=%v\n",fatal,turnErr)
+     if fatal{runtimeErr=turnErr;break waitNative}
+    }else{
+     retireTimer=time.NewTimer(grace);retireCh=retireTimer.C
+     retireUntil=time.Now().Add(grace+5*time.Second)
+    }
+    stopRotation();rotation,stopRotation=m0WindowsArmRotation(o)
+    continue
+   }
+   runtimeErr=m0WindowsTimedRotationDue()
    break waitNative
+  case <-retireCh:
+   if ctx.Err()!=nil{break waitNative}
+   done,retireErr:=mbb.retireNormal(ctx)
+   if retireErr!=nil||(!done&&time.Now().After(retireUntil)){
+    runtimeErr=errors.Join(retireErr,fmt.Errorf("Normal old RX retirement incomplete"));break waitNative
+   }
+   if !done{retireTimer.Reset(100*time.Millisecond);continue}
+   retireCh=nil
+   if rotation==nil{rotation,stopRotation=m0WindowsArmRotation(o)}
   case <-pathChanged:
    runtimeErr=errM0WindowsPhysicalPathChanged
    break waitNative
@@ -1362,4 +1401,160 @@ func m0WindowsV4Profile(name string)(realityfront.FecV2Profile,error){
  case "maximum":return realityfront.FecV2Maximum,nil
  default:return 0,fmt.Errorf("unsupported original Linux FEC2 profile %q",name)
  }
+}
+
+// One cold Normal candidate on the original live native workers. This is
+// the original SYN/RTO/TLS machinery, not another data-plane implementation.
+// A true OS path event cancels ctx via the existing generation supervisor.
+func(p *m0WinRustNativePeer) rotateNormal(ctx context.Context,o m0NativeV4Options,
+ auth realityfront.ClientAdmissionConfig,padding uint8,physical uint32,cold m0RustColdBudgetOutput,
+)(grace time.Duration,fatal bool,err error){
+ if p.rotationCurrent==nil||p.rotationSession==nil||p.rotationRetiring!=nil||p.rotationStaged!=nil{
+  return 0,true,windowsclient.ErrN4NativeGuard
+ }
+ turn,cancel:=context.WithTimeout(ctx,25*time.Second);defer cancel()
+ ordinal,e:=m0WindowsReserveColdTupleOrdinal(o.StatePath);if e!=nil{return 0,false,e}
+ port,e:=m0WindowsOriginalColdClientPort(o.SourcePort,ordinal);if e!=nil{return 0,false,e}
+ cfg:=p.cfg;cfg.Flow.LocalPort=port
+ gen:=p.rotationGeneration+1
+ reason:="configured_outer_ipv4";if physical<o.ConnectionMTU{reason="physical_interface_ipv4"}
+ fmt.Printf("WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=%d mode=normal configured_outer_mtu=%d physical_outer_mtu=%d effective_outer_mtu=%d local_advertised_mss=%d inner_mtu_planned=%d limiting_reason=%s source=RUST_V1_REAL_OS\n",
+  gen,o.ConnectionMTU,physical,cold.EffectiveOuterIPMTU,cold.AdvertisedSynMSS,o.TunnelMTU,reason)
+ fmt.Printf("WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=%d configured_port=%d source_port=%d original_peer_port=%d same_ip_reauth_safe_tuple=true lanes=1\n",
+  gen,o.SourcePort,port,o.ServerPort)
+ transport,e:=p.owner.BeginNativeNormalCandidate(turn,cfg);if e!=nil{return 0,false,e}
+ // Close a pre-stage candidate before stopping its owner. An ambiguous
+ // post-stage promotion retains both owners until the exact product Stop.
+ var readers sync.WaitGroup
+ var handoffClosed bool
+ handoff:=make(chan struct{})
+ closeHandoff:=func(){if !handoffClosed{close(handoff);handoffClosed=true}}
+ var transferred bool
+ defer func(){
+  closeHandoff()
+  if !transferred&&!fatal{
+   if e:=transport.Close();e!=nil{fatal=true;err=errors.Join(err,e)}
+  }
+  readers.Wait()
+  if !transferred&&!fatal&&p.rotationStaged!=nil{
+   stop,c:=context.WithTimeout(context.Background(),15*time.Second)
+   e:=p.rotationStaged.StopScopedOwner(stop);c()
+   if e!=nil{fatal=true;err=errors.Join(err,e)}else{p.rotationStaged=nil}
+  }
+ }()
+ var seed [4]byte
+ if _,e=rand.Read(seed[:]);e!=nil{return 0,false,e}
+ assoc,e:=faketcp.NewClientAssociation(cfg.Flow,binary.BigEndian.Uint32(seed[:]),time.Second,
+  func(seg faketcp.Segment)error{
+   if seg.Flags&faketcp.FlagSYN!=0{
+    wire:=faketcp.MarshalSegment(seg,1,faketcp.PacketPersonaWindows11)
+    decoded,de:=faketcp.ParseIPv4TCP(wire)
+    if de!=nil||!decoded.MSSSet||decoded.MSS!=uint16(cold.AdvertisedSynMSS){return windowsclient.ErrN4NativeGuard}
+    fmt.Printf("WBD_WINDOWS_ACTUAL_SYN_MSS_V1 side=client generation=%d local_advertised_mss=%d tcp_option_bytes=%x\n",gen,decoded.MSS,wire[40:44])
+   }
+   return transport.WriteSegment(seg)
+  })
+ if e!=nil{return 0,false,e}
+ defer assoc.Close()
+ failure:=make(chan error,1);early:=make(chan faketcp.Segment,64)
+ readers.Add(1)
+ go func(){
+  defer readers.Done()
+  fail:=func(e error){select{case failure<-e:default:};assoc.Close()}
+  for{
+   if assoc.State()==faketcp.ClientAssociationDetached{return}
+   seg,e:=transport.ReadSegment()
+   if e!=nil{select{case <-handoff:return;default:};fail(e);return}
+   if assoc.State()!=faketcp.ClientAssociationDetached{
+    if seg.Flags&(faketcp.FlagSYN|faketcp.FlagACK)==(faketcp.FlagSYN|faketcp.FlagACK){
+     if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{fail(windowsclient.ErrN4NativeGuard);return}
+     fmt.Printf("WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=%d peer_advertised_mss=%d local_advertised_mss=%d\n",gen,seg.MSS,cold.AdvertisedSynMSS)
+    }
+    e=assoc.HandleSegment(seg,time.Now())
+    if !errors.Is(e,faketcp.ErrClientDetached){
+     if e==nil||errors.Is(e,faketcp.ErrClientHandshake)&&assoc.State()==faketcp.ClientAssociationSYNSent{continue}
+     fail(e);return
+    }
+   }
+   if handled,_:=assoc.RepeatGameColdFinalACK(&seg);handled{return}
+   if len(seg.Payload)>0{select{case early<-seg:default:fail(fmt.Errorf("Normal cold early queue full"))}}
+   return
+  }
+ }()
+ if e=assoc.Start(time.Now());e!=nil{return 0,false,e}
+ tick:=time.NewTicker(100*time.Millisecond);defer tick.Stop()
+ established:=make(chan error,1);go func(){established<-assoc.WaitEstablished(turn)}()
+ waitSyn:
+ for{select{
+  case <-turn.Done():return 0,false,turn.Err()
+  case e:=<-failure:return 0,false,e
+  case e:=<-established:if e!=nil{return 0,false,e};break waitSyn
+  case <-tick.C:if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{return 0,false,e}
+ }}
+ pumpStop,pumpDone:=make(chan struct{}),make(chan struct{})
+ go func(){
+  defer close(pumpDone)
+  for{select{
+   case <-turn.Done():return
+   case <-pumpStop:return
+   case <-tick.C:
+    if assoc.State()!=faketcp.ClientAssociationEstablished{return}
+    if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{
+     select{case failure<-e:default:};assoc.Close();return
+    }
+  }}
+ }()
+ next,session,e:=p.rotationCurrent.PrepareOriginalNormalSuccessor(turn,assoc,auth,p.rotationSession,padding)
+ close(pumpStop);<-pumpDone
+ if e!=nil{return 0,false,e}
+ p.rotationStaged=next
+ select{case e:=<-failure:return 0,false,e;default:}
+ if e=next.ArmBoundOriginalM2(turn);e!=nil{return 0,false,e}
+ if _,e=next.SetBoundOriginalOuterRepair(turn,!p.disableOuterRepair);e!=nil{return 0,false,e}
+ if _,e=next.SetBoundNativeHealthPolicy(turn,p.effectiveHealth.IntervalSeconds,p.effectiveHealth.DeadSeconds,p.effectiveHealth.DormantSeconds);e!=nil{return 0,false,e}
+ effective,e:=next.ReadBoundOriginalM2Effective(turn)
+ if e!=nil||effective.PathMTU!=p.effective.PathMTU||effective.BusinessIPv4MTU!=p.effective.BusinessIPv4MTU{
+  return 0,false,errors.Join(e,windowsclient.ErrN4NativeGuard)
+ }
+ closeHandoff()
+ if e=transport.TakeNative();e!=nil{return 0,false,e}
+ readers.Wait()
+ // Native Stage may send the real authenticated client Health immediately.
+ // After this boundary remote server promotion cannot be rolled back by Go.
+ fatal=true
+ if e=p.owner.StageNativeNormalCandidate(turn,next,transport);e!=nil{return 0,true,e}
+ for len(early)>0{
+  seg:=<-early
+  if e=p.owner.NativeNormalCandidateEarly(turn,port,seg.Seq,seg.Payload);e!=nil{return 0,true,e}
+ }
+ proof,stopProof:=context.WithTimeout(turn,6*time.Second);defer stopProof()
+ check:=time.NewTicker(25*time.Millisecond);defer check.Stop()
+ for{
+  ready,e:=p.owner.NativeNormalCandidateReady(proof,port)
+  if e!=nil{return 0,true,e}
+  if ready{break}
+  select{case <-proof.Done():return 0,true,proof.Err();case <-check.C:}
+ }
+ grace=m0WindowsRotationDelay(10*time.Second,20*time.Second)
+ if e=p.owner.PromoteNativeNormalCandidate(turn,port,grace);e!=nil{return 0,true,e}
+ transferred=true
+ p.rotationRetiring=p.rotationCurrent;p.rotationCurrent=next
+ p.rotationSession=session;p.rotationStaged=nil;p.rotationGeneration=gen
+ p.effective=effective
+ fmt.Printf("WBD_WINDOWS_NORMAL_MBB_GENERATION_READY generation=%d local_port=%d grace_ms=%d unix_ms=%d original_tls=1 authenticated_candidate_rx=1 same_wintun=1\n",gen,port,grace.Milliseconds(),time.Now().UnixMilli())
+ return grace,false,nil
+}
+func(p *m0WinRustNativePeer) retireNormal(ctx context.Context)(bool,error){
+ old:=p.rotationRetiring
+ if old==nil{return true,nil}
+ done,e:=p.owner.NativeNormalRetired(ctx,old)
+ if e!=nil||!done{return done,e}
+ if old!=p.owner{
+  stop,cancel:=context.WithTimeout(context.Background(),15*time.Second);defer cancel()
+  if e=old.StopScopedOwner(stop);e!=nil{return false,e}
+ }
+ p.rotationRetiring=nil
+ fmt.Printf("WBD_WINDOWS_NORMAL_MBB_OLD_EXACT_STOP generation=%d os_anchor_retained=%t native_rx_joined=1 unix_ms=%d\n",
+  p.rotationGeneration-1,old==p.owner,time.Now().UnixMilli())
+ return true,nil
 }

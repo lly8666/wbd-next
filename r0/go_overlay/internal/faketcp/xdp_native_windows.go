@@ -98,6 +98,19 @@ func(e *XdpEndpoint) CloseAfterRustJoin()error{
  return err
 }
 
+// Normal and Game rotations use the same mutable TCP port-set carrier.
+// This does not open a second Wintun or XDP ring for a candidate.
+func OpenXdpRotatableEndpoint(path string,index uint32,cfg NpcapConfig)(*XdpEndpoint,bool,error){
+ if err:=cfg.Validate();err!=nil{return nil,true,err}
+ local:=cfg.Flow.LocalIP
+ e,ok,err:=openXdpPortSet(path,index,[]uint16{cfg.Flow.LocalPort},false,&local)
+ if err!=nil||!ok{return e,ok,err}
+ e.cfg=cfg;e.gate=newNpcapCallGate(cfg.Generation)
+ return e,true,nil
+}
+// Generic cold lane endpoint; preserve the original Game name for callers.
+type XdpLaneCandidate = XdpGameCandidate
+
 // One interface-owned pair for the original Game group, not one pair per lane.
 // Only this single cold reader calls RX; per-lane association callbacks are
 // serialized by the existing cold TX mutex. Rust borrows after all join.

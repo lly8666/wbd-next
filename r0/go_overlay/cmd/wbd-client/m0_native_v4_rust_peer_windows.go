@@ -15,6 +15,11 @@ import (
 )
 type m0WinRustNativePeer struct{
  owner *realityfront.V4WindowsAuthenticatedClientOwner
+ // Original owner remains the product OS/WAL anchor. Native MBB can
+ // advance only the physical transport owner and its TLS session.
+ rotationCurrent,rotationRetiring,rotationStaged *realityfront.V4WindowsAuthenticatedClientOwner
+ rotationSession *realityfront.V4ClientSession
+ rotationGeneration uint64
  endpoint *faketcp.XdpEndpoint
  cfg faketcp.NpcapConfig
  flow faketcp.ClientFlow
@@ -191,6 +196,16 @@ func(p *m0WinRustNativePeer) DrainPeerAndKernelLoans(ctx context.Context,
   p.active=false
  }
  var err error
+ // Both original workers have joined; no candidate or retiring RX can
+ // still borrow its authenticated physical owner. OS anchor is stopped
+ // later by the unchanged original product WAL transaction.
+ seen:=map[*realityfront.V4WindowsAuthenticatedClientOwner]bool{p.owner:true}
+ for _,member:=range []*realityfront.V4WindowsAuthenticatedClientOwner{p.rotationStaged,p.rotationRetiring,p.rotationCurrent}{
+  if member==nil||seen[member]{continue};seen[member]=true
+  if e:=member.StopScopedOwner(ctx);e!=nil{err=errors.Join(err,e)}
+ }
+ if err!=nil{return err}
+ p.rotationStaged=nil;p.rotationRetiring=nil;p.rotationCurrent=nil
  if p.wintun!=nil{err=errors.Join(err,p.wintun.ReleaseAfterRustJoin());p.wintun=nil}
  if p.xdp!=nil{err=errors.Join(err,p.xdp.CloseAfterRustJoin());p.xdp=nil}
  return err
@@ -213,7 +228,9 @@ func(p *m0WinRustNativePeer) RefreshEffective(ctx context.Context)error{
  s,err:=p.owner.NativeIOStats(ctx);if err!=nil{return err}
  if s.WorkerError!=0{return m0WindowsRustNativeWorkerError(s.WorkerError)}
  p.last=s
- p.effective,err=p.owner.ReadBoundOriginalM2Effective(ctx)
+ effectiveOwner:=p.owner
+ if p.rotationCurrent!=nil{effectiveOwner=p.rotationCurrent}
+ p.effective,err=effectiveOwner.ReadBoundOriginalM2Effective(ctx)
  if err!=nil{return err}
  if (p.effective.V3Enabled==0)!=p.disableOuterRepair{return fmt.Errorf("original Rust outer repair mode drift")}
  if p.mode==m0WinModeFixed&&(!p.fixedInstalledReported||!p.fixedMatureReported){

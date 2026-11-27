@@ -10,6 +10,7 @@ import (
     "errors"
     "fmt"
     "runtime"
+    "time"
     "unsafe"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -749,4 +750,98 @@ func(s *V4WindowsAuthenticatedClientOwner) BoundOriginalIPv4Budget(
   return 0,errV4WindowsOwner
  }
  return s.device.maxIPv4,nil
+}
+
+// Normal MBB uses the existing original TLS owner. The successor is a new
+// protected epoch on the SAME actual Wintun device, not a new OS Apply/WAL.
+// The first original owner remains the product's OS proof anchor.
+func(s *V4WindowsAuthenticatedClientOwner) PrepareOriginalNormalSuccessor(
+ ctx context.Context,assoc *faketcp.ClientAssociation,base ClientAdmissionConfig,
+ previous *V4ClientSession,padding uint8,
+)(*V4WindowsAuthenticatedClientOwner,*V4ClientSession,error){
+ if s==nil||s.bridge==nil||s.device==nil||ctx==nil||previous==nil||
+    base.Policy.Transport!=TransportNormal||base.Policy.FECMode!=FECOff||
+    base.Policy.DesiredLanes!=1||base.DesiredLanes!=1{return nil,nil,ErrAdmissionParams}
+ prior,err:=previous.ColdSnapshot();if err!=nil{return nil,nil,err}
+ priorLease,err:=previous.AuthenticatedLeaseIPv4();if err!=nil{return nil,nil,err}
+ next,session,err:=V4WindowsEstablishOriginalClientOwner(ctx,s.bridge.dll.Name,assoc,base,padding)
+ if err!=nil{return nil,nil,err}
+ fail:=func(cause error)(*V4WindowsAuthenticatedClientOwner,*V4ClientSession,error){
+  stop,cancel:=context.WithTimeout(context.Background(),15*time.Second);defer cancel()
+  return nil,nil,errors.Join(cause,next.StopScopedOwner(stop))
+ }
+ fresh,e:=session.ColdSnapshot()
+ actualLease,le:=session.AuthenticatedLeaseIPv4()
+ if e!=nil||le!=nil||actualLease!=priorLease||session.Epoch==previous.Epoch||
+    fresh.epoch==[16]byte{}||prior.server!=fresh.server||fresh.server||
+    fresh.laneID!=1||prior.principal!=fresh.principal||prior.tunnelID!=fresh.tunnelID||
+    prior.features!=fresh.features||prior.cipher!=fresh.cipher||
+    prior.clientLimit!=fresh.clientLimit||prior.serverLimit!=fresh.serverLimit||
+    prior.incarnation==fresh.incarnation||prior.keys.C2S==fresh.keys.C2S||
+    prior.keys.S2C==fresh.keys.S2C||fresh.StartupPaddingMode()!=padding{
+  return fail(ErrAdmissionParams)
+ }
+ device:=s.device;id:=device.identity;id.Generation=session.Epoch
+ var geometry []uint32
+ if device.originalGeometry[0]!=0{geometry=device.originalGeometry[:]}
+ held,e:=next.bridge.holdOriginalCreatedWintunBudget(ctx,device.device,id,device.originalPathMTU,geometry...)
+ if held!=nil{next.device=held}
+ if e!=nil{return fail(e)}
+ if held.maxIPv4!=device.maxIPv4{return fail(ErrAdmissionParams)}
+ return next,session,nil
+}
+func(s *V4WindowsAuthenticatedClientOwner) BeginNativeNormalCandidate(
+ ctx context.Context,cfg faketcp.NpcapConfig,
+)(*faketcp.XdpLaneCandidate,error){
+ if s==nil||s.bridge==nil||ctx==nil{return nil,errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return nil,err}
+ b:=s.bridge
+ port,err:=b.fixedProc("wbd_m0_win_normal_candidate_port");if err!=nil{return nil,err}
+ read,err:=b.fixedProc("wbd_m0_win_normal_candidate_read");if err!=nil{return nil,err}
+ write,err:=b.fixedProc("wbd_m0_win_normal_candidate_write");if err!=nil{return nil,err}
+ return faketcp.BeginXdpGameCandidate(b.handle,cfg,port,read,write)
+}
+func(s *V4WindowsAuthenticatedClientOwner) StageNativeNormalCandidate(
+ ctx context.Context,next *V4WindowsAuthenticatedClientOwner,transport *faketcp.XdpLaneCandidate,
+)error{
+ if s==nil||s.bridge==nil||next==nil||next.bridge==nil||transport==nil||ctx==nil{return errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return err}
+ tx,rx,err:=next.OriginalVerifiedTCPBoundaries();if err!=nil{return err}
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_normal_candidate_stage");if err!=nil{return err}
+ var sack uintptr
+ if next.bridge.sackPermitted{sack=1}
+ return winOwnerCall(proc,uintptr(s.bridge.handle),uintptr(next.bridge.handle),
+  uintptr(transport.CandidatePort()),uintptr(tx),uintptr(rx),sack)
+}
+func(s *V4WindowsAuthenticatedClientOwner) NativeNormalCandidateEarly(
+ ctx context.Context,port uint16,seq uint32,wire []byte,
+)error{
+ if s==nil||s.bridge==nil||ctx==nil||len(wire)<31||len(wire)>2048{return errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return err}
+ p,err:=s.bridge.fixedProc("wbd_m0_win_normal_candidate_early");if err!=nil{return err}
+ err=winOwnerCall(p,uintptr(s.bridge.handle),uintptr(port),uintptr(seq),
+  uintptr(unsafe.Pointer(&wire[0])),uintptr(len(wire)))
+ runtime.KeepAlive(wire);return err
+}
+func(s *V4WindowsAuthenticatedClientOwner) NativeNormalCandidateReady(ctx context.Context,port uint16)(bool,error){
+ if s==nil||s.bridge==nil||ctx==nil{return false,errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return false,err}
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_normal_candidate_ready");if err!=nil{return false,err}
+ rc,_,_:=proc.Call(uintptr(s.bridge.handle),uintptr(port))
+ if int32(rc)!=0&&int32(rc)!=1{return false,errV4WindowsOwner}
+ return rc==1,nil
+}
+func(s *V4WindowsAuthenticatedClientOwner) PromoteNativeNormalCandidate(ctx context.Context,port uint16,grace time.Duration)error{
+ if s==nil||s.bridge==nil||ctx==nil||grace<10*time.Second||grace>20*time.Second{return errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return err}
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_normal_candidate_promote");if err!=nil{return err}
+ return winOwnerCall(proc,uintptr(s.bridge.handle),uintptr(port),uintptr(grace.Milliseconds()))
+}
+func(s *V4WindowsAuthenticatedClientOwner) NativeNormalRetired(ctx context.Context,old *V4WindowsAuthenticatedClientOwner)(bool,error){
+ if s==nil||s.bridge==nil||old==nil||old.bridge==nil||ctx==nil{return false,errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return false,err}
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_normal_candidate_retired");if err!=nil{return false,err}
+ rc,_,_:=proc.Call(uintptr(s.bridge.handle),uintptr(old.bridge.handle))
+ if int32(rc)!=0&&int32(rc)!=1{return false,errV4WindowsOwner}
+ return rc==1,nil
 }
