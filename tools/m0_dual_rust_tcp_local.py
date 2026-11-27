@@ -152,25 +152,17 @@ def controlled_recovery():
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--dual-rust-tcp"]
     ack={"WBD_M0_SERVER_ACK_DRAIN":"1"}
-    rack={"WBD_M0_RACK_KEEP_WINDOW":"1"}
-    cubic={"WBD_M0_MIDDLE_CC":"cubic"}
-    combined={**ack,**rack,**cubic}
-    # One controlled screen, not a causal ABBA. Use the same target
-    # bytes and offered load within each path condition. Jitter is on
-    # forward DATA direction only, never coupled to the IID loss case.
+    # No repeat of floor-limited jitter or rejected CUBIC/RACK combination.
+    # Same-binary ACK grant A/B/B/A, first clean high offer, then true loss.
     cases=[
-        ("clean-bare",False,600_000_000,{},0,0,192),
-        ("clean-default",True,600_000_000,{},0,0,192),
-        ("clean-combined",True,600_000_000,combined,0,0,192),
-        ("jitter-bare",False,120_000_000,{},5,0,96),
-        ("jitter-default",True,120_000_000,{},5,0,96),
-        ("jitter-ack",True,120_000_000,ack,5,0,96),
-        ("jitter-rack",True,120_000_000,rack,5,0,96),
-        ("jitter-cubic",True,120_000_000,cubic,5,0,96),
-        ("jitter-combined",True,120_000_000,combined,5,0,96),
-        ("loss-bare",False,120_000_000,{},0,0.5,96),
-        ("loss-default",True,120_000_000,{},0,0.5,96),
-        ("loss-combined",True,120_000_000,combined,0,0.5,96),
+        ("clean-A1",True,600_000_000,{},0,0,192),
+        ("clean-B1",True,600_000_000,ack,0,0,192),
+        ("clean-B2",True,600_000_000,ack,0,0,192),
+        ("clean-A2",True,600_000_000,{},0,0,192),
+        ("loss-A1",True,120_000_000,{},0,0.5,96),
+        ("loss-B1",True,120_000_000,ack,0,0.5,96),
+        ("loss-B2",True,120_000_000,ack,0,0.5,96),
+        ("loss-A2",True,120_000_000,{},0,0.5,96),
     ]
     for label,paired,offered,profile,jitter,loss,mib in cases:
         target_bytes=mib*1024*1024
@@ -289,7 +281,9 @@ def controlled_recovery():
                 expected_ack="true" if profile.get("WBD_M0_SERVER_ACK_DRAIN")=="1" else "false"
                 expected_rack="true" if profile.get("WBD_M0_RACK_KEEP_WINDOW")=="1" else "false"
                 expected_cc=profile.get("WBD_M0_MIDDLE_CC","bbr1")
-                row["profile_valid"]=bool(info and origin_info) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info)
+                actual_grants=[int(m.group(1)) for x in info if (m:=re.search(r"\bnative_ack_grant_deferred=(\d+)",x))]
+                row["ack_grant_deferred_max_sample"]=max(actual_grants,default=0)
+                row["profile_valid"]=bool(info and origin_info) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true"))
                 row["receipt_present"]=all(any("WBD_M0_RAW_RX_PACKET_STATS " in line and " drops=" in line for line in log.splitlines()) and
                     "WBD_M0_TCP_INGRESS " in log for log in (cl,sl)) and "WBD_M0_TCP_M4_CLOCK " in sl and "WBD_M0_LOCAL_TUN_GSO " in cl and bool(latest)
             row["qdisc_after_stop"]=path_counts()
@@ -303,7 +297,7 @@ def controlled_recovery():
             save(d/"result.json",row)
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, actual four kernel netns: high offered clean, forward 5ms normal jitter without injected loss, separate 0.5% IID loss; isolated ACK-grant/RACK-window/CC candidates in jitter; fixed bytes per condition; diagnostic not peak or physical parity","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, actual four kernel netns, same-binary server ACK grant A/B/B/A clean high offer and independent 0.5% IID loss, actual branch-execution sample, fixed bytes within each condition, not physical/old-splice qualification","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)

@@ -717,6 +717,7 @@ pub struct Conn {
     native_resume: Option<Instant>,
     native_credit: usize,
     native_waiting: bool,
+    native_ack_grant_deferred:u64,
     /// The smoothed round trip pacing goes by: SRTT's average (1/8) of
     /// the send-to-ACK times of the newest segment each ACK delivers,
     /// taken to the nanosecond as Linux takes its SRTT to the microsecond.
@@ -984,6 +985,7 @@ impl Conn {
             native_resume: None,
             native_credit: usize::MAX,
             native_waiting:false,
+            native_ack_grant_deferred:0,
             pace_srtt: None,
             pace_late: Duration::ZERO,
             delack_deadline: None,
@@ -1070,15 +1072,17 @@ impl Conn {
         if self.cfg.native_owner_turn { self.native_credit=32usize.saturating_sub(self.score.native_pending_count()); }
     }
     pub(crate) fn native_turn_enabled(&self)->bool{self.cfg.native_owner_turn}
-    /// Consume a pure established ACK with no fresh send grant. The
-    /// existing native_resume/owner deadline handles ready sends after
-    /// the current ingress turn. All ACK validation and recovery remain.
+    /// Pure ACKs while the send direction is open can advance state
+    /// before the next existing native send grant, including when the
+    /// peer already half-closed (CloseWait). The same grant gates both
+    /// new DATA and paced fast retransmits; control/close input is unchanged.
     pub(crate) fn begin_native_ack_turn(&mut self,seg:&Segment){
         self.begin_native_turn();
-        if self.cfg.native_owner_turn && self.state==State::Established
+        if self.cfg.native_owner_turn && matches!(self.state,State::Established|State::CloseWait)
             && seg.payload.is_empty() && seg.has_flag(flags::ACK)
             && seg.flags&(flags::SYN|flags::FIN|flags::RST|flags::URG)==0
-        {self.native_credit=0;}
+            && self.native_credit!=0
+        {self.native_credit=0;self.native_ack_grant_deferred+=1;}
     }
 
     // --- Accessors ---------------------------------------------------------
@@ -1248,8 +1252,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline));
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -10549,6 +10553,42 @@ mod tests {
             sender.begin_native_ack_turn(&p);
             assert!(sender.handle_segment(&p).iter().all(|x|parse(x).payload.is_empty()));
         }
+        assert!(sender.stats.bytes_acked>before);
+        assert!(sender.native_resume.is_some());
+        sender.begin_native_turn();
+        assert!(sender.tick().iter().any(|x|!parse(x).payload.is_empty()));
+    }
+
+    #[test]
+    fn native_half_closed_sender_ack_turn_defers_and_resumes_existing_grant(){
+        let mut sender=Conn::new(big(40695,80));
+        let mut receiver=Conn::new(big(80,40695));
+        drive_handshake(&mut sender,&mut receiver);
+        let fin=receiver.close();
+        let ack=deliver(&mut sender,&fin);
+        let _=deliver(&mut receiver,&ack);
+        assert_eq!(sender.state(),State::CloseWait);
+        assert_eq!(receiver.state(),State::FinWait2);
+        sender.cfg.native_owner_turn=true;
+        sender.begin_native_turn();
+        let (n,packets)=sender.write(&[7;20000]);
+        assert_eq!(n,20000);
+        assert!(!packets.is_empty());
+        for wire in &packets{
+            let p=parse(wire);
+            if !p.payload.is_empty(){sender.native_admit(p.seq,p.payload.len() as u32,test_now());}
+        }
+        assert!(sender.send_buf.as_ref().unwrap().pending()>0);
+        let mut ack=deliver(&mut receiver,&packets[..1]);
+        if ack.is_empty(){ack=delack_expired(&mut receiver);}
+        assert!(!ack.is_empty());
+        let before=sender.stats.bytes_acked;
+        for wire in &ack{
+            let p=parse(wire);
+            sender.begin_native_ack_turn(&p);
+            assert!(sender.handle_segment(&p).iter().all(|x|parse(x).payload.is_empty()));
+        }
+        assert!(sender.native_ack_grant_deferred>0);
         assert!(sender.stats.bytes_acked>before);
         assert!(sender.native_resume.is_some());
         sender.begin_native_turn();
