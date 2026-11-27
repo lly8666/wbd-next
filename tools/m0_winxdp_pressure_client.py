@@ -330,7 +330,10 @@ def main():
                 r["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in r["rx_lab"]),default=0)
                 if pool:
                     r["rx_pool"]=receipt("WBD_XDP_RX_POOL_STOP ")
-                    r["pressure_valid"]=r["pressure_valid"] and r["rx_pool"].get("enabled")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and r["rx_pool"].get("recycle")==int(r["arm"]=="B") and (r["rx_pool"].get("posted",0)+r["rx_pool"].get("reserve_remaining",0))*2048==r["rx_pool"].get("backing_bytes") and r["rx_pool"].get("posted",0)>=r["rx_pool"].get("base",0)*r["rx_pool"].get("queues",0)
+                    if os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
+                        r["pressure_valid"]=r["pressure_valid"] and r["rx_pool"].get("single")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and (r["arm"]=="A" or (r["rx_pool"].get("queues")==1 and r["rx_pool"].get("backing_bytes")==33554432 and "WBD_XDP_SINGLE_RSS_READY disabled=1" in s))
+                    else:
+                        r["pressure_valid"]=r["pressure_valid"] and r["rx_pool"].get("enabled")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and r["rx_pool"].get("recycle")==int(r["arm"]=="B") and (r["rx_pool"].get("posted",0)+r["rx_pool"].get("reserve_remaining",0))*2048==r["rx_pool"].get("backing_bytes") and r["rx_pool"].get("posted",0)>=r["rx_pool"].get("base",0)*r["rx_pool"].get("queues",0)
                 if efficiency:
                     r["pending_lab"]=receipt("WBD_XDP_RX_PENDING_LAB ")
                     r["pressure_valid"]=r["pressure_valid"] and r["pending_lab"].get("enabled")==int(r["arm"]=="B") and (r["arm"]=="A" or r["pending_lab"].get("skipped",0)>0)

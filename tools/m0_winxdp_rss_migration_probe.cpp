@@ -67,15 +67,23 @@ int main(int argc,char** argv){
     if(argc!=3)return 2;
     root=fs::path(argv[2]);RxOwner* o=nullptr;
     try{
-        SetEnvironmentVariableA("WBD_XDP_LAB_POLICY","rx-pool-recycle");
+        const bool single=GetEnvironmentVariableA("WBD_XDP_SINGLE_RSS",nullptr,0)>0;
+        SetEnvironmentVariableA("WBD_XDP_LAB_POLICY",single?"rx-single":"rx-pool-recycle");
         SetEnvironmentVariableA("WBD_XDP_LAB_RX","16384");
         HRESULT hr; o=open_rx(std::strtoul(argv[1],nullptr,10),&TestPort,1,FALSE,XSK_BIND_FLAG_GENERIC,&hr);
-        require(o&&o->recycle,"product RX open");
+        require(o&&(single?o->single:o->recycle),"product RX open");
         std::printf("READY queues=%u\n",o->count);std::fflush(stdout);
         std::map<unsigned,unsigned> mapping;
         batch(o,0,64,mapping);
         std::map<unsigned,unsigned> by_queue;
         for(auto [port,q]:mapping)by_queue.emplace(q,port);
+        if(single){
+            require(mapping.size()==64&&by_queue.size()==1&&by_queue.begin()->first==0&&o->count==1,"single RSS roster coverage");
+            XSK_STATISTICS x{};UINT32 sz=sizeof(x);
+            require(SUCCEEDED(XskGetSockopt(o->queues[0].socket,XSK_SOCKOPT_STATISTICS,&x,&sz))&&!x.RxDropped&&!x.RxTruncated&&!x.RxInvalidDescriptors,"single RSS stats");
+            std::puts("SINGLE_RSS_ROSTER_PASS tuples=64 queues=1");
+            wbd_xdp_rx_close(o);o=nullptr;request(65535,0);return 0;
+        }
         require(by_queue.size()>=3,"need three distinct actual queues");
         std::vector<std::pair<unsigned,unsigned>> roster(by_queue.begin(),by_queue.end());
         for(auto [q,port]:roster)std::printf("MIGRATION_ROSTER queue=%u source=%u\n",q,port);

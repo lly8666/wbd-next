@@ -281,7 +281,8 @@ struct RxOwner {
     UINT32 count,next,batch_queue,batch_index,batch_count;
 #ifdef WBD_XDP_PRESSURE_LAB
     UINT32 quantum,slots;
-    bool pooled,recycle;
+    bool pooled,recycle,single;
+    HANDLE rss_scope;
     UINT32 pool_next,pool_total,pool_base,free_count;
     UINT32* free_slots;
 #endif
@@ -308,6 +309,8 @@ void close_rx(RxOwner* o){
     if(o->umem)VirtualFree(o->umem,0,MEM_RELEASE);
 #ifdef WBD_XDP_PRESSURE_LAB
     if(o->free_slots)HeapFree(GetProcessHeap(),0,o->free_slots);
+    // The official driver restores the lower-edge RSS setting on handle close.
+    if(o->rss_scope)CloseHandle(o->rss_scope);
 #endif
     for(UINT32 i=0;i<o->port_count;++i)if(o->ports[i]!=INVALID_SOCKET)closesocket(o->ports[i]);
     if(o->wsa)WSACleanup();
@@ -409,8 +412,33 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     // official driver. Socket bind success alone is NOT queue inventory.
     hr=XdpInterfaceOpen(index,&adapter);if(FAILED(hr))goto fail;
     hr=XdpRssGetCapabilities(adapter,&caps,&capSize);
-    CloseHandle(adapter);adapter=nullptr;if(FAILED(hr))goto fail;
+    if(FAILED(hr)){CloseHandle(adapter);adapter=nullptr;goto fail;}
     o->count=caps.NumberOfReceiveQueues?caps.NumberOfReceiveQueues:1;
+#ifdef WBD_XDP_PRESSURE_LAB
+    // Isolated runner experiment only. Change the actual interface RSS
+    // setting, not merely the number of XSKs. Keep ownership until Stop.
+    if(!udp&&port_count==1&&!std::strcmp(policy,"rx-single")){
+        XDP_RSS_CONFIGURATION config{};
+        XdpInitializeRssConfiguration(&config,sizeof(config));
+        config.Flags=XDP_RSS_FLAG_DISABLED;
+        hr=XdpRssSet(adapter,&config,sizeof(config));
+        if(SUCCEEDED(hr)){
+            alignas(XDP_RSS_CONFIGURATION) unsigned char buf[4096]{};
+            UINT32 bytes=sizeof(buf);
+            auto* actual=reinterpret_cast<XDP_RSS_CONFIGURATION*>(buf);
+            hr=XdpRssGet(adapter,actual,&bytes);
+            if(SUCCEEDED(hr)&&!(actual->Flags&XDP_RSS_FLAG_DISABLED)&&actual->HashType!=0)hr=E_FAIL;
+        }
+        if(FAILED(hr)){
+            std::fprintf(stderr,"WBD_XDP_SINGLE_RSS_UNAVAILABLE hr=0x%08lx\n",(unsigned long)hr);
+            CloseHandle(adapter);adapter=nullptr;goto fail;
+        }
+        o->rss_scope=adapter;adapter=nullptr;
+        o->single=true;o->count=1;
+        std::fprintf(stderr,"WBD_XDP_SINGLE_RSS_READY disabled=1 queues=1\n");
+    }
+#endif
+    if(adapter){CloseHandle(adapter);adapter=nullptr;}
     // Original worker waits on two additional Stop/Direct handles.
     // Explicit scope of this candidate; never silently omit real queues.
     if(o->count>MaxRxQueues){hr=HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);goto fail;}
@@ -678,8 +706,8 @@ extern "C" void wbd_xdp_rx_close(void* raw){
 #ifdef WBD_XDP_PRESSURE_LAB
     if(o->port_count==1&&o->slots!=DnsSlots){
         std::fprintf(stderr,"WBD_XDP_RX_PENDING_LAB enabled=%u skipped=%llu event_checks=%llu\n",o->queues[0].pending_fast?1u:0u,pending_skips,event_checks);
-        std::fprintf(stderr,"WBD_XDP_RX_POOL_STOP enabled=%u recycle=%u backing_bytes=%llu posted=%u max_queue_posted=%u expanded_samples=%llu reserve_remaining=%u borrowed=%llu returned=%llu base=%u queues=%u\n",
-            o->pooled?1u:0u,o->recycle?1u:0u,UINT64(o->pooled?o->pool_total:o->count*o->slots)*RxChunk,
+        std::fprintf(stderr,"WBD_XDP_RX_POOL_STOP enabled=%u recycle=%u single=%u backing_bytes=%llu posted=%u max_queue_posted=%u expanded_samples=%llu reserve_remaining=%u borrowed=%llu returned=%llu base=%u queues=%u\n",
+            o->pooled?1u:0u,o->recycle?1u:0u,o->single?1u:0u,UINT64(o->pooled?o->pool_total:o->count*o->slots)*RxChunk,
             total_posted,max_posted,expanded_samples,o->pooled?o->pool_total-o->pool_next+o->free_count:0,borrowed,returned,o->pooled?o->pool_base:o->slots,o->count);
     }
 #endif
