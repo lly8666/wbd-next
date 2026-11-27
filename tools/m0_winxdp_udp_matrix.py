@@ -90,6 +90,7 @@ def main():
             workloads={
                 "maximum-load":[("maximum-large150-loss5","fixed",150,5,20,1200),
                                 ("maximum-small75-loss5","fixed",75,5,20,288)],
+                "auto-only":[("auto-large100-loss5","auto",100,5,20,1200)],
                 "auto-low":[("auto-large100-loss5","auto",100,5,20,1200),
                             ("maximum-large50-loss10","fixed",50,10,200,1200)],
                 "game-low":[("game2-fec-dir-duplex50","game2-fec",50,5,20,288),
@@ -195,7 +196,7 @@ def main():
                 row["fec_ok"]=("WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6" in s)==(mode=="fixed")
                 if fec_shard:
                     server=(case/"server.log").read_text(errors="replace") if (case/"server.log").exists() else ""
-                    row["auto_applied_quality"]=[l[:500] for l in s.splitlines() if "WBD_CLIENT_QUALITY_V2" in l and re.search(r"fec_c2s=applied-(?:light|mild|medium|balanced|high|strong|maximum)\\b",l)]
+                    row["auto_applied_quality"]=[l[:500] for l in s.splitlines() if "WBD_CLIENT_QUALITY_V2" in l and re.search(r"fec_c2s=applied-(?:light|mild|medium|balanced|high|strong|maximum)\b",l)]
                     row["game_fec_applied"]=[l[:500] for l in server.splitlines() if "V4_PUBLIC_GAME_FEC_APPLIED role=server" in l]
                     if mode=="auto":
                         row["fec_ok"]=bool(row["auto_applied_quality"])
@@ -215,7 +216,7 @@ def main():
                     row["cipher_lab"]=receipts("WBD_XDP_CIPHER_LOAN_LAB ")
                     b=row["arm"]=="B"
                     row["lab_ok"]=row["lab_ok"] and len(row["reclaim_lab"])==1 and row["reclaim_lab"][0].get("enabled")==int(b) and bool(row["rx"]) and all(q.get("queues",0)>0 and q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
-                    row["mechanism_exercised"]=not b or row["reclaim_lab"][0].get("early",0)>0
+                    row["mechanism_exercised"]=not b or any(q.get("early",0)>0 for q in row["reclaim_lab"])
                 elif os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
                     row["rss_map_before"]=receipts("WBD_XDP_RSS_MAP_BEFORE ")
                     arch=os.environ.get("WBD_XDP_SINGLE_WIDE","")
