@@ -1,0 +1,5 @@
+# M0 H2511 acceptance and compile correction
+
+117d0f8 exact native46032634286 both ISA failed build, identical rate.rs:89 accessor inside struct error plus E0599. Logs reviewed; ZIP not reviewed. Core and native functional NOT_RUN. Three-host46032634335 prepare failed and all three execution jobs skipped; no measurement or performance inference. Main H2511 governance46032776071 PASS; historical branch governance failure remains. See docs/evidence/M0/20261128-DELIVERY-EPOCH-COMPILE-FAIL.json.
+
+Corrected only method placement into impl Rate on 933d29bef2130fa891ea3729fd163a4f5daa11e8, same PR80, same source ABBA against qualified 136d66f, same two regressions and selected profiles. Default derives counter initialization. No new logic, configuration, pacing or outer behavior; no repeated dispatch of broken source. New native46034533957 and ABBA46034534070 actually queued on exact new source; no qualification yet. Await actual logs/artifacts before attributing throughput or retrans effect. If epoch preserved zero, do not attribute improvement to it; inspect app-limited and actual owner admission feedback separately. No merge, no physical or Windows.

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "source_sha": "117d0f82450adfdf879ddffef856564bd32a3b73",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "scope": "Dual native product build; actual job logs reviewed, no core or performance result.",
+  "run_id": 46032634286,
+  "jobs": [
+    {
+      "arch": "x86_64",
+      "job_id": 140620018234
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140620017755
+    }
+  ],
+  "error": "rate.rs:89 functions are not allowed in struct definitions; epoch_preserved accessor misplaced; E0599 at conn.rs:1281 follows",
+  "performance": {
+    "run_id": 46032634335,
+    "prepare_job_id": 140620017483,
+    "result": "NOT_RUN",
+    "reason": "exact native prerequisite failure; all three execution jobs skipped"
+  },
+  "candidate_source": "933d29bef2130fa891ea3729fd163a4f5daa11e8",
+  "candidate_native_run": 46034533957,
+  "candidate_abba_run": 46034534070
+}
