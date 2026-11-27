@@ -39,7 +39,8 @@
     "docs/devlog/M0/20261127-SUSTAINED-RECOVERY-PATH-DURATION-AUDIT.md",
     "docs/devlog/M0/20261127-SUSTAINED-MATCHED-RESULT-PACING-CEILING.md",
     "docs/devlog/M0/20261127-PACING80-RESULT-STARTUP-AND-160.md",
-    "docs/devlog/M0/20261127-ADJACENT-LEG-RELAY-CREDIT.md"
+    "docs/devlog/M0/20261127-ADJACENT-LEG-RELAY-CREDIT.md",
+    "docs/devlog/M0/20261127-RELAY-CREDIT-NAGLE-TEST-CORRECTION.md"
   ],
   "verification": [
     {
@@ -89,7 +90,8 @@
     "90de1b2 exact native PASS, cross-host10/10 measured but peak weighted retrans11.54→11.20%, 200M6.20→10.01%; no ACK default promotion. All eight zero near10s, high near20s; matched sustained30/120 finite app both topologies and actual retirement diagnostic pending.",
     "ed9171b exact native and 12 long cases PASS; same-host last sampled retrans0, cross retired30/120/30 0.0023/0.8584/0%, all known endpoint full/raw/reset0. No high-rate fix. Lab existing pacing ceiling80M under high app offer pending ABBA; defaults unchanged.",
     "ddc6b5d native PASS; cross ABBA incomplete A2 post-app sample, both cap80 backlogged1GiB >117s final retrans0.00164/0.00135%, goodput~73M CPU/GiB~85.5; no default promotion. Next independent Startup1.5 and cap80/160 ABBA.",
-    "bd36c2e native PASS, 10/10 cross-host; cap160 139.59Mbps/0.00222% final retrans, cap80 73.58Mbps/0.00126%; Startup1.5 rejected. Adjacent-leg relay pending credit opt-in both endpoints, no pace cap, normal/paused consumer and uncapped ABBA pending."
+    "bd36c2e native PASS, 10/10 cross-host; cap160 139.59Mbps/0.00222% final retrans, cap80 73.58Mbps/0.00126%; Startup1.5 rejected. Adjacent-leg relay pending credit opt-in both endpoints, no pace cap, normal/paused consumer and uncapped ABBA pending.",
+    "d09f615 both ISA core350/351, same new relay-credit unit failed pending96 vs expected0 after 4x1000 MSS; Nagle-tail test assumption corrected, runtime untouched. Native normal/paused and cross-host ABBA not run on failed source."
   ],
   "promotion": null
 }

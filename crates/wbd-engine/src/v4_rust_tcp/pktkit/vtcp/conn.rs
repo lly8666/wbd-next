@@ -10635,9 +10635,23 @@ mod tests {
         assert_eq!(sender.send_buf.as_ref().unwrap().pending(),4096);
         sender.snd_wnd=65535;
         sender.flush_send_queue();
+        // Four whole MSS segments leave a 96-byte Nagle-held tail.
+        // The adjacent producer must recover exactly the newly consumed
+        // pending capacity, even while those bytes are outstanding.
+        assert_eq!(sender.send_buf.as_ref().unwrap().pending(),96);
+        assert_eq!(sender.send_buf.as_ref().unwrap().unacked(),4000);
+        assert_eq!(sender.relay_send_available(),4000);
+        let packets=sender.take_outgoing();
+        let mut acks=deliver(&mut receiver,&packets);
+        acks.extend(delack_expired(&mut receiver));
+        assert_eq!(receiver.readable(),4000);
+        let tail=deliver(&mut sender,&acks);
         assert_eq!(sender.send_buf.as_ref().unwrap().pending(),0);
-        assert_eq!(sender.send_buf.as_ref().unwrap().unacked(),4096);
+        assert_eq!(sender.send_buf.as_ref().unwrap().unacked(),96);
         assert_eq!(sender.relay_send_available(),4096);
+        assert_eq!(tail.iter().map(|p|parse(p).payload.len()).sum::<usize>(),96);
+        let _=deliver(&mut receiver,&tail);
+        assert_eq!(read_all(&mut receiver),vec![7;4096]);
         sender.cfg.relay_pending_limit=None;
         assert_eq!(sender.relay_send_available(),sender.send_available());
     }
