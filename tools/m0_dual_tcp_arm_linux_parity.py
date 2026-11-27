@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One ARM client / ARM routed impairment VM / ARM server, sequential candidate screen with paired and bare brackets.
+"""One ARM client / ARM routed impairment VM / ARM server, sequential same-binary peak and matched-offer ACK grant ABBA.
 Reuse H2228 real two L2 networks and the existing H2442 preset HTTP control.
 """
 import hashlib,http.client,http.server,json,os,pathlib,re,signal,subprocess,sys,time,statistics
@@ -9,24 +9,21 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# All paired profiles use exactly the same qualified native binary.
-# Single-leg candidates are a screen, not a causal ABBA or promotion.
-ORDER=("A","D","R","C","M","L","K","A")
-PROFILES={"A":"selected-default","D":"server-ack-drain","R":"server-rack-window",
-          "C":"middle-cubic","M":"combined","L":"default-offer120M","K":"combined-offer120M"}
+# Isolate the only retained recovery candidate. Both paired blocks
+# use the same binary; the offer control is a workload, not product pacing.
+ORDER=("A","B","B","A","L","K","K","L")
+PROFILES={"A":"selected-default-peak","B":"ack-drain-peak",
+          "L":"selected-default-offer200M","K":"ack-drain-offer200M"}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
-def rust_cc(i):return "cubic" if i>=0 and ORDER[i] in ("C","M","K") else "bbr1"
+def rust_cc(i):return "bbr1"
 def ack_for(k):return "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
-def offer(k):return 120_000_000 if k in ("L","K") else None
+def offer(k):return 200_000_000 if k in ("L","K") else None
 def profile_env(k,server):
-    args=["WBD_M0_MIDDLE_CC=cubic"] if k in ("C","M","K") else []
-    if server and k in ("D","M","K"):args.append("WBD_M0_SERVER_ACK_DRAIN=1")
-    if server and k in ("R","M","K"):args.append("WBD_M0_RACK_KEEP_WINDOW=1")
-    return args
+    return ["WBD_M0_SERVER_ACK_DRAIN=1"] if server and k in ("B","K") else []
 def set_cc(ns,i):
     cc=cc_for(i)
     h.ns(ns,"sysctl","-qw","net.ipv4.tcp_congestion_control="+cc)
@@ -86,6 +83,22 @@ def direct(role):
         rows[r]={k:p.get(k) for k in ("CurAddr","Relay","PeerRelay","Active","RxBytes","TxBytes")}
         rows[r]["direct"]=bool(p.get("CurAddr") and not p.get("PeerRelay"))
     return rows
+def qualify_direct(role):
+    # Warm the already authorized fixture peer path before measurement,
+    # not during the measured application window. A cold or unreachable
+    # peer still fails the existing direct-path requirement.
+    until=time.monotonic()+35
+    attempts=[]
+    while True:
+        d=direct(role)
+        attempts.append({"wall_ns":time.time_ns(),"paths":d})
+        if d and all(x["direct"] for x in d.values()):return attempts
+        if time.monotonic()>=until:return attempts
+        p=h.cmd("tailscale","ping","--c=1",peer("relay")["tail_ip"],timeout=8,allow_fail=True)
+        attempts[-1]["ping_rc"]=p.returncode
+        attempts[-1]["ping_output"]=p.stdout[-1200:]
+        time.sleep(.5)
+
 def watch(role):
     with (OUT/(role+"-direct.jsonl")).open("w",buffering=1) as f:
         while True:
@@ -140,7 +153,11 @@ def server_start(i):
     while f":{port} " not in h.ns(where,"ss","-ltn").stdout:
         if source.poll() is not None or time.monotonic()>until:raise RuntimeError("origin listener failed")
         time.sleep(.2)
-    return {"case":i,"ready":True}
+    readiness=qualify_direct("server")
+    save(FOLDER/"direct-before-ready.json",readiness)
+    if not all(x["direct"] for x in readiness[-1]["paths"].values()):
+        raise RuntimeError("server direct path not ready before measurement")
+    return {"case":i,"ready":True,"direct_readiness":readiness[-1]}
 def server_sample():
     d=snapshot("server")
     if CURRENT is not None and CURRENT>=0:
@@ -236,10 +253,12 @@ def probe_receipt(log,leg,k,i):
     slots=1024
     quantum=32
     server=leg=="server-middle"
-    expected_rack="true" if server and k in ("R","M","K") else "false"
-    expected_ack="true" if k in ("D","M","K") else "false"
+    expected_rack="false"
+    expected_ack="true" if server and k in ("B","K") else "false"
     origin_rows=[s for s in log.splitlines() if "WBD_M0_TCP_ORIGIN " in s]
-    ack_ok=not server or (bool(origin_rows) and all(" ack_drain="+expected_ack in s for s in origin_rows))
+    grants=[int(m.group(1)) for s in rows if (m:=re.search(r"\bnative_ack_grant_deferred=(\d+)",s))]
+    actual_grant_max=max(grants,default=0)
+    ack_ok=bool(grants) and ((actual_grant_max>0)==(expected_ack=="true")) and (not server or (bool(origin_rows) and all(" ack_drain="+expected_ack in s for s in origin_rows)))
     bound=next((s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND " in s),"")
     rx=next((s for s in log.splitlines() if "WBD_M0_RAW_RX_PACKET_STATS " in s),"")
     mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and ack_ok and all(" pace_quantum_mss="+str(quantum)+" " in s and " rack_keep_reo_window="+expected_rack+" " in s for s in rows)
@@ -250,7 +269,7 @@ def probe_receipt(log,leg,k,i):
         gso_ok=int(vals.get("groups",0))>0
     expected='congestion: "'+rust_cc(i)+'"'
     return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows),
-            "ingress_first_expected":expected_first,"mode_ok":mode_ok,"gso_ok":gso_ok,
+            "ingress_first_expected":expected_first,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,
             "valid":mode_ok and gso_ok and len(rows)>=10 and all(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows)}
 def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
@@ -260,7 +279,8 @@ def client_case(i):
     try:
         shape(0,0)
         set_cc(N,i)
-        control("/start",{"case":i});started=True
+        started=True
+        control("/start",{"case":i})
         if i>=0:
             b=bundle(k);flags=["--dual-rust-tcp"]
             p=spawn("client",N,d/"client.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1",*profile_env(k,False),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
@@ -275,9 +295,14 @@ def client_case(i):
             (d/"route.txt").write_text(route)
             save(d/"shape.json",shape(loss_for(i),200));time.sleep(.6)
         else:save(d/"shape.json",shape(0,200));time.sleep(.6)
+        readiness=qualify_direct("client");save(d/"direct-before-app.json",readiness)
+        if not all(x["direct"] for x in readiness[-1]["paths"].values()):raise RuntimeError("client direct path not ready before measurement")
         save(d/"relay-before.json",relay("snapshot"))
         before=control("/sample");save(d/"server-before.json",before)
         pre=snapshot("client");save(d/"client-before.json",pre)
+        if not all(all(y["direct"] for y in x["paths"].values()) for x in (pre,before)):
+            row["status"]="PATH_NOT_QUALIFIED"
+            raise RuntimeError("cold endpoint path at actual pre-app snapshot")
         row["start_wall_ns"]=time.time_ns()
         cmd=["ip","netns","exec",N,"iperf3","-J","-c",TARGET if i>=0 else "10.248.82.2","-p",str(PORT if i>=0 else 5202),"-P","1","-R","-C",cc_for(i),"-t",str(DURATION)]
         if offer(k):cmd.extend(["-b",str(offer(k))])
@@ -360,7 +385,7 @@ def client():
                 sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                 recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(ORDER)+2 and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary peak recovery candidate screen, paired default brackets and same-RTT bare brackets; 1024 slots/32 MSS all, 120M offer only L/K; no causal or promotion claim","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary ACK grant ABBA at peak and 200M application offer; same RTT bare peak brackets; 1024 slots/32 MSS all, actual branch receipt; matched offer not guaranteed delivered throughput","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
