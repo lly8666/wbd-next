@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "source_sha": "05bb056d776eedaa9b17e917f29f8f11c3d5b9f7",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Native dual-ISA paired Normal original/parity functional only; no performance promotion. TIME_WAIT regression and copied-prefix unit passed.",
+  "run_id": 45932877384,
+  "run_attempt": 1,
+  "artifacts": [
+    {
+      "architecture": "x86_64",
+      "job_id": 140289297156,
+      "artifact_id": 15169122541,
+      "core_pass": 345,
+      "m4_unit_pass": 1
+    },
+    {
+      "architecture": "aarch64",
+      "job_id": 140289296905,
+      "artifact_id": 15169895598,
+      "core_pass": 345,
+      "m4_unit_pass": 1
+    }
+  ],
+  "performance": {
+    "result": "FAIL",
+    "scope": "ARM three distinct runner direct path BBR0 400ms added RTT ABBA 45s single reverse stream; measured capacity preflight; no physical or comprehensive qualification",
+    "run_id": 45932877398,
+    "client_job": 140290806845,
+    "server_job": 140290806855,
+    "relay_job": 140290806837,
+    "artifact_ids": {
+      "client": 15169921138,
+      "server": 15170041643,
+      "relay": 15169796355
+    },
+    "baseline_sha": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "bare_mbps": 564.3656503158246,
+    "legs_mbps": [
+      282.5734524513424,
+      157.23618368413491,
+      145.00306521818453,
+      300.3766513368692
+    ],
+    "means": {
+      "splice_mbps": 291.47505189410583,
+      "rust_mbps": 151.11962445115972,
+      "splice_client_cpu_s_per_gib": 12.64966826988007,
+      "splice_server_cpu_s_per_gib": 14.122541008520887,
+      "rust_client_cpu_s_per_gib": 17.00396209217179,
+      "rust_server_cpu_s_per_gib": 23.421076917845255
+    },
+    "rust_client": {
+      "publish_calls": [
+        1473645,
+        1372724
+      ],
+      "local_data": [
+        869052,
+        801877
+      ],
+      "ingress_full": [
+        18697,
+        18781
+      ],
+      "shared_tun_full": [
+        56617,
+        68804
+      ],
+      "local_write_failed": [
+        0,
+        0
+      ]
+    },
+    "rust_server_m4_copied": [
+      1158231,
+      1052684
+    ],
+    "relay_final_qdisc_drops": 0,
+    "review": "Native original job logs and both native evidence ZIPs plus client/server/relay raw performance ZIPs opened; summary, local owner and M4 stop lines, relay qdisc and direct snapshots inspected. Bare precheck has no injected RTT; does not prove sustained 400ms capacity."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "c732dfd312967efb84442b6dbc917bb9d5a07752"
+}
