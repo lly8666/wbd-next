@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "source_sha": "675ab84ef833d344bf294a33df0c30f62e00624b",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native dual ISA selected paired Normal default, 2048+8, CUBIC real app/UDP/Stop functional qualification only.",
+  "run_id": 45956534713,
+  "run_attempt": 2,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "run_attempt": 2,
+      "job_id": 140367274504,
+      "artifact_id": 15179622210,
+      "core_pass": 345,
+      "gso_groups": [
+        272,
+        119,
+        173
+      ],
+      "gso_segments": [
+        1952,
+        1073,
+        1410
+      ],
+      "origin_terminal_errors": 0,
+      "packet_socket_drops": 0
+    },
+    {
+      "arch": "aarch64",
+      "run_attempt": 1,
+      "job_id": 140364204590,
+      "artifact_id": 15179820090,
+      "core_pass": 345,
+      "gso_groups": [
+        163,
+        163,
+        138
+      ],
+      "gso_segments": [
+        1338,
+        1889,
+        1265
+      ],
+      "origin_terminal_errors": 0,
+      "packet_socket_drops": 0
+    }
+  ],
+  "review": "Both actual ZIPs opened CRC clean, source exact, six functional summaries real 3MiB/2MiB bytes, 8 concurrent, UDP, halfclose, joined Stop. Core345 and GSO/M4 units in native logs. Prior x86 RST not reproduced, listen backlog cause not established. Attempt1 x86 infrastructure failure retained; only failed job rerun.",
+  "performance": {
+    "result": "NOT_RUN",
+    "reason": "No ARM performance run for tested source; next exact-source harness freeze restores ABBA."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "b99fb67270dacf3debcf9351d7a18f16369eee50"
+}
