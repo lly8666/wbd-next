@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "source_sha": "3ca7efdd998359f8cb16c8964360077ca83675ef",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native dual ISA scoped Normal original/parity/GSO+direct-origin-read functional only, app hashes, eight concurrent, UDP, half-close, joined Stop.",
+  "run_id": 45944463453,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140325881037,
+      "artifact_id": 15174735581,
+      "core_pass": 346,
+      "gso_groups": 145,
+      "gso_segments": 1344
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140325881372,
+      "artifact_id": 15174486171,
+      "core_pass": 346,
+      "gso_groups": 208,
+      "gso_segments": 2009
+    }
+  ],
+  "performance": {
+    "result": "INCONCLUSIVE",
+    "scope": "ARM same-binary BBR0 400ms added RTT, 45s single reverse flow, outer IP MTU1160, offered TCP120M; A off B direct origin read on, both GSO and server ingress-first.",
+    "run_id": 45944463450,
+    "job_ids": {
+      "client": 140327384954,
+      "server": 140327385084,
+      "relay": 140327385035
+    },
+    "artifact_ids": {
+      "client": 15173899692,
+      "server": 15174970100,
+      "relay": 15174582650
+    },
+    "bare_mbps": [
+      489.505139413073,
+      416.0600202452732
+    ],
+    "legs_mbps": [
+      90.50243428657346,
+      119.97763926935546,
+      119.97764193546399,
+      119.9776499337904
+    ],
+    "client_cpu_s_per_gib": [
+      29.380679711637487,
+      23.053423965818606,
+      24.278485142746163,
+      22.782955913769666
+    ],
+    "server_cpu_s_per_gib": [
+      23.390648815653964,
+      17.81907166440085,
+      17.882711206059426,
+      17.882711206059426
+    ],
+    "matched_delivered_load": false,
+    "bare_bracket_capacity": true,
+    "fixture_status": "LOAD_OR_CAPACITY_NOT_QUALIFIED",
+    "server_ingress_offered": [
+      188852,
+      294660,
+      293387,
+      287910
+    ],
+    "server_ingress_full": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_ingress_offered": [
+      571279,
+      658385,
+      659345,
+      659528
+    ],
+    "client_ingress_full": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_shared_tun_full": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_local_write_failed": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_m4_copied": [
+      581810,
+      679989,
+      677857,
+      677716
+    ],
+    "server_m4_not_proven_copied": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_m4_no_normal_pn": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "relay_qdisc_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "server_bulk_retrans_bytes_last_sample_examples": {
+      "A1": 12054088,
+      "B2": 20536776
+    },
+    "review": "Materialized all five original ZIPs; opened with CRC test, native summaries and exact SHA, all per-case client/server result JSON, server wire/Stop/probe counts, relay-end. Native core 346 incl origin regression per job logs. A1 achieved below specified 95% load; latter three matched-rate rows show server cost nearly identical and client cost higher in B; no qualified full ABBA or demonstrated gain. Reject candidate rather than repeat small optimization. No local admission drops at this offered load, but retransmission/DSACK/reordering remain; no claim about exact physical loss or peak zero-loss."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "b5c1520300359e008a7472a25db83fffc628e1b5"
+}
