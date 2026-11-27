@@ -35,6 +35,49 @@ pub(crate) struct OriginalGameLaneRekey{
     tx:LaneTxCrypto,
     pub(crate) opener:GameLaneOpener,
 }
+/// Windows same-slot make-before-break. The fresh candidate owns both
+/// directions before promotion; neither old DATA nor sibling crypto can
+/// satisfy its readiness proof. Its exact PN and replay state move intact.
+#[cfg(any(target_os="windows",test))]
+pub(crate) struct WindowsGameLaneCandidate{
+    rekey:OriginalGameLaneRekey,
+    probe_pending:Option<u64>,
+    probe_copied:bool,
+    peer_authenticated:bool,
+}
+#[cfg(any(target_os="windows",test))]
+impl WindowsGameLaneCandidate{
+    pub(crate) fn slot(&self)->usize{self.rekey.slot}
+    /// Original kind0 Health only, no new wire message or DATA scheduler.
+    pub(crate) fn seal_probe(&mut self,idle_ns:u64,wire:&mut [u8])
+        ->Result<(u64,usize),Error>{
+        if self.probe_pending.is_some(){return Err(Error::Invalid)}
+        let body=encode_authenticated_health_live(idle_ns,None,None,
+            wire.len().saturating_sub(31)).map_err(|_|Error::Invalid)?;
+        if 14+body.len()>wire.len(){return Err(Error::Invalid)}
+        wire[14..14+body.len()].copy_from_slice(&body);
+        let (pn,len)=self.rekey.tx.seal_in_place(0,wire,body.len(),0)
+            .map_err(|_|Error::Crypto)?;
+        self.probe_pending=Some(pn);Ok((pn,len))
+    }
+    /// Caller must supply the exact existing M4 driver's accepted prefix.
+    /// A local seal or an outer TCP ACK is not this receipt.
+    pub(crate) fn probe_result(&mut self,pn:u64,copied:bool)->Result<(),Error>{
+        if self.probe_pending!=Some(pn){return Err(Error::Invalid)}
+        self.probe_pending=None;self.probe_copied|=copied;Ok(())
+    }
+    /// Only the candidate's distinct AEAD/replay owner can prove reverse
+    /// path readiness. Any DATA is returned for the original shared GameRx
+    /// /FEC writer, not discarded or committed by this cold state.
+    pub(crate) fn open_peer<'a>(&mut self,wire:&'a mut [u8])
+        ->Result<Option<(LogicalPacketId,&'a [u8])>,Error>{
+        let opened=self.rekey.opener.open(wire)?;
+        self.peer_authenticated=true;Ok(opened)
+    }
+    pub(crate) fn ready(&self)->bool{
+        self.probe_pending.is_none()&&self.probe_copied&&self.peer_authenticated
+    }
+}
 /// One original per-lane AEAD/replay owner, moved (not cloned) into its
 /// sole authenticated Linux worker before any DATA can be delivered.
 pub(crate) struct GameLaneOpener{
@@ -553,6 +596,38 @@ impl GameAdapter{
         self.lanes[swap.slot].tx=swap.tx;
         Ok((swap.slot,swap.opener))
     }
+    /// The Windows cold owner must first validate the full same-epoch
+    /// protected identity, record budget, distinct exporter, and slot.
+    #[cfg(any(target_os="windows",test))]
+    pub(crate) fn prepare_windows_lane_candidate(
+        &self,cold:UntrustedColdV4,server:bool,
+    )->Result<WindowsGameLaneCandidate,Error>{
+        let rekey=self.prepare_original_game_lane_rekey(cold,server)?;
+        Ok(WindowsGameLaneCandidate{rekey,probe_pending:None,
+            probe_copied:false,peer_authenticated:false})
+    }
+    /// At the existing TX/RX work boundary, replace only this slot.
+    /// Old RX replay state is MOVED to a retiring tuple owner; the
+    /// shared FEC, dedup and GameTx remain in the original adapter.
+    /// The caller still owns the old tuple and retirement deadline.
+    #[cfg(any(target_os="windows",test))]
+    pub(crate) fn commit_windows_lane_candidate(
+        &mut self,candidate:WindowsGameLaneCandidate,
+    )->Result<GameLaneOpener,Error>{
+        if self.stopped||!candidate.ready(){return Err(Error::Unauthorized)}
+        let OriginalGameLaneRekey{slot,tx,opener}=candidate.rekey;
+        let lane=self.lanes.get_mut(slot).ok_or(Error::Unauthorized)?;
+        if lane.key!=opener.lane.key{return Err(Error::Unauthorized)}
+        let mut receiver=self.rx_owner.lock().map_err(|_|Error::Stopped)?;
+        if receiver.stopped{return Err(Error::Stopped)}
+        let existing=receiver.lanes.iter_mut().find(|l|l.key==lane.key)
+            .ok_or(Error::Unauthorized)?;
+        let old=std::mem::replace(existing,opener.lane);
+        lane.tx=tx;
+        Ok(GameLaneOpener{lane:old,inner_mtu:receiver.inner_mtu,
+            health_origin:receiver.health_origin,health:Arc::clone(&receiver.health),
+            last_health_record_ns:receiver.last_health_record_ns})
+    }
     pub fn counters(&self)->GameCounters{self.tx.counters()}
     pub(crate) fn inner_mtu(&self)->usize{self.inner_mtu}
     // Only an already authenticated Windows or Linux Game native attach calls this
@@ -869,6 +944,65 @@ mod tests{
                 generation:7},mss:1400},
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
+    }
+    fn rotation_cold(server:bool,lane:u8)->UntrustedColdV4{
+        let mut a=[0u8;crate::cold_v4::COLD_V4_LEN];
+        let len=a.len() as u16;
+        a[..4].copy_from_slice(b"WBCO");
+        a[4..6].copy_from_slice(&1u16.to_be_bytes());
+        a[6..8].copy_from_slice(&len.to_be_bytes());
+        a[8]=u8::from(server);a[9]=lane;a[10]=1;
+        a[12..28].fill(1);a[28..44].fill(7);a[44..60].fill(99);
+        a[60..62].copy_from_slice(&1400u16.to_be_bytes());
+        a[62..64].copy_from_slice(&1400u16.to_be_bytes());
+        a[64..96].fill(4);a[96..172].fill(31);a[172..].fill(52);
+        UntrustedColdV4::parse(&a).unwrap()
+    }
+    #[test]
+    fn winxdp_rotation_crypto_requires_fresh_peer_then_keeps_old_rx_and_sibling_pn(){
+        let mut client=build(4);let mut server=build(4);
+        let slot=2;
+        let key=client.lanes[slot-1].key;
+        let (_,old_len)=server.seal_native_health(slot as u32,0,&mut [0u8;512]).unwrap();
+        let mut old_wire=[0u8;512];
+        let (_,n)=server.seal_native_health(slot as u32,0,&mut old_wire).unwrap();
+        assert_eq!(n,old_len);
+        let (sibling_before,_)=client.seal_native_health(3,0,&mut [0u8;512]).unwrap();
+        let premature=client.prepare_windows_lane_candidate(rotation_cold(false,slot as u8),false).unwrap();
+        assert!(matches!(client.commit_windows_lane_candidate(premature),Err(Error::Unauthorized)));
+        let mut a=client.prepare_windows_lane_candidate(rotation_cold(false,slot as u8),false).unwrap();
+        let mut b=server.prepare_windows_lane_candidate(rotation_cold(true,slot as u8),true).unwrap();
+        assert_eq!(a.slot(),slot-1);
+        let mut old_trial=old_wire;
+        assert!(a.open_peer(&mut old_trial[..n]).is_err());
+        let mut cw=[0u8;512];let mut sw=[0u8;512];
+        let (cp,cn)=a.seal_probe(0,&mut cw).unwrap();
+        let (sp,sn)=b.seal_probe(0,&mut sw).unwrap();
+        assert!(!a.ready());assert!(!b.ready());
+        assert!(a.probe_result(cp+1,true).is_err());
+        a.probe_result(cp,true).unwrap();
+        b.probe_result(sp,true).unwrap();
+        let mut duplicate=sw;
+        assert!(a.open_peer(&mut sw[..sn]).unwrap().is_none());
+        assert!(b.open_peer(&mut cw[..cn]).unwrap().is_none());
+        assert!(a.ready()&&b.ready());
+        let mut retired=client.commit_windows_lane_candidate(a).unwrap();
+        let _server_retired=server.commit_windows_lane_candidate(b).unwrap();
+        // The earlier candidate Health PN is still consumed after commit.
+        let rx=client.receiver_handle();
+        assert!(rx.lock().unwrap().prepare_receive(key,&mut duplicate[..sn]).is_err());
+        // A packet in flight on the old tuple can still authenticate once,
+        // without being admitted to the new candidate replay window.
+        let mut old_duplicate=old_wire;
+        assert!(retired.open(&mut old_wire[..n]).unwrap().is_none());
+        assert!(retired.open(&mut old_duplicate[..n]).is_err());
+        let (new_pn,new_len)=server.seal_native_health(slot as u32,0,&mut sw).unwrap();
+        assert_eq!(new_pn,sp+1);
+        assert!(rx.lock().unwrap().prepare_receive(key,&mut sw[..new_len]).unwrap().is_none());
+        let (sibling_after,_)=client.seal_native_health(3,0,&mut [0u8;512]).unwrap();
+        assert_eq!(sibling_after,sibling_before+1);
+        let (new_client_pn,_)=client.seal_native_health(slot as u32,0,&mut cw).unwrap();
+        assert_eq!(new_client_pn,cp+1);
     }
     fn game_padding_udp()->Vec<u8>{
         let mut p=vec![0u8;44];p[0]=0x45;

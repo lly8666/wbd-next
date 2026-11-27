@@ -1,0 +1,11 @@
+# Windows selected-slot proof and outer incarnation candidate (not product enabled)
+
+Previous commits 02a420f and 388ebf3: native source build46006734959 PASS; exact assembled Windows Go/Rust build46006925283 PASS; actual XDP port regression46006734827 PASS. These are compile and driver evidence, not an end-to-end TLS/M4 candidate test.
+
+New source increment uses the existing original GameAdapter rekey primitive to hold a fresh candidate's TX AEAD/PN and RX replay opener. Existing kind0 Health only; require exact TX copy receipt and unique authenticated candidate RX before local promotion, not a sibling's Health or TCP appearance ACK. Move (not clone/reinitialize) both new key owners at selected-slot commit and return old RX opener for grace; no group/logic/FEC rebuild. New outer TX scope and seq ledger use fresh native generation, retire previous frozen TX shadows at a settled boundary; retain other lanes and cumulative byte counters. Old RX opener must feed shared GameRx/FEC on its old tuple and have independent ACK ledger until randomized 10–20s retirement. Existing Linux server commits selected M4 slot after TLS; a local TX receipt plus authenticated reverse is not proof of peer receipt of a particular application DATA packet. No new wire handshake, no new worker. No enabled production caller yet.
+
+Tests exercise wrong/old key rejection, exact candidate probe settlement, pre-proof commit rejection, replay continuity, old in-flight Health under old opener, sibling PN continuity; outer per-incarnation seq/repair state isolation. Windows exact-source compile workflow includes these tests. No real Wintun traffic qualification yet. Remaining integration: actual original same-epoch TLS owner validation, preserve lane1's existing OS proof anchor independently of physical crypto slot, candidate cold-to-native routing/commit, old RX delivery/retirement, real random timer and 400ms loss0 test. Linux server unchanged. Game2 same-group hot replacement unavailable under existing Linux contract.
+
+```feature-impact
+{"kind":"updated","ids":["game-lanes","original-lane-rotation-jitter"],"reason":"Windows selected-slot proof and old RX opener handoff, fresh outer scope with unit tests; no product rotation enabled."}
+```

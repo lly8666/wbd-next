@@ -73,6 +73,13 @@ impl GameOuter{
             fec_seen:vec![0;lanes.len()],fec_copied:0,
             first_record_wire_bytes:0,copy_record_wire_bytes:0};
         for (index,entry) in lanes.iter().enumerate(){
+            owner.lanes.push(Self::build_lane(index,generation,cfg.first.epoch,
+                cfg.first.path_mtu,entry.tx_seq,repair_enabled)?);
+        }
+        Ok(owner)
+    }
+    fn build_lane(index:usize,generation:u32,epoch:[u8;16],path_mtu:u32,
+        tx_seq:u32,repair_enabled:bool)->Result<GameOuterLane,i32>{
             // Each independent Game TCP sequence stream needs its OWN
             // Normal budget direction. No collision with the group crypto
             // tunnel or other Normal/Fixed account; global hard cap SHARED.
@@ -83,7 +90,7 @@ impl GameOuter{
             let dir=BudgetDirection{tunnel,direction:WireDirection::ClientToServer};
             let all=(RecordPn(0),RecordPn(u64::MAX));
             let route=ReceiptRouteScope::checked(lane,lane,
-                WireDirection::ClientToServer,cfg.first.epoch,all,all)
+                WireDirection::ClientToServer,epoch,all,all)
                 .map_err(|_|BAD_STAGE)?;
             let mut shadow=ReceiptState::new(lane,ReceiptConfig{
                 max_shadow_entries:MAX_M2_FIXED_FROZEN,
@@ -100,14 +107,14 @@ impl GameOuter{
             // Game OFF and fixed6 both follow Normal's true-gap-only
             // cosmetic policy: no healthy 810ms DATA PTO.
             shadow.enable_opportunistic_v3().map_err(|_|BAD_STAGE)?;
-            let ack=OuterAckIndex::new(lane,cfg.first.epoch,
-                u64::from(entry.tx_seq),MAX_M2_FIXED_FROZEN)
+            let ack=OuterAckIndex::new(lane,epoch,
+                u64::from(tx_seq),MAX_M2_FIXED_FROZEN)
                 .map_err(|_|BAD_STAGE)?;
             if repair_enabled {
                 let now=m2_clock();
                 let mut g=m2_global().lock().map_err(|_|BAD_STAGE)?;
                 g.register(dir,RepairBudgetConfig{
-                    outer_mtu:u64::from(cfg.first.path_mtu).saturating_add(54),
+                    outer_mtu:u64::from(path_mtu).saturating_add(54),
                     max_repair_bytes_per_epoch:7_000_000,
                     max_pending_reservations:256,
                     max_pending_bytes:524_288,
@@ -119,12 +126,31 @@ impl GameOuter{
                     return Err(BAD_STAGE)
                 }
             }
-            owner.lanes.push(GameOuterLane{
+            Ok(GameOuterLane{
                 lane,direction:dir,route,ack,shadow,
                 ready:VecDeque::new(),held:None,retry_after_ns:None,
-            });
+            })
+    }
+    /// A new physical tuple starts its own PN/SEQ/repair scope. Old frozen
+    /// ciphertext must never be transmitted with the candidate tuple.
+    /// Call at the existing TX work boundary after settling driver prefix;
+    /// no old repair reservation can remain held across promotion.
+    pub(super) fn replace_lane(&mut self,index:usize,new_generation:u32,
+        path_mtu:u32,tx_seq:u32)->Result<(),i32>{
+        let old=self.lanes.get(index).ok_or(INVALID)?;
+        if new_generation==0||new_generation==old.lane.generation||old.held.is_some(){
+            return Err(BAD_STAGE)
         }
-        Ok(owner)
+        let next=Self::build_lane(index,new_generation,self.epoch,path_mtu,tx_seq,self.repair_enabled)?;
+        if self.repair_enabled{
+            let now=m2_clock();
+            let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
+            let _=global.retire_tunnel(old.lane.tunnel,now);
+        }
+        // Keep cumulative group byte accounting and all sibling scopes.
+        // The old ready/shadow queues leave with the retired TX authority.
+        self.lanes[index]=next;
+        Ok(())
     }
     pub(super) fn on_firstsend(&mut self,index:usize,pn:u64,seq:u32,
         wire:&[u8])->Result<(),i32>{
@@ -381,6 +407,32 @@ mod tests{
         assert!(!owner.on_hint(0,360,&[]));
         assert!(owner.prepare(&[true]).unwrap().is_none());
         assert_eq!(owner.next_deadline(),None);
+    }
+    #[test]
+    fn winxdp_rotation_outer_new_seq_scope_does_not_reset_siblings(){
+        for repair in [false,true]{
+            let gen=if repair{74002}else{74001};
+            let epoch=[3;16];
+            let mut owner=GameOuter{lanes:(0..4).map(|i|
+                GameOuter::build_lane(i,gen,epoch,1460,1000+i as u32*100,repair).unwrap()).collect(),
+                epoch,repair_enabled:repair,fec_sparse:false,fec_seen:vec![0;4],
+                fec_copied:0,first_record_wire_bytes:0,copy_record_wire_bytes:0};
+            for i in 0..4{assert_eq!(owner.on_firstsend(i,1,1000+i as u32*100,&[7;120]),Ok(()));}
+            let old_lane=owner.lanes[1].lane;
+            let old_sibling=owner.lanes[2].lane;
+            let total=owner.first_record_wire_bytes;
+            assert_eq!(owner.replace_lane(1,gen,1460,9000),Err(BAD_STAGE));
+            assert_eq!(owner.replace_lane(1,gen+100,1460,9000),Ok(()));
+            assert_ne!(owner.lanes[1].lane,old_lane);
+            assert_eq!(owner.lanes[2].lane,old_sibling);
+            assert_eq!(owner.lanes[2].ack.highest_sent_end(),1320);
+            assert_eq!(owner.lanes[1].ack.highest_sent_end(),9000);
+            assert_eq!(owner.lanes[1].shadow.outstanding(),0);
+            assert_eq!(owner.first_record_wire_bytes,total);
+            assert!(!owner.on_hint(1,1220,&[]));
+            assert_eq!(owner.on_firstsend(1,1,9000,&[9;120]),Ok(()));
+            assert_eq!(owner.on_firstsend(2,2,1320,&[8;120]),Ok(()));
+        }
     }
     #[test]
     fn r1_game_windows_off_and_fixed_share_normal_half_sample(){
