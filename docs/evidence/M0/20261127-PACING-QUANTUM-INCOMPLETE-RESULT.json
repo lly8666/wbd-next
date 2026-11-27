@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "source_sha": "b99fb67270dacf3debcf9351d7a18f16369eee50",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native dual ISA selected paired Normal default, 2048+8, CUBIC six functional profiles only; performance incomplete.",
+  "run_id": 45961111282,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140378882807,
+      "artifact_id": 15180629058,
+      "gso_groups": [
+        204,
+        166,
+        259
+      ],
+      "gso_segments": [
+        1513,
+        1733,
+        1682
+      ],
+      "origin_terminal_errors": 0,
+      "packet_socket_drops": 0
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140378882468,
+      "artifact_id": 15180329973,
+      "gso_groups": [
+        435,
+        272,
+        418
+      ],
+      "gso_segments": [
+        4323,
+        2563,
+        4098
+      ],
+      "origin_terminal_errors": 0,
+      "packet_socket_drops": 0
+    }
+  ],
+  "performance": {
+    "result": "INCOMPLETE",
+    "run_id": 45961111249,
+    "job_ids": {
+      "client": 140380827954,
+      "server": 140380827832,
+      "relay": 140380827925
+    },
+    "artifact_ids": {
+      "client": 15180469911,
+      "server": 15181476038,
+      "relay": 15181940250
+    },
+    "scope": "Same binary both2048, server 32 A vs8 B, client32, BBR zero injected loss, 400ms added RTT, MTU1160, 45s reverse single stream, same RTT naked brackets.",
+    "bare_mbps": [
+      421.5962672283125,
+      414.46300484690715
+    ],
+    "legs": [
+      "A1",
+      "B1",
+      "B2",
+      "A2"
+    ],
+    "status": [
+      "MEASURED",
+      "INCOMPLETE",
+      "MEASURED",
+      "MEASURED"
+    ],
+    "actual_iperf_mbps": [
+      273.8118484608187,
+      272.743292512075,
+      249.76763392624505,
+      241.6117436180805
+    ],
+    "b1_error": "ConnectionResetError(104) after complete iperf JSON; missing server-after snapshot; actual client middle RESET_ACCEPT then late no-flow resets, first cause not established.",
+    "b1_received_bytes": 1534197760,
+    "b1_seconds": 45.000491,
+    "server_ingress_full": [
+      8570,
+      662,
+      651,
+      8534
+    ],
+    "client_ingress_full": [
+      2560,
+      11232,
+      176,
+      211
+    ],
+    "server_packet_socket_drops": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_packet_socket_drops": [
+      0,
+      0,
+      0,
+      233
+    ],
+    "client_shared_tun_full": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "relay_qdisc_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "bulk_server_last_snapshot": {
+      "bytes_sent": [
+        1764955163,
+        1747653812,
+        1682895212,
+        1541903749
+      ],
+      "bytes_retrans": [
+        146215963,
+        146262929,
+        201116081,
+        109942149
+      ],
+      "dsack_dups": [
+        10324,
+        13774,
+        21796,
+        7719
+      ],
+      "reord_seen": [
+        13932,
+        12044,
+        11064,
+        11836
+      ],
+      "timeouts": [
+        0,
+        1,
+        1,
+        2
+      ]
+    },
+    "qualified_a_mean": {
+      "mbps": 257.7117960394496,
+      "client_cpu_s_per_gib": 14.506978687766,
+      "server_cpu_s_per_gib": 17.92448639320223,
+      "weighted_snapshot_retrans_ratio": 0.07746266738821181
+    },
+    "qualified_b2": {
+      "mbps": 249.76763392624505,
+      "client_cpu_s_per_gib": 14.192129862860341,
+      "server_cpu_s_per_gib": 20.54305065771061
+    },
+    "review": "All five actual ZIPs opened and CRC tested; six exact native summaries, raw server and client logs/result JSON, relay-end examined. B1 application bytes/time from iperf raw JSON but no qualified performance row, no B mean. Server full17104→1313 (-92.3%) but high retrans and DSACK persist. 8 MSS not selected; lab flag remains. No claim smaller quantum caused RST or actual retrans increase."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "5dda95bc447c3799e428c1928404c0a3ac3dfb6b"
+}
