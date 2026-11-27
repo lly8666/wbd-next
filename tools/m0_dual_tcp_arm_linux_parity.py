@@ -9,12 +9,11 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# Identity-attribution screen, not a new pacing optimization.
-# Selected relay credit throughout; compare known low-retrans load point.
-ORDER=("A","L","L","A")
+# Exact source ABBA: selected relay credit, both uncapped.
+ORDER=("A","B","B","A")
 CASES=(-1,0,1,2,3,-2)
-PROFILES={"A":"selected-relay-credit","L":"server-existing-ceiling160M"}
-SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
+PROFILES={"A":"original-delivery-epoch","B":"actual-outstanding-delivery-epoch"}
+SOURCES={"A":"136d66fb79139144dd4e08a5e742ceccd493896c","B":os.environ["GITHUB_SHA"]}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
 def rust_cc(i):return "bbr1"
@@ -24,7 +23,7 @@ def compress(k):return "1"
 def offer(i):return 600_000_000
 def target_bytes(i):return 1024*1024*1024
 def profile_env(k,server):
-    return ["WBD_M0_NATIVE_PACE_MBPS=160"] if server and k=="L" else []
+    return []
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
@@ -43,7 +42,7 @@ TICK=os.sysconf("SC_CLK_TCK")
 def load(p):return json.loads(p.read_text())
 def save(p,d):h.save(p,d)
 def peer(role):return load(PEERS/(role+".json"))
-def bundle(k):return ROOT/"bundles"/"B"
+def bundle(k):return ROOT/"bundles"/k
 def manifests():
     rows={}
     for k,source in SOURCES.items():
@@ -262,7 +261,7 @@ def probe_receipt(log,leg,k,i):
     server=leg=="server-middle"
     expected_rack="false"
     expected_ack="false"
-    ceiling=20_000_000 if server and k=="L" else 0
+    ceiling=0
     gain="2.88671875"
     limit=131072
     first_turns=re.search(r"\bingress_first_service_turns=(\d+)",pub)
@@ -271,6 +270,8 @@ def probe_receipt(log,leg,k,i):
     credit_rows=rows+([s for s in log.splitlines() if "WBD_M0_TCP_INFO " in s and "leg=client-local " in s] if not server else [])
     credit=[(int(m.group(1)),int(m.group(2)),int(m.group(3))) for s in credit_rows if (m:=re.search(r" relay_pending_limit=(\d+) relay_pending_bytes=(\d+) relay_available=(\d+) ",s))]
     credit_ok=bool(credit) and len(credit)==len(credit_rows) and all(l==limit and (not l or p<=l) for l,p,a in credit)
+    epochs=[int(m.group(1)) for s in log.splitlines() if "WBD_M0_TCP_DETAIL " in s and "leg="+leg+" " in s and (m:=re.search(r"\brate_epoch_preserved=(\d+)",s))]
+    epoch_ok=bool(epochs) if k=="B" else not epochs
     bbr=[s for s in log.splitlines() if "WBD_M0_BBR1 " in s and "leg="+leg+" " in s]
     gain_ok=bool(bbr) and all(" startup_pacing_gain="+gain+" " in s for s in bbr) and any(" phase=Startup " in s and " pacing_gain="+gain+" " in s for s in bbr)
     rates=[int(m.group(1)) for s in rows if (m:=re.search(r"\bpacing_rate: Some\((\d+)\)",s))]
@@ -287,7 +288,7 @@ def probe_receipt(log,leg,k,i):
     drain_packets=int(dv.get("packets",-1))
     drain_skipped=int(dv.get("skipped_polls",-1))
     drain_ok=dv.get("enabled")==str(drain_expected).lower() and ((drain_packets>0 and drain_skipped>0) if drain_expected else drain_packets==drain_skipped==0)
-    mode_ok=drain_ok and (" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and ack_ok and ceiling_ok and gain_ok and credit_ok and first_ok and all(" pace_quantum_mss="+str(quantum)+" " in s and " rack_keep_reo_window="+expected_rack+" " in s for s in rows)
+    mode_ok=epoch_ok and drain_ok and (" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and ack_ok and ceiling_ok and gain_ok and credit_ok and first_ok and all(" pace_quantum_mss="+str(quantum)+" " in s and " rack_keep_reo_window="+expected_rack+" " in s for s in rows)
     gso_ok=True
     if leg=="client-middle":
         receipt=next((s for s in log.splitlines() if "WBD_M0_LOCAL_TUN_GSO groups=" in s),"")
@@ -295,7 +296,7 @@ def probe_receipt(log,leg,k,i):
         gso_ok=int(vals.get("groups",0))>0
     expected='congestion: "'+rust_cc(i)+'"'
     return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows),
-            "ingress_first_expected":expected_first,"ingress_first_service_turns":actual_first_turns,"rx_drain":dv,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,"pacing_ceiling_bytes_s":ceiling,"actual_pacing_max_bytes_s":max(rates,default=0),"startup_pacing_gain":gain,"startup_gain_verified":gain_ok,"relay_pending_limit":limit,"relay_credit_samples":len(credit),"relay_pending_max_sample":max((p for _,p,_ in credit),default=None),"relay_credit_full_samples":sum(p==limit and a==0 for _,p,a in credit) if limit else 0,
+            "ingress_first_expected":expected_first,"ingress_first_service_turns":actual_first_turns,"rx_drain":dv,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,"pacing_ceiling_bytes_s":ceiling,"actual_pacing_max_bytes_s":max(rates,default=0),"startup_pacing_gain":gain,"startup_gain_verified":gain_ok,"rate_epoch_preserved_max":max(epochs,default=None),"relay_pending_limit":limit,"relay_credit_samples":len(credit),"relay_pending_max_sample":max((p for _,p,_ in credit),default=None),"relay_credit_full_samples":sum(p==limit and a==0 for _,p,a in credit) if limit else 0,
             "valid":mode_ok and gso_ok and len(rows)>=10 and all(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows)}
 def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
@@ -414,7 +415,7 @@ def client():
                 sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                 recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"selected credit, A/L/L/A uncapped vs existing160M ceiling; fixed1GiB/600M, bare brackets; independent header-only four-interface identity sample, not a new rate sweep","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"selected credit, A/B/B/A exact original vs corrected delivery epoch, both uncapped; fixed1GiB/600M, bare brackets; four-interface identity sample","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

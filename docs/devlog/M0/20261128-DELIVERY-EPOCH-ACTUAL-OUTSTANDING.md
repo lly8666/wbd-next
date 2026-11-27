@@ -1,0 +1,11 @@
+# M0 actual outstanding delivery epoch
+
+Baseline 136d66fb79139144dd4e08a5e742ceccd493896c, main 010007f H2510 PR80. Original 46024068630 attempt2 completed; artifacts 15214450867/15213618287/15214022334 CRC opened, exact 1GiB/hash/EOF and retired bulk. A/L/L/A goodput249.720/141.302/139.123/213.213Mbps, retrans bytes46847588/108885/241621/63725724 of sent1120589412/1073850709/1073983445/1137467548. Four-point identity counts 17031/16993/16993/16372;16181/16180/16180/16180;16183/16179/16179/16179;17302/17180/17180/16437. Missing per adjacent multiset38/0/621;1/0/0;4/0/0;122/0/743, no downstream extras, tap drops0. Virtual deterministic samples not exact physical loss or inner retrans mapping. Cap160 not selected. A2 remained Startup (max sampled target225234451 B/s, final cwnd103792426), most later samples app-limited; A1 eventually ProbeBW. Target not actual wire rate. No single root-cause claim.
+
+Linux tcp_rate.c https://codebrowser.dev/linux/linux/net/ipv4/tcp_rate.c.html lines44–69 restarts epoch on packets_out zero, not estimated flight zero. Existing Rate::on_send reset on admitted_pipe zero even after loss marks. Correct actual admitted but cumulatively unacked sequence space excludes only native reservations, retains SACK/lost; retransmits belong to existing epoch. Pipe still drives tx_in_flight. Existing rare zero-pipe path counts preserved epochs in existing probe. No new controller/worker/timer/queue/wire semantics. Deterministic regression native reserve/admit/loss/retransmit/ACK/idle and regular send. Correctness candidate, not yet demonstrated cause or performance benefit.
+
+Native exact dual ISA core, selected Normal, CUBIC/credit rollback, normal/pause/0.5% actual loss; no repeat rejected client-first/drain. Three ARM source ABBA A=136d66f qualified run46024068536 B=new source, both uncapped selected credit, fixed1GiB/600M offer/400ms/zero injected, bare brackets and four interfaces. Existing manifest/hash, profile, app/Stop/retirement, BBR samples and preserved epoch receipt. If preserved count zero, cannot attribute performance change to this defect. No promotion/merge/old splice deletion; Windows/physical NOT_RUN.
+
+```feature-impact
+{"kind":"updated","ids":["dual-rust-tcp"],"reason":"Correct delivery epoch semantics and compare exact original/candidate sources; record prior path attribution."}
+```

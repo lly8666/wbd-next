@@ -166,16 +166,11 @@ def controlled_recovery():
     rows=[]
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--dual-rust-tcp"]
-    # Independent client ingress-first candidate stays opt-in. Isolate
-    # ready-only RX drain on top, and keep weak-network integrity checks.
-    first={"WBD_M0_CLIENT_INGRESS_FIRST":"1"}
-    drain={**first,"WBD_M0_CLIENT_RX_DRAIN":"1"}
+    # Qualify the corrected core on selected defaults, not rejected candidates.
     cases=[
-        ("normal-B",True,600_000_000,first,0,0,512),
-        ("normal-C",True,600_000_000,drain,0,0,512),
-        ("pause-C",True,600_000_000,drain,0,0,512),
-        ("loss-B",True,120_000_000,first,0,0.5,96),
-        ("loss-C",True,120_000_000,drain,0,0.5,96),
+        ("normal-selected",True,600_000_000,{},0,0,512),
+        ("pause-selected",True,600_000_000,{},0,0,512),
+        ("loss-selected",True,120_000_000,{},0,0.5,96),
     ]
     for label,paired,offered,profile,jitter,loss,mib in cases:
         target_bytes=mib*1024*1024
@@ -340,7 +335,7 @@ def controlled_recovery():
             save(d/"result.json",row)
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, selected adjacent credit and client ingress-first; ready-only RX drain normal B/C, paused C, and true 0.5% loss B/C; exact application, actual drain/turn receipts, qdisc and Stop","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, corrected delivery epoch and selected adjacent credit; normal, paused consumer and actual 0.5% loss; exact application, selected profile, qdisc and Stop","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)

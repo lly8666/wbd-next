@@ -437,7 +437,10 @@ impl Scoreboard {
         let xmit = self.ns(now);
         let tx = self.next_tx;
         self.next_tx += 1;
-        let rate=if deferred{self.native_pending+=u64::from(len);self.native_pending_count+=1;TxState::default()}else{self.rate.on_send(xmit,self.admitted_pipe(),len)};
+        let rate=if deferred{self.native_pending+=u64::from(len);self.native_pending_count+=1;TxState::default()}else{
+            let outstanding=self.end_off()-self.una_off>self.native_pending;
+            self.rate.on_send(xmit,self.admitted_pipe(),len,outstanding)
+        };
         self.segs.push_back(Seg {
             start,
             end: start + u64::from(len),
@@ -459,9 +462,10 @@ impl Scoreboard {
         let Some(i)=self.idx(off)else{return false};
         let old=self.segs[i];
         if !old.has(NATIVE_PENDING)||old.start!=off||old.len()!=u64::from(len){return false}
+        let outstanding=self.end_off()-self.una_off>self.native_pending;
         self.native_pending-=old.len();self.native_pending_count-=1;
         let xmit=self.ns(now);
-        let rate=self.rate.on_send(xmit,self.admitted_pipe().saturating_sub(len),len);
+        let rate=self.rate.on_send(xmit,self.admitted_pipe().saturating_sub(len),len,outstanding);
         let record=&mut self.segs[i];record.flags&=!NATIVE_PENDING;record.xmit=xmit;record.rate=rate;
         self.push_tx(old.start,old.end,xmit,old.tx);true
     }
@@ -502,7 +506,7 @@ impl Scoreboard {
         let len = (s_end - s_start) as u32;
         let rate = self
             .rate
-            .on_send(xmit, self.admitted_pipe().saturating_sub(len), len);
+            .on_send(xmit, self.admitted_pipe().saturating_sub(len), len, true);
         let s = &mut self.segs[i];
         s.flags |= RETRANS;
         s.xmit = xmit;
@@ -1215,6 +1219,53 @@ mod tests {
         assert_eq!(s.rate_sample().unwrap().delivery_rate,10_000);
     }
 
+
+    #[test]
+    fn loss_marks_do_not_restart_native_delivery_epoch() {
+        let now=Instant::now();
+        let mut s=Scoreboard::new(100,now);
+        s.set_rack(true);
+        let at=|ms| now+Duration::from_millis(ms);
+        s.reserve_native(100,1000,at(1),0);
+        assert!(s.admit_native(100,1000,at(10)));
+        s.reserve_native(1100,1000,at(20),0);
+        s.mark_all_lost();
+        assert_eq!(s.admitted_pipe(),0);
+        assert!(s.admit_native(1100,1000,at(110)));
+        assert_eq!(s.segs[1].rate.delivered_time,10_000_000);
+        assert_eq!(s.segs[1].rate.first_sent,10_000_000);
+        assert_eq!(s.segs[1].rate.tx_in_flight,1000);
+        s.mark_all_lost();
+        s.on_retransmit(100,1000,at(120),0);
+        assert_eq!(s.segs[0].rate.delivered_time,10_000_000);
+        assert_eq!(s.segs[0].rate.first_sent,10_000_000);
+        assert_eq!(s.rate().epoch_preserved(),2);
+        s.begin_ack();
+        s.ack(2100,at(160),None);
+        let rs=s.rate_sample().unwrap();
+        assert_eq!(rs.delivered,2000);
+        assert_eq!(rs.interval,Duration::from_millis(150));
+        assert_eq!(rs.delivery_rate,2000*1000/150);
+        s.reserve_native(2100,1000,at(180),0);
+        s.reserve_native(3100,1000,at(181),0);
+        assert!(s.admit_native(2100,1000,at(200)));
+        assert_eq!(s.segs[0].rate.delivered_time,200_000_000);
+        assert!(s.admit_native(3100,1000,at(201)));
+        assert_eq!(s.segs[1].rate.delivered_time,200_000_000);
+        assert_eq!(s.rate().epoch_preserved(),2);
+    }
+
+    #[test]
+    fn loss_marks_do_not_restart_regular_delivery_epoch() {
+        let now=Instant::now();
+        let mut s=Scoreboard::new(100,now);
+        s.on_send(100,1000,false,now+Duration::from_millis(10),0);
+        s.mark_all_lost();
+        assert_eq!(s.pipe(),0);
+        s.on_send(1100,1000,false,now+Duration::from_millis(110),0);
+        assert_eq!(s.segs[1].rate.delivered_time,10_000_000);
+        assert_eq!(s.segs[1].rate.tx_in_flight,1000);
+    }
 
     const MSS: u32 = 1000;
 

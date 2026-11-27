@@ -1,4 +1,4 @@
-name: M0 ARM sampled packet identity path attribution
+name: M0 ARM delivery epoch source comparison
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -9,6 +9,8 @@ on:
       - 'tools/m0_dual_tcp_arm_linux_parity.py'
       - 'tools/m0_dual_tcp_path_sample.py'
       - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs'
+      - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/rate.rs'
+      - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/scoreboard.rs'
       - 'crates/wbd-engine/src/v4_rust_tcp/flow.rs'
       - 'crates/wbd-engine/src/v4_rust_tcp/mod.rs'
       - 'crates/wbd-engine/src/v4_embedded_go.rs'
@@ -187,9 +189,10 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
-          mkdir -p bundles/B
+          mkdir -p bundles/A bundles/B
+          gh run download 46024068536 -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
-          for leg in B;do
+          for leg in A B;do
             tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
             (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
           done
@@ -275,9 +278,10 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
-          mkdir -p bundles/B
+          mkdir -p bundles/A bundles/B
+          gh run download 46024068536 -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
-          for leg in B;do
+          for leg in A B;do
             tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
             (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
           done

@@ -86,6 +86,8 @@ pub(crate) struct Rate {
     /// While application-limited, `delivered` at which the bubble ends;
     /// zero otherwise.
     app_limited: u64,
+    pub(crate) fn epoch_preserved(&self) -> u64 { self.epoch_preserved }
+
     /// Bytes marked lost over the connection's life.
     lost: u64,
     /// Bytes delivered that ECN feedback reported CE-marked (Linux's
@@ -93,6 +95,7 @@ pub(crate) struct Rate {
     delivered_ce: u64,
     /// The sample the ACK in progress is building.
     newest: Option<Newest>,
+    epoch_preserved: u64,
 }
 
 impl Rate {
@@ -129,12 +132,14 @@ impl Rate {
 
     /// A segment of `len` bytes goes out at `now` with `in_flight` bytes
     /// in flight before it: its snapshot (OnPacketSent). With nothing in
-    /// flight, the interval starts now: any ACK from here on shows what the
-    /// network delivered since.
-    pub fn on_send(&mut self, now: u64, in_flight: u32, len: u32) -> TxState {
-        if in_flight == 0 {
+    /// flight, restart only if no actual send remains cumulatively
+    /// unacknowledged. Loss and SACK marks do not prove an empty path.
+    pub fn on_send(&mut self, now: u64, in_flight: u32, len: u32, outstanding: bool) -> TxState {
+        if !outstanding {
             self.first_sent = now;
             self.delivered_time = now;
+        } else if in_flight == 0 {
+            self.epoch_preserved += 1;
         }
         TxState {
             delivered: self.delivered,
@@ -233,7 +238,7 @@ mod tests {
         let mut sent = Vec::new();
         for i in 0..10u64 {
             let in_flight = (i * 1000) as u32;
-            sent.push((i * MS, r.on_send(i * MS, in_flight, 1000)));
+            sent.push((i * MS, r.on_send(i * MS, in_flight, 1000, in_flight != 0)));
         }
         let mut last = None;
         for (i, (xmit, tx)) in sent.iter().enumerate() {
@@ -256,13 +261,13 @@ mod tests {
     #[test]
     fn ack_clocked_sample_covers_a_round_trip() {
         let mut r = Rate::default();
-        let a = r.on_send(0, 0, 1000);
+        let a = r.on_send(0, 0, 1000, false);
         r.on_delivered(&a, 0, 1000, 1000, 100 * MS);
         r.sample(None);
         // Sent on that ACK, with 3000 more bytes then delivered by the time
         // it arrives 100 ms later.
-        let b = r.on_send(100 * MS, 0, 1000);
-        let c = r.on_send(100 * MS, 1000, 1000);
+        let b = r.on_send(100 * MS, 0, 1000, false);
+        let c = r.on_send(100 * MS, 1000, 1000, true);
         r.on_delivered(&b, 100 * MS, 2000, 1000, 200 * MS);
         r.on_delivered(&c, 100 * MS, 3000, 1000, 200 * MS);
         let rs = r.sample(Some(100 * MS)).unwrap();
@@ -278,7 +283,7 @@ mod tests {
     #[test]
     fn short_interval_has_no_rate() {
         let mut r = Rate::default();
-        let a = r.on_send(0, 0, 1000);
+        let a = r.on_send(0, 0, 1000, false);
         r.on_delivered(&a, 0, 1000, 1000, 5 * MS);
         let rs = r.sample(Some(10 * MS)).unwrap();
         assert_eq!(rs.delivery_rate, 0);
@@ -291,23 +296,23 @@ mod tests {
     #[test]
     fn app_limited_bubble_ends_once_delivered() {
         let mut r = Rate::default();
-        let a = r.on_send(0, 0, 1000);
+        let a = r.on_send(0, 0, 1000, false);
         r.mark_app_limited(1000);
         assert!(r.is_app_limited());
-        let b = r.on_send(MS, 1000, 1000);
+        let b = r.on_send(MS, 1000, 1000, true);
         assert!(!a.app_limited && b.app_limited);
         r.on_delivered(&a, 0, 1000, 1000, 50 * MS);
         let rs = r.sample(None).unwrap();
         assert!(!rs.is_app_limited);
         assert!(r.is_app_limited(), "the bubble is not yet delivered");
-        let c = r.on_send(50 * MS, 1000, 1000);
+        let c = r.on_send(50 * MS, 1000, 1000, true);
         r.on_delivered(&b, MS, 2000, 1000, 51 * MS);
         let rs = r.sample(None).unwrap();
         assert!(rs.is_app_limited);
         assert!(!r.is_app_limited(), "past the bubble");
         r.on_delivered(&c, 50 * MS, 3000, 1000, 100 * MS);
         assert!(r.sample(None).unwrap().is_app_limited, "sent inside it");
-        let d = r.on_send(100 * MS, 0, 1000);
+        let d = r.on_send(100 * MS, 0, 1000, false);
         assert!(!d.app_limited);
     }
 
@@ -316,9 +321,9 @@ mod tests {
     #[test]
     fn losses_since_transmission_are_counted() {
         let mut r = Rate::default();
-        let a = r.on_send(0, 0, 1000);
-        let _b = r.on_send(0, 1000, 1000);
-        let c = r.on_send(0, 2000, 1000);
+        let a = r.on_send(0, 0, 1000, false);
+        let _b = r.on_send(0, 1000, 1000, true);
+        let c = r.on_send(0, 2000, 1000, true);
         r.on_lost(1000);
         r.on_delivered(&a, 0, 1000, 1000, 10 * MS);
         r.on_delivered(&c, 0, 3000, 1000, 10 * MS);
