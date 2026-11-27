@@ -119,7 +119,7 @@ def server_start(i):
     else:
         k=ORDER[i];b=bundle(k)
         flags=["--dual-rust-tcp"]
-        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1","WBD_M0_NATIVE_INBOX_DOUBLE="+("1" if k=="B" else "0"),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
+        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1","WBD_M0_NATIVE_INBOX_DOUBLE=1","WBD_M0_NATIVE_PACE_QUANTUM8="+("1" if k=="B" else "0"),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
                 "--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443",
                 "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--users-file",fixture.TMP/"users.json",
                 "--lease-pool","10.66.0.128/25","--tls-cert",OUT/"cert.pem","--tls-key",fixture.TMP/"key.pem",
@@ -202,10 +202,11 @@ def probe_receipt(log,leg,k,i):
     rows=[s for s in log.splitlines() if "WBD_M0_TCP_INFO " in s and "leg="+leg+" " in s]
     expected_first="true" if leg=="server-middle" else "false"
     pub=next((s for s in log.splitlines() if "WBD_M0_TCP_PUBLISH " in s),"")
-    slots=2048 if k=="B" else 1024
+    slots=2048
+    quantum=8 if leg=="server-middle" and k=="B" else 32
     bound=next((s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND " in s),"")
     rx=next((s for s in log.splitlines() if "WBD_M0_RAW_RX_PACKET_STATS " in s),"")
-    mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx
+    mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and all(" pace_quantum_mss="+str(quantum)+" " in s for s in rows)
     gso_ok=True
     if leg=="client-middle":
         receipt=next((s for s in log.splitlines() if "WBD_M0_LOCAL_TUN_GSO groups=" in s),"")
@@ -219,14 +220,14 @@ def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()
     started=False;pre=post=before=after=None
-    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if i>=0 else None,"server_ingress_first":i>=0,"client_local_gso":i>=0,"inbox_slots":(2048 if k=="B" else 1024) if i>=0 else None,"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400,"status":"INCOMPLETE"}
+    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if i>=0 else None,"server_ingress_first":i>=0,"client_local_gso":i>=0,"inbox_slots":2048 if i>=0 else None,"server_middle_pace_quantum_mss":(8 if k=="B" else 32) if i>=0 else None,"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400,"status":"INCOMPLETE"}
     try:
         shape(0,0)
         set_cc(N,i)
         control("/start",{"case":i});started=True
         if i>=0:
             b=bundle(k);flags=["--dual-rust-tcp"]
-            p=spawn("client",N,d/"client.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1","WBD_M0_NATIVE_INBOX_DOUBLE="+("1" if k=="B" else "0"),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
+            p=spawn("client",N,d/"client.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1","WBD_M0_NATIVE_INBOX_DOUBLE=1","LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
                     "--raw-interface","wan0","--local-ip","10.248.81.2","--local-port",str(44100+2*i),
                     "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
                     "--username","bench","--password","H2442-ONLY","--auto-ip","--installation-id-file",fixture.TMP/("install-"+str(i)),
@@ -308,7 +309,7 @@ def client():
             for k in "AB":
                 v=[x for x in rows if x["leg"]==k and x["kernel_cc"]==cc and x["loss_pct"]==loss and x["status"]=="MEASURED"]
                 if len(v)==2:means[cc+"-"+str(loss)+"-"+k]={"mbps":statistics.mean(x["mbps"] for x in v),"client_product_cpu_s_per_gib":statistics.mean(x["client"]["product"]["cpu_s_per_gib"] for x in v),"server_product_cpu_s_per_gib":statistics.mean(x["server"]["product"]["cpu_s_per_gib"] for x in v)}
-        summary={"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary selected defaults, 1024 A vs 2048 B both Normal endpoints; zero injected loss; bare BBR same RTT brackets","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","blocks":BLOCKS,"added_rtt_ms":400,"streams":1,"order":ORDER,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if len(means)==2*len(BLOCKS) else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary selected defaults, 2048 both endpoints, server middle pacing quantum cap 32 A vs 8 B MSS; zero injected loss; bare BBR same RTT brackets","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","blocks":BLOCKS,"added_rtt_ms":400,"streams":1,"order":ORDER,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if len(means)==2*len(BLOCKS) else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

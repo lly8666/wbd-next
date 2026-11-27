@@ -436,6 +436,8 @@ pub struct ConnConfig {
     pub(crate) middle_sack_compress: bool,
     /// Native owner diagnostic: bounded packet pacing burst, no accumulated late catch-up.
     pub(crate) native_bounded_pacing: bool,
+    /// Native paired Middle TCP experiment: existing quantum cap in MSS.
+    pub(crate) native_pace_quantum_mss: u32,
     /// Product owner reserves no more than one native batch per flow event.
     pub(crate) native_owner_turn: bool,
     /// Opt-in M0 behavior-alignment profile; not a claim of Linux equivalence.
@@ -539,6 +541,7 @@ impl Default for ConnConfig {
             middle_ack_three: false,
             middle_sack_compress: false,
             native_bounded_pacing: false,
+            native_pace_quantum_mss: 32,
             native_owner_turn: false,
             linux_parity: false,
             ecn: EcnMode::default(),
@@ -1232,8 +1235,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline));
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -4719,7 +4722,7 @@ impl Conn {
     /// drivers' alarm), and a smaller quantum would cap the rate.
     fn pace_quantum(&self, rate: u64) -> f64 {
         let quantum = (rate as f64 / 1000.0).max(2.0 * f64::from(self.mss));
-        if self.cfg.native_bounded_pacing { quantum.min(32.0 * f64::from(self.mss)) } else { quantum }
+        if self.cfg.native_bounded_pacing { quantum.min(f64::from(self.cfg.native_pace_quantum_mss) * f64::from(self.mss)) } else { quantum }
     }
 
     /// Whether pacing lets a segment go now. The credit grows at the
@@ -10524,6 +10527,11 @@ mod tests {
         conn.pace_credit=1_000_000_000.0;
         assert!(conn.pace_ready());
         assert!(conn.pace_credit<=64.0*mss);
+        conn.cfg.native_pace_quantum_mss=8;
+        assert_eq!(conn.pace_quantum(1_000_000_000),8.0*mss);
+        conn.pace_credit=1_000_000_000.0;
+        assert!(conn.pace_ready());
+        assert!(conn.pace_credit<=16.0*mss);
         conn.cfg.native_bounded_pacing = false;
         assert!(conn.pace_quantum(1_000_000_000)>32.0*mss);
     }

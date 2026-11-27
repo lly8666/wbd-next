@@ -121,6 +121,9 @@ def functional():
             receipt=next(s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND " in s)
             assert " slots="+str(expected_slots)+" " in receipt,receipt
         row["inbox_slots"]=expected_slots
+        if os.environ.get("WBD_M0_NATIVE_PACE_QUANTUM8")=="1":
+            assert "WBD_M0_TCP_PACE_QUANTUM mss=8" in sl and "WBD_M0_TCP_PACE_QUANTUM mss=8" in cl
+            row["native_pace_quantum_mss"]=8
         if os.environ.get("WBD_M0_RX_PACKET_STATS")=="1":
             row["packet_rx_stats"]={}
             for log,role in ((sl,"server"),(cl,"client")):
