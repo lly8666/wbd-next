@@ -8,6 +8,9 @@ use std::collections::{BTreeMap,BTreeSet,VecDeque};
 use std::sync::{Arc,Mutex,OnceLock};
 use std::time::Instant;
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
+#[cfg(feature="winxdp_native_trial")]
+#[path = "v4_windows_cold_port.rs"]
+mod cold_port;
 #[path = "v4_windows_native_runtime.rs"]
 mod native_runtime;
 #[path = "v4_windows_game_owner.rs"]
