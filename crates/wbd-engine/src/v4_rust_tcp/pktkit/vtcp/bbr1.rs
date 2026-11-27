@@ -15,6 +15,7 @@ enum Mode { Startup, Drain, ProbeBw, ProbeRtt }
 
 pub struct Bbr1 {
     mss:u32, init:u32, cwnd:u32, rate:u64,
+    startup_pacing_gain:f64,
     mode:Mode, cycle:usize, cycle_at:Instant,
     round:u64, next_round:u64, bw_samples:VecDeque<(u64,u64)>, bw:u64,
     full_bw:u64, full_rounds:u8, full:bool,
@@ -29,7 +30,7 @@ pub struct Bbr1 {
 impl Bbr1 {
     pub fn new(mss:u32,now:Instant)->Self{
         let mss=mss.max(1); let init=initial_window(mss);
-        Self{mss,init,cwnd:init,rate:(HIGH*f64::from(init)*1000.) as u64,
+        Self{mss,init,cwnd:init,rate:(HIGH*f64::from(init)*1000.) as u64,startup_pacing_gain:HIGH,
             mode:Mode::Startup,cycle:0,cycle_at:now,round:0,next_round:0,
             bw_samples:VecDeque::with_capacity(10),bw:0,full_bw:0,full_rounds:0,full:false,
             min_rtt:None,min_stamp:now,seen_rtt:false,probe_until:None,probe_round:0,probe_saved:0,
@@ -37,6 +38,15 @@ impl Bbr1 {
             idle_restart:false,mark_app:false,ack_epoch:now,ack_bytes:0,
             extra:[0;2],extra_slot:0,extra_round:0,
             lt_start:None,lt_previous:0,lt_bw:0,lt_since:0,total_lost:0}
+    }
+    // Lab comparison: reduce only Startup's pacing gain, not its cwnd
+    // gain or the subsequent ProbeBW/ProbeRTT algorithm.
+    pub(crate) fn with_gentle_startup(mut self,enabled:bool)->Self{
+        if enabled{
+            self.startup_pacing_gain=1.5;
+            self.rate=(self.startup_pacing_gain*f64::from(self.init)*1000.) as u64;
+        }
+        self
     }
     fn min_pipe(&self)->u32{4*self.mss}
     fn rtt(&self)->Duration{self.min_rtt.unwrap_or(Duration::from_millis(1))}
@@ -59,7 +69,7 @@ impl Bbr1 {
     }
     fn inflight_target(&self,gain:f64)->u32{self.quantize(self.bdp(gain))}
     fn gains(&self)->(f64,f64){match self.mode{
-        Mode::Startup=>(HIGH,HIGH),Mode::Drain=>(88./256.,HIGH),
+        Mode::Startup=>(self.startup_pacing_gain,HIGH),Mode::Drain=>(88./256.,HIGH),
         Mode::ProbeBw=>(if self.lt_bw!=0{1.}else{CYCLE[self.cycle]},2.),Mode::ProbeRtt=>(1.,1.),
     }}
     fn probe_bw(&mut self,now:Instant){
@@ -148,7 +158,7 @@ impl Bbr1 {
         if let Some(r)=a.newest_rtt.or(a.rtt).filter(|r|!r.is_zero()){
             if !self.seen_rtt{
                 self.seen_rtt=true;
-                self.rate=(HIGH*f64::from(self.cwnd)/r.as_secs_f64()) as u64;
+                self.rate=(self.startup_pacing_gain*f64::from(self.cwnd)/r.as_secs_f64()) as u64;
             }
             if expired||self.min_rtt.is_none_or(|old|r<=old){self.min_rtt=Some(r);self.min_stamp=a.now;}
         }
@@ -169,8 +179,8 @@ impl Bbr1 {
     }
     pub(crate) fn probe(&self,leg:&str,id:u64,wall_ns:u128){
         let (pg,cg)=self.gains();
-        eprintln!("WBD_M0_BBR1 wall_ns={} leg={} id={} phase={:?} cycle={} bw={} min_rtt={:?} round={} full_bw={} full_bw_reached={} pacing_gain={} cwnd_gain={} cwnd={} pacing_rate={} recovery={} conservation={} extra_acked={} lt_bw={} lt_previous={} tso_goal={}",
-            wall_ns,leg,id,self.mode,self.cycle,self.bw,self.min_rtt,self.round,self.full_bw,self.full,pg,cg,self.cwnd,self.rate,self.recovery,self.conserve_until.is_some(),self.extra[0].max(self.extra[1]),self.lt_bw,self.lt_previous,self.tso_goal());
+        eprintln!("WBD_M0_BBR1 wall_ns={} leg={} id={} phase={:?} cycle={} bw={} min_rtt={:?} round={} full_bw={} full_bw_reached={} pacing_gain={} cwnd_gain={} startup_pacing_gain={} cwnd={} pacing_rate={} recovery={} conservation={} extra_acked={} lt_bw={} lt_previous={} tso_goal={}",
+            wall_ns,leg,id,self.mode,self.cycle,self.bw,self.min_rtt,self.round,self.full_bw,self.full,pg,cg,self.startup_pacing_gain,self.cwnd,self.rate,self.recovery,self.conserve_until.is_some(),self.extra[0].max(self.extra[1]),self.lt_bw,self.lt_previous,self.tso_goal());
     }
 }
 impl CongestionController for Bbr1{
@@ -240,6 +250,21 @@ mod tests{
             tx_in_flight:bytes,..Default::default()}),newly_acked:bytes,newly_lost:lost,
             delivered:prior+u64::from(bytes),newest_rtt:Some(Duration::from_millis(100)),
             ..Ack::of(now,bytes,bytes)});
+    }
+    #[test]
+    fn gentle_startup_changes_only_startup_pacing_gain(){
+        let now=Instant::now();
+        let original=Bbr1::new(1000,now);
+        let mut candidate=Bbr1::new(1000,now).with_gentle_startup(true);
+        assert_eq!(candidate.gains(),(1.5,HIGH));
+        assert_eq!(original.gains(),(HIGH,HIGH));
+        assert!(candidate.pacing_rate()<original.pacing_rate());
+        feed(&mut candidate,now+Duration::from_millis(100),0,1_000_000,0,false);
+        assert_eq!(candidate.pacing_rate(),Some(1_485_000));
+        candidate.mode=Mode::ProbeBw;candidate.cycle=0;
+        assert_eq!(candidate.gains(),(1.25,2.));
+        candidate.mode=Mode::ProbeRtt;
+        assert_eq!(candidate.gains(),(1.,1.));
     }
     #[test]
     fn v1_plateau_enters_probe_and_does_not_bound_bw_by_random_loss(){

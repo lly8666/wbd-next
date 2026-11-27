@@ -11,9 +11,10 @@ OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
 # One causal intervention on the existing sender pacing mechanism.
 # All paired legs use the same source, exact bytes and high app offer.
-ORDER=("A","B","B","A")
-CASES=(-1,0,1,2,3,-2)
-PROFILES={"A":"selected-default","B":"server-existing-pacing-ceiling80M"}
+ORDER=("A","G","G","A","L","H","H","L")
+CASES=(-1,0,1,2,3,4,5,6,7,-2)
+PROFILES={"A":"selected-default","G":"uncapped-startup-gain1.5",
+          "L":"server-pacing-ceiling80M","H":"server-pacing-ceiling160M"}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
@@ -23,7 +24,11 @@ def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
 def offer(i):return 600_000_000
 def target_bytes(i):return 1024*1024*1024
-def profile_env(k,server):return ["WBD_M0_NATIVE_PACE80=1"] if server and k=="B" else []
+def profile_env(k,server):
+    if not server:return []
+    if k=="G":return ["WBD_M0_BBR1_STARTUP15=1"]
+    if k in ("L","H"):return ["WBD_M0_NATIVE_PACE_MBPS="+("80" if k=="L" else "160")]
+    return []
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
@@ -261,7 +266,10 @@ def probe_receipt(log,leg,k,i):
     server=leg=="server-middle"
     expected_rack="false"
     expected_ack="false"
-    ceiling=10_000_000 if server and k=="B" else 0
+    ceiling=({"L":10_000_000,"H":20_000_000}.get(k,0)) if server else 0
+    gain="1.5" if server and k=="G" else "2.88671875"
+    bbr=[s for s in log.splitlines() if "WBD_M0_BBR1 " in s and "leg="+leg+" " in s]
+    gain_ok=bool(bbr) and all(" startup_pacing_gain="+gain+" " in s for s in bbr) and any(" phase=Startup " in s and " pacing_gain="+gain+" " in s for s in bbr)
     rates=[int(m.group(1)) for s in rows if (m:=re.search(r"\bpacing_rate: Some\((\d+)\)",s))]
     ceiling_ok=bool(rates) and all(" native_pace_ceiling_bytes_s="+str(ceiling)+" " in s for s in rows) and (not ceiling or max(rates)<=ceiling)
     origin_rows=[s for s in log.splitlines() if "WBD_M0_TCP_ORIGIN " in s]
@@ -270,7 +278,7 @@ def probe_receipt(log,leg,k,i):
     ack_ok=bool(grants) and ((actual_grant_max>0)==(expected_ack=="true")) and (not server or (bool(origin_rows) and all(" ack_drain="+expected_ack in s for s in origin_rows)))
     bound=next((s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND " in s),"")
     rx=next((s for s in log.splitlines() if "WBD_M0_RAW_RX_PACKET_STATS " in s),"")
-    mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and ack_ok and ceiling_ok and all(" pace_quantum_mss="+str(quantum)+" " in s and " rack_keep_reo_window="+expected_rack+" " in s for s in rows)
+    mode_ok=(" ingress_first="+expected_first+" ") in pub and (" slots="+str(slots)+" ") in bound and " packets=" in rx and " drops=" in rx and ack_ok and ceiling_ok and gain_ok and all(" pace_quantum_mss="+str(quantum)+" " in s and " rack_keep_reo_window="+expected_rack+" " in s for s in rows)
     gso_ok=True
     if leg=="client-middle":
         receipt=next((s for s in log.splitlines() if "WBD_M0_LOCAL_TUN_GSO groups=" in s),"")
@@ -278,7 +286,7 @@ def probe_receipt(log,leg,k,i):
         gso_ok=int(vals.get("groups",0))>0
     expected='congestion: "'+rust_cc(i)+'"'
     return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows),
-            "ingress_first_expected":expected_first,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,"pacing_ceiling_bytes_s":ceiling,"actual_pacing_max_bytes_s":max(rates,default=0),
+            "ingress_first_expected":expected_first,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,"pacing_ceiling_bytes_s":ceiling,"actual_pacing_max_bytes_s":max(rates,default=0),"startup_pacing_gain":gain,"startup_gain_verified":gain_ok,
             "valid":mode_ok and gso_ok and len(rows)>=10 and all(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows)}
 def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
@@ -361,11 +369,11 @@ def client_case(i):
         if started:
             try:row["server_receipt"]=control("/stop")
             except Exception as e:row["server_stop_error"]=repr(e)
-        if row["status"]=="MEASURED":
+        if row.get("application_result"):
             origin=row.get("server_receipt",{}).get("origin_app",{})
             app=row.get("application_result",{})
             row["hash_match"]=origin.get("sha256")==app.get("sha256") and origin.get("sent_bytes")==app.get("received_bytes")==target_bytes(i) and row.get("server_receipt",{}).get("rc",{}).get("origin")==0
-            if not row["hash_match"]:row["status"]="INCOMPLETE_APP_HASH"
+            if row["status"]=="MEASURED" and not row["hash_match"]:row["status"]="INCOMPLETE_APP_HASH"
         if row["status"]=="MEASURED" and i>=0 and (not row.get("client_stop") or not row.get("server_receipt",{}).get("joined_stop")):row["status"]="INCOMPLETE_STOP"
         if row["status"]=="MEASURED" and i>=0 and not (row.get("probe",{}).get("valid") and row.get("server_receipt",{}).get("probe",{}).get("valid")):row["status"]="INCOMPLETE_PROBE"
         if row["status"]=="MEASURED" and (not row.get("endpoint_direct_snapshots") or row.get("server_receipt",{}).get("final_sample_error")):row["status"]="INCOMPLETE_PATH_OR_SAMPLE"
@@ -397,7 +405,7 @@ def client():
                 sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                 recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary existing server Middle pacing ceiling80M ABBA, fixed1GiB/600M offered all, same-RTT bare brackets, actual rate and final-or-Stop sample; ceiling is a lab intervention, not selected default","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary two ABBA blocks: uncapped default vs gentler Startup1.5, and80M vs160M existing pacing ceilings; fixed1GiB/600M offered, same-RTT bare brackets; actual rate/gain and final-or-Stop sample; lab only","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

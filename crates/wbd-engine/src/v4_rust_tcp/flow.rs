@@ -50,7 +50,15 @@ impl Endpoint {
             native_owner_turn: parity,
             rack_keep_reo_window:middle&&parity&&std::env::var_os("WBD_M0_RACK_KEEP_WINDOW").as_deref()==Some(std::ffi::OsStr::new("1")),
             native_pace_quantum_mss:quantum_mss,
-            native_pace_ceiling:if middle&&parity&&std::env::var_os("WBD_M0_NATIVE_PACE80").as_deref()==Some(std::ffi::OsStr::new("1")){Some(10_000_000)}else{None},
+            native_pace_ceiling:if middle&&parity{
+                match std::env::var_os("WBD_M0_NATIVE_PACE_MBPS").as_deref().and_then(|s|s.to_str()){
+                    Some("160")=>Some(20_000_000),
+                    Some("80")=>Some(10_000_000),
+                    _ if std::env::var_os("WBD_M0_NATIVE_PACE80").as_deref()==Some(std::ffi::OsStr::new("1"))=>Some(10_000_000),
+                    _=>None,
+                }
+            }else{None},
+            gentle_bbr1_startup:middle&&parity&&std::env::var_os("WBD_M0_BBR1_STARTUP15").as_deref()==Some(std::ffi::OsStr::new("1")),
             native_bounded_pacing: parity || std::env::var_os("WBD_M0_BOUNDED_PACE").as_deref() == Some(std::ffi::OsStr::new("1")),
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()

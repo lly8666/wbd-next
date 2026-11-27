@@ -303,13 +303,14 @@ fn make_cc(
     paced: bool,
     now: Instant,
     linux_parity: bool,
+    gentle_bbr1_startup:bool,
 ) -> Box<dyn CongestionController> {
     let mut cc: Box<dyn CongestionController> = match kind {
         CongestionKind::Cubic => Box::new(Cubic::new(mss).with_linux_parity(linux_parity)),
         CongestionKind::NewReno => Box::new(NewReno::new(mss)),
         CongestionKind::HighSpeed => Box::new(HighSpeed::new(mss)),
         CongestionKind::Bbr => Box::new(Bbr::new(mss, now)),
-        CongestionKind::Bbr1 => Box::new(Bbr1::new(mss, now)),
+        CongestionKind::Bbr1 => Box::new(Bbr1::new(mss, now).with_gentle_startup(gentle_bbr1_startup)),
     };
     cc.set_paced(paced || cc.model_based());
     cc
@@ -440,6 +441,7 @@ pub struct ConnConfig {
     pub(crate) native_pace_quantum_mss: u32,
     /// Lab-only ceiling on the existing TCP pacing rate (payload bytes/s).
     pub(crate) native_pace_ceiling: Option<u64>,
+    pub(crate) gentle_bbr1_startup:bool,
     /// Product owner reserves no more than one native batch per flow event.
     pub(crate) native_owner_turn: bool,
     /// Lab comparison: keep the RFC 8985 reordering window instead of its zero shortcut.
@@ -547,6 +549,7 @@ impl Default for ConnConfig {
             native_bounded_pacing: false,
             native_pace_quantum_mss: 32,
             native_pace_ceiling: None,
+            gentle_bbr1_startup:false,
             native_owner_turn: false,
             rack_keep_reo_window: false,
             linux_parity: false,
@@ -920,7 +923,7 @@ impl Conn {
         let now = wall_clock();
         let rcv_shift = cfg.rcv_wscale();
         let mss = cfg.mss.max(1);
-        let cc = make_cc(cfg.congestion, mss as u32, cfg.pacing, now, cfg.linux_parity);
+        let cc = make_cc(cfg.congestion, mss as u32, cfg.pacing, now, cfg.linux_parity,cfg.gentle_bbr1_startup);
         let ts_offset = super::secret::keyed_hash((
             "tsval",
             cfg.local_addr.map(|a| a.ip()),
@@ -1941,6 +1944,7 @@ impl Conn {
             self.cfg.pacing,
             self.now,
             self.cfg.linux_parity,
+            self.cfg.gentle_bbr1_startup,
         );
     }
 
@@ -7084,6 +7088,7 @@ mod tests {
             client.cfg.pacing,
             client.now,
             client.cfg.linux_parity,
+            client.cfg.gentle_bbr1_startup,
         );
 
         let (_, segs) = client.write(&[4; 10_000]);

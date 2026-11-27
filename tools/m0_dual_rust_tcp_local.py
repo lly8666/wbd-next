@@ -154,8 +154,8 @@ def controlled_recovery():
     # Same existing pacing mechanism, one opt-in ceiling. Local runs
     # qualify actual ceiling execution and complete business, not ABBA.
     cases=[
-        ("backlog-default",True,600_000_000,{},0,0,512),
-        ("backlog-pace80",True,600_000_000,{"WBD_M0_NATIVE_PACE80":"1"},0,0,512),
+        ("backlog-pace160",True,600_000_000,{"WBD_M0_NATIVE_PACE_MBPS":"160"},0,0,512),
+        ("backlog-gentle-startup",True,600_000_000,{"WBD_M0_BBR1_STARTUP15":"1"},0,0,512),
     ]
     for label,paired,offered,profile,jitter,loss,mib in cases:
         target_bytes=mib*1024*1024
@@ -278,10 +278,14 @@ def controlled_recovery():
                 expected_cc=profile.get("WBD_M0_MIDDLE_CC","bbr1")
                 actual_grants=[int(m.group(1)) for x in info if (m:=re.search(r"\bnative_ack_grant_deferred=(\d+)",x))]
                 row["ack_grant_deferred_max_sample"]=max(actual_grants,default=0)
-                ceiling=10_000_000 if profile.get("WBD_M0_NATIVE_PACE80")=="1" else 0
+                ceiling=int(profile.get("WBD_M0_NATIVE_PACE_MBPS","0"))*125_000
+                gentle=profile.get("WBD_M0_BBR1_STARTUP15")=="1"
+                bbr=[x for x in sl.splitlines() if "WBD_M0_BBR1 " in x and "leg=server-middle " in x]
+                gain="1.5" if gentle else "2.88671875"
+                gain_ok=bool(bbr) and all(" startup_pacing_gain="+gain+" " in x for x in bbr) and any(" phase=Startup " in x and " pacing_gain="+gain+" " in x for x in bbr)
                 rates=[int(m.group(1)) for x in info if (m:=re.search(r"\bpacing_rate: Some\((\d+)\)",x))]
                 row["actual_pacing_max_bytes_s"]=max(rates,default=0)
-                row["profile_valid"]=bool(info and origin_info and rates) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x and " native_pace_ceiling_bytes_s="+str(ceiling)+" " in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true")) and (not ceiling or row["actual_pacing_max_bytes_s"]<=ceiling)
+                row["profile_valid"]=gain_ok and bool(info and origin_info and rates) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x and " native_pace_ceiling_bytes_s="+str(ceiling)+" " in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true")) and (not ceiling or row["actual_pacing_max_bytes_s"]<=ceiling)
                 row["receipt_present"]=all(any("WBD_M0_RAW_RX_PACKET_STATS " in line and " drops=" in line for line in log.splitlines()) and
                     "WBD_M0_TCP_INGRESS " in log for log in (cl,sl)) and "WBD_M0_TCP_M4_CLOCK " in sl and "WBD_M0_LOCAL_TUN_GSO " in cl and bool(latest)
             row["qdisc_after_stop"]=path_counts()
@@ -295,7 +299,7 @@ def controlled_recovery():
             save(d/"result.json",row)
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, fixed512MiB actual finite app at600M offer, existing server Middle pacing uncapped vs80M ceiling, zero injection400ms; actual profile/rate and final-or-Stop sample; local qualification not ABBA","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, fixed512MiB actual finite app at600M offer, server Middle 160M ceiling and uncapped gentle Startup, zero injection400ms; actual profile/rate and final-or-Stop sample; local qualification not ABBA","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)
