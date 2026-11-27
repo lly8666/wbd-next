@@ -379,11 +379,16 @@ func runM0NativeV4WindowsGame(
  interval:=2*time.Second
  if diagnostic{interval=time.Second}
  ticker:=time.NewTicker(interval);defer ticker.Stop()
+ rotation,stopRotation:=m0WindowsArmRotation(o)
+ defer stopRotation()
  var runtimeErr error
 outer:
  for{
   select{
   case <-ctx.Done():break outer
+  case <-rotation:
+   if ctx.Err()==nil{runtimeErr=m0WindowsTimedRotationDue()}
+   break outer
   case <-pathChanged:
    runtimeErr=errM0WindowsPhysicalPathChanged
    break outer

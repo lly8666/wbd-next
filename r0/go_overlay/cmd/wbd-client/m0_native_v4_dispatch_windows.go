@@ -8,6 +8,7 @@ import (
  "os"
  "net/netip"
  "strings"
+ "time"
  "golang.org/x/net/idna"
 )
 // Mainline Windows CLI needs real V4 ownership, not a V3/PowerShell
@@ -42,12 +43,24 @@ type m0NativeV4Options struct {
  TunnelMTU uint32 // derived inner Wintun IPv4 MTU
  ConnectionMTU uint32 // exact original --mtu outer NPF IPv4/TCP MTU
  ControlStdin bool
+ // Existing persisted CLI rotate-min/max: zero/zero disables. The
+ // Windows native owner currently renews the whole generation.
+ RotateMin,RotateMax time.Duration
  DisableOuterRepair bool
  Mode m0WindowsV4Mode
  FEC2Mode,FEC2Profile,FEC2AutoPolicy,FEC2AutoStartProfile string
  // Explicit cold original Rust Health policy. Zero means 15/90/0 defaults;
  // the real M2 TX clock returns the effective, not GUI intent.
  HealthIntervalSeconds,HealthDeadSeconds,HealthDormantSeconds uint32
+}
+// Same explicit lower/upper interval contract as the original Windows
+// CLI. Native renewal is bounded to the Linux-supported time scale.
+func m0WindowsValidateRotation(min,max time.Duration)error{
+ if min==0&&max==0{return nil}
+ if min<5*time.Second||max<min||max>24*time.Hour{
+  return fmt.Errorf("rotate-min/max require 5s <= min <= max <= 24h, or both zero")
+ }
+ return nil
 }
 // Default off has no per-DATA bookkeeping. Legacy boolean maps to tls.
 // Explicit conflicting new mode is rejected rather than silently ignored.

@@ -18,6 +18,9 @@ game_fixed=mode.endswith("-fec")
 configured_mtu=configured_native_test_mtu()
 native_outer=native_outer_choice(os.environ.get('WBD_WL_NATIVE_OUTER_MTU_REQUEST','legacy1400'))
 plan028_owned_switch=os.environ.get('WBD_PLAN028_WSL_OWNED_SWITCH','0')=='1'
+timed_rotation=os.environ.get("WBD_XDP_WINDOWS_ROTATION")=="1"
+rotation_report=None
+game_tcp_owned_routes=[]
 plan028_owned_mtu_only=os.environ.get('WBD_PLAN028_WSL_OWNED_MTU_ONLY','0')=='1'
 # One new SOURCE-locked real signed Wintun NativeOwner scene. H1743
 # pure Tunnel remains a separate immutable qualification record.
@@ -576,6 +579,8 @@ try:
    from m0_winxdp_game_download import route_for
    game_tcp_physical=route_for("192.0.2.2")
    report["game_tcp_physical_before_apply"]=game_tcp_physical
+ if timed_rotation and mode not in ("normal","game4-fec"):
+  raise RuntimeError("focused timer fixture supports Normal and Game4 Maximum")
  if p030_managed:
   managed_cfg={"listen":peer+":443","server-name":"wbd-v4.example.test","raw-interface":"eth0",
       "tun-name":"wbdwl4","tun-ipv4":"10.66.0.1/24","lease-pool":"10.66.0.128/25",
@@ -590,7 +595,7 @@ try:
   cfg_local.unlink()
   linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' '"+server+"/wbd-v4-server' --manage serve --config '"+cfg_guest+"' --socket '"+sock_guest+"'\n").encode("utf-8"))
  else:
-  linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+h2441_flags+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
+  linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4 or timed_rotation) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+h2441_flags+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4 or p029b_game_case:
@@ -686,6 +691,8 @@ try:
   "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",(game_route if p029b_game_case else "bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 or p029b_b4 else "all" if p029_v3 or p029b_b5 else "bypass-lan"),"--outer-repair",outer_repair]
  if game_download_bbr and os.environ.get("WBD_XDP_GAME_DOWNLOAD_TRANSPORT")=="tcp":
   args[args.index("--route-mode")+1]="all"
+ if timed_rotation:
+  args.extend(["--rotate-min","12s","--rotate-max","18s"])
  if p029b_game_padding:
   # Signed original Game V5 selector; never bypass Go saved cold config.
   args.extend(["--startup-padding",p029b_game_padding])
@@ -934,6 +941,13 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
        ("PLAN029_H2061_NORMAL_GUI_RECONNECT_SECOND_APPLIED"
         if p029_gui_reconnect else "WBD_WINDOWS_CLIENT_READY"),
        w,110 if p029_gui_reconnect else 30)
+ if game_download_bbr and os.environ.get("WBD_XDP_GAME_DOWNLOAD_TRANSPORT")=="tcp":
+  # Isolate immediately at authentic Ready, before the original UDP and
+  # TCP warmups. Previously this happened after the failing duplex check.
+  from m0_winxdp_game_download import isolate_routes
+  isolate_routes(out,game_tcp_physical,game_tcp_owned_routes)
+  report["game_tcp_background_isolated_before_warmup"]=True
+  report["game_tcp_server_underlay_route"]=wsl("ip","-j","route","get",os.environ["WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4"])
  if p030_managed:
   # GUI second native READY may precede server-side authenticated B
   # publication; wait only for the real management snapshot, not a marker.
@@ -1179,7 +1193,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   print("PLAN029_H1840_REAL_PRODUCT_NONCI_EXPLICIT_CN_SPLIT_OWNED_OS_APPLIED_PRE_BUSINESS",flush=True)
  ready(out/"server.log",("V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else
    "V4_PUBLIC_MIXED_NORMAL_READY role=server" if p030_managed else
-   "V4_PUBLIC_MULTI_SESSION_READY role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) and not is_game else
+   "V4_PUBLIC_MULTI_SESSION_READY role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4 or timed_rotation) and not is_game else
    "V4_ORIGINAL_GO_SERVER_NATIVE_READY"),s,8)
  if tls_wire:
   end_tls_capture()
@@ -1866,7 +1880,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  # Windows->Linux Tunnel TCP with a source-locked Linux listener/echo.
  # The historical PLAN028 Linux->Windows inbound comparator is not a B4
  # requirement; never disguise its known independent FAIL as B4 product FAIL.
- if p029_direct or p029b_b4 or p029b_game_case:
+ if timed_rotation:
+  from m0_winxdp_windows_rotation import measure_rotation
+  rotation_report=measure_rotation(root,out,unix,w,s)
+  report["windows_timed_rotation"]=rotation_report
+ elif p029_direct or p029b_b4 or p029b_game_case:
   # H2159: Game2/4 original kernel Windows->Linux TCP+echo is REQUIRED
   # for all five source-locked business policies. The old Linux-initiated
   # Windows inbound TCP comparator is a separate PLAN028 capability;
@@ -2730,7 +2748,7 @@ print(json.dumps(result),flush=True)
     print("H491_ORIGINAL_TUN_QUEUE_ACTUAL "+json.dumps(report["linux_tun_queue_control"]),flush=True)
    if os.environ.get("WBD_XDP_GAME_DOWNLOAD_TRANSPORT")=="tcp":
     from m0_winxdp_game_download import measure_tcp
-    measured=measure_tcp(root,out,wsl,unix,w,s,scenario,lambda:netem("arm"),game_tcp_physical)
+    measured=measure_tcp(root,out,wsl,unix,w,s,scenario,lambda:netem("arm"),game_tcp_physical,preisolated=bool(game_tcp_owned_routes))
     print(netem("snapshot"),flush=True)
     report["linux_tun_link_kernel"]=link_delta(tun_link_before,tun_link_snapshot("after"))
     report["linux_tun_fq_kernel"]=fq_delta(tun_fq_before,tun_fq_snapshot("after"))
@@ -2973,6 +2991,9 @@ print(json.dumps(result),flush=True)
    finally:
     if owned.exists():
      print(netem("cleanup"),flush=True)
+ if game_tcp_owned_routes:
+  from m0_winxdp_game_download import restore_routes
+  restore_routes(game_tcp_owned_routes);game_tcp_owned_routes.clear()
  game_due_first_fault()
  stop_windows(w)
  stop_marker="WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" if is_game else "WBD_WINDOWS_NATIVE_DISCONNECTED_V1"
@@ -2988,10 +3009,10 @@ print(json.dumps(result),flush=True)
   raise RuntimeError("Windows native owned WAL Stop missing")
  stop_linux();s.wait(timeout=10)
  if p030_managed:wsl("rm","-f",cfg_guest,sock_guest)
- stop_marker=("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close" if is_game and plan028_owned_switch else
+ stop_marker=("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close" if is_game and (plan028_owned_switch or timed_rotation) else
   "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else
   "V4_PUBLIC_SHARED_TUN_STOP generation=" if p030_managed else
-  "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else
+  "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4 or timed_rotation) else
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  server_stop_text=(out/"server.log").read_text()
  if s.returncode or stop_marker not in server_stop_text:raise RuntimeError("Linux original Rust Stop missing; exit="+str(s.returncode)+" expected="+stop_marker)
@@ -3004,6 +3025,10 @@ print(json.dumps(result),flush=True)
   if not report["game_download_bbr"]["ready"] or not report["game_download_bbr"]["stop"]:
    raise RuntimeError("GAME_DOWNLOAD_BBR_OWNER_RECEIPT_MISSING")
  report["stop"]="PASS_BOTH_OWNED"
+ if timed_rotation:
+  from m0_winxdp_windows_rotation import audit_stop
+  report["windows_timed_rotation"].update(audit_stop(out))
+  print("WINXDP_WINDOWS_TIMER_RESULT "+json.dumps(report["windows_timed_rotation"]),flush=True)
  if p029b_b4:
   # Signed source-locked proof: no synthetic OS/Ready, no single- or
   # two-generation Go check-config substituted for three REAL button
@@ -3751,6 +3776,12 @@ except Exception as e:
  print("WBD_WL_TRUE_PUBLIC_MODE_FAIL "+mode+": "+str(e),file=sys.stderr)
  raise
 finally:
+ if game_tcp_owned_routes:
+  try:
+   from m0_winxdp_game_download import restore_routes
+   restore_routes(game_tcp_owned_routes);game_tcp_owned_routes.clear()
+  except Exception as exc:
+   print("GAME_TCP_FIXTURE_ROUTE_RESTORE_FAILED "+str(exc),flush=True)
  if padding_capture is not None and padding_capture.poll() is None:
   try:end_padding_capture()
   except Exception as exc:

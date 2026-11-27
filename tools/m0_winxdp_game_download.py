@@ -116,13 +116,13 @@ def tcp_app(side,flag,directory):
     (out/("game-tcp-"+side+".json")).write_text(json.dumps(row,indent=2))
     print("GAME_TCP_RESULT "+json.dumps(row),flush=True)
 
-def measure_tcp(root,out,wsl,unix,win_product,linux_product,scenario,arm,physical):
+def measure_tcp(root,out,wsl,unix,win_product,linux_product,scenario,arm,physical,preisolated=False):
     # Use the same isolated forwarded origin topology as H2441. A
     # connection to 10.66.0.1 is LOCAL and never enters TCP TPROXY.
     owned=[]
     wsl("ip","netns","add",NS)
     try:
-        isolate_routes(out,physical,owned)
+        if not preisolated:isolate_routes(out,physical,owned)
         wsl("ip","link","add","h2441host","type","veth","peer","name","h2441peer")
         wsl("ip","link","set","h2441peer","netns",NS)
         wsl("ip","addr","add","192.0.2.1/24","dev","h2441host")
@@ -300,6 +300,9 @@ def matrix():
         for pat in ("report.json","client.log","server.log","wl-n0-*.json","wl-n0-*.log","wl-v2-linux-tun-*","game-tcp-*.json","game-tcp-*.log","mode-batch.json","windows-original-go-rust-process-1hz.jsonl","gamefec-*.txt","kernel-samples.jsonl"):
             for p in OUT.glob(pat):
                 if p.is_file() and not p.name.endswith("owned.json"):shutil.copyfile(p,case/p.name)
+        for pat in ("windows-tcp-app.log","linux-tcp-app.log","windows-app.log","linux-app.log"):
+            p=OUT/pat
+            if p.exists():shutil.copyfile(p,case/p.name)
         row=summary(case,mode,transport,rc);rows.append(row)
         (E/("summary-"+transport+".json")).write_text(json.dumps(rows,indent=2))
         if rc==124 or row["stop"]!="PASS_BOTH_OWNED":

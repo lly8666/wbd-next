@@ -9,6 +9,7 @@ import(
  "bufio"
  "context"
  "crypto/rand"
+ mathrand "math/rand"
  "encoding/binary"
  "encoding/json"
  "errors"
@@ -123,6 +124,28 @@ func m0WindowsInitialTransportRetryAllowed(
 // compare selected physical NIC/source4/real interface IPv4 MTU after 200ms
 // quiet / 500ms max; gateway noise and our Wintun's MTU do not rotate TLS.
 var errM0WindowsPhysicalPathChanged=errors.New("original Windows physical path changed; exact owned Stop then new TLS")
+
+// The scheduling authority is separate from path notifications and
+// authenticated health death. This is a cold generation renewal, NOT
+// Linux's simultaneous A+B owner handover or Game4 one-slot hot rekey.
+// One timer starts at actual M4/OS READY; no packet-plane work or goroutine.
+var errM0WindowsTimedRotation=errors.New("scheduled native Windows generation renewal")
+func m0WindowsRotationDelay(min,max time.Duration)time.Duration{
+ if min==max{return min}
+ return min+time.Duration(mathrand.Int63n(int64(max-min)+1))
+}
+func m0WindowsArmRotation(o m0NativeV4Options)(<-chan time.Time,func()){
+ if o.RotateMin==0{return nil,func(){}}
+ delay:=m0WindowsRotationDelay(o.RotateMin,o.RotateMax)
+ fmt.Printf("WBD_WINDOWS_TIMER_ROTATION_ARMED min_ms=%d max_ms=%d actual_delay_ms=%d scope=full_generation unix_ms=%d\n",
+  o.RotateMin.Milliseconds(),o.RotateMax.Milliseconds(),delay.Milliseconds(),time.Now().UnixMilli())
+ timer:=time.NewTimer(delay)
+ return timer.C,func(){timer.Stop()}
+}
+func m0WindowsTimedRotationDue()error{
+ fmt.Printf("WBD_WINDOWS_TIMER_ROTATION_DUE scope=full_generation unix_ms=%d\n",time.Now().UnixMilli())
+ return errM0WindowsTimedRotation
+}
 
 type m0WindowsPhysicalPath struct{
  ifindex uint32
@@ -510,6 +533,7 @@ func m0Plan028WindowsNativeClientSlot(o m0NativeV4Options)(windows.Handle,error)
  return h,nil
 }
 func runM0NativeV4Windows(o m0NativeV4Options)error{
+ if err:=m0WindowsValidateRotation(o.RotateMin,o.RotateMax);err!=nil{return err}
  // 029B Game2 and Game4 share one cold Rust NativeSplitWorker, and
  // each keeps its original 2/4 independent authenticated TLS lanes.
  // No silent Normal fallback or pre-OS "not wired" rejection.
@@ -548,6 +572,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  defer func(){if stopPathWatch!=nil{stopPathWatch()}}()
  reauthAuthorized:=false
  pathRecoveryAuthorized:=false
+ rotationAuthorized:=false
  coldRetries:=0
  for generation:=uint64(1);;{
   if ctx.Err()!=nil{return nil}
@@ -570,11 +595,23 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
     return runM0NativeV4WindowsGeneration(
      genCtx,o,generation,autoOperatorRequests,&applied,generationChanged)
    })
+  // Only the successful exact Stop returns this sentinel directly.
+  // A failed Stop never authorizes a new generation.
+  if ctx.Err()==nil&&applied&&err==errM0WindowsTimedRotation{
+   reauthAuthorized=false
+   pathRecoveryAuthorized=false
+   rotationAuthorized=true
+   coldRetries=0
+   generation++
+   fmt.Printf("WBD_WINDOWS_TIMER_ROTATION_REAUTHORIZE generation=%d previous_native_joined=1 scope=full_generation unix_ms=%d\n",generation,time.Now().UnixMilli())
+   continue
+  }
   // Only after exact native OS/WAL Stop may the existing Go cold owner
   // establish the next generation on a DIFFERENT physical kernel route.
   if ctx.Err()==nil&&errors.Is(err,errM0WindowsPhysicalPathChanged){
    reauthAuthorized=false
    pathRecoveryAuthorized=true // filtered actual native OS event
+   rotationAuthorized=false
    coldRetries=0
    generation++
    fmt.Printf("WBD_WINDOWS_NATIVE_PATH_REAUTHORIZE generation=%d previous_native_joined=1 source=native_ipv4_notification_200_500\n",generation)
@@ -586,12 +623,13 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   initialRetry:=m0WindowsInitialTransportRetryAllowed(
    o.Mode,applied,coldRetries,err)
   recoveryRetry:=m0WindowsColdPathRetryAllowed(
-   o.Mode,reauthAuthorized,pathRecoveryAuthorized,applied,coldRetries,err)
+   o.Mode,reauthAuthorized||rotationAuthorized,pathRecoveryAuthorized,applied,coldRetries,err)
   if ctx.Err()==nil&&(initialRetry||recoveryRetry){
    coldRetries++
    authority:="authenticated_health90"
    if pathRecoveryAuthorized{authority="native_physical_ipv4_path"}
-   if initialRetry&&!reauthAuthorized&&!pathRecoveryAuthorized{
+   if rotationAuthorized{authority="scheduled_generation_renewal"}
+   if initialRetry&&!reauthAuthorized&&!pathRecoveryAuthorized&&!rotationAuthorized{
     authority="initial_original_tls_transport_only"
    }
    fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_COLD_RETRY generation=%d attempt=%d class=timeout authority=%s previous_owner_drained=1\n",generation,coldRetries,authority)
@@ -606,6 +644,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   if !errors.Is(err,errM0NativeV4AuthenticatedPeerDead)||ctx.Err()!=nil{return err}
   reauthAuthorized=true
   pathRecoveryAuthorized=false
+  rotationAuthorized=false
   coldRetries=0
   fmt.Printf("WBD_WINDOWS_NATIVE_DEAD_RECONNECT_ARMED generation=%d old_owner_drained=1\n",generation)
   timer:=time.NewTimer(time.Second)
@@ -1179,11 +1218,16 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  // This invokes the existing Rust readback (not a DATA packet callback).
  qualityTicker:=time.NewTicker(2*time.Second)
  defer qualityTicker.Stop()
+ rotation,stopRotation:=m0WindowsArmRotation(o)
+ defer stopRotation()
  var runtimeErr error
 waitNative:
  for{
   select{
   case <-ctx.Done():break waitNative
+  case <-rotation:
+   if ctx.Err()==nil{runtimeErr=m0WindowsTimedRotationDue()}
+   break waitNative
   case <-pathChanged:
    runtimeErr=errM0WindowsPhysicalPathChanged
    break waitNative
@@ -1236,7 +1280,7 @@ waitNative:
    }
   }
  }
- if runtimeErr!=nil{
+ if runtimeErr!=nil&&runtimeErr!=errM0WindowsTimedRotation{
   metrics:=transport.Stats()
   metrics.NPFIngressLocalDrops=ingressLocalDrops.Load()
   if snapshot,marshalErr:=json.Marshal(metrics);marshalErr==nil{

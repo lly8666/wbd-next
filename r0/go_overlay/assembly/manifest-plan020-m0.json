@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "ab2eb721c017d49a7bff002cf0b551b10ca9fb9e",
+      "result_blob": "b01855bafc7650bf52fd4859ae191dd4a7d8aa72",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -324,6 +324,10 @@
         {
           "find": "absolute owned CN domain rules snapshot used only at split cold start",
           "replace": "optional absolute CN domain snapshot; empty uses built-in geolocation-cn"
+        },
+        {
+          "find": "\t\t\tHealthIntervalSeconds:uint32(*fec2Selection.HealthKeepaliveSeconds),",
+          "replace": "\t\t\tRotateMin:*rotateMin,RotateMax:*rotateMax,\n\t\t\tHealthIntervalSeconds:uint32(*fec2Selection.HealthKeepaliveSeconds),"
         }
       ]
     },
@@ -1432,7 +1436,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "b8caf7ede88c87dde4c30400f9e48f04241b7f3e"
+      "result_blob": "602f0deccc9a93f0672d93e2d20ae6000d5f4253"
     },
     {
       "kind": "create",
@@ -1444,7 +1448,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "7c6246c0c96369f2a85862eed9f97a6ae5137c2d"
+      "result_blob": "3bd08c03b0a1bef1760daec9a12c6549f66f4922"
     },
     {
       "kind": "create",
@@ -1522,7 +1526,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "e72ebac8f494cc1b983a33006abd6d4af25008ae"
+      "result_blob": "8a6799d2d9f457b762d0cc39a26f6ddf6aae43ca"
     },
     {
       "kind": "create",
@@ -1618,7 +1622,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
-      "result_blob": "a79bb84146c5811660bfecce7bd11a1d27569556"
+      "result_blob": "bfe88bb63c73a12accad7290576d6c079b01732f"
     },
     {
       "kind": "create",
