@@ -1,4 +1,4 @@
-name: M0 ARM client-first reverse and bounded ready RX drain ABBA
+name: M0 ARM sampled packet identity path attribution
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml'
       - 'tools/m0_dual_tcp_arm_linux_parity.py'
+      - 'tools/m0_dual_tcp_path_sample.py'
       - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs'
       - 'crates/wbd-engine/src/v4_rust_tcp/flow.rs'
       - 'crates/wbd-engine/src/v4_rust_tcp/mod.rs'
@@ -117,6 +118,14 @@ jobs:
         run: |
           set -euo pipefail
           bash tools/m0_h2228_three_runner_case.sh relay-start
+      - name: Start header-only deterministic path sample (relay)
+        run: |
+          sudo -n nohup python3 -u tools/m0_dual_tcp_path_sample.py start relay >h2228-out/path-sample-worker.log 2>&1 </dev/null &
+          for i in $(seq 1 100); do
+            test ! -s h2228-out/path-sample-ready.json || break
+            sleep .2
+          done
+          test -s h2228-out/path-sample-ready.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: h2228-relay-ready
@@ -133,6 +142,9 @@ jobs:
         run: |
           set -euo pipefail
           bash tools/m0_h2228_three_runner_case.sh relay-wait
+      - name: Finish and qualify header-only path sample
+        if: always()
+        run: sudo -n python3 -u tools/m0_dual_tcp_path_sample.py stop
       - name: Cleanup ONLY owned middle namespace and VXLAN (never Tailscale)
         if: always()
         shell: bash
@@ -174,7 +186,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
           mkdir -p bundles/B
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
           for leg in B;do
@@ -202,6 +214,14 @@ jobs:
           tailscale ping --c=5 "$(jq -r .tail_ip h2228-peer/relay.json)" >h2228-out/relay-ping.txt 2>&1 || true
           nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py watch server >h2228-out/watch.log 2>&1 </dev/null &
           echo $! >"$RUNNER_TEMP/dual-watch.pid"
+      - name: Start header-only deterministic path sample (server)
+        run: |
+          sudo -n nohup python3 -u tools/m0_dual_tcp_path_sample.py start server >h2228-out/path-sample-worker.log 2>&1 </dev/null &
+          for i in $(seq 1 100); do
+            test ! -s h2228-out/path-sample-ready.json || break
+            sleep .2
+          done
+          test -s h2228-out/path-sample-ready.json
       - name: Start preset server and real origin control
         run: |
           sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py server >h2228-out/server-control.log 2>&1 </dev/null &
@@ -214,6 +234,9 @@ jobs:
         with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
       - name: Keep the same ARM server through all eight legs
         run: bash tools/m0_h2228_three_runner_case.sh server-wait
+      - name: Finish and qualify header-only path sample
+        if: always()
+        run: sudo -n python3 -u tools/m0_dual_tcp_path_sample.py stop
       - name: Preserve native resource and path receipts
         if: always()
         run: |
@@ -251,7 +274,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
           mkdir -p bundles/B
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
           for leg in B;do
@@ -279,7 +302,15 @@ jobs:
           tailscale ping --c=5 "$(jq -r .tail_ip h2228-peer/relay.json)" >h2228-out/relay-ping.txt 2>&1 || true
           nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py watch client >h2228-out/watch.log 2>&1 </dev/null &
           echo $! >"$RUNNER_TEMP/dual-watch.pid"
-      - name: Wait server control and run client-first and RX drain blocks
+      - name: Start header-only deterministic path sample (client)
+        run: |
+          sudo -n nohup python3 -u tools/m0_dual_tcp_path_sample.py start client >h2228-out/path-sample-worker.log 2>&1 </dev/null &
+          for i in $(seq 1 100); do
+            test ! -s h2228-out/path-sample-ready.json || break
+            sleep .2
+          done
+          test -s h2228-out/path-sample-ready.json
+      - name: Wait server control and run path attribution screen
         run: |
           for i in $(seq 1 150);do
             gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-server-ready -D h2228-server-ready >/dev/null 2>&1 && break
@@ -290,6 +321,9 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with: {name: h2228-client-result, path: h2228-out/summary.json, retention-days: 5, if-no-files-found: warn}
+      - name: Finish and qualify header-only path sample
+        if: always()
+        run: sudo -n python3 -u tools/m0_dual_tcp_path_sample.py stop
       - name: Preserve native resource and path receipts
         if: always()
         run: |

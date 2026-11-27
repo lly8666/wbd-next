@@ -9,12 +9,11 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# Independent reverse-order client-first repeat, then isolate ready RX drain.
-# Same binary, no pacing ceiling, selected relay credit throughout.
-ORDER=("B","A","A","B","B","C","C","B")
-CASES=(-1,0,1,2,3,4,5,6,7,-2)
-PROFILES={"A":"selected-relay-credit","B":"selected-credit-client-ingress-first",
-          "C":"client-first-plus-bounded-ready-rx-drain"}
+# Identity-attribution screen, not a new pacing optimization.
+# Selected relay credit throughout; compare known low-retrans load point.
+ORDER=("A","L","L","A")
+CASES=(-1,0,1,2,3,-2)
+PROFILES={"A":"selected-relay-credit","L":"server-existing-ceiling160M"}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
@@ -25,8 +24,7 @@ def compress(k):return "1"
 def offer(i):return 600_000_000
 def target_bytes(i):return 1024*1024*1024
 def profile_env(k,server):
-    if server or k=="A":return []
-    return ["WBD_M0_CLIENT_INGRESS_FIRST=1"]+(["WBD_M0_CLIENT_RX_DRAIN=1"] if k=="C" else [])
+    return ["WBD_M0_NATIVE_PACE_MBPS=160"] if server and k=="L" else []
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
@@ -257,14 +255,14 @@ def bulk_tcp_sample(log,leg):
 
 def probe_receipt(log,leg,k,i):
     rows=[s for s in log.splitlines() if "WBD_M0_TCP_INFO " in s and "leg="+leg+" " in s]
-    expected_first="true" if leg=="server-middle" or k in ("B","C") else "false"
+    expected_first="true" if leg=="server-middle" else "false"
     pub=next((s for s in log.splitlines() if "WBD_M0_TCP_PUBLISH " in s),"")
     slots=1024
     quantum=32
     server=leg=="server-middle"
     expected_rack="false"
     expected_ack="false"
-    ceiling=0
+    ceiling=20_000_000 if server and k=="L" else 0
     gain="2.88671875"
     limit=131072
     first_turns=re.search(r"\bingress_first_service_turns=(\d+)",pub)
@@ -285,7 +283,7 @@ def probe_receipt(log,leg,k,i):
     rx=next((s for s in log.splitlines() if "WBD_M0_RAW_RX_PACKET_STATS " in s),"")
     rx_drain=next((s for s in log.splitlines() if "WBD_M0_CLIENT_RX_DRAIN " in s),"")
     dv=dict(w.split("=",1) for w in rx_drain.split() if "=" in w)
-    drain_expected=not server and k=="C"
+    drain_expected=False
     drain_packets=int(dv.get("packets",-1))
     drain_skipped=int(dv.get("skipped_polls",-1))
     drain_ok=dv.get("enabled")==str(drain_expected).lower() and ((drain_packets>0 and drain_skipped>0) if drain_expected else drain_packets==drain_skipped==0)
@@ -416,7 +414,7 @@ def client():
                 sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                 recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"same-binary selected credit, reverse client-first B/A/A/B then client-first vs bounded ready RX drain B/C/C/B; fixed1GiB/600M, bare brackets, actual service turns/drain packets and final-or-Stop recovery; compare blocks separately, lab only","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"selected credit, A/L/L/A uncapped vs existing160M ceiling; fixed1GiB/600M, bare brackets; independent header-only four-interface identity sample, not a new rate sweep","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
