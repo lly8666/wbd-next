@@ -349,9 +349,17 @@ def main():
                     r["rx_pool"]=receipt("WBD_XDP_RX_POOL_STOP ")
                     if os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
                         r["rss_map_before"]=receipt("WBD_XDP_RSS_MAP_BEFORE ")
-                        same_single=os.environ.get("WBD_XDP_SINGLE_WIDE")=="bbr-path"
+                        arch=os.environ.get("WBD_XDP_SINGLE_WIDE","")
+                        same_single=arch=="bbr-path" or arch.startswith("arch-")
                         expect_single=same_single or r["arm"]=="B"
                         r["pressure_valid"]=r["pressure_valid"] and r["rss_map_before"].get("processors",0)>1 and r["rx_pool"].get("single")==int(expect_single) and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and (not expect_single or (r["rx_pool"].get("queues")==1 and r["rx_pool"].get("backing_bytes")==33554432 and "WBD_XDP_SINGLE_RSS_READY processors=1 queues=1" in s))
+                        if arch.startswith("arch-"):
+                            r["reclaim_lab"]=receipt("WBD_XDP_TX_RECLAIM_LAB ")
+                            r["wake_lab"]=receipt("WBD_XDP_RX_WAKE_LAB ")
+                            r["cipher_lab"]=receipt("WBD_XDP_CIPHER_LOAN_LAB ")
+                            b=r["arm"]=="B"
+                            r["pressure_valid"]=r["pressure_valid"] and bool(r["reclaim_lab"] and r["wake_lab"] and r["cipher_lab"]) and r["reclaim_lab"].get("enabled")==int(b and arch=="arch-reclaim") and r["wake_lab"].get("enabled")==int(b and arch=="arch-wake") and (r["cipher_lab"].get("packets",0)>0)==(b and arch=="arch-cipher")
+                            r["mechanism_exercised"]=not b or {"arch-reclaim":r["reclaim_lab"].get("early",0),"arch-wake":r["wake_lab"].get("reused",0),"arch-cipher":r["cipher_lab"].get("packets",0)}[arch]>0
                     else:
                         r["pressure_valid"]=r["pressure_valid"] and r["rx_pool"].get("enabled")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and r["rx_pool"].get("recycle")==int(r["arm"]=="B") and (r["rx_pool"].get("posted",0)+r["rx_pool"].get("reserve_remaining",0))*2048==r["rx_pool"].get("backing_bytes") and r["rx_pool"].get("posted",0)>=r["rx_pool"].get("base",0)*r["rx_pool"].get("queues",0)
                 if efficiency:
@@ -387,6 +395,11 @@ def main():
                         (v["direction"]=="down" or (v.get("server_rx_mbps") or 0)>=.95*v["rate"])
                         for v in group)
                     pair["scope"]="MATCHED_TARGET" if pair["valid"] and pair["all_arms_at_target"] else "COMPLETE_BELOW_TARGET" if pair["valid"] else "INCOMPLETE"
+                    if os.environ.get("WBD_XDP_SINGLE_WIDE","").startswith("arch-"):
+                        pair["mechanism_exercised"]=all(x.get("mechanism_exercised",False) for x in group)
+                        for arm in ("A","B"):
+                            ar=[x for x in group if x["arm"]==arm]
+                            pair[arm+"_mechanism"]=[{k:x.get(k) for k in ("reclaim_lab","wake_lab","cipher_lab","tx")} for x in ar]
                     if tune:
                         for arm in ("A","B"):
                             ar=[x for x in group if x["arm"]==arm]
@@ -408,7 +421,7 @@ def main():
                     print(("WINXDP_NORMAL_TUNE_PAIR " if tune else "WINXDP_CARRIER_ABBA_PAIR ")+json.dumps(pair),flush=True)
                     save(OUT/("pair-"+r["group"]+".json"),pair)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
-            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","path_mode","splice_bbr_accepts","splice_stop","outer_netem","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","rx_pool","rss_map_before","pending_lab","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","fec_receipts","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
+            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","path_mode","splice_bbr_accepts","splice_stop","outer_netem","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","rx_pool","rss_map_before","reclaim_lab","wake_lab","cipher_lab","mechanism_exercised","pending_lab","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","fec_receipts","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
             if r.get("shape_clear_error") or not r.get("client_stop") or not r.get("server_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):
                 for pth in (SERVER/("case-"+str(i))/"server.log",SERVER/("case-"+str(i))/"source.log",d/"client.log"):
                     if pth.exists():

@@ -139,3 +139,17 @@ if os.environ.get("WBD_XDP_SINGLE_WIDE")=="bbr-path":
         dict(name="single-bbr-loss10-duplex50",direction="duplex",rate=50,delay=200,streams=4,mtu=1400,profile=6,loss=10),
     ]
     CASES=[dict(base,**w,arm=arm,group=w["name"],policy="rx-single",path_mode="nat" if arm=="A" else "bbr",budget=w["rate"]) for w in workloads for arm in seq]
+
+# Three independent single-variable candidates; identical real RSS mapping
+# and outer repair enabled in both arms.
+arch=os.environ.get("WBD_XDP_SINGLE_WIDE","")
+if arch in ("arch-reclaim","arch-wake","arch-cipher"):
+    workloads={
+        "arch-reclaim":[dict(name="reclaim-up350",direction="up",rate=350,delay=20,streams=4,mtu=1460),
+            dict(name="reclaim-max-duplex100",direction="duplex",rate=100,delay=80,streams=4,mtu=1400,profile=6,loss=1)],
+        "arch-wake":[dict(name="wake-down350",direction="down",rate=350,delay=200,mtu=1460),
+            dict(name="wake-duplex175",direction="duplex",rate=175,delay=20,streams=4,mtu=1460)],
+        "arch-cipher":[dict(name="cipher-up350",direction="up",rate=350,delay=20,streams=4,mtu=1460),
+            dict(name="cipher-duplex175",direction="duplex",rate=175,delay=20,streams=4,mtu=1460)],
+    }[arch]
+    CASES=[dict(base,**w,arm=arm,group=w["name"],policy="rx-single" if arm=="A" else "rx-single-"+arch[5:],budget=w["rate"]) for w in workloads for arm in seq]

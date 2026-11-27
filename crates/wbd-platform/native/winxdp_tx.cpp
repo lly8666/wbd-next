@@ -44,11 +44,16 @@ struct TxOwner {
 #ifdef WBD_XDP_PRESSURE_LAB
     UINT32 slots,peak_pending,peak_unreclaimed;
     UINT64 samples,zero_credit,partial_credit,credit_calls;
+    bool early_reclaim;
+    UINT64 reclaim_calls,reclaim_batches,reclaim_pokes,early_reclaims;
 #endif
 };
 bool reclaim(TxOwner* o,bool poke=true) {
     UINT32 index;
     UINT32 n=XskRingConsumerReserve(&o->completion,Slots,&index);
+#ifdef WBD_XDP_PRESSURE_LAB
+    ++o->reclaim_calls;if(n)++o->reclaim_batches;
+#endif
     for(UINT32 i=0;i<n;++i)
         o->free_chunks[o->free_count++]=*static_cast<UINT64*>(XskRingGetElement(&o->completion,index+i));
     if(n){
@@ -56,6 +61,9 @@ bool reclaim(TxOwner* o,bool poke=true) {
         // The SDK explicitly requires a poke on completion consumption
         // when NEED_POKE is set, even if no new frame will be published.
         if(poke&&XskRingProducerNeedPoke(&o->tx)){
+#ifdef WBD_XDP_PRESSURE_LAB
+            ++o->reclaim_pokes;
+#endif
             XSK_NOTIFY_RESULT_FLAGS result{};++o->pokes;
             HRESULT hr=XskNotifySocket(o->socket,XSK_NOTIFY_FLAG_POKE_TX,0,&result);
             if(FAILED(hr)){std::fprintf(stderr,"WBD_XDP_TX_COMPLETION_POKE_FAILED hr=0x%08lx\n",(unsigned long)hr);return false;}
@@ -117,6 +125,8 @@ static TxOwner* open_tx(DWORD ifindex,UINT32 slots,XSK_BIND_FLAGS mode,HRESULT* 
     o->free_count=slots;
 #ifdef WBD_XDP_PRESSURE_LAB
     o->slots=slots;
+    {char policy[32]{};GetEnvironmentVariableA("WBD_XDP_LAB_POLICY",policy,sizeof(policy));
+    o->early_reclaim=slots==Slots&&!std::strcmp(policy,"rx-single-reclaim");}
 #endif
     *result=S_OK;return o;
 fail:
@@ -140,6 +150,14 @@ extern "C" void* wbd_xdp_tx_open(const unsigned char* ip,const unsigned char* ma
 extern "C" int wbd_xdp_tx_credit(void* raw,UINT32 wanted){
     auto* o=static_cast<TxOwner*>(raw);
     if(o->free_count<wanted&&!reclaim(o))return -1;
+#ifdef WBD_XDP_PRESSURE_LAB
+    // Refill ahead of exhaustion only if a real large completion batch
+    // is already available. No wait, no deferral of the required poke.
+    else if(o->early_reclaim&&o->free_count>=wanted&&o->free_count<=512&&
+        ReadUInt32Acquire(o->completion.SharedProducer)-*o->completion.SharedConsumer>=512){
+        ++o->early_reclaims;if(!reclaim(o))return -1;
+    }
+#endif
     if(o->free_count<wanted){
         ++o->credit_limited;
         if(XskRingError(&o->tx)||XskRingError(&o->completion))return -1;
@@ -229,6 +247,7 @@ extern "C" void wbd_xdp_tx_report(void* raw){
     o->reported=true;
     reclaim(o,false);
 #ifdef WBD_XDP_PRESSURE_LAB
+    std::fprintf(stderr,"WBD_XDP_TX_RECLAIM_LAB enabled=%u calls=%llu batches=%llu early=%llu reclaim_pokes=%llu\n",o->early_reclaim?1u:0u,o->reclaim_calls,o->reclaim_batches,o->early_reclaims,o->reclaim_pokes);
     std::fprintf(stderr,"WBD_XDP_TX_LAB slots=%u samples=%llu peak_pending_sampled=%u peak_unreclaimed_sampled=%u credit_calls=%llu zero_credit=%llu partial_credit=%llu\n",o->slots,o->samples,o->peak_pending,o->peak_unreclaimed,o->credit_calls,o->zero_credit,o->partial_credit);
 #endif
     XSK_STATISTICS stats{};UINT32 size=sizeof(stats);
@@ -265,8 +284,8 @@ struct RxQueue {
     UINT32 peak_ready;
     LARGE_INTEGER held_at;
     bool sampled;
-    bool pending_fast;
-    UINT64 pending_skips,event_checks;
+    bool pending_fast,wake_reuse;
+    UINT64 pending_skips,event_checks,wake_reused;
     UINT32 posted,peak_posted,low_batches;
     UINT64 expanded_samples,returned_chunks,borrowed_chunks;
 #endif
@@ -345,7 +364,7 @@ HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue,UINT32 slots,XSK_BIND_FLA
 #endif
     return rx_poke(q);
 }
-HRESULT arm_queue(RxQueue* q){
+HRESULT arm_queue(RxQueue* q,bool already_signaled=false){
     XSK_NOTIFY_RESULT_FLAGS flags{};
     if(q->pending){
 #ifdef WBD_XDP_PRESSURE_LAB
@@ -353,9 +372,17 @@ HRESULT arm_queue(RxQueue* q){
         if(q->pending_fast&&!HasOverlappedIoCompleted(&q->ov)){
             ++q->pending_skips;return S_OK;
         }
-        ++q->event_checks;
-#endif
+        // Rust's WAIT_ANY already observed this same manual-reset event.
+        // Only its sole owner can reset/rearm it. Consume that result once.
+        if(q->wake_reuse&&already_signaled){++q->wake_reused;}
+        else{
+            ++q->event_checks;
+            if(WaitForSingleObject(q->event,0)!=WAIT_OBJECT_0)return S_OK;
+        }
+#else
+        (void)already_signaled;
         if(WaitForSingleObject(q->event,0)!=WAIT_OBJECT_0)return S_OK;
+#endif
         HRESULT hr=XskGetNotifyAsyncResult(&q->ov,&flags);
         q->pending=false;
         if(FAILED(hr))return hr;
@@ -382,6 +409,9 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     char policy[32]{};
     GetEnvironmentVariableA("WBD_XDP_LAB_POLICY",policy,sizeof(policy));
     const bool pending_fast=!udp&&port_count==1&&!std::strcmp(policy,"rx-pending");
+    const bool single_policy=!std::strcmp(policy,"rx-single")||
+        !std::strcmp(policy,"rx-single-reclaim")||!std::strcmp(policy,"rx-single-wake")||
+        !std::strcmp(policy,"rx-single-cipher");
 #endif
     HRESULT hr=E_FAIL;
     WSADATA wd{};
@@ -420,9 +450,9 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     // table length; set every entry to one currently valid processor.
     // Generic rss.c assigns one queue per distinct processor, starting
     // at queue0. The scoped interface handle restores the original table.
-    if(!udp&&port_count==1&&(!std::strcmp(policy,"rx-single")||
+    if(!udp&&port_count==1&&(single_policy||
         GetEnvironmentVariableA("WBD_XDP_SINGLE_RSS",nullptr,0)>0)){
-        const bool single=!std::strcmp(policy,"rx-single");
+        const bool single=single_policy;
         alignas(XDP_RSS_CONFIGURATION) unsigned char buf[4096]{};
         auto* cfg=reinterpret_cast<XDP_RSS_CONFIGURATION*>(buf);
         UINT32 bytes=sizeof(buf);
@@ -519,6 +549,7 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
         UINT32 first=0,initial=slots,total=slots;
 #ifdef WBD_XDP_PRESSURE_LAB
         q->pending_fast=pending_fast;
+        q->wake_reuse=o->single&&!std::strcmp(policy,"rx-single-wake");
         if(o->pooled){q->umem=o->umem;first=i*o->pool_base;initial=o->pool_base;total=o->pool_total;}
         else
 #endif
@@ -693,15 +724,18 @@ extern "C" int wbd_xdp_rx_release(void* raw){
 }
 // Only called after the worker finds no ready descriptors. Pending waits
 // on other queues survive a wake, including the original Go→Rust handoff.
-extern "C" int wbd_xdp_rx_events(void* raw,HANDLE* events){
+extern "C" int wbd_xdp_rx_events_after_wait(void* raw,HANDLE* events,UINT32 signaled){
     auto* o=static_cast<RxOwner*>(raw);
     for(UINT32 i=0;i<o->count;++i){
         auto* q=&o->queues[i];
-        HRESULT hr=arm_queue(q);
+        HRESULT hr=arm_queue(q,signaled==i+1);
         if(FAILED(hr)){std::fprintf(stderr,"WBD_XDP_RX_NOTIFY_FAILED queue=%u hr=0x%08lx\n",i,(unsigned long)hr);return -1;}
         events[i]=q->event;
     }
     return static_cast<int>(o->count);
+}
+extern "C" int wbd_xdp_rx_events(void* raw,HANDLE* events){
+    return wbd_xdp_rx_events_after_wait(raw,events,0);
 }
 // Cold calls borrow the same per-queue descriptors, one at a time for the
 // existing Go decoder. The bounded wait owns no Go pointer, and all native
@@ -753,6 +787,7 @@ extern "C" void wbd_xdp_rx_close(void* raw){
     }
 #ifdef WBD_XDP_PRESSURE_LAB
     if(o->port_count==1&&o->slots!=DnsSlots){
+        std::fprintf(stderr,"WBD_XDP_RX_WAKE_LAB enabled=%u reused=%llu event_checks=%llu\n",o->queues[0].wake_reuse?1u:0u,o->queues[0].wake_reused,event_checks);
         std::fprintf(stderr,"WBD_XDP_RX_PENDING_LAB enabled=%u skipped=%llu event_checks=%llu\n",o->queues[0].pending_fast?1u:0u,pending_skips,event_checks);
         std::fprintf(stderr,"WBD_XDP_RX_POOL_STOP enabled=%u recycle=%u single=%u backing_bytes=%llu posted=%u max_queue_posted=%u expanded_samples=%llu reserve_remaining=%u borrowed=%llu returned=%llu base=%u queues=%u\n",
             o->pooled?1u:0u,o->recycle?1u:0u,o->single?1u:0u,UINT64(o->pooled?o->pool_total:o->count*o->slots)*RxChunk,

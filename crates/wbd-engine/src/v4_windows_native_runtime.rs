@@ -256,6 +256,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  }
  struct Counters {
      tx_copied:AtomicU64,
+     cipher_outside_lock:AtomicU64,
      rx_delivered:AtomicU64,
      rx_tx_notify_attempts:AtomicU64,
      post_ingress_direct_to_rx:AtomicU64,
@@ -285,7 +286,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  }
  impl Counters {
      fn new(ack:u32,seq:u32)->Self{
-         Self{tx_copied:AtomicU64::new(0),rx_delivered:AtomicU64::new(0),
+         Self{tx_copied:AtomicU64::new(0),cipher_outside_lock:AtomicU64::new(0),rx_delivered:AtomicU64::new(0),
              rx_tx_notify_attempts:AtomicU64::new(0),
              post_ingress_direct_to_rx:AtomicU64::new(0),
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
@@ -537,6 +538,7 @@ fn stage_sources(
      counters:&Counters,ip_id:&mut u16,fixed:bool,
      split:&mut Option<NativeSplitWorker>,now_ms:u64,
      sources:&mut [[u8;MAX_IPV4];BATCH],frames:&mut SourceFrames,
+     cipher_outside_lock:bool,
  )->Result<StageWork,i32>{
      // One bounded Wintun drain, ONE Entry lock to seal ALL ready sources,
      // ONE NPF ready-only queue and ONE lock to settle real driver receipts.
@@ -612,6 +614,7 @@ fn stage_sources(
      let mut meta=[(0u64,0u32,0usize);BATCH];
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
      let mut native_off_loan=None;
+     let mut deferred_loan=None;
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          if fixed{
@@ -650,14 +653,31 @@ fn stage_sources(
                  meta[i]=v3_queue_source(&mut e,source,budget,now,pad,MAX_IPV4)?;
              }
              let keep_pending=!v3_native_off_loan(&e);
+             // The original checked M1 batch remains immutable and holds
+             // its generation ledger through copy and driver submission.
+             // Preserve pending original ciphertext for repair when enabled.
              let loan=v3_drain_source_loan(&mut e,now,&meta[..count],keep_pending,|i,wire|{
-                 batch.frame(i)[FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
-                     .copy_from_slice(wire);
+                 if !cipher_outside_lock{
+                     batch.frame(i)[FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
+                         .copy_from_slice(wire);
+                 }
              })?;
-             if keep_pending{e.tx_scratch=loan.recycle();}
+             if cipher_outside_lock{deferred_loan=Some((loan,keep_pending));}
+             else if keep_pending{e.tx_scratch=loan.recycle();}
              else{native_off_loan=Some(loan);}
 
          }
+     }
+     if let Some((loan,_))=deferred_loan.as_ref(){
+         // checked_tx_ready was already performed under the original lock
+         // in v3_drain_source_loan. No fresh/reordered records can enter
+         // this exact immutable batch while the single TX owner copies.
+         for (i,row) in loan.as_slice().iter().enumerate(){
+             let wire=row.record.bytes();
+             batch.frame(i)[FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
+                 .copy_from_slice(wire);
+         }
+         counters.cipher_outside_lock.fetch_add(count as u64,Ordering::Relaxed);
      }
      let mut lens=[0usize;BATCH];
      let ack=counters.ack.load(Ordering::Acquire);
@@ -685,7 +705,10 @@ fn stage_sources(
      }
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
-         let settled_native_off=if let Some(loan)=native_off_loan{
+         let settled_native_off=if let Some((loan,keep_pending))=deferred_loan{
+             if keep_pending{e.tx_scratch=loan.recycle();false}
+             else{v3_finish_native_off_loan(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,loan)?;true}
+         }else if let Some(loan)=native_off_loan{
              v3_finish_native_off_loan(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,loan)?;
              true
          }else{false};
@@ -1038,6 +1061,9 @@ fn stage_sources(
      // Genuine reverse ACK-only fallback, only when no piggybacked DATA
      // has settled current progress; never a periodic ACK/PTO generator.
      let mut last_pure_ack=None::<Instant>;
+     let lab_cipher_outside_lock=cfg!(feature="winxdp_tx_trial")
+         &&option_env!("WBD_XDP_PRESSURE_LAB")==Some("1")
+         &&std::env::var("WBD_XDP_LAB_POLICY").ok().as_deref()==Some("rx-single-cipher");
      #[cfg(feature="winxdp_tx_trial")]
      let lab_feedback_first=option_env!("WBD_XDP_PRESSURE_LAB")==Some("1")
          &&std::env::var("WBD_XDP_LAB_POLICY").ok().as_deref()==Some("feedback");
@@ -1222,7 +1248,7 @@ fn stage_sources(
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
                  let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
                      &counters,&mut ip_id,fixed,&mut split,now_ms,
-                     &mut sources,&mut frames)?;
+                     &mut sources,&mut frames,lab_cipher_outside_lock)?;
                  work+=staged.tunnel;
                  fresh_direct_ingress|=staged.direct>0;
                  direct_progress|=staged.direct>0;
@@ -2144,6 +2170,9 @@ fn stage_sources(
      };
      let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
      let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
+     if option_env!("WBD_XDP_PRESSURE_LAB")==Some("1"){
+         eprintln!("WBD_XDP_CIPHER_LOAN_LAB packets={}",session.counters.cipher_outside_lock.load(Ordering::Relaxed));
+     }
      eprintln!("PLAN029B_WINTUN_IPV6_SKIPPED_STOP packets={} joined=true original_wintun_owner=1",
          session.counters.skipped_ipv6.load(Ordering::Relaxed));
      eprintln!("WBD_WINDOWS_RUST_NATIVE_WAKE_BATCH max_verified_per_wake={} tx_wake_attempts={} rx_data_delivered={} joined=true",

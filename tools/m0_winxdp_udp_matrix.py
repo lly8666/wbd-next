@@ -77,7 +77,14 @@ def main():
                 ("fixed-small16384-100","fixed",100,5,20,288),
                 ("maximum-large150-loss5","fixed",150,5,20,1200),
             ]
-        CASES=[[name+"-"+str(i),mode,16384,2048,32,"original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),rate,loss,delay,size] for name,mode,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
+        arch=os.environ.get("WBD_XDP_SINGLE_WIDE","")
+        if arch.startswith("arch-"):
+            workloads={
+                "arch-reclaim":[("normal-small100","normal",100,0,20,288),("maximum-large150-loss5","fixed",150,5,20,1200)],
+                "arch-wake":[("normal-large175","normal",175,0,20,1200),("normal-small50","normal",50,0,20,288)],
+                "arch-cipher":[("normal-large175","normal",175,0,20,1200),("normal-small100","normal",100,0,20,288)],
+            }[arch]
+        CASES=[[name+"-"+str(i),mode,16384,2048,32,("rx-single" if arm=="A" else "rx-single-"+arch[5:]) if arch.startswith("arch-") else "original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),rate,loss,delay,size] for name,mode,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
     rows=[]
     order=list(range(len(CASES)))
     if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
@@ -160,7 +167,7 @@ def main():
             row["outer_netem"]=wire
         except (OSError,ValueError,KeyError,TypeError):pass
         if tune:
-            row.update(resource,group=group,arm=("A" if policy=="original" else "B") if (efficiency or pool) else ("A" if rx==16384 else "B"),rx_slots=rx)
+            row.update(resource,group=group,arm=("A" if policy=="original" or (os.environ.get("WBD_XDP_SINGLE_WIDE","").startswith("arch-") and policy=="rx-single") else "B") if (efficiency or pool) else ("A" if rx==16384 else "B"),rx_slots=rx)
             row["lab_ok"]=bool(row["tx_lab"] and row["rx_lab"]) and all(q.get("slots")==tx for q in row["tx_lab"]) and all(q.get("slots")==rx and q.get("quantum")==32 for q in row["rx_lab"])
             row["carrier_ok"]=bool(row["tx"] and row["rx"]) and all(q.get("published",0)>0 and q.get("published")==q.get("completed_before_close") and q.get("invalid")==0 for q in row["tx"]) and all(q.get("truncated")==0 for q in row["rx"])
             row["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in row["rx_lab"]),default=0)
@@ -172,7 +179,18 @@ def main():
                 row["rx_pool"]=receipts("WBD_XDP_RX_POOL_STOP ")
                 if os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
                     row["rss_map_before"]=receipts("WBD_XDP_RSS_MAP_BEFORE ")
-                    row["lab_ok"]=row["lab_ok"] and bool(row["rss_map_before"]) and all(x.get("processors",0)>1 for x in row["rss_map_before"]) and bool(row["rx_pool"]) and all(q.get("single")==int(row["arm"]=="B") and (row["arm"]=="A" or (q.get("queues")==1 and q.get("backing_bytes")==33554432)) for q in row["rx_pool"]) and (row["arm"]=="A" or "WBD_XDP_SINGLE_RSS_READY processors=1 queues=1" in s) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
+                    arch=os.environ.get("WBD_XDP_SINGLE_WIDE","")
+                    b=row["arm"]=="B"
+                    single=arch.startswith("arch-") or b
+                    row["lab_ok"]=row["lab_ok"] and bool(row["rss_map_before"]) and all(x.get("processors",0)>1 for x in row["rss_map_before"]) and bool(row["rx_pool"]) and all(q.get("single")==int(single) and (not single or (q.get("queues")==1 and q.get("backing_bytes")==33554432)) for q in row["rx_pool"]) and (not single or "WBD_XDP_SINGLE_RSS_READY processors=1 queues=1" in s) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
+                    if arch.startswith("arch-"):
+                        row["reclaim_lab"]=receipts("WBD_XDP_TX_RECLAIM_LAB ")
+                        row["wake_lab"]=receipts("WBD_XDP_RX_WAKE_LAB ")
+                        row["cipher_lab"]=receipts("WBD_XDP_CIPHER_LOAN_LAB ")
+                        # Exclude any cold DNS TX owner from the candidate receipt;
+                        # the fixed one-lane data path has the existing 2048-slot TX.
+                        row["lab_ok"]=row["lab_ok"] and bool(row["reclaim_lab"] and row["wake_lab"] and row["cipher_lab"]) and any(q.get("enabled")==int(b and arch=="arch-reclaim") for q in row["reclaim_lab"]) and all(q.get("enabled")==int(b and arch=="arch-wake") for q in row["wake_lab"]) and all((q.get("packets",0)>0)==(b and arch=="arch-cipher") for q in row["cipher_lab"])
+                        row["mechanism_exercised"]=not b or any(q.get(key,0)>0 for q in row[{"arch-reclaim":"reclaim_lab","arch-wake":"wake_lab","arch-cipher":"cipher_lab"}[arch]] for key in [{"arch-reclaim":"early","arch-wake":"reused","arch-cipher":"packets"}[arch]])
                 else:
                     row["lab_ok"]=row["lab_ok"] and bool(row["rx_pool"]) and all(q.get("enabled")==int(row["arm"]=="B") and q.get("recycle")==int(row["arm"]=="B") and (q.get("posted",0)+q.get("reserve_remaining",0))*2048==q.get("backing_bytes") and q.get("posted",0)>=q.get("base",0)*q.get("queues",0) for q in row["rx_pool"]) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
             if os.environ.get("WBD_XDP_SINGLE_WIDE")=="wire":
@@ -216,6 +234,10 @@ def main():
                         ar=[x for x in pair if x["arm"]==arm]
                         result[arm]["pending_skips"]=sum(q.get("skipped",0) for x in ar for q in x["pending_lab"])
                         result[arm]["event_checks"]=sum(q.get("event_checks",0) for x in ar for q in x["pending_lab"])
+                if os.environ.get("WBD_XDP_SINGLE_WIDE","").startswith("arch-"):
+                    result["mechanism_exercised"]=all(x.get("mechanism_exercised",False) for x in pair)
+                    for arm in ("A","B"):
+                        result[arm]["mechanism"]=[{k:x.get(k) for k in ("reclaim_lab","wake_lab","cipher_lab","tx")} for x in pair if x["arm"]==arm]
                 if pool:
                     # A green delivery/Stop receipt is not target-rate evidence.
                     result["all_arms_offered_at_target"]=all(

@@ -16,7 +16,7 @@ extern "C"{
     fn wbd_xdp_tx_close(raw:*mut c_void);
     fn wbd_xdp_rx_borrow(raw:*mut c_void,frames:*mut Frame,max:usize)->usize;
     fn wbd_xdp_rx_release(raw:*mut c_void)->i32;
-    fn wbd_xdp_rx_events(raw:*mut c_void,events:*mut usize)->i32;
+    fn wbd_xdp_rx_events_after_wait(raw:*mut c_void,events:*mut usize,signaled:u32)->i32;
 }
 pub fn cold_open(index:u32,port:u16)->Result<(usize,usize),TxError>{
     cold_open_ports(index,&[port],false)
@@ -37,12 +37,12 @@ pub unsafe fn cold_write(raw:usize,bytes:*const u8,len:usize)->i32{
 pub unsafe fn close_after_join(rx:usize,tx:usize){
     unsafe{wbd_xdp_rx_close(rx as *mut c_void);wbd_xdp_tx_close(tx as *mut c_void)}
 }
-pub struct XdpRx{owner:NonNull<c_void>,failed:bool}
+pub struct XdpRx{owner:NonNull<c_void>,failed:bool,signaled:u32}
 unsafe impl Send for XdpRx{}
 impl XdpRx{
     pub unsafe fn from_cold(raw:usize)->Result<Self,TxError>{
         let owner=NonNull::new(raw as *mut c_void).ok_or(TxError::IoFailed)?;
-        Ok(Self{owner,failed:false})
+        Ok(Self{owner,failed:false,signaled:0})
     }
     /// Service ready descriptors before arming a driver wait. Under load
     /// this avoids one notify IOCTL + wait syscall for every RX quantum.
@@ -54,13 +54,14 @@ impl XdpRx{
         if count==0{
             let mut handles=[0usize;crate::windows_native_io::MAX_WAIT_HANDLES];
             handles[0]=stop;
-            let queue_count=unsafe{wbd_xdp_rx_events(self.owner.as_ptr(),handles.as_mut_ptr().add(1))};
+            let signaled=std::mem::take(&mut self.signaled);
+            let queue_count=unsafe{wbd_xdp_rx_events_after_wait(self.owner.as_ptr(),handles.as_mut_ptr().add(1),signaled)};
             if queue_count<=0{return Err(TxError::IoFailed)}
             let queue_count=queue_count as usize;
             handles[queue_count+1]=early;
             match wait_ready(&handles[..queue_count+2],wait_ms){
                 Ok(WaitResult::Ready(0))=>return Ok(RxTurn::Stop),
-                Ok(WaitResult::Ready(_))=>{},
+                Ok(WaitResult::Ready(i))=>{if i<=queue_count{self.signaled=i as u32;}},
                 Ok(WaitResult::Timeout)=>return Ok(RxTurn::Idle),
                 _=>return Err(TxError::IoFailed),
             }
