@@ -7222,7 +7222,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                     )
                 };
                 if let Ok((pn,_,_))=result{
-                    if let Some(i)=native_receipt{native_clock_receipts[i].pn=Some(pn);}
+                    if let Some(i)=native_receipt{native_clock_receipts[i].pn=Some(wbd_types::RecordPn(pn));}
                     accepted+=1;
                     #[cfg(feature="fec2_product_record")]
                     match proto{
