@@ -62,3 +62,23 @@ if os.environ.get("WBD_XDP_STRESS_PHASE")=="carrier-abba":
     # for this follow-up; S repeats the historical lossy ABBA exactly.
     if os.environ.get("H2478_REPLICA")!="S":
         CASES=[dict(c,arm="B" if c["arm"]=="A" else "A") for c in CASES]
+
+# Normal-only tuning, same instrumented WinXDP binary in every arm.
+if os.environ.get("WBD_XDP_STRESS_PHASE")=="normal-tune":
+    assert PATH_MODE=="nat" and os.environ.get("WBD_XDP_PRESSURE_LAB")=="1"
+    base=dict(CASES[0],profile=-1,loss=0,mtu=1460,tx_slots=2048,quantum=32,policy="original",sndbuf=16777216)
+    # Hold MTU, socket supply and other parameters fixed within each group.
+    workloads=[
+        dict(name="normal-down350",direction="down",rate=350,streams=1,delay=200,mtu=1160),
+        dict(name="normal-duplex175",direction="duplex",rate=175,streams=4,delay=20),
+    ]
+    order="BAAB" if os.environ.get("H2478_REPLICA") in "BDFHJL" else "ABBA"
+    CASES=[dict(base,**w,arm=arm,group=w["name"],rx_slots=16384 if arm=="A" else 8192) for w in workloads for arm in order]
+    for w in (
+        dict(name="normal-up350",direction="up",rate=350,streams=4,delay=20),
+        dict(name="normal-duplex100-loss1",direction="duplex",rate=100,streams=4,delay=80,loss=1),
+        dict(name="normal-duplex50-loss5",direction="duplex",rate=50,streams=4,delay=200,loss=5),
+        dict(name="normal-duplex10-loss10",direction="duplex",rate=10,streams=2,delay=200,loss=10),
+    ):
+        CASES.append(dict(base,**w,rx_slots=16384,arm="A",group=w["name"]))
+    CASES=[dict(c,budget=c["rate"]) for c in CASES]

@@ -245,6 +245,13 @@ def main():
             # S reproduces the previous duplex tail failure, even off 9V45.
             # Other replicas run only the H2480-style clean quartets.
             order=[i for i in order if (CASES[i]["group"]=="lossy-duplex")== (os.environ["H2478_REPLICA"]=="S")]
+        tune=os.environ.get("WBD_XDP_STRESS_PHASE")=="normal-tune"
+        if tune:
+            order=list(range(len(CASES)))
+            if os.environ["H2478_REPLICA"] in "BDFHJL":
+                order=list(range(8,12))+list(range(4,8))+list(range(4))
+            if os.environ["H2478_REPLICA"]=="S":
+                order=list(range(4))+[8,10]
         for i in order:
             CURRENT=i
             if abba:
@@ -289,6 +296,9 @@ def main():
                     if len(cpu)>=2:
                         dt=cpu[-1]["monotonic_s"]-cpu[0]["monotonic_s"]
                         if dt>0:r["steady_process_cpu_cores"]=(cpu[-1]["cpu_total_s"]-cpu[0]["cpu_total_s"])/dt
+                        for key in ("working_set_bytes","private_bytes"):
+                            vals=[v[key] for v in cpu if key in v]
+                            if vals:r["steady_peak_"+key]=max(vals)
                 except Exception as e:r["cpu_sample_error"]=repr(e)
             r["tx_lab"]=receipt("WBD_XDP_TX_LAB ")
             r["rx_lab"]=[{k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",l)} for l in s.splitlines() if "WBD_XDP_RX_LAB " in l]
@@ -308,10 +318,15 @@ def main():
                 else:
                     r["carrier_ok"]="WBD_XDP_TX_READY" in s and "WBD_XDP_RX_READY" in s and r["tx"].get("published",0)>0 and r["tx"].get("published")==r["tx"].get("completed_before_close") and r["rx"].get("received",0)>0
                     r["pressure_valid"]=r["pressure_valid"] and r["carrier_ok"]
+            if tune:
+                r["carrier_ok"]=r["tx"].get("published",0)>0 and r["tx"].get("published")==r["tx"].get("completed_before_close") and r["rx"].get("received",0)>0
+                r["pressure_valid"]=r["pressure_valid"] and r["carrier_ok"]
+                r["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in r["rx_lab"]),default=0)
+            if abba or tune:
                 goodput=(r.get("rx_mbps") or 0)+(r.get("server_rx_mbps") or 0)
                 r["cpu_s_per_gib"]=r["steady_process_cpu_cores"]*8589.934592/goodput if goodput>0 and r["steady_process_cpu_cores"] is not None else None
             rows.append(r);save(d/"measurement.json",r)
-            if abba:
+            if abba or tune:
                 import statistics
                 group=[v for v in rows if v["group"]==r["group"]]
                 if len(group)==4:
@@ -330,10 +345,19 @@ def main():
                         (v["direction"]=="down" or (v.get("server_rx_mbps") or 0)>=.95*v["rate"])
                         for v in group)
                     pair["scope"]="MATCHED_TARGET" if pair["valid"] and pair["all_arms_at_target"] else "COMPLETE_BELOW_TARGET" if pair["valid"] else "INCOMPLETE"
-                    print("WINXDP_CARRIER_ABBA_PAIR "+json.dumps(pair),flush=True)
+                    if tune:
+                        for arm in ("A","B"):
+                            ar=[x for x in group if x["arm"]==arm]
+                            pair[arm+"_rx_peak_sampled"]=max(x["rx_peak_sampled"] for x in ar)
+                            pair[arm+"_rx_drops"]=sum(x["rx"].get("dropped",0) for x in ar)
+                            pair[arm+"_tx_credit_limited"]=sum(x["tx"].get("credit_limited",0) for x in ar)
+                            for key in ("steady_peak_working_set_bytes","steady_peak_private_bytes"):
+                                vals=[x.get(key) for x in ar]
+                                pair[arm+"_"+key]=statistics.mean(vals) if all(v is not None for v in vals) else None
+                    print(("WINXDP_NORMAL_TUNE_PAIR " if tune else "WINXDP_CARRIER_ABBA_PAIR ")+json.dumps(pair),flush=True)
                     save(OUT/("pair-"+r["group"]+".json"),pair)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
-            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
+            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
             if r.get("shape_clear_error") or not r.get("client_stop") or not r.get("server_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):
                 for pth in (SERVER/("case-"+str(i))/"server.log",SERVER/("case-"+str(i))/"source.log",d/"client.log"):
                     if pth.exists():
@@ -342,7 +366,7 @@ def main():
                 raise RuntimeError("owned cleanup failed; no next case")
         control("server","/finish")
         if p.wait(30)!=0:raise RuntimeError("local control exit")
-        if len(rows)!=len(order) or not all(r["pressure_valid"] and (not abba or r["cpu_s_per_gib"] is not None) for r in rows):raise SystemExit(2)
+        if len(rows)!=len(order) or not all(r["pressure_valid"] and (not (abba or tune) or r["cpu_s_per_gib"] is not None) for r in rows):raise SystemExit(2)
     finally:
         try:shape(0,0)
         except Exception as e:print("PRESSURE_CLEANUP_ERROR",repr(e),flush=True)

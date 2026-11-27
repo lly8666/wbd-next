@@ -34,6 +34,15 @@ def main():
     if os.environ.get("WBD_XDP_UDP_PHASE")=="capacity-sweep":CASES=[["fixed-small16384-50","fixed",16384,2048,32,"original",50,5,20,288],["fixed-small16384-100","fixed",16384,2048,32,"original",100,5,20,288],["fixed-small16384-150","fixed",16384,2048,32,"original",150,5,20,288],["fixed-small16384-250","fixed",16384,2048,32,"original",250,5,20,288],["fixed-small16384","fixed",16384,2048,32,"original",350,5,20,288],["fixed-small16384-feedback","fixed",16384,2048,32,"feedback",350,5,20,288],["fixed-small8192","fixed",8192,2048,32,"original",350,5,20,288],["fixed-rx4096-small","fixed",4096,2048,32,"original",350,5,20,288],["fixed-small16384-100-feedback","fixed",16384,2048,32,"feedback",100,5,20,288],["fixed-small16384-100-clean","fixed",16384,2048,32,"original",100,0,20,288],["normal-small-150","normal",16384,2048,32,"original",150,0,20,288],["auto-small-150","auto",16384,2048,32,"original",150,5,20,288],["game2-small-100","game2-fec",16384,2048,32,"original",100,5,20,288],["game4-small-100","game4-fec",16384,2048,32,"original",100,5,20,288]]
     if os.environ.get("WBD_XDP_UDP_PHASE")=="game-batch":CASES=[["game2-fec-1200-0","game2-fec",16384,2048,32,"original",250,5,20,1200],["game2-fec-1200-1","game2-fec",16384,2048,32,"game-batch",250,5,20,1200],["game2-fec-1200-2","game2-fec",16384,2048,32,"game-batch",250,5,20,1200],["game2-fec-1200-3","game2-fec",16384,2048,32,"original",250,5,20,1200],["game2-fec-288-0","game2-fec",16384,2048,32,"original",100,5,20,288],["game2-fec-288-1","game2-fec",16384,2048,32,"game-batch",100,5,20,288],["game2-fec-288-2","game2-fec",16384,2048,32,"game-batch",100,5,20,288],["game2-fec-288-3","game2-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-1200-0","game4-fec",16384,2048,32,"original",250,5,20,1200],["game4-fec-1200-1","game4-fec",16384,2048,32,"game-batch",250,5,20,1200],["game4-fec-1200-2","game4-fec",16384,2048,32,"game-batch",250,5,20,1200],["game4-fec-1200-3","game4-fec",16384,2048,32,"original",250,5,20,1200],["game4-fec-288-0","game4-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-288-1","game4-fec",16384,2048,32,"game-batch",100,5,20,288],["game4-fec-288-2","game4-fec",16384,2048,32,"game-batch",100,5,20,288],["game4-fec-288-3","game4-fec",16384,2048,32,"original",100,5,20,288]]
     if os.environ.get("WBD_XDP_UDP_PHASE")=="game-direction":CASES=[["game2-fec-dir-up","game2-fec",16384,2048,32,"original",100,5,20,288],["game2-fec-dir-down","game2-fec",16384,2048,32,"original",100,5,20,288],["game2-fec-dir-duplex50","game2-fec",16384,2048,32,"original",50,5,20,288],["game2-fec-dir-duplex100","game2-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-dir-up","game4-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-dir-down","game4-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-dir-duplex50","game4-fec",16384,2048,32,"original",50,5,20,288],["game4-fec-dir-duplex100","game4-fec",16384,2048,32,"original",100,5,20,288]]
+    tune=os.environ.get("WBD_XDP_UDP_PHASE")=="normal-tune"
+    if tune:
+        workloads=[("normal-small100",100,0,20,288),("normal-large250",250,0,20,1200)]
+        seq="BAAB" if os.environ["H2478_REPLICA"] in "BDFHJL" else "ABBA"
+        CASES=[[name+"-"+str(i),"normal",16384 if arm=="A" else 8192,2048,32,"original",rate,loss,delay,size] for name,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
+        CASES += [[name,"normal",16384,2048,32,"original",rate,loss,delay,size] for name,rate,loss,delay,size in (
+            ("normal-small50",50,0,20,288),("normal-small-150",150,0,20,288),
+            ("normal-loss1",100,1,80,1200),("normal-loss5",50,5,200,288),
+            ("normal-large-up350",350,0,20,1200),("normal-large-down350",350,0,20,1200))]
     rows=[]
     order=list(range(len(CASES)))
     if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
@@ -42,10 +51,15 @@ def main():
     if os.environ.get("WBD_XDP_UDP_PHASE")=="game-batch" and os.environ["H2478_REPLICA"] in "BDFHJL":
         # BAAB inside each reversed four-run group.
         CASES=[[*c[:5],("game-batch" if c[5]=="original" else "original"),*c[6:]] for c in CASES]
+    if tune:
+        order=list(range(len(CASES)))
+        if os.environ["H2478_REPLICA"] in "BDFHJL":order=list(range(8,len(CASES)))+list(range(4,8))+list(range(4))
+        if os.environ["H2478_REPLICA"]=="S":order=list(range(4))+[8,9]
     for i in order:
         name,mode,rx,tx,q,policy,rate,loss,delay,size=CASES[i]
         case=E/name;case.mkdir(exist_ok=False)
-        path=ROOT/"scenarios"/("xdp-pressure-"+name+".json")
+        group=name.rsplit("-",1)[0] if tune and i<8 else name
+        path=ROOT/"scenarios"/("xdp-pressure-"+group+".json")
         shutil.copyfile(path,case/"scenario.json")
         expected=read_scenario(path)["scenario_sha256"]
         env=dict(os.environ,WBD_WL_PUBLIC_MODE=mode,WBD_WL_PUBLIC_MODES=mode,WBD_WL_V2_SCENARIO=str(path.relative_to(ROOT)).replace(chr(92),"/"),WBD_XDP_LAB_RX=str(rx),WBD_XDP_LAB_TX=str(tx),WBD_XDP_LAB_QUANTUM=str(q),WBD_XDP_LAB_POLICY=policy)
@@ -68,6 +82,7 @@ def main():
             if f.exists():
                 a=json.loads(f.read_text());stats[role]={k:a.get(k) for k in ("sent_packets","sent_payload_mbps","received_first_packets","received_payload_mbps","duplicate_packets","invalid_packets","max_interdelivery_ms","sender_cpu_pct_one_core","business_udp_rtt","udp_socket_probe_deltas")}
         cpu_cores=None
+        resource={}
         try:
             app=json.loads((case/"wl-n0-windows-app.json").read_text())
             start=app["measurement_start_monotonic_s"]; end=app["measurement_end_monotonic_s"]
@@ -75,6 +90,9 @@ def main():
             samples=[v for v in samples if start+10<=v["monotonic_s"]<=end-5]
             if len(samples)>=2:
                 cpu_cores=(samples[-1]["cpu_total_s"]-samples[0]["cpu_total_s"])/(samples[-1]["monotonic_s"]-samples[0]["monotonic_s"])
+                for key in ("working_set_bytes","private_bytes"):
+                    vals=[x[key] for x in samples if key in x]
+                    if vals:resource["steady_peak_"+key]=max(vals)
         except (OSError,ValueError,KeyError,ZeroDivisionError):pass
         delivered=v.get("first_delivered_mbps") or {}
         goodput=sum(delivered.values()) if isinstance(delivered,dict) else 0
@@ -84,7 +102,28 @@ def main():
              "status":v.get("status"),"target":v.get("target_mbps"),"offered":v.get("offered_mbps"),"delivered":v.get("first_delivered_mbps"),"first":v.get("first_delivery_fraction"),
              "tx":receipts("WBD_XDP_TX_STOP "),"rx":receipts("WBD_XDP_RX_STOP "),"tx_lab":receipts("WBD_XDP_TX_LAB "),"rx_lab":receipts("WBD_XDP_RX_LAB "),
              "fatal":[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC_ARENA_FULL" in l or "WBD_WINDOWS_NATIVE_WORKER_FAILURE" in l],"stats":stats,"tun_fq":r.get("linux_tun_fq_kernel"),"tun_link":r.get("linux_tun_link_kernel")}
+        if tune:
+            row.update(resource,group=group,arm="A" if rx==16384 else "B",rx_slots=rx)
+            row["lab_ok"]=bool(row["tx_lab"] and row["rx_lab"]) and all(q.get("slots")==tx for q in row["tx_lab"]) and all(q.get("slots")==rx and q.get("quantum")==32 for q in row["rx_lab"])
+            row["carrier_ok"]=bool(row["tx"] and row["rx"]) and all(q.get("published",0)>0 and q.get("published")==q.get("completed_before_close") and q.get("invalid")==0 for q in row["tx"]) and all(q.get("truncated")==0 for q in row["rx"])
+            row["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in row["rx_lab"]),default=0)
         rows.append(row)
+        if tune and i<8:
+            import statistics
+            pair=[x for x in rows if x["group"]==group]
+            if len(pair)==4:
+                result={"group":group,"sequence":"".join(x["arm"] for x in pair),
+                    "valid":all(x["rc"]==0 and x["scenario_identity"] and x["lab_ok"] and x["carrier_ok"] and x["status"]=="MEASURED_BOTH_OS_KERNEL" and x["stop"]=="PASS_BOTH_OWNED" and x["cpu_s_per_gib"] is not None for x in pair)}
+                for arm in ("A","B"):
+                    ar=[x for x in pair if x["arm"]==arm]
+                    result[arm]={"delivered":{k:statistics.mean(x["delivered"][k] for x in ar) for k in ("windows","linux") if all(x.get("delivered") and k in x["delivered"] for x in ar)},
+                        "offered":{k:statistics.mean(x["offered"][k] for x in ar) for k in ("windows","linux") if all(x.get("offered") and k in x["offered"] for x in ar)},
+                        "cpu_s_per_gib":statistics.mean(x["cpu_s_per_gib"] for x in ar) if all(x["cpu_s_per_gib"] is not None for x in ar) else None,
+                        "rx_peak_sampled":max(x["rx_peak_sampled"] for x in ar),
+                        "rx_drops":sum(q.get("dropped",0) for x in ar for q in x["rx"]),
+                        "tx_credit_limited":sum(q.get("credit_limited",0) for x in ar for q in x["tx"])}
+                print("WINXDP_NORMAL_UDP_PAIR "+json.dumps(result),flush=True)
+                (E/("pair-"+group+".json")).write_text(json.dumps(result,indent=2))
         if os.environ.get("WBD_XDP_UDP_PHASE")=="game-batch":
             import statistics
             pair=[x for x in rows if x["mode"]==mode and x["size"]==size]
@@ -100,5 +139,5 @@ def main():
         if rc==124 or row["stop"]!="PASS_BOTH_OWNED":
             print("WINXDP_UDP_OWNED_STOP_MISSING "+name+"\n"+(case/"fixture.log").read_text(errors="replace")[-3500:],flush=True)
             break
-    return 0 if len(rows)==len(order) and all(x["rc"]==0 and x["scenario_identity"] for x in rows) else 2
+    return 0 if len(rows)==len(order) and all(x["rc"]==0 and x["scenario_identity"] and (not tune or (x["lab_ok"] and x["carrier_ok"])) for x in rows) else 2
 if __name__=="__main__":raise SystemExit(main())
