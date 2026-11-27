@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "source_sha": "a153b50052e739b30ec8ec31e727189caec3d199",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native dual ISA original six functional profiles, two new core recovery regressions, and same-host ARM fixed-byte eight-case recovery diagnostic. Not peak, physical or CPU parity qualification.",
+  "run_id": 45963914340,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140387937099,
+      "artifact_id": 15181473977,
+      "core_pass": 347
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140387937459,
+      "artifact_id": 15182393005,
+      "core_pass": 347
+    }
+  ],
+  "recovery": {
+    "result": "PASS",
+    "target_bytes": 201326592,
+    "added_rtt_ms": 400,
+    "injected_loss_pct": 0,
+    "order": [
+      "bare-before",
+      "paired",
+      "ack-drain",
+      "rack-window",
+      "cubic",
+      "lower-offer",
+      "combined-lower-offer",
+      "bare-after"
+    ],
+    "offered_mbps": [
+      120,
+      120,
+      120,
+      120,
+      120,
+      30,
+      30,
+      120
+    ],
+    "actual_mbps": [
+      97.93889635953046,
+      94.26942564258728,
+      94.02813115609678,
+      94.02818545722305,
+      94.09652482319407,
+      28.700739563690334,
+      28.69522133376754,
+      98.1949187385144
+    ],
+    "all_exact_bytes_hash_eof": true,
+    "paired_all_joined_stop": true,
+    "paired_bulk_snapshot_bytes_sent": [
+      196247172,
+      195592234,
+      195723631,
+      195689712,
+      200736563,
+      200801918
+    ],
+    "paired_bulk_snapshot_retrans_bytes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "paired_dsack": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "paired_reorder": [
+      137,
+      64,
+      202,
+      30,
+      15,
+      33
+    ],
+    "paired_timeouts": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "paired_ingress_full_client": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "paired_ingress_full_server": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "paired_packet_socket_drops_client": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "paired_packet_socket_drops_server": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "paired_reset_events_client": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "paired_reset_events_server": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "interpretation": "Actual four nominal 120M paired offers reached only about94Mbps with finite-app pacing; all six zero observed retrans, no ability to discriminate candidates on this clean path. Actual complete app hash independent from earlier live TCP sample. Do not infer peak parity or promote."
+  },
+  "prior_invalid_fixture": {
+    "source_sha": "a4216bd246eeb397507fdd2aa8ee0449dae06f7a",
+    "run_id": 45963684842,
+    "artifact_ids": [
+      15182142568,
+      15182142023
+    ],
+    "result": "INCOMPLETE",
+    "reason": "All eight iperf reverse -n rows mismatch intended fixed bytes including naked controls; original functional profiles and core pass.",
+    "paired_bulk_retrans_bytes": [
+      91256,
+      58072,
+      0,
+      263398,
+      0,
+      0
+    ],
+    "paired_server_ingress_full": [
+      2915,
+      0,
+      2483,
+      101,
+      0,
+      0
+    ],
+    "paired_client_ingress_full": [
+      81,
+      89,
+      0,
+      194,
+      0,
+      0
+    ],
+    "interpretation": "Higher actual ~120M offered cases diagnostic only. No causal selection."
+  },
+  "governance": {
+    "branch_feature_catalog_run": 45963914472,
+    "result": "FAIL",
+    "reason": "active card exceeds 16KiB size bound; compact and archive original verbatim in next source. Other historical governance failures remain until verified."
+  },
+  "review": "Four actual ZIPs materialized, CRC checked and original/native recovery summaries and relevant logs reviewed. Exact current eight cases measured, old eight incomplete. No blanket zero loss claim.",
+  "physical": "NOT_RUN",
+  "next_source": "afcaaa8ff4fc11a5f041ffe420e8c09db3eed881"
+}
