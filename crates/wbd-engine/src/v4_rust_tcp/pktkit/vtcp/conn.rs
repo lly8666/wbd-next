@@ -678,6 +678,7 @@ pub struct Conn {
     /// When data last went out, for the restart after idle (Linux's
     /// `lsndtime`).
     last_data_sent: Option<Instant>,
+    snd_small_end: Option<u32>,
     /// An RTT sample came in since the last probe (RFC 8985 §7.3), so
     /// probes cannot keep SRTT from following a longer path.
     rtt_sampled: bool,
@@ -959,6 +960,7 @@ impl Conn {
             pipe_ack: PipeAck::new(now),
             nvp_since: None,
             last_data_sent: None,
+            snd_small_end: None,
             rtt_sampled: false,
             cwnd_blocked: false,
             is_cwnd_limited: false,
@@ -3602,7 +3604,7 @@ impl Conn {
             let bytes = if self.sack_ok { d.delivered } else { acked };
             let use_ = self.cwnd_use(flight);
             let a = self.ack_info(bytes, use_, rtt, ack, rs, delivered, 0);
-            self.cc.on_ack(&a);
+            self.cc.on_ack_packets(&a,d.packets);
             self.note_ss_exit(SlowStartExit::Delay, self.cc.cwnd());
         }
         // RFC 7661: what the path carried, sampled outside loss recovery
@@ -4054,7 +4056,7 @@ impl Conn {
     /// recovery; PRR has by then brought the flight down in step with what
     /// was delivered, which already leaves the losses out.
     fn loss_flight(&mut self, flight: u32) -> u32 {
-        if self.nvp_since.is_none() || self.cc.model_based() {
+        if self.cfg.linux_parity || self.nvp_since.is_none() || self.cc.model_based() {
             return flight;
         }
         let used = self
@@ -4147,6 +4149,10 @@ impl Conn {
             Some((srtt, rttvar, recover)) if seq_after(seg.ack, recover) => {
                 self.rto.after_spurious_timeout(srtt, rttvar, rtt);
                 self.rto_adapt = None;
+            }
+            _ if self.cfg.linux_parity => {
+                let nxt = self.send_buf.as_ref().unwrap().nxt();
+                self.rto.sample_linux(rtt, Some((seg.ack,nxt)));
             }
             _ => self.rto.sample_of(rtt, per_window),
         }
@@ -4521,14 +4527,21 @@ impl Conn {
             // server answers before the handshake completes.
             let syn = usize::from(self.state == State::SynReceived);
             let in_flight = self.send_buf.as_ref().unwrap().unacked() > syn;
-            if !big_enough && in_flight && !self.fin_queued {
-                break;
-            }
+            let hold = if self.cfg.linux_parity && !self.cfg.nodelay && n == pending {
+                !big_enough && in_flight && self.snd_small_end.is_some_and(|end| {
+                    let sb = self.send_buf.as_ref().unwrap();
+                    seq_after(end,sb.una()) && !seq_after(end,sb.nxt())
+                })
+            } else { !big_enough && in_flight };
+            if hold && !self.fin_queued { break; }
             if !self.pace_ready() {
                 self.pace_wait();
                 break;
             }
             self.send_new(n, opts);
+            if self.cfg.linux_parity && n < room {
+                self.snd_small_end = Some(self.send_buf.as_ref().unwrap().nxt());
+            }
             sent_new = true;
         }
 
@@ -4639,7 +4652,7 @@ impl Conn {
         if let Some(r) = self.cc.pacing_rate() {
             return Some(r.max(1));
         }
-        let srtt = self.pace_srtt.unwrap_or_else(|| self.rto.srtt());
+        let srtt = if self.cfg.linux_parity { self.rto.srtt() } else { self.pace_srtt.unwrap_or_else(|| self.rto.srtt()) };
         if srtt.is_zero() {
             return None;
         }
@@ -4946,7 +4959,10 @@ impl Conn {
             }
         } else {
             self.retries += 1;
-            if self.retries > MAX_RETRIES {
+            let retry_limit = if self.cfg.linux_parity {
+                match self.state { State::SynSent => 6, State::SynReceived => 5, _ => 15 }
+            } else { MAX_RETRIES };
+            if self.retries > retry_limit {
                 self.tear_down(State::Closed);
                 return;
             }
@@ -5145,7 +5161,8 @@ impl Conn {
     /// retransmissions; once released, answered ones are limited too (see
     /// [`ORPHAN_RETRIES`]).
     fn probes_exhausted(&mut self) -> bool {
-        if self.probes_out >= MAX_RETRIES
+        let retry_limit = if self.cfg.linux_parity { 15 } else { MAX_RETRIES };
+        if self.probes_out >= retry_limit
             || (self.released.is_some() && self.orphan_probes >= ORPHAN_RETRIES)
         {
             return true;

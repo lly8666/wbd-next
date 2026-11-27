@@ -39,7 +39,8 @@
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-INTENT.md",
     "docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-INTENT.md",
     "docs/devlog/M0/20261127-LINUX-TCP-PARITY-AUDIT-AND-CANDIDATE.md",
-    "docs/devlog/M0/20261127-LINUX-TCP-PARITY-RESULT-AND-HOTPATH.md"
+    "docs/devlog/M0/20261127-LINUX-TCP-PARITY-RESULT-AND-HOTPATH.md",
+    "docs/devlog/M0/20261127-LINUX-TCP-PARITY-CONSOLIDATED-BEHAVIOR.md"
   ],
   "verification": [
     {
@@ -153,6 +154,20 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "edc0d11a374f5185315814f8a940933638b7149e",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45862140433"
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "935a631 scoped native original/parity and 339 core tests",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "935a6317969486846fec60fe98f35d2429dfedcb",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45914393727"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "935a631 scoped native original/parity and 339 core tests",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "935a6317969486846fec60fe98f35d2429dfedcb",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45914393727"
     }
   ],
   "limitations": [
@@ -162,7 +177,8 @@
     "Clean x86 ABBA measured capped goodput parity, but client CPU +29.1%; full performance qualification NOT_RUN. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json",
     "Matched CUBIC ABBA measured capped goodput parity, client CPU +47.45%, host +15.19%; mixed BBR same VM similar gap. CUBIC trial not selected for product; restore BBRv3 in next substantive candidate. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json",
     "ACK3 BBRv3 middle candidate 8a6439b exact scoped functional dual ISA PASS; same-VM old splice/original Rust ABBA run45821912542 and ARM three-runner loss1/5 run45822382519/45822382479 in flight. No performance or default promotion.",
-    "edc0d11 ARM Linux parity ABBA 23/24 measured, CUBIC 5% baseline reset, BBR0 150.56 vs 205.79 Mbps and CPU/GiB higher; no performance promotion. New receive growth / borrowed DATA candidate unverified."
+    "edc0d11 ARM Linux parity ABBA 23/24 measured, CUBIC 5% baseline reset, BBR0 150.56 vs 205.79 Mbps and CPU/GiB higher; no performance promotion. New receive growth / borrowed DATA candidate unverified.",
+    "935a631 dual ISA 339/339; ARM hotpath ABBA BBR -11.6% throughput, CUBIC +24.7%; mixed. Consolidated candidate unverified."
   ],
   "promotion": null
 }

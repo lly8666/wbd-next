@@ -116,6 +116,8 @@ pub trait CongestionController: Send {
     /// A cumulative ACK outside fast recovery; for a model-based
     /// controller, every ACK.
     fn on_ack(&mut self, ack: &Ack);
+    /// Native scoreboard packet count, used by Linux-style CUBIC.
+    fn on_ack_packets(&mut self, ack: &Ack, _packets: u32) { self.on_ack(ack); }
     /// Whether the controller runs on every ACK and sets cwnd itself in
     /// and out of recovery, and paces at a rate of its own (BBR).
     fn model_based(&self) -> bool {

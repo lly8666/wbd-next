@@ -112,6 +112,11 @@ pub struct Cubic {
     legacy_last_ack: Option<Instant>,
     legacy_round_min: Option<Duration>,
     legacy_samples: u32,
+    linux_ack_cnt: u64,
+    linux_tcp_cwnd: u32,
+    linux_ai_credit: u64,
+    linux_cnt: u32,
+    linux_last_update: Option<(Instant,u32)>,
 }
 
 impl Cubic {
@@ -138,6 +143,8 @@ impl Cubic {
             legacy_last_ack: None,
             legacy_round_min: None,
             legacy_samples: 0,
+            linux_ack_cnt: 0, linux_tcp_cwnd: 0, linux_ai_credit: 0,
+            linux_cnt: 2, linux_last_update: None,
         }
     }
 
@@ -163,9 +170,61 @@ impl Cubic {
         self.legacy_round_min = Some(self.legacy_round_min.map_or(rtt, |old| old.min(rtt)));
         self.legacy_samples = self.legacy_samples.saturating_add(1);
         let threshold = (min / 8).clamp(MIN_RTT_THRESH, MAX_RTT_THRESH);
-        let delay = self.legacy_samples >= 8 && self.legacy_round_min.is_some_and(|r| r > min + threshold);
-        let train = train && self.legacy_round.is_some_and(|(_, t)| a.now.saturating_duration_since(t) > if self.paced { min } else { min / 2 });
+        let delay = self.legacy_samples > 8 && self.legacy_round_min.is_some_and(|r| r > min + threshold);
+        let threshold = min + Duration::from_millis(1);
+        let train = train && self.legacy_round.is_some_and(|(_, t)| a.now.saturating_duration_since(t) > if self.paced { threshold } else { threshold / 2 });
         delay || train
+    }
+
+    /// CUBIC growth in complete segment units, independently derived
+    /// from the Linux curve and additive-increase behavior.
+    fn linux_avoid(&mut self, a: &Ack, packets: u32) {
+        if packets == 0 { return; }
+        let cwnd = (self.cwnd / self.mss).max(1);
+        let first = self.epoch.is_none();
+        let e = if let Some(e) = self.epoch { e } else {
+            let w = f64::from(self.cwnd);
+            let origin = self.w_max.unwrap_or(w).max(w);
+            let e = Epoch {start:a.now,k:((origin-w)/self.c()).cbrt(),origin,w_est:w};
+            self.epoch=Some(e); self.linux_ack_cnt=0;
+            self.linux_tcp_cwnd=cwnd; self.linux_last_update=None; e
+        };
+        self.linux_ack_cnt += u64::from(packets);
+        let update = first || self.linux_last_update.is_none_or(|(t,w)| w != cwnd || a.now.saturating_duration_since(t)>Duration::from_millis(31));
+        if update {
+            let t = a.now.saturating_duration_since(e.start).as_secs_f64()+self.delay_min.unwrap_or_default().as_secs_f64();
+            let target = (self.w_cubic(&e,t)/f64::from(self.mss)).max(0.) as u32;
+            let mut cnt = if target>cwnd {cwnd/(target-cwnd)} else {cwnd.saturating_mul(100)};
+            if self.w_max.is_none(){cnt=cnt.min(20);}
+            let delta = (u64::from(cwnd)*15/8).max(1);
+            if self.linux_ack_cnt>delta {
+                let steps=(self.linux_ack_cnt-1)/delta;
+                self.linux_ack_cnt-=steps*delta;
+                self.linux_tcp_cwnd=self.linux_tcp_cwnd.saturating_add(steps.min(u32::MAX as u64) as u32);
+            }
+            if self.linux_tcp_cwnd>cwnd {cnt=cnt.min(cwnd/(self.linux_tcp_cwnd-cwnd));}
+            self.linux_cnt=cnt.max(2); self.linux_last_update=Some((a.now,cwnd));
+        }
+        let cnt=u64::from(self.linux_cnt);
+        if self.linux_ai_credit>=cnt {self.linux_ai_credit=0; self.cwnd=self.cwnd.saturating_add(self.mss);}
+        self.linux_ai_credit+=u64::from(packets);
+        let inc=self.linux_ai_credit/cnt;self.linux_ai_credit%=cnt;
+        self.cwnd=self.cwnd.saturating_add((inc*u64::from(self.mss)).min(u32::MAX as u64) as u32);
+    }
+
+    fn linux_ack(&mut self, a: &Ack, mut packets: u32) {
+        if let Some(rtt)=ack_rtt(a){self.delay_min=Some(self.delay_min.map_or(rtt,|m|m.min(rtt)));}
+        let limited=cwnd_limited(self.cwnd,self.ssthresh,self.mss,a.flight);
+        if self.cwnd<self.ssthresh {
+            if self.ssthresh==u32::MAX && self.legacy_hystart(a) { self.ssthresh=self.cwnd; self.hystart.finish(); }
+            if !limited {return;}
+            if self.cwnd<self.ssthresh {
+                let room=(self.ssthresh-self.cwnd).div_ceil(self.mss);
+                let n=packets.min(room);packets-=n;
+                self.cwnd=self.cwnd.saturating_add(n.saturating_mul(self.mss)).min(self.ssthresh);
+            }
+        }
+        if limited {self.linux_avoid(a,packets);}
     }
 
     /// C, scaled to bytes per second cubed.
@@ -260,10 +319,13 @@ impl Cubic {
             _ => w,
         });
         self.cwnd_prior = w;
-        self.ssthresh = self.decreased_by(if self.linux_parity { self.cwnd } else { flight }, beta);
+        self.ssthresh = if self.linux_parity {
+            ((u64::from(self.cwnd/self.mss)*717/1024).max(2) as u32).saturating_mul(self.mss)
+        } else { self.decreased_by(flight,beta) };
         self.epoch = None;
         self.credit = 0.0;
         self.hystart.finish();
+        self.linux_ai_credit=0;self.linux_last_update=None;
     }
 }
 
@@ -289,7 +351,12 @@ impl CongestionController for Cubic {
         self.paced = paced;
     }
 
+    fn on_ack_packets(&mut self,a:&Ack,packets:u32){
+        if self.linux_parity {self.linux_ack(a,packets);} else {self.on_ack(a);}
+    }
+
     fn on_ack(&mut self, a: &Ack) {
+        if self.linux_parity {self.linux_ack(a,a.bytes_acked.div_ceil(self.mss));return;}
         if let Some(rtt) = ack_rtt(a) {
             self.delay_min = Some(self.delay_min.map_or(rtt, |m| m.min(rtt)));
         }
@@ -368,7 +435,7 @@ impl CongestionController for Cubic {
     fn on_retransmit_timeout(&mut self, flight_size: u32, repeated: bool) {
         if !repeated {
             self.cwnd_prior = f64::from(self.cwnd);
-            self.ssthresh = self.decreased(if self.linux_parity { self.cwnd } else { flight_size });
+            self.ssthresh = if self.linux_parity { ((u64::from(self.cwnd/self.mss)*717/1024).max(2) as u32).saturating_mul(self.mss) } else {self.decreased(flight_size)};
         }
         // The first stage after a timeout starts its curve where it
         // stands, as after the first slow start (§4.8). Linux forgets the
@@ -379,6 +446,8 @@ impl CongestionController for Cubic {
         self.delay_min = None;
         self.cwnd = self.mss;
         self.hystart.finish();
+        self.linux_ai_credit=0;self.linux_last_update=None;
+        self.legacy_round=None;self.legacy_last_ack=None;self.legacy_round_min=None;self.legacy_samples=0;
     }
 
     fn set_cwnd(&mut self, cwnd: u32) {
@@ -622,6 +691,17 @@ mod tests {
     /// The window after a loss follows W_cubic(t) = C(t − K)³ + W_max with
     /// K = ∛(W_max(1 − β)/C): concave up to W_max, flat around it at K,
     /// convex past it.
+    #[test]
+    fn linux_cubic_counts_packets_and_has_initial_growth_floor() {
+        let t=Instant::now(); let mut c=Cubic::new(MSS).with_linux_parity(true);
+        c.cwnd=100*MSS;c.ssthresh=c.cwnd;
+        let a=Ack::of(t,20*MSS,c.cwnd);
+        c.on_ack_packets(&a,20);
+        assert_eq!(c.cwnd,101*MSS);
+        c.on_loss(20*MSS);
+        assert_eq!(c.ssthresh,70*MSS);
+    }
+
     #[test]
     fn window_follows_the_cubic_curve() {
         let w_max = 1000.0;

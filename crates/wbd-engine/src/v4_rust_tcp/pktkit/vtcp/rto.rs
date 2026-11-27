@@ -36,6 +36,12 @@ pub struct RtoState {
     rto: Duration,
     measured: bool,
     max_rto: Duration,
+    linux: bool,
+    linux_srtt8: i64,
+    linux_mdev4: i64,
+    linux_dev_max: i64,
+    linux_var4: i64,
+    linux_round_end: Option<u32>,
 
     timing: bool,
     time_sent: Instant,
@@ -51,6 +57,8 @@ impl RtoState {
             rto: DEFAULT_RTO,
             measured: false,
             max_rto: MAX_RTO,
+            linux: false, linux_srtt8: 0, linux_mdev4: 0,
+            linux_dev_max: 0, linux_var4: 0, linux_round_end: None,
             timing: false,
             time_sent: now,
             time_seq: 0,
@@ -58,13 +66,49 @@ impl RtoState {
     }
 
     pub(crate) fn with_linux_parity(mut self, enabled: bool) -> Self {
+        self.linux = enabled;
         if enabled { self.max_rto = Duration::from_secs(120); }
         self
     }
 
     /// Feed a fresh RTT sample and recompute SRTT / RTTVAR / RTO.
     pub fn sample(&mut self, rtt: Duration) {
-        self.sample_of(rtt, 1);
+        if self.linux { self.sample_linux(rtt, None); }
+        else { self.sample_of(rtt, 1); }
+    }
+
+    /// Scaled microsecond estimator, asymmetric deviation gain and
+    /// send-round peak/decay. seq = (cumulative ACK, next send sequence).
+    pub(crate) fn sample_linux(&mut self, rtt: Duration, seq: Option<(u32,u32)>) {
+        let m = rtt.as_micros().clamp(1, i64::MAX as u128 / 16) as i64;
+        let floor = MIN_RTO.as_micros() as i64;
+        if !self.measured || self.linux_srtt8 == 0 {
+            self.linux_srtt8 = m * 8;
+            self.linux_mdev4 = m * 2;
+            self.linux_var4 = self.linux_mdev4.max(floor);
+            self.linux_dev_max = self.linux_var4;
+            self.linux_round_end = seq.map(|(_,nxt)| nxt);
+        } else {
+            let error = m - self.linux_srtt8 / 8;
+            self.linux_srtt8 = (self.linux_srtt8 + error).max(1);
+            let mut delta = error.abs() - self.linux_mdev4 / 4;
+            if error < 0 && delta > 0 { delta /= 8; }
+            self.linux_mdev4 = (self.linux_mdev4 + delta).max(0);
+            self.linux_dev_max = self.linux_dev_max.max(self.linux_mdev4);
+            self.linux_var4 = self.linux_var4.max(self.linux_dev_max);
+            if let Some((ack,nxt)) = seq {
+                if self.linux_round_end.is_some_and(|end| seq_after(ack,end)) {
+                    self.linux_var4 -= (self.linux_var4 - self.linux_dev_max).max(0) / 4;
+                    self.linux_dev_max = floor;
+                    self.linux_round_end = Some(nxt);
+                } else if self.linux_round_end.is_none() { self.linux_round_end = Some(nxt); }
+            }
+        }
+        self.measured = true;
+        self.srtt = Duration::from_micros((self.linux_srtt8 / 8).max(1) as u64);
+        self.rttvar = Duration::from_micros((self.linux_var4 / 4) as u64);
+        self.rto = self.srtt + Duration::from_micros(self.linux_var4.max(floor) as u64);
+        self.clamp();
     }
 
     /// Feed one of about `per_window` samples taken this round trip.
@@ -139,6 +183,13 @@ impl RtoState {
         self.srtt = srtt_prev.max(sample);
         self.rttvar = rttvar_prev.max(sample / 2);
         self.measured = true;
+        if self.linux {
+            self.linux_srtt8 = self.srtt.as_micros() as i64 * 8;
+            self.linux_mdev4 = self.rttvar.as_micros() as i64 * 4;
+            self.linux_var4 = self.linux_mdev4.max(MIN_RTO.as_micros() as i64);
+            self.linux_dev_max = self.linux_var4;
+            self.linux_round_end = None;
+        }
         self.rto = self.srtt + (self.rttvar * 4).max(MIN_RTO);
         self.clamp();
     }
@@ -200,6 +251,19 @@ mod tests {
         let mut r = RtoState::new(Instant::now()).with_linux_parity(true);
         for _ in 0..10 { r.backoff(); }
         assert_eq!(r.rto(), Duration::from_secs(120));
+    }
+
+    #[test]
+    fn linux_variance_holds_peak_until_round_progress() {
+        let mut r = RtoState::new(Instant::now()).with_linux_parity(true);
+        r.sample_linux(Duration::from_millis(400),Some((10,100)));
+        assert_eq!(r.rto(),Duration::from_millis(1200));
+        for i in 11..100 { r.sample_linux(Duration::from_millis(400),Some((i,100))); }
+        assert_eq!(r.rto(),Duration::from_millis(1200));
+        r.sample_linux(Duration::from_millis(400),Some((101,200)));
+        assert_eq!(r.rto(),Duration::from_millis(1200));
+        r.sample_linux(Duration::from_millis(400),Some((201,300)));
+        assert_eq!(r.rto(),Duration::from_millis(1050));
     }
 
     #[test]

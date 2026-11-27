@@ -148,6 +148,8 @@ pub(crate) struct Delivery {
     /// Bytes newly delivered, cumulatively or selectively, and not SACKed
     /// before: RFC 6937's DeliveredData.
     pub delivered: u32,
+    /// Newly fully delivered scoreboard segments, not ACK messages.
+    pub packets: u32,
     /// The lowest end among newly delivered segments never retransmitted:
     /// data that reached the receiver in its original transmission.
     pub orig_min_end: Option<u32>,
@@ -158,6 +160,7 @@ pub(crate) struct Delivery {
 impl Delivery {
     fn note(&mut self, bytes: u64, end: u32, original: bool) {
         self.delivered = self.delivered.saturating_add(bytes as u32);
+        self.packets = self.packets.saturating_add(1);
         if original && self.orig_min_end.is_none_or(|e| seq_before(end, e)) {
             self.orig_min_end = Some(end);
         }
@@ -169,6 +172,7 @@ impl Delivery {
     /// Fold in what another part of the same ACK reported.
     pub(crate) fn merge(&mut self, o: Delivery) {
         self.delivered = self.delivered.saturating_add(o.delivered);
+        self.packets = self.packets.saturating_add(o.packets);
         if let Some(e) = o.orig_min_end.filter(|&e| self.orig_min_end.is_none_or(|m| seq_before(e, m)))
         {
             self.orig_min_end = Some(e);
