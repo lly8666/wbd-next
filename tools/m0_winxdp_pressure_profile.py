@@ -168,3 +168,23 @@ if os.environ.get("WBD_XDP_ARCH_REPEAT")=="1":
                 policy="rx-single" if arm=="A" else "rx-single-"+arch[5:],
                 budget=w["rate"])
            for w in workloads for order in orders for arm in order]
+
+# Cross-FEC completion study. Frozen candidate DLL, only the TX reclaim
+# policy differs. Each qualified runner executes both orders per workload.
+if os.environ.get("WBD_XDP_RECLAIM_FEC_GROUP"):
+    shard=os.environ["WBD_XDP_RECLAIM_FEC_GROUP"]
+    assert arch=="arch-reclaim" and os.environ.get("WBD_XDP_ARCH_REPEAT")=="1"
+    profiles={"fixed-low":(0,1),"fixed-mid":(2,3),"fixed-high":(4,5),"fixed-max":(6,)}[shard]
+    grades=("light","mild","medium","balanced","high","strong","maximum")
+    workloads=[dict(name="reclaim-fixed-"+grades[p]+"-up150",direction="up",
+                    rate=150,delay=20,streams=4,mtu=1400,profile=p,loss=0)
+               for p in profiles]
+    if shard=="fixed-max":
+        workloads.append(dict(name="reclaim-max-duplex100",direction="duplex",
+                              rate=100,delay=80,streams=4,mtu=1400,profile=6,loss=1))
+    orders=("BAAB","ABBA") if seq=="BAAB" else ("ABBA","BAAB")
+    CASES=[dict(dict(base,**w),name=w["name"]+"-"+order.lower(),
+                group=w["name"]+"-"+order.lower(),arm=arm,
+                policy="rx-single" if arm=="A" else "rx-single-reclaim",
+                budget=w["rate"])
+           for w in workloads for order in orders for arm in order]

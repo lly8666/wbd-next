@@ -30,6 +30,7 @@ def run_case(env,log,mode):
 
 def main():
     global CASES
+    fec_shard=os.environ.get("WBD_XDP_RECLAIM_FEC_GROUP","")
     if os.environ.get("WBD_XDP_UDP_PHASE")=="small-pps":CASES=[["fixed-rx4096-small","fixed",4096,2048,32,"original",350,5,20,288],["fixed-small8192","fixed",8192,2048,32,"original",350,5,20,288],["fixed-small16384","fixed",16384,2048,32,"original",350,5,20,288],["fixed-small16384-150","fixed",16384,2048,32,"original",150,5,20,288],["fixed-small16384-feedback","fixed",16384,2048,32,"feedback",350,5,20,288]]
     if os.environ.get("WBD_XDP_UDP_PHASE")=="capacity-sweep":CASES=[["fixed-small16384-50","fixed",16384,2048,32,"original",50,5,20,288],["fixed-small16384-100","fixed",16384,2048,32,"original",100,5,20,288],["fixed-small16384-150","fixed",16384,2048,32,"original",150,5,20,288],["fixed-small16384-250","fixed",16384,2048,32,"original",250,5,20,288],["fixed-small16384","fixed",16384,2048,32,"original",350,5,20,288],["fixed-small16384-feedback","fixed",16384,2048,32,"feedback",350,5,20,288],["fixed-small8192","fixed",8192,2048,32,"original",350,5,20,288],["fixed-rx4096-small","fixed",4096,2048,32,"original",350,5,20,288],["fixed-small16384-100-feedback","fixed",16384,2048,32,"feedback",100,5,20,288],["fixed-small16384-100-clean","fixed",16384,2048,32,"original",100,0,20,288],["normal-small-150","normal",16384,2048,32,"original",150,0,20,288],["auto-small-150","auto",16384,2048,32,"original",150,5,20,288],["game2-small-100","game2-fec",16384,2048,32,"original",100,5,20,288],["game4-small-100","game4-fec",16384,2048,32,"original",100,5,20,288]]
     if os.environ.get("WBD_XDP_UDP_PHASE")=="game-batch":CASES=[["game2-fec-1200-0","game2-fec",16384,2048,32,"original",250,5,20,1200],["game2-fec-1200-1","game2-fec",16384,2048,32,"game-batch",250,5,20,1200],["game2-fec-1200-2","game2-fec",16384,2048,32,"game-batch",250,5,20,1200],["game2-fec-1200-3","game2-fec",16384,2048,32,"original",250,5,20,1200],["game2-fec-288-0","game2-fec",16384,2048,32,"original",100,5,20,288],["game2-fec-288-1","game2-fec",16384,2048,32,"game-batch",100,5,20,288],["game2-fec-288-2","game2-fec",16384,2048,32,"game-batch",100,5,20,288],["game2-fec-288-3","game2-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-1200-0","game4-fec",16384,2048,32,"original",250,5,20,1200],["game4-fec-1200-1","game4-fec",16384,2048,32,"game-batch",250,5,20,1200],["game4-fec-1200-2","game4-fec",16384,2048,32,"game-batch",250,5,20,1200],["game4-fec-1200-3","game4-fec",16384,2048,32,"original",250,5,20,1200],["game4-fec-288-0","game4-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-288-1","game4-fec",16384,2048,32,"game-batch",100,5,20,288],["game4-fec-288-2","game4-fec",16384,2048,32,"game-batch",100,5,20,288],["game4-fec-288-3","game4-fec",16384,2048,32,"original",100,5,20,288]]
@@ -84,6 +85,18 @@ def main():
                 "arch-wake":[("normal-large175","normal",175,0,20,1200),("normal-small50","normal",50,0,20,288)],
                 "arch-cipher":[("normal-large175","normal",175,0,20,1200),("normal-small100","normal",100,0,20,288)],
             }[arch]
+        if fec_shard:
+            assert arch=="arch-reclaim" and os.environ.get("WBD_XDP_ARCH_REPEAT")=="1"
+            workloads={
+                "maximum-load":[("maximum-large150-loss5","fixed",150,5,20,1200),
+                                ("maximum-small75-loss5","fixed",75,5,20,288)],
+                "auto-low":[("auto-large100-loss5","auto",100,5,20,1200),
+                            ("maximum-large50-loss10","fixed",50,10,200,1200)],
+                "game-low":[("game2-fec-dir-duplex50","game2-fec",50,5,20,288),
+                            ("game4-fec-dir-duplex50","game4-fec",50,5,20,288)],
+                "game-high":[("game2-small-100","game2-fec",100,5,20,288),
+                             ("game4-small-100","game4-fec",100,5,20,288)],
+            }[fec_shard]
         CASES=[[name+"-"+str(i),mode,16384,2048,32,("rx-single" if arm=="A" else "rx-single-"+arch[5:]) if arch.startswith("arch-") else "original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),rate,loss,delay,size] for name,mode,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
         if os.environ.get("WBD_XDP_ARCH_REPEAT")=="1":
             assert arch in ("arch-reclaim","arch-cipher")
@@ -180,11 +193,30 @@ def main():
             row["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in row["rx_lab"]),default=0)
             if maximum_memory or pool:
                 row["fec_ok"]=("WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6" in s)==(mode=="fixed")
+                if fec_shard:
+                    server=(case/"server.log").read_text(errors="replace") if (case/"server.log").exists() else ""
+                    row["auto_applied_quality"]=[l[:500] for l in s.splitlines() if "WBD_CLIENT_QUALITY_V2" in l and re.search(r"fec_c2s=applied-(?:light|mild|medium|balanced|high|strong|maximum)\\b",l)]
+                    row["game_fec_applied"]=[l[:500] for l in server.splitlines() if "V4_PUBLIC_GAME_FEC_APPLIED role=server" in l]
+                    if mode=="auto":
+                        row["fec_ok"]=bool(row["auto_applied_quality"])
+                    elif mode.startswith("game"):
+                        row["fec_ok"]=any("lanes="+mode[4]+" mode=fixed profile=6" in l for l in row["game_fec_applied"]) and "WBD_GAME_FEC_NORMAL_OUTER_STOP" in s
+                    row["fec_ok"]=row["fec_ok"] and r.get("mode_public")=="PASS_ACTUAL_WINDOWS_LINUX_NATIVE_"+mode
                 row["lab_ok"]=row["lab_ok"] and row["fec_ok"]
                 row["fec_receipts"]=[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC2_INSTALLED" in l or ("FEC" in l and ("STOP" in l or "PARITY" in l))][-20:]
             if pool:
                 row["rx_pool"]=receipts("WBD_XDP_RX_POOL_STOP ")
-                if os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
+                if fec_shard and mode.startswith("game"):
+                    # The frozen DLL maps RSS only for a single port. Both
+                    # Game arms use the original multi-RSS shared carrier.
+                    # No synthetic single-RSS/pool/cipher receipt for Game.
+                    row["reclaim_lab"]=receipts("WBD_XDP_TX_RECLAIM_LAB ")
+                    row["wake_lab"]=receipts("WBD_XDP_RX_WAKE_LAB ")
+                    row["cipher_lab"]=receipts("WBD_XDP_CIPHER_LOAN_LAB ")
+                    b=row["arm"]=="B"
+                    row["lab_ok"]=row["lab_ok"] and len(row["reclaim_lab"])==1 and row["reclaim_lab"][0].get("enabled")==int(b) and bool(row["rx"]) and all(q.get("queues",0)>0 and q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
+                    row["mechanism_exercised"]=not b or row["reclaim_lab"][0].get("early",0)>0
+                elif os.environ.get("WBD_XDP_SINGLE_RSS")=="1":
                     row["rss_map_before"]=receipts("WBD_XDP_RSS_MAP_BEFORE ")
                     arch=os.environ.get("WBD_XDP_SINGLE_WIDE","")
                     b=row["arm"]=="B"
@@ -200,7 +232,7 @@ def main():
                         row["mechanism_exercised"]=not b or any(q.get(key,0)>0 for q in row[{"arch-reclaim":"reclaim_lab","arch-wake":"wake_lab","arch-cipher":"cipher_lab"}[arch]] for key in [{"arch-reclaim":"early","arch-wake":"reused","arch-cipher":"packets"}[arch]])
                 else:
                     row["lab_ok"]=row["lab_ok"] and bool(row["rx_pool"]) and all(q.get("enabled")==int(row["arm"]=="B") and q.get("recycle")==int(row["arm"]=="B") and (q.get("posted",0)+q.get("reserve_remaining",0))*2048==q.get("backing_bytes") and q.get("posted",0)>=q.get("base",0)*q.get("queues",0) for q in row["rx_pool"]) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
-            if os.environ.get("WBD_XDP_SINGLE_WIDE")=="wire":
+            if os.environ.get("WBD_XDP_SINGLE_WIDE")=="wire" or fec_shard:
                 row["lab_ok"]=row["lab_ok"] and len(row.get("outer_netem",{}).get("directions",{}))==2
             if efficiency:
                 row["pending_lab"]=receipts("WBD_XDP_RX_PENDING_LAB ")
@@ -212,6 +244,8 @@ def main():
             if len(pair)==4:
                 result={"group":group,"sequence":"".join(x["arm"] for x in pair),
                     "valid":all(x["rc"]==0 and x["scenario_identity"] and x["lab_ok"] and x["carrier_ok"] and x["status"]=="MEASURED_BOTH_OS_KERNEL" and x["stop"]=="PASS_BOTH_OWNED" and x["cpu_s_per_gib"] is not None for x in pair)}
+                if fec_shard and mode.startswith("game"):
+                    result["valid"]=result["valid"] and len({tuple(q.get("queues") for q in x["rx"]) for x in pair})==1
                 for arm in ("A","B"):
                     ar=[x for x in pair if x["arm"]==arm]
                     result[arm]={"delivered":{k:statistics.mean(x["delivered"][k] for x in ar) for k in ("windows","linux") if all(x.get("delivered") and k in x["delivered"] for x in ar)},
@@ -228,7 +262,7 @@ def main():
                         for key in ("steady_peak_working_set_bytes","steady_peak_private_bytes"):
                             vals=[x.get(key) for x in ar]
                             result[arm][key]=statistics.mean(vals) if all(v is not None for v in vals) else None
-                if pool:
+                if pool and not (fec_shard and mode.startswith("game")):
                     for arm in ("A","B"):
                         ar=[x for x in pair if x["arm"]==arm]
                         result[arm]["pool_backing_bytes"]=max(q["backing_bytes"] for x in ar for q in x["rx_pool"])
@@ -245,6 +279,8 @@ def main():
                     result["mechanism_exercised"]=all(x.get("mechanism_exercised",False) for x in pair)
                     for arm in ("A","B"):
                         result[arm]["mechanism"]=[{k:x.get(k) for k in ("reclaim_lab","wake_lab","cipher_lab","tx")} for x in pair if x["arm"]==arm]
+                        if fec_shard:
+                            result[arm]["fec_evidence"]=[{k:x.get(k) for k in ("fec_ok","auto_applied_quality","game_fec_applied","fec_receipts","first","tun_link","tun_fq","stats")} for x in pair if x["arm"]==arm]
                 if pool:
                     # A green delivery/Stop receipt is not target-rate evidence.
                     result["all_arms_offered_at_target"]=all(
