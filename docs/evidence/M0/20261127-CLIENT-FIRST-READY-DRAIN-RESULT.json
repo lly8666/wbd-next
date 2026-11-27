@@ -1,0 +1,369 @@
+{
+  "schema_version": 1,
+  "source_sha": "92d1db9236d7eef62c231177a4a47b0124873c17",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA core351 and twelve native functional profiles; five local diagnostic cases and ten qualified cross-host measurements. Measurement PASS, client candidates not selected.",
+  "run_id": 46007230927,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140533350581,
+      "artifact_id": 15202507833,
+      "core_pass": 351,
+      "gso_groups": [
+        105,
+        63,
+        141,
+        268,
+        137,
+        98
+      ],
+      "gso_segments": [
+        1259,
+        902,
+        1254,
+        1855,
+        1360,
+        1078
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140533350403,
+      "artifact_id": 15202650158,
+      "core_pass": 351,
+      "gso_groups": [
+        308,
+        112,
+        101,
+        250,
+        207,
+        113
+      ],
+      "gso_segments": [
+        2906,
+        1135,
+        1074,
+        2438,
+        1931,
+        1143
+      ]
+    }
+  ],
+  "local": {
+    "order": [
+      "normal-B",
+      "normal-C",
+      "pause-C",
+      "loss-B",
+      "loss-C"
+    ],
+    "mbps": [
+      338.8901640566781,
+      338.71503640419354,
+      96.25203027824654,
+      66.52780025773097,
+      61.36350540360612
+    ],
+    "seconds": [
+      12.67362629999991,
+      12.680179013000043,
+      44.62209559200005,
+      12.104809791999969,
+      13.123539189999974
+    ],
+    "client_cpu_s_per_gib": [
+      16.96,
+      16.98,
+      17.78,
+      13.333333333333334,
+      12.8
+    ],
+    "server_cpu_s_per_gib": [
+      15.1,
+      15.48,
+      17.58,
+      15.146666666666667,
+      15.04
+    ],
+    "bulk_stop_bytes_sent": [
+      536870912,
+      536870912,
+      537150902,
+      101220165,
+      101177648
+    ],
+    "bulk_stop_bytes_retrans": [
+      0,
+      0,
+      279990,
+      556869,
+      514352
+    ],
+    "dsack": [
+      0,
+      0,
+      0,
+      246,
+      210
+    ],
+    "timeouts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_ingress_full": [
+      0,
+      0,
+      270,
+      0,
+      0
+    ],
+    "server_ingress_full": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "drain_packets": [
+      0,
+      20429,
+      6017,
+      0,
+      1633
+    ],
+    "drain_skipped_polls": [
+      0,
+      1432,
+      694,
+      0,
+      87
+    ],
+    "drain_empty": [
+      0,
+      627,
+      407,
+      0,
+      24
+    ],
+    "all_exact_hash_eof_profile_stop": true,
+    "all_packet_socket_drops_zero": true,
+    "seed_supported": false,
+    "interpretation": "Normal no gain; unmatched pause C not causal comparison; loss B/C throughput -7.76%, recovery similar. Actual drain executed."
+  },
+  "performance": {
+    "result": "PASS",
+    "run_id": 46007230937,
+    "job_ids": {
+      "client": 140536748983,
+      "server": 140536748974,
+      "relay": 140536748855
+    },
+    "artifact_ids": {
+      "client": 15203735303,
+      "server": 15201749889,
+      "relay": 15203275754
+    },
+    "scope": "Same binary selected credit both sides, reverse client-first B/A/A/B then ready RX drain B/C/C/B, separate blocks. 1GiB/600M offered,400ms added RTT zero injected, bare brackets.",
+    "bare_mbps": [
+      352.6464728264621,
+      286.8655709937804
+    ],
+    "order": [
+      "B1",
+      "A1",
+      "A2",
+      "B2",
+      "B3",
+      "C1",
+      "C2",
+      "B4"
+    ],
+    "mbps": [
+      217.49951543119064,
+      231.51683509934983,
+      248.91642360316567,
+      243.8242886442632,
+      265.89161640636803,
+      253.1865042879212,
+      253.4830299016423,
+      270.0253946866578
+    ],
+    "client_cpu_s_per_gib": [
+      12.55,
+      12.45,
+      12.5,
+      12.46,
+      12.7,
+      12.57,
+      12.12,
+      12.57
+    ],
+    "server_cpu_s_per_gib": [
+      14.83,
+      14.74,
+      14.93,
+      14.6,
+      15.12,
+      15.1,
+      14.71,
+      14.13
+    ],
+    "bulk_retired": {
+      "bytes_sent": [
+        1125572121,
+        1131098199,
+        1123864170,
+        1124169675,
+        1124648154,
+        1131150952,
+        1116902801,
+        1114024713
+      ],
+      "bytes_retrans": [
+        51830297,
+        57356375,
+        50122346,
+        50427851,
+        50906330,
+        57409128,
+        43160977,
+        40282889
+      ],
+      "dsack": [
+        2623,
+        3402,
+        2902,
+        2588,
+        3341,
+        4003,
+        2270,
+        2557
+      ],
+      "timeouts": [
+        1,
+        2,
+        1,
+        1,
+        2,
+        0,
+        1,
+        1
+      ]
+    },
+    "client_ingress_full": [
+      3306,
+      752,
+      2171,
+      5444,
+      403,
+      1432,
+      2031,
+      758
+    ],
+    "server_ingress_full": [
+      324,
+      0,
+      0,
+      429,
+      356,
+      0,
+      0,
+      0
+    ],
+    "client_first_service_turns": [
+      189936,
+      0,
+      0,
+      189570,
+      188581,
+      194823,
+      190025,
+      185506
+    ],
+    "client_drain_packets": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      190882,
+      202771,
+      0
+    ],
+    "client_drain_skipped_polls": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      9216,
+      9897,
+      0
+    ],
+    "client_drain_empty": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      202,
+      203,
+      0
+    ],
+    "all_hash_eof_direct_profile_stop_retired": true,
+    "all_packet_socket_drops_zero": true,
+    "relay_end_qdisc_drops_zero": true,
+    "blocks": {
+      "BAAB": {
+        "A": {
+          "mbps": 240.21662935125775,
+          "cpu_s_per_gib": 27.31,
+          "weighted_retrans_ratio": 0.04766319938530202,
+          "client_full": 2923,
+          "server_full": 0,
+          "dsack": 6304
+        },
+        "B": {
+          "mbps": 230.66190203772692,
+          "cpu_s_per_gib": 27.22,
+          "weighted_retrans_ratio": 0.045453281875197024,
+          "client_full": 8750,
+          "server_full": 753,
+          "dsack": 5211
+        }
+      },
+      "BCCB": {
+        "B": {
+          "mbps": 267.9585055465129,
+          "cpu_s_per_gib": 27.26,
+          "weighted_retrans_ratio": 0.040733606211166,
+          "client_full": 1161,
+          "server_full": 356,
+          "dsack": 5898
+        },
+        "C": {
+          "mbps": 253.33476709478174,
+          "cpu_s_per_gib": 27.25,
+          "weighted_retrans_ratio": 0.04473652147587238,
+          "client_full": 3463,
+          "server_full": 0,
+          "dsack": 6273
+        }
+      }
+    },
+    "interpretation": "Client-first throughput gain not repeated; client full worse. RX drain executes but throughput and retrans/full worsen. Reject drain and keep both client switches off; no further batch sweep. Prior selected defaults retained."
+  },
+  "governance": {
+    "main_h2507": "PASS",
+    "run_id": 46007365552,
+    "branch_governance": "historical unresolved"
+  },
+  "physical": "NOT_RUN",
+  "review": "Five actual ZIPs CRC checked; exact sources, twelve native summaries and both core logs351; five local rows including actual drain receipts and Stop, ten cross-host rows with actual profile/retirement and path/CPU/ingress, relay-end. No final peak parity.",
+  "next_source": "136d66fb79139144dd4e08a5e742ceccd493896c"
+}
