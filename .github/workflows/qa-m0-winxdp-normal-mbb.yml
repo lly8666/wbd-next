@@ -3,7 +3,7 @@ run-name: "M0 Normal same-Wintun MBB 400ms loss0 | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
-    paths: ['.github/workflows/qa-m0-winxdp-normal-mbb.yml']
+    paths: ['.github/workflows/qa-m0-winxdp-normal-mbb.yml', 'crates/wbd-engine/src/v4_windows_normal_rotation.rs', 'tools/m0_winxdp_windows_rotation.py']
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:

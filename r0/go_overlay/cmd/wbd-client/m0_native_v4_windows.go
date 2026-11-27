@@ -1444,7 +1444,8 @@ func(p *m0WinRustNativePeer) rotateNormal(ctx context.Context,o m0NativeV4Option
  }()
  var seed [4]byte
  if _,e=rand.Read(seed[:]);e!=nil{return 0,false,e}
- assoc,e:=faketcp.NewClientAssociation(cfg.Flow,binary.BigEndian.Uint32(seed[:]),time.Second,
+ flow:=faketcp.ClientFlow{LocalIP:cfg.Flow.LocalIP,PeerIP:cfg.Flow.PeerIP,LocalPort:cfg.Flow.LocalPort,PeerPort:cfg.Flow.PeerPort}
+ assoc,e:=faketcp.NewClientAssociation(flow,binary.BigEndian.Uint32(seed[:]),time.Second,
   func(seg faketcp.Segment)error{
    if seg.Flags&faketcp.FlagSYN!=0{
     wire:=faketcp.MarshalSegment(seg,1,faketcp.PacketPersonaWindows11)

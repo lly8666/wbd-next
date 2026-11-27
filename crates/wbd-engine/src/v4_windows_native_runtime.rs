@@ -2415,6 +2415,8 @@ fn stage_sources(
              counters:Arc::clone(&counters),
              tx:thread::spawn(||AUTHENTICATED_PEER_DEAD),
              rx:thread::spawn(||OK),
+             #[cfg(feature="winxdp_native_trial")]
+             rotation:None,
          };
          assert!(active().lock().unwrap().insert(owner,session).is_none());
          assert_eq!(counters.snapshot().worker_error,AUTHENTICATED_PEER_DEAD);
@@ -2437,6 +2439,8 @@ fn stage_sources(
              counters:Arc::clone(&counters),
              tx:thread::spawn(||INVALID),
              rx:thread::spawn(||OK),
+             #[cfg(feature="winxdp_native_trial")]
+             rotation:None,
          };
          assert!(active().lock().unwrap().insert(owner,session).is_none());
          assert_eq!(counters.snapshot().worker_error,INVALID);
