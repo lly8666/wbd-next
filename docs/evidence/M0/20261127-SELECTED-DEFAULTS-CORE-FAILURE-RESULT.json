@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "source_sha": "47a42a680d247ca185c6ab21351edee757b55bc4",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "scope": "Exact native build succeeded both ISAs; core 344/345 both, default native product fixture NOT_RUN. No product or performance promotion.",
+  "run_id": 45951052590,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140346743017,
+      "artifact_id": 15176837109,
+      "core_pass": 344,
+      "core_fail": 1
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140346743227,
+      "artifact_id": 15176039942,
+      "core_pass": 344,
+      "core_fail": 1
+    }
+  ],
+  "failure": {
+    "test": "v4_rust_tcp::flow::tests::dual_leg_wire_and_real_nonblocking_origin_bidirectional",
+    "assertion": "app.conn.fin_received()",
+    "review": "Both original ZIPs opened, CRC and exact source verified; failure in both job logs. Existing emulated wire did not admit generated DATA, so new default native reservation/FIN ordering is not modeled; test-only correction pending exact validation, not assertion of production pass."
+  },
+  "performance": {
+    "result": "NOT_RUN",
+    "run_id": 45951052618,
+    "prepare_job_id": 140346742354,
+    "reason": "Exact dual ISA core gate failed; three runner jobs skipped."
+  },
+  "historical_splice": {
+    "source_sha": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "comparison_run_id": 45938085540,
+    "artifact_ids": {
+      "client": 15170994957,
+      "server": 15171593144
+    },
+    "cases": [
+      0,
+      3
+    ],
+    "actual_proxy_middle_bytes_sent": [
+      1264482725,
+      1147254319
+    ],
+    "actual_proxy_middle_bytes_retrans": [
+      12293984,
+      10404642
+    ],
+    "actual_proxy_middle_dsack_dups": [
+      885,
+      554
+    ],
+    "actual_proxy_middle_reord_seen": [
+      1154,
+      691
+    ],
+    "client_bulk_live36_rcv_ooopack": [
+      375641,
+      380202
+    ],
+    "shared_tun_full_both_endpoints": [
+      0,
+      0
+    ],
+    "server_tun_failed": [
+      0,
+      0
+    ],
+    "review": "Old actual server-after.json ss -tinm client-facing proxy bulk socket selected by tuple and bytes; not origin iperf sender. Original two ZIPs reopened CRC; old splice had retrans 0.972%/0.907% at zero injected loss, distinct runs from latest 7.61–13.54% Rust. H2433 historical 128→1024 server inbox helped ARM, high x86 still full; H2437 selected 1024 both Normal. H2260/H2261 pre-splice separate sparse workload observed local drops and actual Linux inner TCP RTO."
+  },
+  "physical": "NOT_RUN",
+  "next_source": "25eca47ef9634415b359f5b3a0de97c2a5b0c65a"
+}
