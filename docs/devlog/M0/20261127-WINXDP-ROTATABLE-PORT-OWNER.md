@@ -1,0 +1,11 @@
+# WinXDP live port ownership primitive (Windows only; candidate)
+
+Baseline run 46001744551: four real 9V45 cold turns (Normal C/E 6079/6203ms max gaps; Game4 Max A/H 9578/9438ms), zero qdisc drop, all exact Stop. Game4 Maximum preconnect BBR diagnostic 31.004 Mbps, outer post-netem 222.705Mbps; Linux exit13 Stop not qualified. Do not claim full hot renewal.
+
+Pinned Microsoft XDP v1.4.0 published/external/xdp/program.h has XDP_MATCH_IPV4_TCP_PORT_SET; src/xdp/program.c maps user port-set via MDL, programinspect.c tests network-order TCP destination bits, test/functional/lib/tests.cpp lines3588-3620 proves ClearBit/SetBit on live program. This is the actual reusable carrier primitive: explicit new rotatable open, same existing single RSS, XSK and UMEM, exclusive kernel reservation before setting bit, clear bit before releasing retired port. One aligned 8KiB bitmap for opt-in rotating IPv4 carrier only; no steady application packet copy/lock/worker; unchanged static TCP/UDP open behavior. Four active plus up to four overlapping reservations fit eight slots. Serialized by the cold owner, no new timer or hot thread. Expose Rust and private Windows DLL cold functions; no live product caller yet.
+
+New exact-source Windows+WSL functional probe compiles the actual C++ shim using official 1.4 SDK/runtime. Three phases: 4 initial ports, add candidate fifth, retire one old; six distinct real Linux SYN source tuples per port/phase; all three unaffected sibling ports must retain all six per phase, excluded port must be absent, same RX/TX start and two mutations with no RX drop. Functional not CPU comparison, no 9V45 requirement for this driver capability. This is the first carrier implementation increment only. Next product work remains candidate TLS transport routing, selected-slot GameAdapter and outer Seq/ACK/repair ownership handoff, old RX grace, then real 400ms no-loss hot lane qualification. No Linux server, appearance, protected protocol, FEC or existing runtime default changed.
+
+```feature-impact
+{"kind":"updated","ids":["original-lane-rotation-jitter","game-lanes"],"reason":"Windows-only opt-in native carrier port-set cold primitive and real driver functional probe; product hot-lane integration NOT_RUN."}
+```

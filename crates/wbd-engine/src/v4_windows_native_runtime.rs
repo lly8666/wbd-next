@@ -2635,4 +2635,23 @@ pub unsafe extern "C" fn wbd_m0_win_xdp_open_ports(index:u32,ports:*const u16,co
 
 #[cfg(feature="winxdp_native_trial")]
 #[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_xdp_open_rotatable(index:u32,local4:*const u8,ports:*const u16,count:u32,handles:*mut usize)->i32{
+    if !matches!(count,1|2|4){return INVALID}
+    let local4=unsafe{*(local4 as *const [u8;4])};
+    let ports=unsafe{std::slice::from_raw_parts(ports,count as usize)};
+    match wbd_platform::windows_xdp_rx::cold_open_rotatable(index,local4,ports){
+        Ok((rx,tx))=>{unsafe{handles.write(rx);handles.add(1).write(tx)};0},
+        Err(_)=>BAD_STAGE,
+    }
+}
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_xdp_change_port(rx:usize,port:u16,add:u32)->i32{
+    if add>1{return INVALID}
+    match unsafe{wbd_platform::windows_xdp_rx::cold_change_port(rx,port,add==1)}{
+        Ok(())=>0,Err(_)=>BAD_STAGE,
+    }
+}
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
 pub extern "C" fn wbd_m0_win_xdp_driver_status()->i32{wbd_platform::windows_xdp_rx::driver_status()}

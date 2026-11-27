@@ -288,7 +288,7 @@ namespace {
 // floor(16MiB/1194)=14051 full-size frames; next power of two 16384.
 // 2048-byte chunks retain the existing maximum IPv4+Ethernet coverage.
 // This matches bulk/full-size capacity, not NPF's packed ACK-only capacity.
-constexpr UINT32 RxSlots=16384,DnsSlots=16,MaxRxQueues=62,MaxPorts=4,RxChunk=2048;
+constexpr UINT32 RxSlots=16384,DnsSlots=16,MaxRxQueues=62,MaxPorts=4,MaxLivePorts=8,RxChunk=2048;
 struct RxQueue {
     HANDLE socket,event;
     bool pending;
@@ -309,7 +309,11 @@ struct RxQueue {
 };
 struct RxOwner {
     HANDLE program,map;
-    SOCKET ports[MaxPorts];
+    SOCKET ports[MaxLivePorts];
+    UINT16 port_numbers[MaxLivePorts];
+    // Optional cold-only mutable bitmap, pinned by the XDP program. No
+    // additional ring, worker, or per-frame application lookup.
+    LONG* port_set;
     UINT32 port_count;
     bool wsa;
     RxQueue* queues;
@@ -330,6 +334,7 @@ constexpr UINT32 PoolBase=512,PoolWarm=8192,RecycleBase=2048;
 struct RxFrame { const unsigned char* data; size_t len; };
 void close_rx(RxOwner* o){
     if(o->program)CloseHandle(o->program);
+    if(o->port_set)VirtualFree(o->port_set,0,MEM_RELEASE);
     if(o->map)CloseHandle(o->map);
     if(o->queues){
         for(UINT32 i=0;i<o->count;++i){
@@ -350,7 +355,7 @@ void close_rx(RxOwner* o){
     // One scoped mapping per steady carrier, released after all RX sockets.
     // The driver restores the previous lower-edge table on handle close.
     if(o->rss_scope)CloseHandle(o->rss_scope);
-    for(UINT32 i=0;i<o->port_count;++i)if(o->ports[i]!=INVALID_SOCKET)closesocket(o->ports[i]);
+    for(UINT32 i=0;i<MaxLivePorts;++i)if(o->ports[i]!=INVALID_SOCKET)closesocket(o->ports[i]);
     if(o->wsa)WSACleanup();
     HeapFree(GetProcessHeap(),0,o);
 }
@@ -415,11 +420,34 @@ HRESULT arm_queue(RxQueue* q,bool already_signaled=false){
     SetEvent(q->event);return S_OK;
 }
 }
-static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL udp,XSK_BIND_FLAGS mode,HRESULT* result){
+// Port changes are serialized by the existing cold owner; only the driver
+// reads these bits concurrently. Network-order index matches v1.4.0
+// programinspect.c. Interlocked operations publish a whole aligned word.
+static void change_port_bit(RxOwner* o,UINT16 port,bool add){
+    const UINT16 bit=htons(port);
+    const LONG mask=static_cast<LONG>(1UL<<(bit%32));
+    if(add)InterlockedOr(o->port_set+bit/32,mask);
+    else InterlockedAnd(o->port_set+bit/32,~mask);
+}
+static SOCKET reserve_port(UINT16 port,BOOL udp){
+    const BOOL exclusive=TRUE;
+    const DWORD dual=0;
+    sockaddr_in6 address{};address.sin6_family=AF_INET6;address.sin6_port=htons(port);
+    SOCKET p=socket(AF_INET6,udp?SOCK_DGRAM:SOCK_STREAM,udp?IPPROTO_UDP:IPPROTO_TCP);
+    if(p==INVALID_SOCKET)return p;
+    if(setsockopt(p,IPPROTO_IPV6,IPV6_V6ONLY,reinterpret_cast<const char*>(&dual),sizeof(dual))||
+       setsockopt(p,SOL_SOCKET,SO_EXCLUSIVEADDRUSE,reinterpret_cast<const char*>(&exclusive),sizeof(exclusive))||
+       bind(p,reinterpret_cast<sockaddr*>(&address),sizeof(address))){
+        std::fprintf(stderr,"WBD_XDP_PORT_BIND_FAILED port=%u wsa=%d\n",port,WSAGetLastError());
+        closesocket(p);return INVALID_SOCKET;
+    }
+    return p;
+}
+static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL udp,XSK_BIND_FLAGS mode,HRESULT* result,const UINT8* rotate_ip){
     auto* o=static_cast<RxOwner*>(HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(RxOwner)));
     if(!o){*result=E_OUTOFMEMORY;return nullptr;}
     o->port_count=port_count;
-    for(UINT32 i=0;i<MaxPorts;++i)o->ports[i]=INVALID_SOCKET;
+    for(UINT32 i=0;i<MaxLivePorts;++i)o->ports[i]=INVALID_SOCKET;
     UINT32 slots=udp?DnsSlots:RxSlots;
     // All steady TCP-shaped carriers share one actual RSS queue, including
     // the 2/4 Game ports. Cold DNS is a separate short-lived UDP carrier.
@@ -442,9 +470,6 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
 #endif
     HRESULT hr=E_FAIL;
     WSADATA wd{};
-    BOOL exclusive=TRUE;
-    DWORD dual=0;
-    sockaddr_in6 address{};address.sin6_family=AF_INET6;
     HANDLE adapter=nullptr;
     XDP_RSS_CAPABILITIES caps{};UINT32 capSize=sizeof(caps);
     XDP_HOOK_ID hook{XDP_HOOK_L2,XDP_HOOK_RX,XDP_HOOK_INSPECT};
@@ -454,16 +479,16 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     // the port for the original cold generation on both families.
     if(WSAStartup(MAKEWORD(2,2),&wd))goto fail;
     o->wsa=true;
+    if(rotate_ip){
+        o->port_set=static_cast<LONG*>(VirtualAlloc(nullptr,XDP_PORT_SET_BUFFER_SIZE,
+            MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE));
+        if(!o->port_set){hr=E_OUTOFMEMORY;goto fail;}
+    }
     for(UINT32 i=0;i<port_count;++i){
-        address.sin6_port=htons(ports[i]);
-        SOCKET p=socket(AF_INET6,udp?SOCK_DGRAM:SOCK_STREAM,udp?IPPROTO_UDP:IPPROTO_TCP);
-        o->ports[i]=p;
-        if(p==INVALID_SOCKET)goto fail;
-        if(setsockopt(p,IPPROTO_IPV6,IPV6_V6ONLY,reinterpret_cast<const char*>(&dual),sizeof(dual))||
-           setsockopt(p,SOL_SOCKET,SO_EXCLUSIVEADDRUSE,reinterpret_cast<const char*>(&exclusive),sizeof(exclusive))||
-           bind(p,reinterpret_cast<sockaddr*>(&address),sizeof(address))){
-            std::fprintf(stderr,"WBD_XDP_PORT_BIND_FAILED port=%u wsa=%d\n",ports[i],WSAGetLastError());goto fail;
-        }
+        o->ports[i]=reserve_port(ports[i],udp);
+        if(o->ports[i]==INVALID_SOCKET)goto fail;
+        o->port_numbers[i]=ports[i];
+        if(o->port_set)change_port_bit(o,ports[i],true);
     }
     // This is the same RSS capability source used by ALL_QUEUES in the
     // official driver. Socket bind success alone is NOT queue inventory.
@@ -588,7 +613,15 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
         rule.Redirect.TargetType=o->map?XDP_REDIRECT_TARGET_TYPE_XSKMAP_BY_QUEUEID:XDP_REDIRECT_TARGET_TYPE_XSK;
         rule.Redirect.Target=o->map?o->map:o->queues[0].socket;
     }
-    hr=XdpCreateProgram(index,&hook,0,flags,rules,port_count,&o->program);if(FAILED(hr))goto fail;
+    if(o->port_set){
+        // One IPv4 TCP rule for the lifetime of the carrier. The official
+        // v1.4 driver locks/maps this bitmap, it does not clone its bits.
+        auto& rule=rules[0];
+        rule.Match=XDP_MATCH_IPV4_TCP_PORT_SET;
+        std::memcpy(&rule.Pattern.IpPortSet.Address.Ipv4,rotate_ip,4);
+        rule.Pattern.IpPortSet.PortSet.PortSet=reinterpret_cast<const UINT8*>(o->port_set);
+    }
+    hr=XdpCreateProgram(index,&hook,0,flags,rules,o->port_set?1:port_count,&o->program);if(FAILED(hr))goto fail;
     *result=S_OK;return o;
 fail:
     *result=hr;close_rx(o);return nullptr;
@@ -601,7 +634,7 @@ static bool provider_unavailable(HRESULT hr){
            hr==static_cast<HRESULT>(0xD0000225u)||
            hr==static_cast<HRESULT>(0xD00000BBu);
 }
-extern "C" int wbd_xdp_open_carrier(DWORD index,const UINT16* ports,UINT32 count,BOOL udp,void** handles){
+static int open_carrier(DWORD index,const UINT16* ports,UINT32 count,BOOL udp,void** handles,const UINT8* rotate_ip){
     UINT32 tx_slots=udp?DnsSlots:Slots;
 #ifdef WBD_XDP_PRESSURE_LAB
     if(!udp)tx_slots=lab_value("WBD_XDP_LAB_TX",Slots,1024,2048,2048);
@@ -613,7 +646,7 @@ extern "C" int wbd_xdp_open_carrier(DWORD index,const UINT16* ports,UINT32 count
         HRESULT status;
         auto* tx=open_tx(index,tx_slots,mode,&status);
         if(tx){
-            auto* rx=open_rx(index,ports,count,udp,mode,&status);
+            auto* rx=open_rx(index,ports,count,udp,mode,&status,rotate_ip);
             if(rx){
                 const char* provider=attempt==0?"native":"generic";
                 std::fprintf(stderr,"WBD_XDP_TX_READY ifindex=%lu queue=0 slots=%u chunk=%u provider=%s\n",index,tx_slots,Chunk,provider);
@@ -630,6 +663,38 @@ extern "C" int wbd_xdp_open_carrier(DWORD index,const UINT16* ports,UINT32 count
         return 0;
     }
     return 0;
+}
+extern "C" int wbd_xdp_open_carrier(DWORD index,const UINT16* ports,UINT32 count,BOOL udp,void** handles){
+    return open_carrier(index,ports,count,udp,handles,nullptr);
+}
+extern "C" int wbd_xdp_open_rotatable_carrier(DWORD index,const UINT8* local4,const UINT16* ports,UINT32 count,void** handles){
+    // Private cold API: caller supplies real selected local IPv4 and
+    // unique bound original ports. Ordinary carriers remain unchanged.
+    if(count!=1&&count!=2&&count!=4)return 0;
+    return open_carrier(index,ports,count,FALSE,handles,local4);
+}
+extern "C" int wbd_xdp_rx_change_port(void* raw,UINT16 port,BOOL add){
+    auto* o=static_cast<RxOwner*>(raw);
+    if(!o->port_set||!port)return 0;
+    UINT32 free_slot=MaxLivePorts,slot=MaxLivePorts;
+    for(UINT32 i=0;i<MaxLivePorts;++i){
+        if(o->ports[i]==INVALID_SOCKET){if(free_slot==MaxLivePorts)free_slot=i;}
+        else if(o->port_numbers[i]==port)slot=i;
+    }
+    if(add){
+        if(slot!=MaxLivePorts||free_slot==MaxLivePorts)return 0;
+        SOCKET p=reserve_port(port,FALSE);
+        if(p==INVALID_SOCKET)return 0;
+        o->ports[free_slot]=p;o->port_numbers[free_slot]=port;
+        change_port_bit(o,port,true);
+    }else{
+        if(slot==MaxLivePorts)return 0;
+        change_port_bit(o,port,false);
+        closesocket(o->ports[slot]);
+        o->ports[slot]=INVALID_SOCKET;o->port_numbers[slot]=0;
+    }
+    std::fprintf(stderr,"WBD_XDP_RX_PORT_CHANGE port=%u add=%u same_program_umem=1\n",port,unsigned(add!=0));
+    return 1;
 }
 extern "C" size_t wbd_xdp_rx_borrow(void* raw,RxFrame* frames,size_t max){
     auto* o=static_cast<RxOwner*>(raw);

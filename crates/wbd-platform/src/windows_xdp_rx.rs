@@ -10,6 +10,8 @@ struct Frame{data:*const u8,len:usize}
 extern "C"{
     fn wbd_xdp_driver_status()->i32;
     fn wbd_xdp_open_carrier(index:u32,ports:*const u16,count:u32,udp:i32,handles:*mut *mut c_void)->i32;
+    fn wbd_xdp_open_rotatable_carrier(index:u32,local4:*const u8,ports:*const u16,count:u32,handles:*mut *mut c_void)->i32;
+    fn wbd_xdp_rx_change_port(raw:*mut c_void,port:u16,add:i32)->i32;
     fn wbd_xdp_rx_cold_read(raw:*mut c_void,dst:*mut u8,cap:usize)->i32;
     fn wbd_xdp_tx_cold_write(raw:*mut c_void,bytes:*const u8,len:usize)->i32;
     fn wbd_xdp_rx_close(raw:*mut c_void);
@@ -27,6 +29,22 @@ pub fn cold_open_ports(index:u32,ports:&[u16],udp:bool)->Result<(usize,usize),Tx
         return Err(TxError::IoFailed)
     }
     Ok((handles[0] as usize,handles[1] as usize))
+}
+/// Opt-in cold opening for an owner that will later replace physical lanes.
+pub fn cold_open_rotatable(index:u32,local4:[u8;4],ports:&[u16])->Result<(usize,usize),TxError>{
+    let mut handles=[std::ptr::null_mut();2];
+    if unsafe{wbd_xdp_open_rotatable_carrier(index,local4.as_ptr(),ports.as_ptr(),ports.len() as u32,handles.as_mut_ptr())}==0{
+        return Err(TxError::IoFailed)
+    }
+    Ok((handles[0] as usize,handles[1] as usize))
+}
+/// Serialized cold port control. Caller owns the live carrier and ensures
+/// retirement of the exact native lane before releasing its port.
+pub unsafe fn cold_change_port(raw:usize,port:u16,add:bool)->Result<(),TxError>{
+    if unsafe{wbd_xdp_rx_change_port(raw as *mut c_void,port,add as i32)}==0{
+        return Err(TxError::IoFailed)
+    }
+    Ok(())
 }
 pub unsafe fn cold_read(raw:usize,dst:*mut u8,cap:usize)->i32{
     unsafe{wbd_xdp_rx_cold_read(raw as *mut c_void,dst,cap)}
