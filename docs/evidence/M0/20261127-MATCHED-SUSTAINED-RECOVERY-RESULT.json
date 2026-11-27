@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "source_sha": "ed9171b1dc511ef2c359da2aa7b8c800ee7e576f",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA six original native profiles plus twelve exact finite application matched-workload local/cross-host diagnostic cases. Not full peak or physical parity.",
+  "run_id": 45975043566,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140424561102,
+      "artifact_id": 15187026875,
+      "gso_groups": [
+        225,
+        117,
+        78
+      ],
+      "gso_segments": [
+        1681,
+        1066,
+        1001
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140424560580,
+      "artifact_id": 15186414955,
+      "gso_groups": [
+        395,
+        267,
+        183
+      ],
+      "gso_segments": [
+        3082,
+        2062,
+        1591
+      ]
+    }
+  ],
+  "recovery": {
+    "result": "PASS",
+    "scope": "Same finite app, 400ms added RTT, outer1160, zero injected loss, selected BBR1/1024/32. 30M offered256MiB twice, 120M offered512MiB. Exact app bytes/hash/EOF, all paired Stop and profiles. Topology not exact hardware or physical equivalence.",
+    "order": [
+      "bare30",
+      "paired30",
+      "paired120",
+      "bare120",
+      "paired30-repeat",
+      "bare30-repeat"
+    ],
+    "offered_mbps": [
+      30,
+      30,
+      120,
+      120,
+      30,
+      30
+    ],
+    "app_bytes": [
+      268435456,
+      268435456,
+      536870912,
+      536870912,
+      268435456,
+      268435456
+    ],
+    "local": {
+      "all_measured": true,
+      "mbps": [
+        29.137021002091583,
+        29.016685846979026,
+        108.78009965344984,
+        110.65609596602215,
+        28.72658143958953,
+        29.1370791458505
+      ],
+      "paired_seconds": [
+        74.00857766199988,
+        39.48302409799999,
+        74.75597653400018
+      ],
+      "paired_bulk_last_sample": {
+        "retired": [
+          false,
+          false,
+          false
+        ],
+        "bytes_sent": [
+          268435456,
+          514167203,
+          268237859
+        ],
+        "bytes_retrans": [
+          0,
+          0,
+          0
+        ],
+        "dsack": [
+          0,
+          0,
+          0
+        ],
+        "reorder": [
+          32,
+          204,
+          12
+        ],
+        "timeouts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "paired_client_cpu_s_per_gib": [
+        20.24,
+        16.2,
+        20.04
+      ],
+      "paired_server_cpu_s_per_gib": [
+        16.64,
+        13.88,
+        16.52
+      ]
+    },
+    "cross_host": {
+      "run_id": 45975043638,
+      "job_ids": {
+        "client": 140429859568,
+        "server": 140429859760,
+        "relay": 140429859532
+      },
+      "artifact_ids": {
+        "client": 15187632299,
+        "server": 15188360616,
+        "relay": 15188485205
+      },
+      "all_measured": true,
+      "mbps": [
+        28.871985455963618,
+        28.90683039205407,
+        108.19317082243442,
+        106.0582698234853,
+        28.869956109345846,
+        28.86464887918525
+      ],
+      "paired_seconds": [
+        74.28983457800001,
+        39.69721252599999,
+        74.38472160700002
+      ],
+      "paired_bulk_retired": {
+        "retired": [
+          true,
+          true,
+          true
+        ],
+        "bytes_sent": [
+          268441678,
+          541519292,
+          268435456
+        ],
+        "bytes_acked": [
+          268435456,
+          536870912,
+          268435456
+        ],
+        "bytes_retrans": [
+          6222,
+          4648380,
+          0
+        ],
+        "dsack": [
+          3,
+          334,
+          0
+        ],
+        "reorder": [
+          2,
+          261,
+          9
+        ],
+        "timeouts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "paired_first_positive_sample_seconds_after_first_server_sample": [
+        53.221114062,
+        15.012500272,
+        null
+      ],
+      "paired_client_cpu_s_per_gib": [
+        25.88,
+        21.84,
+        25.96
+      ],
+      "paired_server_cpu_s_per_gib": [
+        20.92,
+        16.740000000000002,
+        20.32
+      ],
+      "all_endpoint_direct_snapshots": true
+    },
+    "all_paired_ingress_full_raw_drop_reset_zero": true,
+    "relay_qdisc_drops_zero": true,
+    "interpretation": "Duration alone insufficient. Both 30M sustained cross-host cases near-zero final retrans, 120M final 0.8584% vs same-host latest sample0. Same workload across topologies, not same machine. Finite app differs from historical iperf; offered120M delivered108M, traffic shape/path/actual rate not separated. No cure for previous peak 6–16% retrans. No candidate promotion."
+  },
+  "physical": "NOT_RUN",
+  "review": "All five original ZIPs materialized and opened with CRC, six native exact source summaries, local and cross six case rows, raw server TCP info/final markers, both endpoint ingress/raw/M4/Stop and reset logs, path/profiles, relay end. Main H2499 governance PASS, inherited branch governance unresolved.",
+  "next_source": "ddc6b5dd5df59972bd1cfa2c00353417622aa7ef"
+}
