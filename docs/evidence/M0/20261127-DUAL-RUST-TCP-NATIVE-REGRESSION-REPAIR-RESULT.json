@@ -1,0 +1,1110 @@
+{
+  "scope": "9ede62e native regression repair acceptance: scoped native PASS, zero-loss ABBA complete but no performance qualification",
+  "source": "9ede62e1aa3e2a1396c73d899f78e21db1db4920",
+  "native": {
+    "run": 45925278759,
+    "core_pass_each": 344,
+    "original_and_parity_normal": "PASS"
+  },
+  "performance": {
+    "run": 45925278726,
+    "client_job": 140266324606,
+    "artifacts": {
+      "client": 15166871034,
+      "server": 15166821246,
+      "relay": 15166313707
+    },
+    "review": "client ZIP extracted, original client job result rows verified; server/relay ZIP IDs located, not unpacked this turn",
+    "rows": [
+      {
+        "case": -1,
+        "leg": "bare",
+        "source_sha": null,
+        "loss_pct": 0,
+        "ack_ratio": null,
+        "kernel_cc": "cubic",
+        "rust_middle_cc": null,
+        "experiment": "bare",
+        "sack_compress": null,
+        "added_rtt_ms": 0,
+        "status": "MEASURED",
+        "start_wall_ns": 1795744850974574300,
+        "end_wall_ns": 1795744863864430600,
+        "iperf_rc": 0,
+        "endpoint_path_samples": [
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 11748,
+              "TxBytes": 3572,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 23455732,
+              "TxBytes": 1437884,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 404,
+              "TxBytes": 372,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 1366964,
+              "TxBytes": 23753524,
+              "direct": true
+            }
+          }
+        ],
+        "endpoint_direct_snapshots": true,
+        "mbps": 13.544023145190605,
+        "bytes": 20316160,
+        "seconds": 12.000074,
+        "sender_bytes": 21102592,
+        "sender_retrans": 7,
+        "client": {
+          "tailscaled": {
+            "user_cpu_s": 0.79,
+            "system_cpu_s": 1.42,
+            "rss_kib": 42492,
+            "hwm_kib": 42492,
+            "cpu_s_per_gib": 116.80206451612904
+          },
+          "host_cpu_s": 2.69,
+          "host_cpu_s_per_gib": 142.1708387096774
+        },
+        "server": {
+          "tailscaled": {
+            "user_cpu_s": 0.83,
+            "system_cpu_s": 1.43,
+            "rss_kib": 42268,
+            "hwm_kib": 42268,
+            "cpu_s_per_gib": 119.44464516129031
+          },
+          "host_cpu_s": 3.04,
+          "host_cpu_s_per_gib": 160.66890322580645
+        },
+        "sender_cc": "cubic",
+        "receiver_cc": "cubic"
+      },
+      {
+        "case": 0,
+        "leg": "A",
+        "source_sha": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "loss_pct": 0,
+        "ack_ratio": 2,
+        "kernel_cc": "bbr",
+        "rust_middle_cc": null,
+        "experiment": "cap64",
+        "sack_compress": "1",
+        "added_rtt_ms": 400,
+        "status": "MEASURED",
+        "start_wall_ns": 1795744867156779500,
+        "end_wall_ns": 1795744916335576600,
+        "iperf_rc": 0,
+        "endpoint_path_samples": [
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 23636692,
+              "TxBytes": 1458124,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 2204329348,
+              "TxBytes": 87017492,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 1372996,
+              "TxBytes": 23757604,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 83641380,
+              "TxBytes": 2221298164,
+              "direct": true
+            }
+          }
+        ],
+        "endpoint_direct_snapshots": true,
+        "mbps": 316.50245837707627,
+        "bytes": 1780350976,
+        "seconds": 45.000623,
+        "sender_bytes": 1935147008,
+        "sender_retrans": 907,
+        "client": {
+          "product": {
+            "user_cpu_s": 7.72,
+            "system_cpu_s": 14.71,
+            "rss_kib": 38180,
+            "hwm_kib": 38180,
+            "cpu_s_per_gib": 13.527686078185967
+          },
+          "tailscaled": {
+            "user_cpu_s": 15.77,
+            "system_cpu_s": 25.12,
+            "rss_kib": 49368,
+            "hwm_kib": 49448,
+            "cpu_s_per_gib": 24.661038062283737
+          },
+          "host_cpu_s": 70.18,
+          "host_cpu_s_per_gib": 42.32603695796216
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 9.24,
+            "system_cpu_s": 15.66,
+            "rss_kib": 66252,
+            "hwm_kib": 66252,
+            "cpu_s_per_gib": 15.017359935213133
+          },
+          "tailscaled": {
+            "user_cpu_s": 21.44,
+            "system_cpu_s": 28.05,
+            "rss_kib": 48176,
+            "hwm_kib": 48176,
+            "cpu_s_per_gib": 29.84775675476699
+          },
+          "host_cpu_s": 77.95,
+          "host_cpu_s_per_gib": 47.012176985938304
+        },
+        "sender_cc": "bbr",
+        "receiver_cc": "bbr",
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "bbr",
+          "accepts": [],
+          "valid": true
+        },
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=390512 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 02:01:57 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ]
+      },
+      {
+        "case": 1,
+        "leg": "B",
+        "source_sha": "9ede62e1aa3e2a1396c73d899f78e21db1db4920",
+        "loss_pct": 0,
+        "ack_ratio": 2,
+        "kernel_cc": "bbr",
+        "rust_middle_cc": "bbr1",
+        "experiment": "cap64",
+        "sack_compress": "1",
+        "added_rtt_ms": 400,
+        "status": "MEASURED",
+        "start_wall_ns": 1795744919957314800,
+        "end_wall_ns": 1795744970199948800,
+        "iperf_rc": 0,
+        "endpoint_path_samples": [
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 2204361124,
+              "TxBytes": 87028100,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 3464848632,
+              "TxBytes": 117187720,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 83647284,
+              "TxBytes": 2221302900,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 111726968,
+              "TxBytes": 3563310872,
+              "direct": true
+            }
+          }
+        ],
+        "endpoint_direct_snapshots": true,
+        "mbps": 162.87557677745588,
+        "bytes": 916193280,
+        "seconds": 45.000892,
+        "sender_bytes": 1014366208,
+        "sender_retrans": 117,
+        "client": {
+          "product": {
+            "user_cpu_s": 7.28,
+            "system_cpu_s": 8.14,
+            "rss_kib": 132236,
+            "hwm_kib": 218192,
+            "cpu_s_per_gib": 18.071622317596567
+          },
+          "tailscaled": {
+            "user_cpu_s": 8.63,
+            "system_cpu_s": 14.03,
+            "rss_kib": 49516,
+            "hwm_kib": 49516,
+            "cpu_s_per_gib": 26.556612303290414
+          },
+          "host_cpu_s": 41.45,
+          "host_cpu_s_per_gib": 48.577739628040064
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 10.06,
+            "system_cpu_s": 7.39,
+            "rss_kib": 167084,
+            "hwm_kib": 169952,
+            "cpu_s_per_gib": 20.450701001430616
+          },
+          "tailscaled": {
+            "user_cpu_s": 12.75,
+            "system_cpu_s": 15.48,
+            "rss_kib": 49200,
+            "hwm_kib": 49200,
+            "cpu_s_per_gib": 33.08442918454936
+          },
+          "host_cpu_s": 48.11,
+          "host_cpu_s_per_gib": 56.382992846924175
+        },
+        "sender_cc": "bbr",
+        "receiver_cc": "bbr",
+        "client_stop": true,
+        "probe": {
+          "samples": 99,
+          "matching": 99,
+          "valid": true
+        },
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=1549849 local_batch_max=32 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0 admission_drain_before_service=true",
+          "WBD_M0_TCP_INGRESS offered=1004324 full=16374 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=174706 unrouted=0 backpressure=131767 reader_joined=1 queue_full_drops=27043 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 02:02:50 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ]
+      },
+      {
+        "case": 2,
+        "leg": "B",
+        "source_sha": "9ede62e1aa3e2a1396c73d899f78e21db1db4920",
+        "loss_pct": 0,
+        "ack_ratio": 2,
+        "kernel_cc": "bbr",
+        "rust_middle_cc": "bbr1",
+        "experiment": "cap64",
+        "sack_compress": "1",
+        "added_rtt_ms": 400,
+        "status": "MEASURED",
+        "start_wall_ns": 1795744973815761700,
+        "end_wall_ns": 1795745024097621000,
+        "iperf_rc": 0,
+        "endpoint_path_samples": [
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 3464894728,
+              "TxBytes": 117203152,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 5271095880,
+              "TxBytes": 161349480,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 111737864,
+              "TxBytes": 3563319672,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 151115416,
+              "TxBytes": 5442176752,
+              "direct": true
+            }
+          }
+        ],
+        "endpoint_direct_snapshots": true,
+        "mbps": 240.60868394225068,
+        "bytes": 1353449472,
+        "seconds": 45.000852,
+        "sender_bytes": 1429340160,
+        "sender_retrans": 471,
+        "client": {
+          "product": {
+            "user_cpu_s": 9.46,
+            "system_cpu_s": 11.04,
+            "rss_kib": 111248,
+            "hwm_kib": 259728,
+            "cpu_s_per_gib": 16.263412744528374
+          },
+          "tailscaled": {
+            "user_cpu_s": 10.16,
+            "system_cpu_s": 16.04,
+            "rss_kib": 49488,
+            "hwm_kib": 49604,
+            "cpu_s_per_gib": 20.78543482471431
+          },
+          "host_cpu_s": 51.59,
+          "host_cpu_s_per_gib": 40.92826651171799
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 12.57,
+            "system_cpu_s": 9.66,
+            "rss_kib": 168248,
+            "hwm_kib": 170160,
+            "cpu_s_per_gib": 17.63588611272516
+          },
+          "tailscaled": {
+            "user_cpu_s": 16,
+            "system_cpu_s": 19.71,
+            "rss_kib": 49960,
+            "hwm_kib": 50156,
+            "cpu_s_per_gib": 28.33007166376138
+          },
+          "host_cpu_s": 59.91,
+          "host_cpu_s_per_gib": 47.52883207437536
+        },
+        "sender_cc": "bbr",
+        "receiver_cc": "bbr",
+        "client_stop": true,
+        "probe": {
+          "samples": 99,
+          "matching": 99,
+          "valid": true
+        },
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=2131658 local_batch_max=32 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0 admission_drain_before_service=true",
+          "WBD_M0_TCP_INGRESS offered=1441965 full=50719 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=251444 unrouted=0 backpressure=440490 reader_joined=1 queue_full_drops=169512 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 02:03:44 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ]
+      },
+      {
+        "case": 3,
+        "leg": "A",
+        "source_sha": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "loss_pct": 0,
+        "ack_ratio": 2,
+        "kernel_cc": "bbr",
+        "rust_middle_cc": null,
+        "experiment": "cap64",
+        "sack_compress": "1",
+        "added_rtt_ms": 400,
+        "status": "MEASURED",
+        "start_wall_ns": 1795745027717784800,
+        "end_wall_ns": 1795745076889742300,
+        "iperf_rc": 0,
+        "endpoint_path_samples": [
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 5271123176,
+              "TxBytes": 161359448,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 7575353688,
+              "TxBytes": 250626160,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 151179176,
+              "TxBytes": 5442181344,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 237131496,
+              "TxBytes": 7762092824,
+              "direct": true
+            }
+          }
+        ],
+        "endpoint_direct_snapshots": true,
+        "mbps": 334.81819535944345,
+        "bytes": 1883373568,
+        "seconds": 45.000507,
+        "sender_bytes": 2044723200,
+        "sender_retrans": 3387,
+        "client": {
+          "product": {
+            "user_cpu_s": 8.05,
+            "system_cpu_s": 15.49,
+            "rss_kib": 38148,
+            "hwm_kib": 38148,
+            "cpu_s_per_gib": 13.42053587584383
+          },
+          "tailscaled": {
+            "user_cpu_s": 16.85,
+            "system_cpu_s": 26.28,
+            "rss_kib": 49888,
+            "hwm_kib": 50088,
+            "cpu_s_per_gib": 24.589112673115736
+          },
+          "host_cpu_s": 73.42,
+          "host_cpu_s_per_gib": 41.85793305031665
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 9.78,
+            "system_cpu_s": 16.4,
+            "rss_kib": 66736,
+            "hwm_kib": 66736,
+            "cpu_s_per_gib": 14.92564270304127
+          },
+          "tailscaled": {
+            "user_cpu_s": 22.33,
+            "system_cpu_s": 29.3,
+            "rss_kib": 50072,
+            "hwm_kib": 50156,
+            "cpu_s_per_gib": 29.435100563713547
+          },
+          "host_cpu_s": 83.07,
+          "host_cpu_s_per_gib": 47.35955459670123
+        },
+        "sender_cc": "bbr",
+        "receiver_cc": "bbr",
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "bbr",
+          "accepts": [],
+          "valid": true
+        },
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=408581 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 02:04:37 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ]
+      },
+      {
+        "case": 4,
+        "leg": "A",
+        "source_sha": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "loss_pct": 0,
+        "ack_ratio": 2,
+        "kernel_cc": "cubic",
+        "rust_middle_cc": null,
+        "experiment": "cap64",
+        "sack_compress": "1",
+        "added_rtt_ms": 400,
+        "status": "MEASURED",
+        "start_wall_ns": 1795745080510648600,
+        "end_wall_ns": 1795745129671110100,
+        "iperf_rc": 0,
+        "endpoint_path_samples": [
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 7576019436,
+              "TxBytes": 250748228,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 9775101804,
+              "TxBytes": 341751588,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 237246012,
+              "TxBytes": 7762117828,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 324865996,
+              "TxBytes": 9978276452,
+              "direct": true
+            }
+          }
+        ],
+        "endpoint_direct_snapshots": true,
+        "mbps": 319.15865101136546,
+        "bytes": 1795293184,
+        "seconds": 45.000646,
+        "sender_bytes": 1929510912,
+        "sender_retrans": 4288,
+        "client": {
+          "product": {
+            "user_cpu_s": 8.45,
+            "system_cpu_s": 16.31,
+            "rss_kib": 38272,
+            "hwm_kib": 38272,
+            "cpu_s_per_gib": 14.808638387968166
+          },
+          "tailscaled": {
+            "user_cpu_s": 17.81,
+            "system_cpu_s": 28.75,
+            "rss_kib": 49852,
+            "hwm_kib": 50088,
+            "cpu_s_per_gib": 27.84693874571074
+          },
+          "host_cpu_s": 79.65,
+          "host_cpu_s_per_gib": 47.63764327955027
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 9.98,
+            "system_cpu_s": 16.93,
+            "rss_kib": 65168,
+            "hwm_kib": 65168,
+            "cpu_s_per_gib": 16.09452580857122
+          },
+          "tailscaled": {
+            "user_cpu_s": 22.95,
+            "system_cpu_s": 31.53,
+            "rss_kib": 49512,
+            "hwm_kib": 50308,
+            "cpu_s_per_gib": 32.58378915090896
+          },
+          "host_cpu_s": 85.34,
+          "host_cpu_s_per_gib": 51.04075929035555
+        },
+        "sender_cc": "cubic",
+        "receiver_cc": "cubic",
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "cubic",
+          "accepts": [],
+          "valid": true
+        },
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=418496 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 02:05:30 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ]
+      },
+      {
+        "case": 5,
+        "leg": "B",
+        "source_sha": "9ede62e1aa3e2a1396c73d899f78e21db1db4920",
+        "loss_pct": 0,
+        "ack_ratio": 2,
+        "kernel_cc": "cubic",
+        "rust_middle_cc": "cubic",
+        "experiment": "cap64",
+        "sack_compress": "1",
+        "added_rtt_ms": 400,
+        "status": "MEASURED",
+        "start_wall_ns": 1795745133343372300,
+        "end_wall_ns": 1795745183607149800,
+        "iperf_rc": 0,
+        "endpoint_path_samples": [
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 9777540572,
+              "TxBytes": 342180404,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 10461501852,
+              "TxBytes": 388077004,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 325275644,
+              "TxBytes": 9978295948,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 369171052,
+              "TxBytes": 10680803068,
+              "direct": true
+            }
+          }
+        ],
+        "endpoint_direct_snapshots": true,
+        "mbps": 94.04475114384503,
+        "bytes": 529006592,
+        "seconds": 45.000414,
+        "sender_bytes": 607518720,
+        "sender_retrans": 341,
+        "client": {
+          "product": {
+            "user_cpu_s": 8.26,
+            "system_cpu_s": 12.6,
+            "rss_kib": 78736,
+            "hwm_kib": 102936,
+            "cpu_s_per_gib": 42.340218037661046
+          },
+          "tailscaled": {
+            "user_cpu_s": 13.16,
+            "system_cpu_s": 21.65,
+            "rss_kib": 48860,
+            "hwm_kib": 50088,
+            "cpu_s_per_gib": 70.65498513379585
+          },
+          "host_cpu_s": 61.65,
+          "host_cpu_s_per_gib": 125.13300297324083
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 6.7,
+            "system_cpu_s": 9.26,
+            "rss_kib": 145100,
+            "hwm_kib": 145100,
+            "cpu_s_per_gib": 32.39452923686819
+          },
+          "tailscaled": {
+            "user_cpu_s": 13.1,
+            "system_cpu_s": 20.21,
+            "rss_kib": 50528,
+            "hwm_kib": 51680,
+            "cpu_s_per_gib": 67.61038652130823
+          },
+          "host_cpu_s": 51.92,
+          "host_cpu_s_per_gib": 105.38370664023786
+        },
+        "sender_cc": "cubic",
+        "receiver_cc": "cubic",
+        "client_stop": true,
+        "probe": {
+          "samples": 99,
+          "matching": 99,
+          "valid": true
+        },
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=1284935 local_batch_max=32 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0 admission_drain_before_service=true",
+          "WBD_M0_TCP_INGRESS offered=556404 full=1422 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=242839 unrouted=0 backpressure=25167 reader_joined=1 queue_full_drops=4723 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 02:06:24 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ]
+      },
+      {
+        "case": 6,
+        "leg": "B",
+        "source_sha": "9ede62e1aa3e2a1396c73d899f78e21db1db4920",
+        "loss_pct": 0,
+        "ack_ratio": 2,
+        "kernel_cc": "cubic",
+        "rust_middle_cc": "cubic",
+        "experiment": "cap64",
+        "sack_compress": "1",
+        "added_rtt_ms": 400,
+        "status": "MEASURED",
+        "start_wall_ns": 1795745187278939000,
+        "end_wall_ns": 1795745237016683000,
+        "iperf_rc": 0,
+        "endpoint_path_samples": [
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 10472309692,
+              "TxBytes": 389998076,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 12232561536,
+              "TxBytes": 539077640,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 371200972,
+              "TxBytes": 10681723604,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 514257504,
+              "TxBytes": 12456504320,
+              "direct": true
+            }
+          }
+        ],
+        "endpoint_direct_snapshots": true,
+        "mbps": 248.41416583136913,
+        "bytes": 1397358592,
+        "seconds": 45.000931,
+        "sender_bytes": 1460928512,
+        "sender_retrans": 79,
+        "client": {
+          "product": {
+            "user_cpu_s": 13.95,
+            "system_cpu_s": 17.43,
+            "rss_kib": 74112,
+            "hwm_kib": 123956,
+            "cpu_s_per_gib": 24.112649845230276
+          },
+          "tailscaled": {
+            "user_cpu_s": 19.66,
+            "system_cpu_s": 32.18,
+            "rss_kib": 49800,
+            "hwm_kib": 50088,
+            "cpu_s_per_gib": 39.83428196229247
+          },
+          "host_cpu_s": 91.14,
+          "host_cpu_s_per_gib": 70.0327248850952
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 11.94,
+            "system_cpu_s": 15.81,
+            "rss_kib": 139144,
+            "hwm_kib": 139144,
+            "cpu_s_per_gib": 21.32332801800957
+          },
+          "tailscaled": {
+            "user_cpu_s": 22.79,
+            "system_cpu_s": 32.65,
+            "rss_kib": 52432,
+            "hwm_kib": 52432,
+            "cpu_s_per_gib": 42.60055154300722
+          },
+          "host_cpu_s": 85.71,
+          "host_cpu_s_per_gib": 65.86026826751711
+        },
+        "sender_cc": "cubic",
+        "receiver_cc": "cubic",
+        "client_stop": true,
+        "probe": {
+          "samples": 98,
+          "matching": 98,
+          "valid": true
+        },
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=2335754 local_batch_max=32 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0 admission_drain_before_service=true",
+          "WBD_M0_TCP_INGRESS offered=1410044 full=322 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=417315 unrouted=0 backpressure=496 reader_joined=1 queue_full_drops=224 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 02:07:17 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ]
+      },
+      {
+        "case": 7,
+        "leg": "A",
+        "source_sha": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "loss_pct": 0,
+        "ack_ratio": 2,
+        "kernel_cc": "cubic",
+        "rust_middle_cc": null,
+        "experiment": "cap64",
+        "sack_compress": "1",
+        "added_rtt_ms": 400,
+        "status": "MEASURED",
+        "start_wall_ns": 1795745240637540600,
+        "end_wall_ns": 1795745289808527000,
+        "iperf_rc": 0,
+        "endpoint_path_samples": [
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 12232595040,
+              "TxBytes": 539086936,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 14263670464,
+              "TxBytes": 623957984,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 514605952,
+              "TxBytes": 12456510112,
+              "direct": true
+            }
+          },
+          {
+            "relay": {
+              "CurAddr": "52.250.213.53:43048",
+              "Relay": "sfo",
+              "PeerRelay": "",
+              "Active": true,
+              "RxBytes": 596290368,
+              "TxBytes": 14502417736,
+              "direct": true
+            }
+          }
+        ],
+        "endpoint_direct_snapshots": true,
+        "mbps": 294.4337025163716,
+        "bytes": 1656225792,
+        "seconds": 45.000984,
+        "sender_bytes": 1734606848,
+        "sender_retrans": 1734,
+        "client": {
+          "product": {
+            "user_cpu_s": 7.98,
+            "system_cpu_s": 15.19,
+            "rss_kib": 37448,
+            "hwm_kib": 37448,
+            "cpu_s_per_gib": 15.021259892371004
+          },
+          "tailscaled": {
+            "user_cpu_s": 16.38,
+            "system_cpu_s": 26.63,
+            "rss_kib": 49864,
+            "hwm_kib": 50088,
+            "cpu_s_per_gib": 27.883659385881607
+          },
+          "host_cpu_s": 72.86,
+          "host_cpu_s_per_gib": 47.23560620449509
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 9.33,
+            "system_cpu_s": 15.99,
+            "rss_kib": 65732,
+            "hwm_kib": 65732,
+            "cpu_s_per_gib": 16.41511870845204
+          },
+          "tailscaled": {
+            "user_cpu_s": 21.41,
+            "system_cpu_s": 29.55,
+            "rss_kib": 51576,
+            "hwm_kib": 52276,
+            "cpu_s_per_gib": 33.03769547325103
+          },
+          "host_cpu_s": 79.96,
+          "host_cpu_s_per_gib": 51.838581829692934
+        },
+        "sender_cc": "cubic",
+        "receiver_cc": "cubic",
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "cubic",
+          "accepts": [],
+          "valid": true
+        },
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=389043 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 02:08:10 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ]
+      }
+    ],
+    "bare_mbps": 13.544023145190605,
+    "bbro": {
+      "client_ingress_full": [
+        16374,
+        50719
+      ],
+      "client_shared_tun_full": [
+        27043,
+        169512
+      ],
+      "client_local_data_packets": [
+        899131,
+        1326904
+      ],
+      "client_middle_ack_only": [
+        126898,
+        183369
+      ]
+    },
+    "kernel": {
+      "client_release": "7.0.0-1017-azure",
+      "client_package": "7.0.0-1017.17~24.04.1",
+      "client_tcp_ecn": 2,
+      "client_tcp_ecn_option": 2,
+      "client_tcp_ecn_option_beacon": 3
+    },
+    "status": "NOT_QUALIFIED"
+  },
+  "next": {
+    "source": "75c47a5df4e58787b2bb9ee15228638932ae4be0",
+    "branch": "experiment/m0-dual-rust-tcp",
+    "pr": 80,
+    "runs": [
+      {
+        "id": 45926991260,
+        "name": "M0 ARM Linux parity actual M4 clock and ready loans ABBA",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 45926991269,
+        "name": "M0 dual Rust TCP Normal native product",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 45926991215,
+        "name": "experiment/m0-dual-rust-tcp|75c47a5df4e58787b2bb9ee15228638932ae4be0|governance",
+        "status": "completed",
+        "conclusion": "failure"
+      },
+      {
+        "id": 45926991165,
+        "name": "governance-maintenance|75c47a5df4e58787b2bb9ee15228638932ae4be0",
+        "status": "completed",
+        "conclusion": "failure"
+      }
+    ],
+    "scope": "opt-in Normal fresh small DATA M4 clock via actual ready PN copied prefix, existing M1 ready loan batch; retransmission, actual GSO, AccECN not yet implemented",
+    "status": "UNVERIFIED"
+  },
+  "decision": "Retain old splice and all prior evidence. Native then narrow zero loss comparison; verify actual M4 receipts. No product merge."
+}
