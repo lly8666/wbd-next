@@ -1,0 +1,534 @@
+{
+  "scope": "Actual native and ARM old/new Rust parity joint receive growth + fresh data copy comparison; no Linux qualification",
+  "source_sha": "935a6317969486846fec60fe98f35d2429dfedcb",
+  "native": {
+    "run": 45914393727,
+    "core": {
+      "x86_64": 339,
+      "aarch64": 339,
+      "failed": 0
+    },
+    "product": "scoped original/parity Normal functional PASS"
+  },
+  "performance": {
+    "run": 45914393841,
+    "client_job": 140231640872,
+    "artifact": 15162456191,
+    "summary_artifact": 15162191301,
+    "baseline": "edc0d11a374f5185315814f8a940933638b7149e",
+    "candidate": "935a6317969486846fec60fe98f35d2429dfedcb",
+    "source": "original job log ARM_DUAL_RESULT lines; artifacts located but not unpacked in this turn",
+    "status": "MEASURED_MIXED_NOT_PROMOTED",
+    "added_rtt_ms": 400,
+    "loss_pct": 0,
+    "order": "ABBA",
+    "rows": [
+      {
+        "case": -1,
+        "leg": "bare",
+        "source": null,
+        "cc": "cubic",
+        "mbps": 532.0566031132179,
+        "bytes": 798097408,
+        "client": {
+          "tailscaled": {
+            "user_cpu_s": 4.94,
+            "system_cpu_s": 6.49,
+            "rss_kib": 48092,
+            "hwm_kib": 48092,
+            "cpu_s_per_gib": 15.377658071932993
+          },
+          "host_cpu_s": 13.27,
+          "host_cpu_s_per_gib": 17.853151584825095
+        },
+        "server": {
+          "tailscaled": {
+            "user_cpu_s": 8.21,
+            "system_cpu_s": 11.02,
+            "rss_kib": 46976,
+            "hwm_kib": 46976,
+            "cpu_s_per_gib": 25.87159796354081
+          },
+          "host_cpu_s": 20.05,
+          "host_cpu_s_per_gib": 26.974807029068813
+        },
+        "direct_snapshots": true,
+        "status": "MEASURED"
+      },
+      {
+        "case": 0,
+        "leg": "A",
+        "source": "edc0d11a374f5185315814f8a940933638b7149e",
+        "cc": "bbr",
+        "mbps": 286.30129825917317,
+        "bytes": 1610481664,
+        "client": {
+          "product": {
+            "user_cpu_s": 11.12,
+            "system_cpu_s": 11.13,
+            "rss_kib": 165144,
+            "hwm_kib": 267768,
+            "cpu_s_per_gib": 14.834540571335557
+          },
+          "tailscaled": {
+            "user_cpu_s": 11.09,
+            "system_cpu_s": 17.19,
+            "rss_kib": 49072,
+            "hwm_kib": 49072,
+            "cpu_s_per_gib": 18.854867746398632
+          },
+          "host_cpu_s": 55.76,
+          "host_cpu_s_per_gib": 37.176358753153735
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 12.46,
+            "system_cpu_s": 11.13,
+            "rss_kib": 171016,
+            "hwm_kib": 171016,
+            "cpu_s_per_gib": 15.727946610238465
+          },
+          "tailscaled": {
+            "user_cpu_s": 18.3,
+            "system_cpu_s": 23.33,
+            "rss_kib": 49272,
+            "hwm_kib": 50392,
+            "cpu_s_per_gib": 27.755592089199965
+          },
+          "host_cpu_s": 68.2,
+          "host_cpu_s_per_gib": 45.47036705461056
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 97,
+          "matching": 97,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=2545129 local_batch_max=494 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1647324 full=2875 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=440465 unrouted=0 backpressure=87 reader_joined=1 queue_full_drops=19 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:09:29 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 1,
+        "leg": "B",
+        "source": "935a6317969486846fec60fe98f35d2429dfedcb",
+        "cc": "bbr",
+        "mbps": 237.53296147067817,
+        "bytes": 1336147968,
+        "client": {
+          "product": {
+            "user_cpu_s": 9.94,
+            "system_cpu_s": 11.58,
+            "rss_kib": 112532,
+            "hwm_kib": 263172,
+            "cpu_s_per_gib": 17.293686482244457
+          },
+          "tailscaled": {
+            "user_cpu_s": 10.33,
+            "system_cpu_s": 16.11,
+            "rss_kib": 49124,
+            "hwm_kib": 49124,
+            "cpu_s_per_gib": 21.24744751814793
+          },
+          "host_cpu_s": 52.7,
+          "host_cpu_s_per_gib": 42.350245242299394
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 13.27,
+            "system_cpu_s": 9.64,
+            "rss_kib": 171140,
+            "hwm_kib": 172312,
+            "cpu_s_per_gib": 18.410704335883853
+          },
+          "tailscaled": {
+            "user_cpu_s": 16.19,
+            "system_cpu_s": 20.99,
+            "rss_kib": 51016,
+            "hwm_kib": 51132,
+            "cpu_s_per_gib": 29.878218559937217
+          },
+          "host_cpu_s": 62.16,
+          "host_cpu_s_per_gib": 49.95239552678046
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 97,
+          "matching": 97,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=2214030 local_batch_max=471 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1382892 full=1530 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=454608 unrouted=0 backpressure=254 reader_joined=1 queue_full_drops=127 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:10:22 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 2,
+        "leg": "B",
+        "source": "935a6317969486846fec60fe98f35d2429dfedcb",
+        "cc": "bbr",
+        "mbps": 193.61049753124126,
+        "bytes": 1089077248,
+        "client": {
+          "product": {
+            "user_cpu_s": 7.77,
+            "system_cpu_s": 7.81,
+            "rss_kib": 206140,
+            "hwm_kib": 237532,
+            "cpu_s_per_gib": 15.36061619930196
+          },
+          "tailscaled": {
+            "user_cpu_s": 7.84,
+            "system_cpu_s": 12.17,
+            "rss_kib": 49540,
+            "hwm_kib": 49540,
+            "cpu_s_per_gib": 19.728236851606688
+          },
+          "host_cpu_s": 40.44,
+          "host_cpu_s_per_gib": 39.87055963413166
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 14.44,
+            "system_cpu_s": 7.74,
+            "rss_kib": 170944,
+            "hwm_kib": 170944,
+            "cpu_s_per_gib": 21.86768082801781
+          },
+          "tailscaled": {
+            "user_cpu_s": 13.01,
+            "system_cpu_s": 15.85,
+            "rss_kib": 50612,
+            "hwm_kib": 52128,
+            "cpu_s_per_gib": 28.453618967384763
+          },
+          "host_cpu_s": 53.28,
+          "host_cpu_s_per_gib": 52.52975809363341
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 98,
+          "matching": 98,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=1740169 local_batch_max=548 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1114590 full=2048 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=302192 unrouted=0 backpressure=53 reader_joined=1 queue_full_drops=5 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:11:15 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 3,
+        "leg": "A",
+        "source": "edc0d11a374f5185315814f8a940933638b7149e",
+        "cc": "bbr",
+        "mbps": 201.62721988585375,
+        "bytes": 1134166016,
+        "client": {
+          "product": {
+            "user_cpu_s": 8.41,
+            "system_cpu_s": 9.33,
+            "rss_kib": 171268,
+            "hwm_kib": 251704,
+            "cpu_s_per_gib": 16.794878076967528
+          },
+          "tailscaled": {
+            "user_cpu_s": 8.06,
+            "system_cpu_s": 12.75,
+            "rss_kib": 50016,
+            "hwm_kib": 50016,
+            "cpu_s_per_gib": 19.701319773488965
+          },
+          "host_cpu_s": 42.65,
+          "host_cpu_s_per_gib": 40.37776493701606
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 14.27,
+            "system_cpu_s": 8.17,
+            "rss_kib": 171816,
+            "hwm_kib": 172524,
+            "cpu_s_per_gib": 21.244479371316306
+          },
+          "tailscaled": {
+            "user_cpu_s": 13.47,
+            "system_cpu_s": 16.94,
+            "rss_kib": 48792,
+            "hwm_kib": 52128,
+            "cpu_s_per_gib": 28.789867098116265
+          },
+          "host_cpu_s": 55.38,
+          "host_cpu_s_per_gib": 52.42955737894372
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 97,
+          "matching": 97,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=1911066 local_batch_max=502 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1182314 full=1670 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=382376 unrouted=0 backpressure=2 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:12:08 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 4,
+        "leg": "A",
+        "source": "edc0d11a374f5185315814f8a940933638b7149e",
+        "cc": "cubic",
+        "mbps": 202.34745963310135,
+        "bytes": 1138229248,
+        "client": {
+          "product": {
+            "user_cpu_s": 12.21,
+            "system_cpu_s": 15.77,
+            "rss_kib": 59484,
+            "hwm_kib": 106768,
+            "cpu_s_per_gib": 26.394767388300323
+          },
+          "tailscaled": {
+            "user_cpu_s": 17.34,
+            "system_cpu_s": 28.62,
+            "rss_kib": 50000,
+            "hwm_kib": 50000,
+            "cpu_s_per_gib": 43.356093965914326
+          },
+          "host_cpu_s": 80.93,
+          "host_cpu_s_per_gib": 76.3448364808844
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 11.07,
+            "system_cpu_s": 14.51,
+            "rss_kib": 57256,
+            "hwm_kib": 133344,
+            "cpu_s_per_gib": 24.130741593735603
+          },
+          "tailscaled": {
+            "user_cpu_s": 20.43,
+            "system_cpu_s": 31.45,
+            "rss_kib": 52068,
+            "hwm_kib": 52244,
+            "cpu_s_per_gib": 48.94069092584062
+          },
+          "host_cpu_s": 80.27,
+          "host_cpu_s_per_gib": 75.72222938737909
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 97,
+          "matching": 97,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=1966968 local_batch_max=166 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1171633 full=0 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=396598 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:13:01 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 5,
+        "leg": "B",
+        "source": "935a6317969486846fec60fe98f35d2429dfedcb",
+        "cc": "cubic",
+        "mbps": 270.1356388669013,
+        "bytes": 1519517696,
+        "client": {
+          "product": {
+            "user_cpu_s": 13.96,
+            "system_cpu_s": 17.34,
+            "rss_kib": 66072,
+            "hwm_kib": 118884,
+            "cpu_s_per_gib": 22.117622703355472
+          },
+          "tailscaled": {
+            "user_cpu_s": 19.07,
+            "system_cpu_s": 31.04,
+            "rss_kib": 50908,
+            "hwm_kib": 50908,
+            "cpu_s_per_gib": 35.409395324764944
+          },
+          "host_cpu_s": 90.26,
+          "host_cpu_s_per_gib": 63.78072284999569
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 12.6,
+            "system_cpu_s": 16,
+            "rss_kib": 134148,
+            "hwm_kib": 134148,
+            "cpu_s_per_gib": 20.20971275769861
+          },
+          "tailscaled": {
+            "user_cpu_s": 23.22,
+            "system_cpu_s": 34.6,
+            "rss_kib": 52108,
+            "hwm_kib": 52672,
+            "cpu_s_per_gib": 40.8575381695851
+          },
+          "host_cpu_s": 89.64,
+          "host_cpu_s_per_gib": 63.342610195807815
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 98,
+          "matching": 98,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=2337994 local_batch_max=243 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1533263 full=18 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=443460 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:13:54 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 6,
+        "leg": "B",
+        "source": "935a6317969486846fec60fe98f35d2429dfedcb",
+        "cc": "cubic",
+        "mbps": 325.241142893206,
+        "bytes": 1829502976,
+        "client": {
+          "product": {
+            "user_cpu_s": 15.42,
+            "system_cpu_s": 18.5,
+            "rss_kib": 75700,
+            "hwm_kib": 137816,
+            "cpu_s_per_gib": 19.907769021349765
+          },
+          "tailscaled": {
+            "user_cpu_s": 20.42,
+            "system_cpu_s": 32.35,
+            "rss_kib": 50300,
+            "hwm_kib": 50768,
+            "cpu_s_per_gib": 30.970901275254338
+          },
+          "host_cpu_s": 94.63,
+          "host_cpu_s_per_gib": 55.538684625304484
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 13.51,
+            "system_cpu_s": 16.45,
+            "rss_kib": 68748,
+            "hwm_kib": 141284,
+            "cpu_s_per_gib": 17.583630892678034
+          },
+          "tailscaled": {
+            "user_cpu_s": 24.97,
+            "system_cpu_s": 35.92,
+            "rss_kib": 52588,
+            "hwm_kib": 53924,
+            "cpu_s_per_gib": 35.73655824616707
+          },
+          "host_cpu_s": 93.07,
+          "host_cpu_s_per_gib": 54.623115059464105
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 98,
+          "matching": 98,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=2699998 local_batch_max=324 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1841828 full=0 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=514692 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:14:46 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 7,
+        "leg": "A",
+        "source": "edc0d11a374f5185315814f8a940933638b7149e",
+        "cc": "cubic",
+        "mbps": 275.210278461516,
+        "bytes": 1548091392,
+        "client": {
+          "product": {
+            "user_cpu_s": 14.82,
+            "system_cpu_s": 18.94,
+            "rss_kib": 65204,
+            "hwm_kib": 116256,
+            "cpu_s_per_gib": 23.415622724578785
+          },
+          "tailscaled": {
+            "user_cpu_s": 18.9,
+            "system_cpu_s": 30.81,
+            "rss_kib": 51048,
+            "hwm_kib": 51488,
+            "cpu_s_per_gib": 34.47839471678943
+          },
+          "host_cpu_s": 92.16,
+          "host_cpu_s_per_gib": 63.9213208026416
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 12.64,
+            "system_cpu_s": 15.66,
+            "rss_kib": 137112,
+            "hwm_kib": 137112,
+            "cpu_s_per_gib": 19.628617390568117
+          },
+          "tailscaled": {
+            "user_cpu_s": 22.95,
+            "system_cpu_s": 33.66,
+            "rss_kib": 52864,
+            "hwm_kib": 53924,
+            "cpu_s_per_gib": 39.26417068834137
+          },
+          "host_cpu_s": 87.88,
+          "host_cpu_s_per_gib": 60.952752518838366
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 98,
+          "matching": 98,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=2505387 local_batch_max=169 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1564771 full=523 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=613297 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:15:39 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      }
+    ]
+  },
+  "next": {
+    "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+    "branch": "experiment/m0-dual-rust-tcp",
+    "pr": 80,
+    "core_run": 45916282014,
+    "abba_run": 45916281816,
+    "status": "UNVERIFIED",
+    "scope": "grouped parity CUBIC packet count and growth, RTO variance, Minshall, BBRv1 long-term model and quantization; not equivalent full Linux; actual header prediction, skb EDT/TSQ and GSO remain gaps"
+  },
+  "decision": "Retain predecessor and all observations; no Linux parity claim or product merge. Check exact candidate native and full Linux ABBA results, then remaining product-relevant gaps."
+}

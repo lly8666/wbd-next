@@ -16,30 +16,31 @@
     "gui": "Not exposed"
   },
   "code_refs": [
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/crates/wbd-engine/src/v4_rust_tcp/mod.rs",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/crates/wbd-engine/src/v4_rust_tcp/ipv4.rs",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/crates/wbd-engine/src/v4_rust_tcp/flow.rs",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/crates/wbd-engine/src/v4_rust_tcp/linux_socket.rs",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/crates/wbd-engine/src/v4_rust_tcp/linux_owner.rs",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/crates/wbd-engine/src/v4_embedded_go.rs",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/crates/wbd-engine/src/v4_owner_crypto.rs",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/r0/go_overlay/internal/v4productcli/linux.go"
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/crates/wbd-engine/src/v4_rust_tcp/mod.rs",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/crates/wbd-engine/src/v4_rust_tcp/ipv4.rs",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/crates/wbd-engine/src/v4_rust_tcp/flow.rs",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/crates/wbd-engine/src/v4_rust_tcp/linux_socket.rs",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/crates/wbd-engine/src/v4_rust_tcp/linux_owner.rs",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/crates/wbd-engine/src/v4_embedded_go.rs",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/crates/wbd-engine/src/v4_owner_crypto.rs",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/r0/go_overlay/internal/v4productcli/linux.go"
   ],
   "doc_refs": [
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-WIP.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/crates/wbd-engine/src/v4_rust_tcp/pktkit/UPSTREAM.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-WIP.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-WIP.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261126-DUAL-RUST-TCP-TX-TURN-INTENT.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-INTENT.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-RESULT.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-INTENT.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-INTENT.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261127-LINUX-TCP-PARITY-AUDIT-AND-CANDIDATE.md",
-    "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/devlog/M0/20261127-LINUX-TCP-PARITY-RESULT-AND-HOTPATH.md"
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261126-DUAL-RUST-TCP-CORE-WIP.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/crates/wbd-engine/src/v4_rust_tcp/pktkit/UPSTREAM.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261126-DUAL-RUST-TCP-ENDPOINT-WIP.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-WIP.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261126-DUAL-RUST-TCP-NORMAL-RESULT.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261126-DUAL-RUST-TCP-CPU-TOOLCHAIN-INTENT.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261126-DUAL-RUST-TCP-TX-TURN-INTENT.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-INTENT.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-RESULT.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-INTENT.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261126-DUAL-RUST-TCP-ACK3-ARM-INTENT.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261127-LINUX-TCP-PARITY-AUDIT-AND-CANDIDATE.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261127-LINUX-TCP-PARITY-RESULT-AND-HOTPATH.md",
+    "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/devlog/M0/20261127-LINUX-TCP-PARITY-CONSOLIDATED-BEHAVIOR.md"
   ],
   "verification": [
     {
@@ -54,21 +55,21 @@
       "scope": "Native component: inner TCP endpoints, actual kernel origin socket bidirectional bytes, origin-to-virtual-app FIN (not product TUN)",
       "status": "FUNCTIONAL_PASS",
       "source_sha": "3e709e0c8577b56ca237a24e6d18fccf998e9965",
-      "evidence": "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/evidence/M0/20261126-DUAL-RUST-TCP-ENDPOINT-CORE.json"
+      "evidence": "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/evidence/M0/20261126-DUAL-RUST-TCP-ENDPOINT-CORE.json"
     },
     {
       "platform": "linux/x86_64",
       "scope": "Paired Normal actual product TCP bidirectional bytes, half-close, concurrency, UDP, owned Stop",
       "status": "FUNCTIONAL_PASS",
       "source_sha": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
-      "evidence": "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/evidence/M0/20261126-DUAL-RUST-TCP-TX-TURN-RESULT.json"
+      "evidence": "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/evidence/M0/20261126-DUAL-RUST-TCP-TX-TURN-RESULT.json"
     },
     {
       "platform": "linux/x86_64",
       "scope": "Experimental CUBIC middle SOURCE with original kernel BBR functional fixture, actual Normal business and Stop",
       "status": "FUNCTIONAL_PASS",
       "source_sha": "f2b88695d062556fdb804c69041705beb5b64280",
-      "evidence": "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
+      "evidence": "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
     },
     {
       "platform": "linux/x86_64",
@@ -96,21 +97,21 @@
       "scope": "Native component: inner TCP endpoints, actual kernel origin socket bidirectional bytes, origin-to-virtual-app FIN (not product TUN)",
       "status": "FUNCTIONAL_PASS",
       "source_sha": "3e709e0c8577b56ca237a24e6d18fccf998e9965",
-      "evidence": "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/evidence/M0/20261126-DUAL-RUST-TCP-ENDPOINT-CORE.json"
+      "evidence": "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/evidence/M0/20261126-DUAL-RUST-TCP-ENDPOINT-CORE.json"
     },
     {
       "platform": "linux/aarch64",
       "scope": "Paired Normal actual product TCP bidirectional bytes, half-close, concurrency, UDP, owned Stop",
       "status": "FUNCTIONAL_PASS",
       "source_sha": "f2fed3e6dafbcb3ff325599d9726811a293894e0",
-      "evidence": "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/evidence/M0/20261126-DUAL-RUST-TCP-TX-TURN-RESULT.json"
+      "evidence": "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/evidence/M0/20261126-DUAL-RUST-TCP-TX-TURN-RESULT.json"
     },
     {
       "platform": "linux/aarch64",
       "scope": "Experimental CUBIC middle SOURCE with original kernel BBR functional fixture, actual Normal business and Stop",
       "status": "FUNCTIONAL_PASS",
       "source_sha": "f2b88695d062556fdb804c69041705beb5b64280",
-      "evidence": "https://github.com/lly8666/wbd-next/blob/935a6317969486846fec60fe98f35d2429dfedcb/docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
+      "evidence": "https://github.com/lly8666/wbd-next/blob/65aae40cdbd99c0a9957518db1748ad533181bdc/docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json"
     },
     {
       "platform": "linux/aarch64",
@@ -153,6 +154,20 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "edc0d11a374f5185315814f8a940933638b7149e",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45862140433"
+    },
+    {
+      "platform": "linux/x86_64",
+      "scope": "935a631 scoped native original/parity and 339 core tests",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "935a6317969486846fec60fe98f35d2429dfedcb",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45914393727"
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "935a631 scoped native original/parity and 339 core tests",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "935a6317969486846fec60fe98f35d2429dfedcb",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45914393727"
     }
   ],
   "limitations": [
@@ -162,7 +177,8 @@
     "Clean x86 ABBA measured capped goodput parity, but client CPU +29.1%; full performance qualification NOT_RUN. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CLEAN-ABBA.json",
     "Matched CUBIC ABBA measured capped goodput parity, client CPU +47.45%, host +15.19%; mixed BBR same VM similar gap. CUBIC trial not selected for product; restore BBRv3 in next substantive candidate. See docs/evidence/M0/20261126-DUAL-RUST-TCP-CC-MATCHED-ABBA.json",
     "ACK3 BBRv3 middle candidate 8a6439b exact scoped functional dual ISA PASS; same-VM old splice/original Rust ABBA run45821912542 and ARM three-runner loss1/5 run45822382519/45822382479 in flight. No performance or default promotion.",
-    "edc0d11 ARM Linux parity ABBA 23/24 measured, CUBIC 5% baseline reset, BBR0 150.56 vs 205.79 Mbps and CPU/GiB higher; no performance promotion. New receive growth / borrowed DATA candidate unverified."
+    "edc0d11 ARM Linux parity ABBA 23/24 measured, CUBIC 5% baseline reset, BBR0 150.56 vs 205.79 Mbps and CPU/GiB higher; no performance promotion. New receive growth / borrowed DATA candidate unverified.",
+    "935a631 dual ISA 339/339; ARM hotpath ABBA BBR -11.6% throughput, CUBIC +24.7%; mixed. Consolidated candidate unverified."
   ],
   "promotion": null
 }
