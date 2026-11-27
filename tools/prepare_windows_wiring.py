@@ -230,7 +230,7 @@ def prepare(root, legacy, output, source, spec):
             target = dest / name
             data = git(root, "show", source + ":" + relative)
             need(len(data) > 60, "empty bridge: " + relative)
-            need(b"package realityfront" in data if name == "admission_v4.go"
+            need(b"package realityfront" in data if name in ("admission_v4.go", "bridge_v4_game_cold_set.go")
                  else data.startswith(b"//go:build windows"), "wrong bridge target: " + relative)
             if name == "admission_v4.go" and target.exists():
                 # The single exact PLAN020 manifest now assembles the same
