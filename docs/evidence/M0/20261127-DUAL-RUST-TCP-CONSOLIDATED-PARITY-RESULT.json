@@ -1,0 +1,1519 @@
+{
+  "scope": "Consolidated Linux TCP parity candidate acceptance; scoped function PASS, Linux performance parity FAIL, no promotion",
+  "source_sha": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+  "native": {
+    "run": 45916282014,
+    "core": {
+      "x86_64": 342,
+      "aarch64": 342,
+      "failed": 0
+    },
+    "product": "scoped original/parity Normal native PASS"
+  },
+  "performance": {
+    "run": 45916281816,
+    "baseline_source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "candidate_source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+    "client_job": 140237529620,
+    "artifacts": {
+      "client": 15163436935,
+      "server": 15164040248,
+      "relay": 15163561043
+    },
+    "artifact_review": "All three ZIPs extracted; 24 measured client, 24 joined server Stop, valid server probes, direct endpoint receipts; relay 1298 samples present. BBR0 relay qdisc drops delta zero both directions all four legs.",
+    "status": "MEASURED_NOT_PARITY_QUALIFIED",
+    "added_rtt_ms": 400,
+    "order": "ABBA",
+    "kernel": {
+      "client": "7.0.0-1017-azure",
+      "server": "7.0.0-1017-azure",
+      "image_version": "7.0.0-1017.17~24.04.1",
+      "config_sha256": "3a68127626c42ac011fe3e28fa813b6b5c225897d3062255d1178493ed32c588",
+      "bbr_srcversion": "5B6C12777290291DF28F230",
+      "exact_patched_source": "not independently compared"
+    },
+    "rows": [
+      {
+        "case": -1,
+        "leg": "bare",
+        "source": null,
+        "cc": "cubic",
+        "loss_pct": 0,
+        "mbps": 319.0915540553772,
+        "bytes": 478674944,
+        "client": {
+          "tailscaled": {
+            "user_cpu_s": 3.86,
+            "system_cpu_s": 5.19,
+            "rss_kib": 48220,
+            "hwm_kib": 48360,
+            "cpu_s_per_gib": 20.30054764512596
+          },
+          "host_cpu_s": 10.72,
+          "host_cpu_s_per_gib": 24.04661555312158
+        },
+        "server": {
+          "tailscaled": {
+            "user_cpu_s": 5.88,
+            "system_cpu_s": 7.63,
+            "rss_kib": 48668,
+            "hwm_kib": 48668,
+            "cpu_s_per_gib": 30.305016429353778
+          },
+          "host_cpu_s": 14.93,
+          "host_cpu_s_per_gib": 33.49029572836802
+        },
+        "direct_snapshots": true,
+        "status": "MEASURED"
+      },
+      {
+        "case": 0,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "cubic",
+        "loss_pct": 0,
+        "mbps": 99.70763871126596,
+        "bytes": 560857088,
+        "client": {
+          "product": {
+            "user_cpu_s": 4.67,
+            "system_cpu_s": 10.63,
+            "rss_kib": 27272,
+            "hwm_kib": 27272,
+            "cpu_s_per_gib": 29.291329749941575
+          },
+          "tailscaled": {
+            "user_cpu_s": 12.2,
+            "system_cpu_s": 20.26,
+            "rss_kib": 48168,
+            "hwm_kib": 48360,
+            "cpu_s_per_gib": 62.143566253797616
+          },
+          "host_cpu_s": 53.84,
+          "host_cpu_s_per_gib": 103.0748492638467
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 5.11,
+            "system_cpu_s": 10.28,
+            "rss_kib": 46120,
+            "hwm_kib": 46120,
+            "cpu_s_per_gib": 29.463631689647116
+          },
+          "tailscaled": {
+            "user_cpu_s": 13.12,
+            "system_cpu_s": 19.16,
+            "rss_kib": 45700,
+            "hwm_kib": 48680,
+            "cpu_s_per_gib": 61.79896237438654
+          },
+          "host_cpu_s": 52.41,
+          "host_cpu_s_per_gib": 100.33716288852536
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "cubic",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=214291 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:28:06 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 1,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "cubic",
+        "loss_pct": 0,
+        "mbps": 248.36765172441494,
+        "bytes": 1397096448,
+        "client": {
+          "product": {
+            "user_cpu_s": 12.68,
+            "system_cpu_s": 15.14,
+            "rss_kib": 87328,
+            "hwm_kib": 200140,
+            "cpu_s_per_gib": 21.38112768552397
+          },
+          "tailscaled": {
+            "user_cpu_s": 16.6,
+            "system_cpu_s": 26.48,
+            "rss_kib": 49344,
+            "hwm_kib": 49452,
+            "cpu_s_per_gib": 33.1092372642837
+          },
+          "host_cpu_s": 78.7,
+          "host_cpu_s_per_gib": 60.48507364668355
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 11.7,
+            "system_cpu_s": 15.62,
+            "rss_kib": 151036,
+            "hwm_kib": 151036,
+            "cpu_s_per_gib": 20.996851487006285
+          },
+          "tailscaled": {
+            "user_cpu_s": 21.67,
+            "system_cpu_s": 31.13,
+            "rss_kib": 48556,
+            "hwm_kib": 48680,
+            "cpu_s_per_gib": 40.57956656346749
+          },
+          "host_cpu_s": 85.09,
+          "host_cpu_s_per_gib": 65.39612346373957
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 97,
+          "matching": 97,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=2193128 local_batch_max=2207 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1410938 full=104 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=438574 unrouted=0 backpressure=31850 reader_joined=1 queue_full_drops=6993 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:28:59 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 2,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "cubic",
+        "loss_pct": 0,
+        "mbps": 108.16425490427315,
+        "bytes": 608436224,
+        "client": {
+          "product": {
+            "user_cpu_s": 8.03,
+            "system_cpu_s": 11.22,
+            "rss_kib": 89600,
+            "hwm_kib": 121360,
+            "cpu_s_per_gib": 33.97156398104266
+          },
+          "tailscaled": {
+            "user_cpu_s": 11.97,
+            "system_cpu_s": 20.31,
+            "rss_kib": 49380,
+            "hwm_kib": 49452,
+            "cpu_s_per_gib": 56.966342093925036
+          },
+          "host_cpu_s": 57.2,
+          "host_cpu_s_per_gib": 100.94407582938389
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 7.96,
+            "system_cpu_s": 10.88,
+            "rss_kib": 144276,
+            "hwm_kib": 144276,
+            "cpu_s_per_gib": 33.24801378716071
+          },
+          "tailscaled": {
+            "user_cpu_s": 15.1,
+            "system_cpu_s": 22.01,
+            "rss_kib": 48496,
+            "hwm_kib": 48896,
+            "cpu_s_per_gib": 65.49011632916846
+          },
+          "host_cpu_s": 59.79,
+          "host_cpu_s_per_gib": 105.51479534683325
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 99,
+          "matching": 99,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=1292683 local_batch_max=2314 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=641263 full=732 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=239392 unrouted=0 backpressure=17996 reader_joined=1 queue_full_drops=3711 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:29:52 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 3,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "cubic",
+        "loss_pct": 0,
+        "mbps": 237.977308759671,
+        "bytes": 1338638336,
+        "client": {
+          "product": {
+            "user_cpu_s": 6.69,
+            "system_cpu_s": 13.04,
+            "rss_kib": 33560,
+            "hwm_kib": 33560,
+            "cpu_s_per_gib": 15.825727993733476
+          },
+          "tailscaled": {
+            "user_cpu_s": 14.3,
+            "system_cpu_s": 23.19,
+            "rss_kib": 49940,
+            "hwm_kib": 49940,
+            "cpu_s_per_gib": 30.071289532948207
+          },
+          "host_cpu_s": 63.81,
+          "host_cpu_s_per_gib": 51.18295505727994
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 8.66,
+            "system_cpu_s": 15.32,
+            "rss_kib": 66360,
+            "hwm_kib": 66360,
+            "cpu_s_per_gib": 19.23471653774601
+          },
+          "tailscaled": {
+            "user_cpu_s": 19.62,
+            "system_cpu_s": 27.59,
+            "rss_kib": 48604,
+            "hwm_kib": 48896,
+            "cpu_s_per_gib": 37.86784686184275
+          },
+          "host_cpu_s": 76.64,
+          "host_cpu_s_per_gib": 61.47408988544012
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "cubic",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=329634 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:30:45 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 4,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "cubic",
+        "loss_pct": 1,
+        "mbps": 0.5825288887832123,
+        "bytes": 3276800,
+        "client": {
+          "product": {
+            "user_cpu_s": 0.18,
+            "system_cpu_s": 0.38,
+            "rss_kib": 18412,
+            "hwm_kib": 18412,
+            "cpu_s_per_gib": 183.50080000000003
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.42,
+            "system_cpu_s": 0.6,
+            "rss_kib": 50448,
+            "hwm_kib": 50448,
+            "cpu_s_per_gib": 334.2336
+          },
+          "host_cpu_s": 3.05,
+          "host_cpu_s_per_gib": 999.424
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 0.25,
+            "system_cpu_s": 0.54,
+            "rss_kib": 18780,
+            "hwm_kib": 18780,
+            "cpu_s_per_gib": 258.8672
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.45,
+            "system_cpu_s": 0.62,
+            "rss_kib": 48748,
+            "hwm_kib": 48896,
+            "cpu_s_per_gib": 350.61760000000004
+          },
+          "host_cpu_s": 4.84,
+          "host_cpu_s_per_gib": 1585.9712
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "cubic",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=2358 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:31:37 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 5,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "cubic",
+        "loss_pct": 1,
+        "mbps": 0.6524323409390332,
+        "bytes": 3670016,
+        "client": {
+          "product": {
+            "user_cpu_s": 0.24,
+            "system_cpu_s": 0.44,
+            "rss_kib": 19088,
+            "hwm_kib": 19088,
+            "cpu_s_per_gib": 198.9485714285714
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.37,
+            "system_cpu_s": 0.57,
+            "rss_kib": 50460,
+            "hwm_kib": 50460,
+            "cpu_s_per_gib": 275.01714285714286
+          },
+          "host_cpu_s": 3.16,
+          "host_cpu_s_per_gib": 924.5257142857143
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 0.26,
+            "system_cpu_s": 0.45,
+            "rss_kib": 20440,
+            "hwm_kib": 20440,
+            "cpu_s_per_gib": 207.72571428571428
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.41,
+            "system_cpu_s": 0.55,
+            "rss_kib": 49048,
+            "hwm_kib": 49048,
+            "cpu_s_per_gib": 280.86857142857144
+          },
+          "host_cpu_s": 3.97,
+          "host_cpu_s_per_gib": 1161.5085714285715
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 99,
+          "matching": 99,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=22805 local_batch_max=56 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=3950 full=0 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=2564 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:32:31 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 6,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "cubic",
+        "loss_pct": 1,
+        "mbps": 0.37281848882125584,
+        "bytes": 2097152,
+        "client": {
+          "product": {
+            "user_cpu_s": 0.17,
+            "system_cpu_s": 0.33,
+            "rss_kib": 18916,
+            "hwm_kib": 18916,
+            "cpu_s_per_gib": 256
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.27,
+            "system_cpu_s": 0.36,
+            "rss_kib": 48300,
+            "hwm_kib": 50156,
+            "cpu_s_per_gib": 322.56
+          },
+          "host_cpu_s": 2.57,
+          "host_cpu_s_per_gib": 1315.84
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 0.18,
+            "system_cpu_s": 0.32,
+            "rss_kib": 20272,
+            "hwm_kib": 20272,
+            "cpu_s_per_gib": 256
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.28,
+            "system_cpu_s": 0.33,
+            "rss_kib": 49220,
+            "hwm_kib": 49220,
+            "cpu_s_per_gib": 312.32000000000005
+          },
+          "host_cpu_s": 3.45,
+          "host_cpu_s_per_gib": 1766.4
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 99,
+          "matching": 99,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=17632 local_batch_max=18 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=29 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=2239 full=0 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1560 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:33:24 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 7,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "cubic",
+        "loss_pct": 1,
+        "mbps": 0.5592390420292211,
+        "bytes": 3145728,
+        "client": {
+          "product": {
+            "user_cpu_s": 0.16,
+            "system_cpu_s": 0.36,
+            "rss_kib": 18424,
+            "hwm_kib": 18424,
+            "cpu_s_per_gib": 177.49333333333334
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.36,
+            "system_cpu_s": 0.56,
+            "rss_kib": 48304,
+            "hwm_kib": 50156,
+            "cpu_s_per_gib": 314.0266666666667
+          },
+          "host_cpu_s": 3.47,
+          "host_cpu_s_per_gib": 1184.4266666666667
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 0.22,
+            "system_cpu_s": 0.49,
+            "rss_kib": 18644,
+            "hwm_kib": 18644,
+            "cpu_s_per_gib": 242.34666666666666
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.4,
+            "system_cpu_s": 0.56,
+            "rss_kib": 48020,
+            "hwm_kib": 48896,
+            "cpu_s_per_gib": 327.68
+          },
+          "host_cpu_s": 3.86,
+          "host_cpu_s_per_gib": 1317.5466666666666
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "cubic",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=2066 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:34:16 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 8,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "cubic",
+        "loss_pct": 5,
+        "mbps": 0.1162858351299412,
+        "bytes": 654109,
+        "client": {
+          "product": {
+            "user_cpu_s": 0.09,
+            "system_cpu_s": 0.19,
+            "rss_kib": 18056,
+            "hwm_kib": 18056,
+            "cpu_s_per_gib": 459.6293747983899
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.15,
+            "system_cpu_s": 0.25,
+            "rss_kib": 48320,
+            "hwm_kib": 50156,
+            "cpu_s_per_gib": 656.6133925691285
+          },
+          "host_cpu_s": 3.33,
+          "host_cpu_s_per_gib": 5466.306493137994
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 0.11,
+            "system_cpu_s": 0.24,
+            "rss_kib": 18396,
+            "hwm_kib": 18396,
+            "cpu_s_per_gib": 574.5367184979873
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.2,
+            "system_cpu_s": 0.22,
+            "rss_kib": 48068,
+            "hwm_kib": 48896,
+            "cpu_s_per_gib": 689.4440621975849
+          },
+          "host_cpu_s": 3.07,
+          "host_cpu_s_per_gib": 5039.50778796806
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "cubic",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=708 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:35:11 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 9,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "cubic",
+        "loss_pct": 5,
+        "mbps": 0.1621170378569984,
+        "bytes": 911933,
+        "client": {
+          "product": {
+            "user_cpu_s": 0.11,
+            "system_cpu_s": 0.25,
+            "rss_kib": 18940,
+            "hwm_kib": 18940,
+            "cpu_s_per_gib": 423.8765968991143
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.17,
+            "system_cpu_s": 0.23,
+            "rss_kib": 48328,
+            "hwm_kib": 50156,
+            "cpu_s_per_gib": 470.97399655457144
+          },
+          "host_cpu_s": 2.19,
+          "host_cpu_s_per_gib": 2578.5826311362785
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 0.12,
+            "system_cpu_s": 0.24,
+            "rss_kib": 20320,
+            "hwm_kib": 20320,
+            "cpu_s_per_gib": 423.8765968991143
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.16,
+            "system_cpu_s": 0.24,
+            "rss_kib": 48084,
+            "hwm_kib": 48896,
+            "cpu_s_per_gib": 470.97399655457144
+          },
+          "host_cpu_s": 3.09,
+          "host_cpu_s_per_gib": 3638.2741233840643
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 101,
+          "matching": 101,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=14455 local_batch_max=22 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=29 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1102 full=0 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=863 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:36:07 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 10,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "cubic",
+        "loss_pct": 5,
+        "mbps": 0.13980693641472064,
+        "bytes": 786432,
+        "client": {
+          "product": {
+            "user_cpu_s": 0.1,
+            "system_cpu_s": 0.22,
+            "rss_kib": 18956,
+            "hwm_kib": 18956,
+            "cpu_s_per_gib": 436.9066666666667
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.15,
+            "system_cpu_s": 0.2,
+            "rss_kib": 48340,
+            "hwm_kib": 50156,
+            "cpu_s_per_gib": 477.8666666666666
+          },
+          "host_cpu_s": 2.12,
+          "host_cpu_s_per_gib": 2894.5066666666667
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 0.11,
+            "system_cpu_s": 0.23,
+            "rss_kib": 20212,
+            "hwm_kib": 20212,
+            "cpu_s_per_gib": 464.21333333333337
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.15,
+            "system_cpu_s": 0.23,
+            "rss_kib": 48436,
+            "hwm_kib": 48896,
+            "cpu_s_per_gib": 518.8266666666667
+          },
+          "host_cpu_s": 3.06,
+          "host_cpu_s_per_gib": 4177.92
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 98,
+          "matching": 98,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=13554 local_batch_max=15 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=940 full=0 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=806 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:37:00 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 11,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "cubic",
+        "loss_pct": 5,
+        "mbps": 0.1584673367604682,
+        "bytes": 891388,
+        "client": {
+          "product": {
+            "user_cpu_s": 0.1,
+            "system_cpu_s": 0.17,
+            "rss_kib": 18336,
+            "hwm_kib": 18336,
+            "cpu_s_per_gib": 325.23468173230964
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.17,
+            "system_cpu_s": 0.22,
+            "rss_kib": 47904,
+            "hwm_kib": 50156,
+            "cpu_s_per_gib": 469.7834291688917
+          },
+          "host_cpu_s": 2.04,
+          "host_cpu_s_per_gib": 2457.328706421895
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 0.11,
+            "system_cpu_s": 0.26,
+            "rss_kib": 18292,
+            "hwm_kib": 18292,
+            "cpu_s_per_gib": 445.69197126279465
+          },
+          "tailscaled": {
+            "user_cpu_s": 0.19,
+            "system_cpu_s": 0.26,
+            "rss_kib": 48512,
+            "hwm_kib": 48896,
+            "cpu_s_per_gib": 542.0578028871827
+          },
+          "host_cpu_s": 3.13,
+          "host_cpu_s_per_gib": 3770.313162304182
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "cubic",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=787 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:37:55 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 12,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "bbr",
+        "loss_pct": 0,
+        "mbps": 316.9244183306218,
+        "bytes": 1782710272,
+        "client": {
+          "product": {
+            "user_cpu_s": 7.24,
+            "system_cpu_s": 13.06,
+            "rss_kib": 38688,
+            "hwm_kib": 38688,
+            "cpu_s_per_gib": 12.226865671641791
+          },
+          "tailscaled": {
+            "user_cpu_s": 14.25,
+            "system_cpu_s": 22.19,
+            "rss_kib": 51108,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 21.948127343577678
+          },
+          "host_cpu_s": 62.65,
+          "host_cpu_s_per_gib": 37.734637159032424
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 9.14,
+            "system_cpu_s": 16.05,
+            "rss_kib": 66468,
+            "hwm_kib": 66468,
+            "cpu_s_per_gib": 15.17215498860378
+          },
+          "tailscaled": {
+            "user_cpu_s": 21.28,
+            "system_cpu_s": 28.44,
+            "rss_kib": 50152,
+            "hwm_kib": 50508,
+            "cpu_s_per_gib": 29.946786265715755
+          },
+          "host_cpu_s": 79.58,
+          "host_cpu_s_per_gib": 47.93172266745092
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "bbr",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=380905 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:38:48 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 13,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "bbr",
+        "loss_pct": 0,
+        "mbps": 174.03746783163723,
+        "bytes": 978976768,
+        "client": {
+          "product": {
+            "user_cpu_s": 7.06,
+            "system_cpu_s": 7.92,
+            "rss_kib": 147440,
+            "hwm_kib": 249052,
+            "cpu_s_per_gib": 16.430065604498594
+          },
+          "tailscaled": {
+            "user_cpu_s": 7.3,
+            "system_cpu_s": 11.42,
+            "rss_kib": 50948,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 20.532098005087693
+          },
+          "host_cpu_s": 37.25,
+          "host_cpu_s_per_gib": 40.85580398982461
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 11.96,
+            "system_cpu_s": 7.87,
+            "rss_kib": 170960,
+            "hwm_kib": 170960,
+            "cpu_s_per_gib": 21.749546123979115
+          },
+          "tailscaled": {
+            "user_cpu_s": 12.47,
+            "system_cpu_s": 15.71,
+            "rss_kib": 50436,
+            "hwm_kib": 50508,
+            "cpu_s_per_gib": 30.90782701834248
+          },
+          "host_cpu_s": 50.6,
+          "host_cpu_s_per_gib": 55.498085419734906
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 97,
+          "matching": 97,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=1572847 local_batch_max=7607 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=1058006 full=19599 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=199030 unrouted=0 backpressure=304386 reader_joined=1 queue_full_drops=109144 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:39:40 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 14,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "bbr",
+        "loss_pct": 0,
+        "mbps": 127.22430365596948,
+        "bytes": 715653120,
+        "client": {
+          "product": {
+            "user_cpu_s": 5.36,
+            "system_cpu_s": 5.37,
+            "rss_kib": 122096,
+            "hwm_kib": 224260,
+            "cpu_s_per_gib": 16.098930402930403
+          },
+          "tailscaled": {
+            "user_cpu_s": 5.44,
+            "system_cpu_s": 8.37,
+            "rss_kib": 50584,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 20.720058608058608
+          },
+          "host_cpu_s": 28.04,
+          "host_cpu_s_per_gib": 42.07027106227106
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 9.31,
+            "system_cpu_s": 6.15,
+            "rss_kib": 171840,
+            "hwm_kib": 172032,
+            "cpu_s_per_gib": 23.195663003663004
+          },
+          "tailscaled": {
+            "user_cpu_s": 9.33,
+            "system_cpu_s": 11.86,
+            "rss_kib": 50456,
+            "hwm_kib": 50508,
+            "cpu_s_per_gib": 31.7927619047619
+          },
+          "host_cpu_s": 38.99,
+          "host_cpu_s_per_gib": 58.49928205128205
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 98,
+          "matching": 98,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=1190285 local_batch_max=2456 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=796333 full=14933 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=153647 unrouted=0 backpressure=146206 reader_joined=1 queue_full_drops=39666 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:40:34 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 15,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "bbr",
+        "loss_pct": 0,
+        "mbps": 311.46594410089864,
+        "bytes": 1752039424,
+        "client": {
+          "product": {
+            "user_cpu_s": 7.06,
+            "system_cpu_s": 12.98,
+            "rss_kib": 38276,
+            "hwm_kib": 38276,
+            "cpu_s_per_gib": 12.28156504825316
+          },
+          "tailscaled": {
+            "user_cpu_s": 14.18,
+            "system_cpu_s": 21.53,
+            "rss_kib": 51080,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 21.884964464726565
+          },
+          "host_cpu_s": 62.27,
+          "host_cpu_s_per_gib": 38.16232812149323
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 9.08,
+            "system_cpu_s": 16.06,
+            "rss_kib": 66568,
+            "hwm_kib": 66568,
+            "cpu_s_per_gib": 15.407113039575073
+          },
+          "tailscaled": {
+            "user_cpu_s": 21,
+            "system_cpu_s": 28.32,
+            "rss_kib": 50228,
+            "hwm_kib": 50508,
+            "cpu_s_per_gib": 30.225887633724845
+          },
+          "host_cpu_s": 79.37,
+          "host_cpu_s_per_gib": 48.64210668063141
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "bbr",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=379012 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:41:26 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 16,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "bbr",
+        "loss_pct": 1,
+        "mbps": 61.468426489464264,
+        "bytes": 345767936,
+        "client": {
+          "product": {
+            "user_cpu_s": 1.55,
+            "system_cpu_s": 2.81,
+            "rss_kib": 23108,
+            "hwm_kib": 23108,
+            "cpu_s_per_gib": 13.539469294920396
+          },
+          "tailscaled": {
+            "user_cpu_s": 3.85,
+            "system_cpu_s": 6.4,
+            "rss_kib": 50368,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 31.830174374526155
+          },
+          "host_cpu_s": 16.81,
+          "host_cpu_s_per_gib": 52.20148597422289
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 2.32,
+            "system_cpu_s": 4.36,
+            "rss_kib": 48352,
+            "hwm_kib": 48352,
+            "cpu_s_per_gib": 20.74395754359363
+          },
+          "tailscaled": {
+            "user_cpu_s": 5.79,
+            "system_cpu_s": 7.73,
+            "rss_kib": 50244,
+            "hwm_kib": 50508,
+            "cpu_s_per_gib": 41.98477634571645
+          },
+          "host_cpu_s": 23.55,
+          "host_cpu_s_per_gib": 73.13176648976497
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "bbr",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=32374 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:42:19 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 17,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "bbr",
+        "loss_pct": 1,
+        "mbps": 152.25051837408324,
+        "bytes": 856424448,
+        "client": {
+          "product": {
+            "user_cpu_s": 6.89,
+            "system_cpu_s": 6.98,
+            "rss_kib": 145980,
+            "hwm_kib": 236980,
+            "cpu_s_per_gib": 17.389507193143558
+          },
+          "tailscaled": {
+            "user_cpu_s": 7.32,
+            "system_cpu_s": 11.91,
+            "rss_kib": 50568,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 24.109605142332416
+          },
+          "host_cpu_s": 36.26,
+          "host_cpu_s_per_gib": 45.46096112641567
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 7.62,
+            "system_cpu_s": 7.7,
+            "rss_kib": 159808,
+            "hwm_kib": 159808,
+            "cpu_s_per_gib": 19.207444138353228
+          },
+          "tailscaled": {
+            "user_cpu_s": 12.68,
+            "system_cpu_s": 15.82,
+            "rss_kib": 50008,
+            "hwm_kib": 50508,
+            "cpu_s_per_gib": 35.73186409550046
+          },
+          "host_cpu_s": 46.4,
+          "host_cpu_s_per_gib": 58.17398224670952
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 99,
+          "matching": 99,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=1540440 local_batch_max=4793 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=925847 full=13365 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=217849 unrouted=0 backpressure=130142 reader_joined=1 queue_full_drops=37061 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:43:12 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 18,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "bbr",
+        "loss_pct": 1,
+        "mbps": 70.74383471363893,
+        "bytes": 397934592,
+        "client": {
+          "product": {
+            "user_cpu_s": 4.6,
+            "system_cpu_s": 5.89,
+            "rss_kib": 98888,
+            "hwm_kib": 179628,
+            "cpu_s_per_gib": 28.305032938076412
+          },
+          "tailscaled": {
+            "user_cpu_s": 6.6,
+            "system_cpu_s": 11.41,
+            "rss_kib": 49872,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 48.59615283267457
+          },
+          "host_cpu_s": 31.62,
+          "host_cpu_s_per_gib": 85.3198418972332
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 4.27,
+            "system_cpu_s": 5.83,
+            "rss_kib": 131052,
+            "hwm_kib": 131052,
+            "cpu_s_per_gib": 27.25270092226614
+          },
+          "tailscaled": {
+            "user_cpu_s": 8.71,
+            "system_cpu_s": 11.72,
+            "rss_kib": 49864,
+            "hwm_kib": 50508,
+            "cpu_s_per_gib": 55.12600790513834
+          },
+          "host_cpu_s": 33.54,
+          "host_cpu_s_per_gib": 90.50055335968379
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 99,
+          "matching": 99,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=950077 local_batch_max=2696 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=441704 full=728 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=144419 unrouted=0 backpressure=30813 reader_joined=1 queue_full_drops=5651 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:44:05 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 19,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "bbr",
+        "loss_pct": 1,
+        "mbps": 67.69097600846361,
+        "bytes": 380764160,
+        "client": {
+          "product": {
+            "user_cpu_s": 1.56,
+            "system_cpu_s": 2.66,
+            "rss_kib": 23044,
+            "hwm_kib": 23044,
+            "cpu_s_per_gib": 11.90025473321859
+          },
+          "tailscaled": {
+            "user_cpu_s": 3.48,
+            "system_cpu_s": 5.76,
+            "rss_kib": 51108,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 26.056481927710845
+          },
+          "host_cpu_s": 15.19,
+          "host_cpu_s_per_gib": 42.835277108433736
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 2.43,
+            "system_cpu_s": 4.07,
+            "rss_kib": 55744,
+            "hwm_kib": 55744,
+            "cpu_s_per_gib": 18.329776247848535
+          },
+          "tailscaled": {
+            "user_cpu_s": 5.81,
+            "system_cpu_s": 7.5,
+            "rss_kib": 50812,
+            "hwm_kib": 50812,
+            "cpu_s_per_gib": 37.53374182444062
+          },
+          "host_cpu_s": 22.56,
+          "host_cpu_s_per_gib": 63.61842340791738
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "bbr",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=31396 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:44:58 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 20,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "bbr",
+        "loss_pct": 5,
+        "mbps": 5.592308772801856,
+        "bytes": 31457280,
+        "client": {
+          "product": {
+            "user_cpu_s": 0.73,
+            "system_cpu_s": 1.67,
+            "rss_kib": 20156,
+            "hwm_kib": 20156,
+            "cpu_s_per_gib": 81.92
+          },
+          "tailscaled": {
+            "user_cpu_s": 2.1,
+            "system_cpu_s": 3.46,
+            "rss_kib": 50856,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 189.78133333333335
+          },
+          "host_cpu_s": 9.49,
+          "host_cpu_s_per_gib": 323.92533333333336
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 1.12,
+            "system_cpu_s": 2.54,
+            "rss_kib": 22528,
+            "hwm_kib": 22528,
+            "cpu_s_per_gib": 124.92800000000001
+          },
+          "tailscaled": {
+            "user_cpu_s": 2.63,
+            "system_cpu_s": 4.03,
+            "rss_kib": 50884,
+            "hwm_kib": 50884,
+            "cpu_s_per_gib": 227.328
+          },
+          "host_cpu_s": 13.06,
+          "host_cpu_s_per_gib": 445.78133333333335
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "bbr",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=24443 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:45:52 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 21,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "bbr",
+        "loss_pct": 5,
+        "mbps": 50.0051821082289,
+        "bytes": 281280512,
+        "client": {
+          "product": {
+            "user_cpu_s": 3.77,
+            "system_cpu_s": 4.54,
+            "rss_kib": 86508,
+            "hwm_kib": 91408,
+            "cpu_s_per_gib": 31.72205032618826
+          },
+          "tailscaled": {
+            "user_cpu_s": 5.76,
+            "system_cpu_s": 10.2,
+            "rss_kib": 49848,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 60.924659832246036
+          },
+          "host_cpu_s": 26.88,
+          "host_cpu_s_per_gib": 102.60995340167753
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 4.35,
+            "system_cpu_s": 5.18,
+            "rss_kib": 83604,
+            "hwm_kib": 83604,
+            "cpu_s_per_gib": 36.379198508853676
+          },
+          "tailscaled": {
+            "user_cpu_s": 7.5,
+            "system_cpu_s": 10.28,
+            "rss_kib": 51708,
+            "hwm_kib": 52512,
+            "cpu_s_per_gib": 67.87220876048463
+          },
+          "host_cpu_s": 30.2,
+          "host_cpu_s_per_gib": 115.28350419384901
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 99,
+          "matching": 99,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=668135 local_batch_max=1354 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=304897 full=0 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=59097 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:46:46 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 22,
+        "leg": "B",
+        "source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+        "cc": "bbr",
+        "loss_pct": 5,
+        "mbps": 40.008496604242715,
+        "bytes": 225050624,
+        "client": {
+          "product": {
+            "user_cpu_s": 3.66,
+            "system_cpu_s": 4.53,
+            "rss_kib": 88668,
+            "hwm_kib": 98776,
+            "cpu_s_per_gib": 39.075410599883526
+          },
+          "tailscaled": {
+            "user_cpu_s": 5.55,
+            "system_cpu_s": 9.81,
+            "rss_kib": 50756,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 73.28428654630169
+          },
+          "host_cpu_s": 27.01,
+          "host_cpu_s_per_gib": 128.86774606872453
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 4.12,
+            "system_cpu_s": 4.87,
+            "rss_kib": 82444,
+            "hwm_kib": 82444,
+            "cpu_s_per_gib": 42.89230052417007
+          },
+          "tailscaled": {
+            "user_cpu_s": 7.05,
+            "system_cpu_s": 9.67,
+            "rss_kib": 51712,
+            "hwm_kib": 52512,
+            "cpu_s_per_gib": 79.7729994175888
+          },
+          "host_cpu_s": 28.67,
+          "host_cpu_s_per_gib": 136.7877926616191
+        },
+        "client_stop": true,
+        "probe": {
+          "samples": 103,
+          "matching": 103,
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "WBD_M0_TCP_PUBLISH calls=641590 local_batch_max=1460 middle_batch_max=2 pending_peak=2 local_write_failed=0 ingress_first=false ingress_turn_peak=32 ingress_with_pending=0",
+          "WBD_M0_TCP_INGRESS offered=269007 full=0 disconnected=0",
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=87186 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:47:42 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      },
+      {
+        "case": 23,
+        "leg": "A",
+        "source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+        "cc": "bbr",
+        "loss_pct": 5,
+        "mbps": 14.237068050783238,
+        "bytes": 80084992,
+        "client": {
+          "product": {
+            "user_cpu_s": 1.1,
+            "system_cpu_s": 2.58,
+            "rss_kib": 21136,
+            "hwm_kib": 21136,
+            "cpu_s_per_gib": 49.339705400982
+          },
+          "tailscaled": {
+            "user_cpu_s": 3.48,
+            "system_cpu_s": 5.87,
+            "rss_kib": 50768,
+            "hwm_kib": 51576,
+            "cpu_s_per_gib": 125.36039279869067
+          },
+          "host_cpu_s": 14.51,
+          "host_cpu_s_per_gib": 194.54324058919804
+        },
+        "server": {
+          "product": {
+            "user_cpu_s": 1.75,
+            "system_cpu_s": 4.19,
+            "rss_kib": 27208,
+            "hwm_kib": 27208,
+            "cpu_s_per_gib": 79.6407201309329
+          },
+          "tailscaled": {
+            "user_cpu_s": 4.42,
+            "system_cpu_s": 6.43,
+            "rss_kib": 51928,
+            "hwm_kib": 52512,
+            "cpu_s_per_gib": 145.47168576104747
+          },
+          "host_cpu_s": 19.85,
+          "host_cpu_s_per_gib": 266.13944353518826
+        },
+        "client_stop": true,
+        "probe": {
+          "kernel_cc": "bbr",
+          "accepts": [],
+          "valid": true
+        },
+        "direct_snapshots": true,
+        "native_counters": [
+          "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=32494 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+          "2026/11/27 00:48:37 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+        ],
+        "status": "MEASURED"
+      }
+    ],
+    "bbro": {
+      "case_order": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "relay_qdisc_drop_delta_each_direction": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "client_ingress_failure": [
+        0,
+        19599,
+        14933,
+        0
+      ],
+      "server_ingress_failure": [
+        0,
+        21469,
+        10409,
+        0
+      ],
+      "client_shared_tun_full": [
+        0,
+        109144,
+        39666,
+        0
+      ],
+      "server_data_flow_phase_samples": {
+        "B1": {
+          "Startup": 43,
+          "ProbeRtt": 5,
+          "ProbeBw": 0
+        },
+        "B2": {
+          "Startup": 44,
+          "ProbeRtt": 4,
+          "ProbeBw": 0
+        }
+      },
+      "policer_nonzero_samples": [
+        0,
+        0
+      ]
+    },
+    "limits": "bare no added RTT 319.09 Mbps, below prior absolute capacity qualification; endpoint host/relay and multiple workloads not fully qualified; mixed CUBIC/weak loss variance; iperf throughput not independent application payload hash."
+  },
+  "governance": {
+    "feature_run": 45916281786,
+    "status": "FAIL structure",
+    "maintenance_run": 45916281944,
+    "errors": "verified cursor lacks reviewed PASS evidence in existing regression drills; no governance exemption"
+  },
+  "decision": "Function scope accepted; performance not accepted. Preserve candidate on PR80; no old splice retirement, no Windows rollout. Next prioritize actual send/admission event semantics and data plane service, then ordinary ACK/data parsing fast path and complete TCP recovery comparisons. No new runs or product code changes in this acceptance."
+}
