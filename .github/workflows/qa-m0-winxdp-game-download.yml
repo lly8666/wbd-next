@@ -108,7 +108,7 @@ jobs:
           python tools/m0_h2476_gate.py h2442-out/cpu-names.json h2442-out/cpu-gate.json
           if($LASTEXITCODE -ne 0){throw 'CPU gate receipt failed'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with: {name: 'h2476-publish-reclaim-publish-reclaim-cpu-gate-udp-${{ matrix.replica }}', path: h2442-out/cpu-gate.json, if-no-files-found: error, retention-days: 14}
+        with: {name: 'h2476-game-download-cpu-gate-${{ matrix.transport }}-${{ matrix.replica }}', path: h2442-out/cpu-gate.json, if-no-files-found: error, retention-days: 14}
       - name: Fetch already qualified exact WinXDP installed release
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
         shell: pwsh
@@ -128,7 +128,7 @@ jobs:
           # Check exact build identity
           # above, then use the original frozen-server verifier at its base SHA.
           git diff --exit-code 26b11e2da236e909b73f461964c52d5a86d42dca HEAD -- crates r0 Cargo.toml Cargo.lock tools/m0_plan029_linux_dual_native_build.sh tools/m0_linux_glibc231_build.sh ':!crates/wbd-engine/src/v4_windows_native_runtime.rs' ':!crates/wbd-engine/src/v4_windows_owner.rs' ':!crates/wbd-engine/src/v4_windows_fec2_owner.rs' ':!crates/wbd-engine/Cargo.toml' ':!crates/wbd-platform/Cargo.toml' ':!crates/wbd-platform/src/lib.rs' ':!crates/wbd-platform/build.rs' ':!crates/wbd-platform/native/winxdp_tx.cpp' ':!crates/wbd-platform/src/windows_xdp_tx.rs' ':!crates/wbd-platform/src/windows_xdp_rx.rs' ':!crates/wbd-engine/src/v4_windows_game_native_runtime.rs' ':!crates/wbd-engine/src/v4_game_lane.rs' ':!crates/wbd-engine/src/v4_windows_game_owner.rs' ':!r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go' ':!r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go' ':!r0/go_overlay/internal/faketcp/xdp_native_windows.go' ':!r0/go_overlay/assembly/manifest-plan020-m0.json' ':!r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go' ':!r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go' ':!r0/go_overlay/internal/faketcp/native_dns_bootstrap_windows.go'
-          git diff --exit-code af01925eb09e5971841344edc24ddb2399afc9bb HEAD -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_winxdp_release_package.ps1 tools/m0_plan028_h1640_win_gui_compile.ps1 tools/m0_winxdp_driver_setup.cs ':!crates/wbd-platform/native/winxdp_tx.cpp' ':!crates/wbd-platform/src/windows_xdp_rx.rs' ':!crates/wbd-engine/src/v4_windows_native_runtime.rs'
+          git diff --exit-code af01925eb09e5971841344edc24ddb2399afc9bb HEAD -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_winxdp_release_package.ps1 tools/m0_plan028_h1640_win_gui_compile.ps1 tools/m0_winxdp_driver_setup.cs ':!crates/wbd-platform/native/winxdp_tx.cpp' ':!crates/wbd-platform/src/windows_xdp_rx.rs' ':!crates/wbd-engine/src/v4_windows_native_runtime.rs' ':!crates/wbd-engine/src/v4_windows_game_native_runtime.rs'
           GITHUB_SHA=26b11e2da236e909b73f461964c52d5a86d42dca bash tools/m0_h2476_fetch_frozen_linux.sh
           cp -a linux-plan029-public-bundle linux-product
       - name: WSL stage 1 - bounded distro inventory
