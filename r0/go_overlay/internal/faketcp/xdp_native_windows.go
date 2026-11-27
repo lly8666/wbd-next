@@ -114,9 +114,31 @@ func OpenXdpGameEndpoint(path string,index uint32,cfgs []NpcapConfig)(*XdpEndpoi
  return e,true,nil
 }
 func openXdpPorts(path string,index uint32,ports []uint16,udp bool)(*XdpEndpoint,bool,error){
+ return openXdpPortSet(path,index,ports,udp,nil)
+}
+// The opt-in carrier uses the same initial cold handoff, but allows a
+// later candidate port on the existing XSK. Never silently fall back.
+func OpenXdpRotatableGameEndpoint(path string,index uint32,cfgs []NpcapConfig)(*XdpEndpoint,bool,error){
+ if len(cfgs)!=4{return nil,true,fmt.Errorf("rotatable Game requires four lanes")}
+ var ports [4]uint16
+ local:=cfgs[0].Flow.LocalIP
+ for i,cfg:=range cfgs{
+  if err:=cfg.Validate();err!=nil{return nil,true,err}
+  if cfg.Flow.LocalIP!=local{return nil,true,fmt.Errorf("rotatable Game local IPv4 mismatch")}
+  ports[i]=cfg.Flow.LocalPort
+ }
+ e,ok,err:=openXdpPortSet(path,index,ports[:],false,&local)
+ if err!=nil||!ok{return e,ok,err}
+ e.cfg=cfgs[0];e.gameCfgs=cfgs
+ for i:=range cfgs{e.gameIDs[i]=1}
+ return e,true,nil
+}
+func openXdpPortSet(path string,index uint32,ports []uint16,udp bool,local *[4]byte)(*XdpEndpoint,bool,error){
  dll,err:=syscall.LoadDLL(path)
  if err!=nil{return nil,false,err}
- open,err:=dll.FindProc("wbd_m0_win_xdp_open_ports")
+ symbol:="wbd_m0_win_xdp_open_ports"
+ if local!=nil{symbol="wbd_m0_win_xdp_open_rotatable"}
+ open,err:=dll.FindProc(symbol)
  if err!=nil{_ = dll.Release();return nil,false,nil}
  read,err:=dll.FindProc("wbd_m0_win_xdp_read")
  if err!=nil{_ = dll.Release();return nil,true,err}
@@ -127,8 +149,13 @@ func openXdpPorts(path string,index uint32,ports []uint16,udp bool)(*XdpEndpoint
  e:=&XdpEndpoint{dll:dll,read:read,write:write,close:closeProc,gate:newNpcapCallGate(1),ipID:1}
  var protocol uintptr
  if udp{protocol=1}
- rc,_,_:=open.Call(uintptr(index),uintptr(unsafe.Pointer(&ports[0])),uintptr(len(ports)),protocol,uintptr(unsafe.Pointer(&e.handles[0])))
- runtime.KeepAlive(ports);runtime.KeepAlive(e)
+ var rc uintptr
+ if local!=nil{
+  rc,_,_=open.Call(uintptr(index),uintptr(unsafe.Pointer(&local[0])),uintptr(unsafe.Pointer(&ports[0])),uintptr(len(ports)),uintptr(unsafe.Pointer(&e.handles[0])))
+ }else{
+  rc,_,_=open.Call(uintptr(index),uintptr(unsafe.Pointer(&ports[0])),uintptr(len(ports)),protocol,uintptr(unsafe.Pointer(&e.handles[0])))
+ }
+ runtime.KeepAlive(local);runtime.KeepAlive(ports);runtime.KeepAlive(e)
  if int32(rc)!=0{_ = dll.Release();return nil,true,fmt.Errorf("WinXDP ports open rc=%d",int32(rc))}
  fmt.Printf("WBD_XDP_COLD_OWNER_READY ifindex=%d ports=%d udp=%t\n",index,len(ports),udp)
  return e,true,nil
@@ -169,5 +196,62 @@ func(e *XdpEndpoint) writeRaw(frame []byte)error{
  rc,_,_:=e.write.Call(e.handles[1],uintptr(unsafe.Pointer(&frame[0])),uintptr(len(frame)))
  runtime.KeepAlive(frame)
  if int32(rc)!=1{return fmt.Errorf("WinXDP cold write rc=%d",int32(rc))}
+ return nil
+}
+
+// One original FakeTCP cold candidate. These procs target the current
+// authenticated Game4 runtime, not the ring handles already loaned to Rust.
+// The existing native workers remain the sole RX/TX producers/consumers.
+type XdpGameCandidate struct{
+ group uint64
+ cfg NpcapConfig
+ port,read,write *syscall.Proc
+ gate *npcapCallGate
+ sendMu sync.Mutex
+ ipID uint16
+}
+func BeginXdpGameCandidate(group uint64,cfg NpcapConfig,port,read,write *syscall.Proc)(*XdpGameCandidate,error){
+ if group==0||port==nil||read==nil||write==nil{return nil,ErrNpcapClosed}
+ if err:=cfg.Validate();err!=nil{return nil,err}
+ rc,_,_:=port.Call(uintptr(group),uintptr(cfg.Flow.LocalPort),1)
+ if rc!=0{return nil,fmt.Errorf("WinXDP candidate port rc=%d",rc)}
+ return &XdpGameCandidate{group:group,cfg:cfg,port:port,read:read,write:write,
+  gate:newNpcapCallGate(cfg.Generation),ipID:1},nil
+}
+func(c *XdpGameCandidate) ReadSegment()(Segment,error){
+ if err:=c.gate.begin(c.cfg.Generation);err!=nil{return Segment{},err}
+ defer c.gate.end()
+ var frame [4096]byte
+ for !c.gate.isClosed(){
+  rc,_,_:=c.read.Call(uintptr(c.group),uintptr(c.cfg.Flow.LocalPort),uintptr(unsafe.Pointer(&frame[0])),uintptr(len(frame)))
+  runtime.KeepAlive(&frame)
+  n:=int32(rc)
+  if n<0||int(n)>len(frame){return Segment{},fmt.Errorf("WinXDP candidate read rc=%d",n)}
+  if n==0{continue}
+  seg,_,ok,err:=decodeNpcapInbound(frame[:n],c.cfg.Flow)
+  if err!=nil{return Segment{},err}
+  if ok{return seg,nil}
+ }
+ return Segment{},ErrNpcapClosed
+}
+func(c *XdpGameCandidate) WriteSegment(seg Segment)error{
+ if err:=c.gate.begin(c.cfg.Generation);err!=nil{return err}
+ defer c.gate.end()
+ c.sendMu.Lock();defer c.sendMu.Unlock()
+ _,frame,err:=encodeNpcapOutbound(seg,c.cfg,c.ipID)
+ if err!=nil{return err}
+ c.ipID++
+ rc,_,_:=c.write.Call(uintptr(c.group),uintptr(c.cfg.Flow.LocalPort),uintptr(unsafe.Pointer(&frame[0])),uintptr(len(frame)))
+ runtime.KeepAlive(frame)
+ if int32(rc)!=1{return fmt.Errorf("WinXDP candidate write rc=%d",int32(rc))}
+ return nil
+}
+// Only an uncommitted candidate is discarded through this interface.
+// The future native slot commit must transfer its exact port instead.
+func(c *XdpGameCandidate) Close()error{
+ if !c.gate.close(){return nil}
+ c.gate.wait()
+ rc,_,_:=c.port.Call(uintptr(c.group),uintptr(c.cfg.Flow.LocalPort),0)
+ if rc!=0{return fmt.Errorf("WinXDP candidate port retirement rc=%d",rc)}
  return nil
 }

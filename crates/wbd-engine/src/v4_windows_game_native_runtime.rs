@@ -222,7 +222,8 @@ impl GameColdCandidate {
         if self.port.load(Ordering::Acquire)!=u32::from(port){let _=reply.send(-1);return Ok(())}
         let result=send_lane(npf,0,&[&frame]);
         let _=reply.send(if result.accepted_prefix==1&&result.uncertain_index.is_none(){1}else{-1});
-        if result.error.is_some(){return Err(BAD_STAGE)}
+        // No TX credit is a cold candidate miss, not a sibling failure.
+        if result.error.is_some_and(|e|e!=wbd_platform::TxError::WouldBlock){return Err(BAD_STAGE)}
         Ok(())
     }
 }
@@ -1618,7 +1619,7 @@ pub unsafe extern "C" fn wbd_m0_win_game_candidate_write(h:u64,port:u16,frame:*c
     if bytes[12..14]!=[8,0]||bytes[14]>>4!=4||bytes[23]!=6||
        off<34||off+20>len||u16::from_be_bytes([bytes[off],bytes[off+1]])!=port{return -1}
     let (reply,rx)=sync_channel(1);
-    let wake={
+    let (wake,candidate)={
         let Ok(map)=sessions().lock()else{return -1};
         let Some(s)=map.get(&h)else{return -1};
         if s.counters.stop.load(Ordering::Acquire){return -1}
@@ -1627,10 +1628,19 @@ pub unsafe extern "C" fn wbd_m0_win_game_candidate_write(h:u64,port:u16,frame:*c
         if c.port.load(Ordering::Acquire)!=u32::from(port)||tx.is_some(){return -1}
         *tx=Some((port,bytes.to_vec(),reply));
         c.tx_pending.store(true,Ordering::Release);
-        Arc::clone(&s.tx_wake)
+        (Arc::clone(&s.tx_wake),Arc::clone(c))
     };
-    if wake.wake().is_err(){return -1}
-    rx.recv_timeout(Duration::from_secs(2)).unwrap_or(-1)
+    if wake.wake().is_ok(){
+        if let Ok(result)=rx.recv_timeout(Duration::from_secs(2)){return result}
+    }
+    // Cancel an unpublished candidate command. If TX already took it,
+    // this lock joins that single real send; preserve the actual receipt.
+    if let Ok(mut q)=candidate.tx.lock(){
+        if q.as_ref().is_some_and(|(p,_,_)|*p==port){
+            q.take();candidate.tx_pending.store(false,Ordering::Release);
+        }
+    }
+    rx.try_recv().unwrap_or(-1)
 }
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_win_game_native_v3_early(

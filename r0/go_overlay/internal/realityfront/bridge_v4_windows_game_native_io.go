@@ -7,6 +7,7 @@ import(
  "context"
  "runtime"
  "unsafe"
+ "github.com/lly8666/wobuzhidao/internal/faketcp"
 )
 type V4WindowsGameExtraLaneV3 struct{
  Owner uint64
@@ -222,4 +223,21 @@ func(g *V4WindowsAuthenticatedGameGroup) Plan029GameEnableNativeTCPAfterDefender
  ctx context.Context,port uint16,
 )error{
  _,err:=g.plan029GameTCPControl(ctx,2,port);return err
+}
+
+// Begin only the selected new port's cold FakeTCP transport. The group
+// remains active and no existing lane is stopped or reconfigured.
+// No caller may publish this as a new M4 lane before native commit.
+func(g *V4WindowsAuthenticatedGameGroup) BeginNativeGameLaneCandidate(
+ ctx context.Context,cfg faketcp.NpcapConfig,
+)(*faketcp.XdpGameCandidate,error){
+ if g==nil||ctx==nil{return nil,errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return nil,err}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||g.joined==0||len(g.members)!=4{return nil,ErrAdmissionUnsupported}
+ b:=g.members[0].bridge
+ port,err:=b.fixedProc("wbd_m0_win_game_candidate_port");if err!=nil{return nil,err}
+ read,err:=b.fixedProc("wbd_m0_win_game_candidate_read");if err!=nil{return nil,err}
+ write,err:=b.fixedProc("wbd_m0_win_game_candidate_write");if err!=nil{return nil,err}
+ return faketcp.BeginXdpGameCandidate(g.joined,cfg,port,read,write)
 }

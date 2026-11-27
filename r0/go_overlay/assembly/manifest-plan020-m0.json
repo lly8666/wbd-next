@@ -1634,7 +1634,7 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_game_native_io.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go",
-      "result_blob": "6a206036ccbfedb8423cffdc981fb63b9b33148b"
+      "result_blob": "774785e20ee78faa685c78441e2ccb51638184d0"
     },
     {
       "kind": "create",
@@ -2141,7 +2141,7 @@
       "kind": "create",
       "path": "internal/faketcp/xdp_native_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/xdp_native_windows.go",
-      "result_blob": "8fc9c193bde566731413db661f0cdd04e4d47714"
+      "result_blob": "698cf8280d24d9775393741273f29623268f2de2"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
