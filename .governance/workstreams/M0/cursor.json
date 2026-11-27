@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2482,
-  "checkpoint_sha": "8214118b73a0c16dd538323834c82ea2de0a9916",
+  "sequence": 2483,
+  "checkpoint_sha": "7437c5ebd9eef20b154f99cb45b4986d88ce3e61",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "核对c6b33c1精确双ISA原生与旧splice A vs Rust GSO+server ingress-first B的BBR0/1%两组ABBA；检查真实业务、CPU、路径及恢复收据，勿重复派单。再做inner retransmit实际记账。",
+  "next_action": "核对014a902精确双ISA原生与同二进制BBR1% fast retrans clock ABBA，检查旧样本、ACK/SACK取消、实际收据、CPU和弱网稳定性；勿重复派单。明确候选范围仅fast lost DATA，后续再处理TLP/RTO/FIN。",
   "unverified": true,
-  "last_tested_source": "5536d9c16fa650e9bcc2d477b20d437517a11cd2",
+  "last_tested_source": "c6b33c161c484390e33d4c64691c09115db5e61c",
   "evidence_refs": [
-    "docs/evidence/M0/20261127-SERVER-INGRESS-FIRST-CAUSAL-RESULT.json"
+    "docs/evidence/M0/20261127-SELECTED-GSO-INGRESS-SPLICE-BBR01-RESULT.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261127-M0-M4-CLOCK-NATIVE-RESULT-HANDOFF.md",
-    "docs/devlog/M0/20261127-M0-DUAL-TCP-LATE-RST-HANDOFF.md",
     "docs/evidence/M0/20261127-DUAL-RUST-TCP-M4-CLOCK-NATIVE-RESULT.json",
     "docs/devlog/M0/20261127-M0-LOCAL-TUN-GSO-HANDOFF.md",
     "docs/evidence/M0/20261127-DUAL-TCP-TIMEWAIT-AND-BBR0-RESULT.json",
     "docs/devlog/M0/20261127-M0-SERVER-INGRESS-FIRST-HANDOFF.md",
     "docs/evidence/M0/20261127-LOCAL-TUN-GSO-RESULT.json",
-    "docs/devlog/M0/20261127-M0-SELECTED-INGRESS-REQUALIFICATION-HANDOFF.md"
+    "docs/devlog/M0/20261127-M0-SELECTED-INGRESS-REQUALIFICATION-HANDOFF.md",
+    "docs/evidence/M0/20261127-SERVER-INGRESS-FIRST-CAUSAL-RESULT.json",
+    "docs/devlog/M0/20261127-M0-FAST-RETRANS-CLOCK-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "5536d9c双ISA原生PASS，ARM同二进制BBR0 A221.06→B281.33 Mbps +27.26%，CPU/GiB32.02→30.09 -6.03%，服务端准入大降；仅因果PASS非splice parity。ACK3在parity恢复ACK2，SACK压缩仍在。c6b33c1产品代码冻结，旧splice BBR0/1%重资格未验。"
+  "partial_summary": "c6b33c1双ISA原生PASS，ARM8/8：BBR0 splice206.96→Rust273.76 +32.3%，CPU/GiB27.83→32.51；1%68.74→72.69且B34.65/110.73不稳，CPU39.26→60.88，整体性能FAIL。014a902 middle fast lost DATA实际时钟候选未验。"
 }
