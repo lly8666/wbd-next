@@ -31,6 +31,9 @@ use wbd_platform::ipv4_tcp::{
      SackRange32 as WireSack, Ipv4Tuple, PacketPersona, Presentation,
  };
  use wbd_platform::rx_ipv4_tcp::{parse_data_packet_fast,parse_ack_packet,extend_seq32,TrustedRx};
+ #[cfg(feature="winxdp_native_trial")]
+ #[path="v4_windows_normal_rotation.rs"]
+ mod rotation;
 
  // std::thread::Builder::name is only a Rust thread name on some
  // Windows runtimes. Expose the actual OS thread description once so that
@@ -463,13 +466,21 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      counters:Arc<Counters>,
      tx:JoinHandle<i32>,
      rx:JoinHandle<i32>,
+     #[cfg(feature="winxdp_native_trial")]
+     rotation:Option<Arc<rotation::NormalRotation>>,
  }
  static NATIVE:OnceLock<Mutex<BTreeMap<u64,NativeSession>>>=OnceLock::new();
  fn active()->&'static Mutex<BTreeMap<u64,NativeSession>>{
      NATIVE.get_or_init(||Mutex::new(BTreeMap::new()))
  }
  pub(super) fn active_owner(h:u64)->bool{
-     active().lock().map_or(true,|g|g.contains_key(&h))
+     active().lock().map_or(true,|g|{
+         if g.contains_key(&h){return true}
+         #[cfg(feature="winxdp_native_trial")]
+         {g.values().any(|s|s.rotation.as_ref().is_some_and(|r|r.owns(h)))}
+         #[cfg(not(feature="winxdp_native_trial"))]
+         {false}
+     })
  }
 
  // The owner is already authenticated and M4 OS-pinned before construction.
@@ -1050,13 +1061,15 @@ fn stage_sources(
              counters.startup_pad_npf_bytes.load(Ordering::Relaxed));
      }
  }
- fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
+ fn tx_loop(mut cfg:WbdWinNativeAttachV1,mut lane:Arc<Mutex<Entry>>,
      mut tun:WintunRx,mut npf:NativeTx,stop:Arc<WakeEvent>,
-     notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool,auto:bool,
-     sack_negotiated:bool,mut split:Option<NativeSplitWorker>,
+     notify:Arc<WakeEvent>,mut counters:Arc<Counters>,fixed:bool,auto:bool,
+     mut sack_negotiated:bool,mut split:Option<NativeSplitWorker>,
      direct_return:Option<SyncSender<Vec<u8>>>,
      direct_notify:Arc<WakeEvent>,
-     tcp_control:Option<Receiver<TcpColdCommand>>)->i32{
+     tcp_control:Option<Receiver<TcpColdCommand>>,
+     #[cfg(feature="winxdp_native_trial")] rotation:Option<Arc<rotation::NormalRotation>>)->i32{
+     let root_counters=Arc::clone(&counters);
      let mut ip_id=1u16;
      // Genuine reverse ACK-only fallback, only when no piggybacked DATA
      // has settled current progress; never a periodic ACK/PTO generator.
@@ -1095,10 +1108,22 @@ fn stage_sources(
          std::env::var("WBD_PLAN029_P2_POST_INGRESS_FLUSH_SCENE").ok()
              .as_deref()==Some("1");
      loop {
-         if counters.stopping.load(Ordering::Acquire){
+         if root_counters.stopping.load(Ordering::Acquire){
              log_padding_driver_receipt(&split,&counters);
              return OK
          }
+         #[cfg(feature="winxdp_native_trial")]
+         let rotation_progress=if let Some(r)=rotation.as_ref(){
+             match r.tx_turn(&mut npf,&mut ip_id,&direct_notify){
+                 Ok((next,progress))=>{
+                     if let Some(p)=next{cfg=p.cfg;lane=p.lane;counters=p.counters;sack_negotiated=p.sack;last_pure_ack=None;}
+                     progress
+                 },
+                 Err(e)=>return e,
+             }
+         }else{false};
+         #[cfg(not(feature="winxdp_native_trial"))]
+         let rotation_progress=false;
          let result=(||->Result<bool,i32>{
              {
                  let mut e=lock_owner(&lane,&counters,LockDirection::Tx)?;
@@ -1364,7 +1389,7 @@ fn stage_sources(
              // Original authenticated Tunnel ACK semantics use Tunnel
              // work only. Direct socket progress keeps scheduling fair
              // without waiting for the 10ms poll; WouldBlock falls through.
-             if active||direct_progress||still_ready{return Ok(false)}
+             if active||direct_progress||still_ready||rotation_progress{return Ok(false)}
              #[cfg(feature="winxdp_tx_trial")]
              let (carrier_blocked,parity_blocked,completion)={
                  let required=if fixed{4}else{1};
@@ -1424,6 +1449,8 @@ fn stage_sources(
              let next_tcp_due=split.as_ref()
                  .and_then(|owner|owner.next_tcp_cleanup_due_ms());
              let timeout=timeout.min(closed_tcp_cleanup_wait_ms(now_ms,next_tcp_due));
+             #[cfg(feature="winxdp_native_trial")]
+             let timeout=if carrier_blocked{timeout}else{timeout.min(rotation.as_ref().map_or(u32::MAX,|r|r.probe_wait_ms()))};
              // 3 old owner events + 16 existing TCP shards + at most
              // 16 ordinary Direct UDP FD_READ events = 35 (<64 WAIT_ANY).
              // Overflow UDP keeps its old timed scan. No per-flow thread.
@@ -1596,21 +1623,19 @@ fn stage_sources(
      counters.rx_tx_notify_attempts.fetch_add(1,Ordering::Relaxed);
      let _=tx_notify.wake();
  }
- fn rx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
+ fn rx_loop(mut cfg:WbdWinNativeAttachV1,mut lane:Arc<Mutex<Entry>>,
      mut tun:WintunTx,mut npf:NativeRx,stop:Arc<WakeEvent>,
      tx_notify:Arc<WakeEvent>,early_notify:Arc<WakeEvent>,
      early:Arc<Mutex<VecDeque<(u32,Vec<u8>)>>>,
-     counters:Arc<Counters>,fixed:bool,sack_negotiated:bool,
+     mut counters:Arc<Counters>,fixed:bool,mut sack_negotiated:bool,
      direct_returns:Option<Receiver<Vec<u8>>>,
-     tunnel_dns:Option<Arc<Mutex<TunnelDnsMap>>>)->i32{
+     tunnel_dns:Option<Arc<Mutex<TunnelDnsMap>>>,
+     #[cfg(feature="winxdp_native_trial")] rotation:Option<Arc<rotation::NormalRotation>>)->i32{
+     let root_counters=Arc::clone(&counters);
+     #[cfg(feature="winxdp_native_trial")]
+     let mut rotation_rx=rotation::RotationRx::default();
      #[cfg(not(feature="winxdp_native_trial"))]
      let event=match npf.event(){Ok(e)=>e,Err(_)=>return BAD_STAGE};
-     let trusted=TrustedRx{
-         tuple:Ipv4Tuple{src_ip:&cfg.peer_ip,dst_ip:&cfg.local_ip,
-             src_port:cfg.peer_port,dst_port:cfg.local_port},
-         persona:PacketPersona::Legacy,mtu:cfg.path_mtu as usize,
-         authenticated_options:None,
-     };
      #[cfg(not(feature="winxdp_native_trial"))]
      let mut frame=[0u8;MAX_NPF];
      let mut plain=[0u8;MAX_IPV4];
@@ -1622,11 +1647,18 @@ fn stage_sources(
      let mut deferred_direct_tcp:Option<Vec<u8>>=None;
      let mut boundary_rx=BoundaryQpcTrace::new("RX_WINTUN_SEND");
      loop{
-         if counters.stopping.load(Ordering::Acquire){return OK}
+         if root_counters.stopping.load(Ordering::Acquire){return OK}
+         #[cfg(feature="winxdp_native_trial")]
+         if let Some(r)=rotation.as_ref(){
+             match rotation_rx.turn(r,&mut cfg,&mut lane,&mut counters,&mut ack,&mut sack_negotiated,
+                 &mut tun,&mut plain,&tx_notify,tunnel_dns.as_ref()){
+                 Ok(true)=>last_sack_publish=Instant::now(),Ok(false)=>{},Err(e)=>return e,
+             }
+         }
          // Fast ready XDP turns may skip the kernel wait; the existing TX
          // worker-error state is the other producer of the shared Stop event.
          #[cfg(feature="winxdp_native_trial")]
-         if counters.worker_error.load(Ordering::Acquire)!=0{return OK}
+         if root_counters.worker_error.load(Ordering::Acquire)!=0{return OK}
          // Both Tunnel and Direct packets have ONE native Wintun TX owner.
          // A TCP ACK/window-update or DATA must survive a transient full
          // Wintun ring; discarding it here incurs real kernel RTO stalls.
@@ -1703,6 +1735,15 @@ fn stage_sources(
          let wait_ms=direct_rx_wait_timeout_ms(
              deferred_direct_tcp.is_some(),direct_processed);
          #[cfg(feature="winxdp_native_trial")]
+         let wait_ms=wait_ms.min(rotation.as_ref().map_or(u32::MAX,|r|r.rx_wait_ms()));
+     let trusted=TrustedRx{
+         tuple:Ipv4Tuple{src_ip:&cfg.peer_ip,dst_ip:&cfg.local_ip,
+             src_port:cfg.peer_port,dst_port:cfg.local_port},
+         persona:PacketPersona::Legacy,mtu:cfg.path_mtu as usize,
+         authenticated_options:None,
+     };
+
+         #[cfg(feature="winxdp_native_trial")]
          let batch=match npf.next_turn(stop.handle(),early_notify.handle(),wait_ms){
              Ok(wbd_platform::windows_xdp_rx::RxTurn::Ready(b))=>b,
              Ok(wbd_platform::windows_xdp_rx::RxTurn::Stop)=>return OK,
@@ -1740,6 +1781,12 @@ fn stage_sources(
              #[cfg(feature="winxdp_native_trial")]
              let frame_bytes=batch.frame(_i);
              let Some(packet)=io::ethernet_ipv4(frame_bytes)else{continue};
+             #[cfg(feature="winxdp_native_trial")]
+             if let Some(r)=rotation.as_ref(){
+                 match rotation_rx.other(r,cfg.local_port,packet,frame_bytes,&mut tun,&mut plain,&tx_notify,tunnel_dns.as_ref()){
+                     Ok(true)=>continue,Ok(false)=>{},Err(e)=>return e,
+                 }
+             }
              // Optional SACK only after actual original Go protected
              // FakeTCP SYN/SYN-ACK; packet checksum is NOT crypto proof.
              if packet.len()>=40 && packet[0]==0x45 && packet[33]==0x10 {
@@ -1988,6 +2035,15 @@ fn stage_sources(
      let stop=match WakeEvent::new(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
      let notify=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
      let counters=Arc::new(Counters::new(config.initial_rx_seq,config.initial_tx_seq));
+     #[cfg(feature="winxdp_native_trial")]
+     let rotation=if !fixed&&unsafe{wbd_platform::windows_xdp_rx::is_rotatable(config.rx_capture)}{
+         Some(Arc::new(rotation::NormalRotation::new(rotation::NormalPath{cfg:config,lane:Arc::clone(&lane),
+             counters:Arc::clone(&counters),sack:sack_negotiated})))
+     }else{None};
+     #[cfg(feature="winxdp_native_trial")]
+     let tx_rotation=rotation.clone();
+     #[cfg(feature="winxdp_native_trial")]
+     let rx_rotation=rotation.clone();
      let rx_notify=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
      let early=Arc::new(Mutex::new(VecDeque::with_capacity(64)));
      let tunnel_dns_map=split.as_ref().map(|s|s.tunnel_map());
@@ -2023,7 +2079,8 @@ fn stage_sources(
          let rc=tx_loop(config,tx_lane,wtx,sender,Arc::clone(&tx_stop),tx_notify,
              Arc::clone(&tx_counters),fixed,auto_policy.is_some(),sack_negotiated,
              split,direct_sender,Arc::clone(&rx_notify_for_tx),
-             tcp_receiver);
+             tcp_receiver,
+             #[cfg(feature="winxdp_native_trial")] tx_rotation);
          if rc!=OK{
              eprintln!("WBD_WINDOWS_NATIVE_WORKER_FAILURE role=TX rc={}",rc);
              tx_counters.worker_error.store(rc,Ordering::Release);
@@ -2039,7 +2096,8 @@ fn stage_sources(
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=RX tid={}",unsafe{GetCurrentThreadId()});
          let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),tx_notify_for_rx,
              rx_event,rx_early,Arc::clone(&rx_counters),fixed,sack_negotiated,
-             direct_receiver,tunnel_dns_map);
+             direct_receiver,tunnel_dns_map,
+             #[cfg(feature="winxdp_native_trial")] rx_rotation);
          if rc!=OK{
              eprintln!("WBD_WINDOWS_NATIVE_WORKER_FAILURE role=RX rc={}",rc);
              rx_counters.worker_error.store(rc,Ordering::Release);
@@ -2049,7 +2107,9 @@ fn stage_sources(
      }).expect("Rust RX worker spawn");
      guard.insert(config.owner,NativeSession{stop,tx_notify:notify,
          epoch:config.epoch,luid:config.luid,ifindex:config.ifindex,
-         tcp_control:tcp_sender,rx_notify,early,counters,tx,rx});
+         tcp_control:tcp_sender,rx_notify,early,counters,tx,rx,
+         #[cfg(feature="winxdp_native_trial")]
+         rotation});
      OK
  }
  /// After the exact four-stage OS Apply receipt, the original Go owner
@@ -2126,7 +2186,11 @@ fn stage_sources(
      if out.is_null(){return INVALID}
      let guard=match active().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
      let Some(session)=guard.get(&h)else{return UNKNOWN};
-     unsafe{out.write(session.counters.snapshot())};
+     #[cfg(feature="winxdp_native_trial")]
+     let snapshot=session.rotation.as_ref().map_or_else(||session.counters.snapshot(),|r|r.snapshot());
+     #[cfg(not(feature="winxdp_native_trial"))]
+     let snapshot=session.counters.snapshot();
+     unsafe{out.write(snapshot)};
      OK
  }
  // Stop belongs to the original Win32 native owner, not the Go timeout.
@@ -2149,6 +2213,8 @@ fn stage_sources(
          let g=match active().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
          let Some(s)=g.get(&h)else{return UNKNOWN};
          s.counters.stopping.store(true,Ordering::Release);
+         #[cfg(feature="winxdp_native_trial")]
+         if let Some(r)=s.rotation.as_ref(){r.mark_stop();}
          let _=s.stop.wake();
          let _=s.tx_notify.wake();
          let _=s.rx_notify.wake();
@@ -2170,6 +2236,8 @@ fn stage_sources(
      };
      let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
      let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
+     #[cfg(feature="winxdp_native_trial")]
+     if let Some(r)=session.rotation.as_ref(){r.finish_stop();}
      if option_env!("WBD_XDP_PRESSURE_LAB")==Some("1"){
          eprintln!("WBD_XDP_CIPHER_LOAN_LAB packets={}",session.counters.cipher_outside_lock.load(Ordering::Relaxed));
      }

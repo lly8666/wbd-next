@@ -3,7 +3,7 @@ run-name: "M0 Windows Game cold candidate source build | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
-    paths: ['.github/workflows/qa-m0-winxdp-lane-cold-build.yml', 'crates/wbd-engine/src/v4_game_lane.rs', 'crates/wbd-engine/src/v4_windows_cold_port.rs', 'crates/wbd-engine/src/v4_windows_native_runtime.rs', 'crates/wbd-engine/src/v4_windows_owner.rs', 'crates/wbd-engine/src/v4_windows_game_*.rs', 'r0/go_overlay/internal/realityfront/bridge_v4_windows_game_*.go', 'r0/go_overlay/internal/realityfront/bridge_v4_windows_wintun_lease.go', 'r0/go_overlay/internal/faketcp/xdp_native_windows.go', 'tools/prepare_windows_wiring.py', 'r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set.go']
+    paths: ['.github/workflows/qa-m0-winxdp-lane-cold-build.yml', 'crates/wbd-engine/src/v4_game_lane.rs', 'crates/wbd-engine/src/v4_windows_cold_port.rs', 'crates/wbd-engine/src/v4_windows_native_runtime.rs', 'crates/wbd-engine/src/v4_windows_normal_rotation.rs', 'crates/wbd-engine/src/v4_windows_owner.rs', 'crates/wbd-engine/src/v4_windows_game_*.rs', 'r0/go_overlay/internal/realityfront/bridge_v4_windows_game_*.go', 'r0/go_overlay/internal/realityfront/bridge_v4_windows_wintun_lease.go', 'r0/go_overlay/internal/faketcp/xdp_native_windows.go', 'tools/prepare_windows_wiring.py', 'r0/go_overlay/internal/realityfront/bridge_v4_game_cold_set.go']
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
