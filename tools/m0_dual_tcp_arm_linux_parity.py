@@ -119,7 +119,7 @@ def server_start(i):
     else:
         k=ORDER[i];b=bundle(k)
         flags=["--tcp-proxy-cc",cc_for(i),"--tcp-proxy-port","46180"] if k=="A" else ["--dual-rust-tcp"]
-        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_LINUX_PARITY="+("1" if k=="B" else "0"),"WBD_M0_MIDDLE_CC="+rust_cc(i),"WBD_M0_SACK_COMPRESS="+compress(k),"WBD_M0_TCP_EXPERIMENT="+profile(i,k),"WBD_M0_ACK_PROBE="+ack_for(k),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
+        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_LINUX_PARITY="+("1" if k=="B" else "0"),"WBD_M0_NATIVE_M4_CLOCK="+("1" if k=="B" else "0"),"WBD_M0_MIDDLE_CC="+rust_cc(i),"WBD_M0_SACK_COMPRESS="+compress(k),"WBD_M0_TCP_EXPERIMENT="+profile(i,k),"WBD_M0_ACK_PROBE="+ack_for(k),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
                 "--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443",
                 "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--users-file",fixture.TMP/"users.json",
                 "--lease-pool","10.66.0.128/25","--tls-cert",OUT/"cert.pem","--tls-key",fixture.TMP/"key.pem",
@@ -158,7 +158,7 @@ def server_close():
         result["wire"]=[s for s in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in s]
         result["probe"]=probe_receipt(log,"server-middle",ORDER[i],i)
         result["experiment"]=profile(i,ORDER[i])
-        result["native_counters"]=[s for s in log.splitlines() if "V4_PUBLIC_RX_CHAIN role=" in s or "V4_PUBLIC_TX_CHAIN role=" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s]
+        result["native_counters"]=[s for s in log.splitlines() if "V4_PUBLIC_RX_CHAIN role=" in s or "V4_PUBLIC_TX_CHAIN role=" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_TCP_M4_CLOCK" in s]
     save(d/"result.json",result);CURRENT=fixture.current=None
     return result
 def server():
@@ -220,7 +220,7 @@ def client_case(i):
         control("/start",{"case":i});started=True
         if i>=0:
             b=bundle(k);flags=[] if k=="A" else ["--dual-rust-tcp"]
-            p=spawn("client",N,d/"client.log","env","WBD_M0_LINUX_PARITY="+("1" if k=="B" else "0"),"WBD_M0_MIDDLE_CC="+rust_cc(i),"WBD_M0_SACK_COMPRESS="+compress(k),"WBD_M0_TCP_EXPERIMENT="+profile(i,k),"WBD_M0_ACK_PROBE="+ack_for(k),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
+            p=spawn("client",N,d/"client.log","env","WBD_M0_LINUX_PARITY="+("1" if k=="B" else "0"),"WBD_M0_NATIVE_M4_CLOCK="+("1" if k=="B" else "0"),"WBD_M0_MIDDLE_CC="+rust_cc(i),"WBD_M0_SACK_COMPRESS="+compress(k),"WBD_M0_TCP_EXPERIMENT="+profile(i,k),"WBD_M0_ACK_PROBE="+ack_for(k),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
                     "--raw-interface","wan0","--local-ip","10.248.81.2","--local-port",str(44100+2*i),
                     "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
                     "--username","bench","--password","H2442-ONLY","--auto-ip","--installation-id-file",fixture.TMP/("install-"+str(i)),
@@ -276,7 +276,7 @@ def client_case(i):
             row["client_stop"]=rc==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and log.count("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client")==1 and (k=="A" or "WBD_DUAL_RUST_TCP_OWNER_STOP" in log)
             row["wire"]=[s for s in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in s]
             row["probe"]=probe_receipt(log,"client-middle",k,i)
-            row["native_counters"]=[s for s in log.splitlines() if "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s]
+            row["native_counters"]=[s for s in log.splitlines() if "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_TCP_M4_CLOCK" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s]
         if started:
             try:row["server_receipt"]=control("/stop")
             except Exception as e:row["server_stop_error"]=repr(e)

@@ -1,4 +1,4 @@
-name: M0 ARM Linux parity zero loss native admission regression ABBA
+name: M0 ARM Linux parity actual M4 clock and ready loans ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]

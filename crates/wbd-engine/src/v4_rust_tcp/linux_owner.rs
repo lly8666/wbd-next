@@ -186,13 +186,16 @@ impl Owner{
     /// Receipt for a generated inner DATA datagram at the actual TUN
     /// write attempt or original M1 slab acceptance boundary.
     pub(crate) fn admit(&mut self,local:bool,ip:&[u8],now:Instant)->io::Result<()>{
+        self.admit_header(local,ip,ip.len(),now)
+    }
+    pub(crate) fn admit_header(&mut self,local:bool,ip:&[u8],packet_len:usize,now:Instant)->io::Result<()>{
         if !self.parity||ip.len()<40{return Ok(())}
         let h=20+usize::from(ip[32]>>4)*4;
-        if h>=ip.len()||ip[33]&(flags::SYN|flags::FIN|flags::RST)!=0{return Ok(())}
+        if h>=packet_len||ip[33]&(flags::SYN|flags::FIN|flags::RST)!=0{return Ok(())}
         let tuple=Tuple{src:SocketAddrV4::new(Ipv4Addr::new(ip[12],ip[13],ip[14],ip[15]),u16::from_be_bytes([ip[20],ip[21]])),dst:SocketAddrV4::new(Ipv4Addr::new(ip[16],ip[17],ip[18],ip[19]),u16::from_be_bytes([ip[22],ip[23]]))};
         let tuple=if local||self.server{tuple.reverse()}else{tuple};
         let Some(&id)=self.keys.get(&tuple)else{return Ok(())};
-        let seq=u32::from_be_bytes(ip[24..28].try_into().unwrap());let len=(ip.len()-h) as u32;
+        let seq=u32::from_be_bytes(ip[24..28].try_into().unwrap());let len=(packet_len-h) as u32;
         let e=self.flows.get_mut(&id).unwrap();let changed=match &mut e.flow{Flow::Client(f)=>f.admit(local,seq,len,now),Flow::Server(f)=>f.admit(seq,len,now)};
         if changed{self.refresh(id)?;}Ok(())
     }

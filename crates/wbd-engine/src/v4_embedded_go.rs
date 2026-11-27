@@ -6462,6 +6462,33 @@ struct TxTurnCompletion{
     copied:u32,definitely_unsent:u32,uncertain:u32,
     backpressure:bool,failed:bool,invalidate_route:bool,
 }
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+struct NativeM4Clock{
+    header:[u8;40],len:usize,pn:Option<wbd_types::RecordPn>,at:Instant,copied:bool,
+}
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+impl NativeM4Clock{
+    fn from_inner(ip:&[u8],at:Instant)->Option<Self>{
+        if ip.len()<40||ip[0]!=0x45||ip[9]!=6||ip[33]&0x07!=0||20+usize::from(ip[32]>>4)*4>=ip.len(){return None}
+        Some(Self{header:ip[..40].try_into().unwrap(),len:ip.len(),pn:None,at,copied:false})
+    }
+    fn settle(&mut self,ready:&[(wbd_types::RecordPn,u64)],copied:usize,at:Instant){
+        if let Some(pn)=self.pn{
+            if let Some(i)=ready.iter().position(|(p,_)|*p==pn){self.at=at;self.copied=i<copied;}
+        }
+    }
+}
+#[cfg(all(test,any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn native_m4_clock_only_counts_actual_copied_prefix(){
+    let now=Instant::now();let mut ip=[0u8;41];ip[0]=0x45;ip[9]=6;ip[32]=0x50;ip[33]=0x10;
+    let mut a=NativeM4Clock::from_inner(&ip,now).unwrap();let mut b=NativeM4Clock::from_inner(&ip,now).unwrap();
+    a.pn=Some(wbd_types::RecordPn(5));b.pn=Some(wbd_types::RecordPn(6));
+    let later=now+Duration::from_millis(2);let ready=[(wbd_types::RecordPn(5),99),(wbd_types::RecordPn(6),99)];
+    a.settle(&ready,1,later);b.settle(&ready,1,later);
+    assert!(a.copied);assert!(!b.copied);assert_eq!(a.at,later);assert_eq!(b.at,later);
+    let mut missing=NativeM4Clock::from_inner(&ip,now).unwrap();missing.pn=Some(wbd_types::RecordPn(4));missing.settle(&ready,1,later);assert!(!missing.copied);assert_eq!(missing.at,now);
+}
 // The only completion translation on the original authenticated TX path.
 // Exactly the kernel-copied prefix counts, the untouched suffix is dropped
 // by the existing bounded owner drain; an uncertain record is NEVER retried.
@@ -6824,6 +6851,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     events:&wbd_platform::linux_route_events::RouteEvents,
     jumbo_read:&mut [u8],jumbo_queue:&mut VecDeque<Vec<u8>>,
     active_jumbo:&mut Option<PendingOriginalJumbo>,
+    native_m4_clock:bool,native_clock_receipts:&mut Vec<NativeM4Clock>,
     #[cfg(feature="fec2_product_record")]
     ingress:&LoopCounts,
     #[cfg(feature="fec2_product_record")]
@@ -7108,6 +7136,11 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }
         for (mut slab,n) in pending.drain(..){
             if stop.load(Ordering::Acquire){failed=true;break}
+            let native_receipt=if native_m4_clock{
+                NativeM4Clock::from_inner(&slab.writable()[14..14+n],started).map(|r|{
+                    let i=native_clock_receipts.len();native_clock_receipts.push(r);i
+                })
+            }else{None};
             // The NORMAL small-packet path stays unchanged: no LINK20, no
             // packet copy and no extra timer. One oversized real TUN IPv4
             // packet is slow-path fragmented using M3's immutable single-
@@ -7188,7 +7221,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                         slab,n,scoped,ifindex,destination,15,loop_now()
                     )
                 };
-                if result.is_ok(){
+                if let Ok((pn,_,_))=result{
+                    if let Some(i)=native_receipt{native_clock_receipts[i].pn=Some(pn);}
                     accepted+=1;
                     #[cfg(feature="fec2_product_record")]
                     match proto{
@@ -7356,6 +7390,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }
         (batch,raw,flow,e.server_side,e.generation,ready_records.len(),failed,jumbo_staged)
     };
+    let m4_submit_at=if native_m4_clock&&!native_clock_receipts.is_empty(){Some(Instant::now())}else{None};
     let report=if stop.load(Ordering::Acquire)||admitted==0{None}else{
         let tuple=if server_side{Ipv4Tuple{
             src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
@@ -7368,6 +7403,10 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             generation,ready_records.as_slice(),tuple,presentations.as_slice()
         ))
     };
+    if let Some(at)=m4_submit_at{
+        let copied=report.as_ref().map_or(0,|r|r.outcome.accepted_prefix.min(admitted));
+        for receipt in native_clock_receipts.iter_mut(){receipt.settle(actual_firstsend,copied,at);}
+    }
     // Hold only immutable Arc frozen records until the actual synchronous
     // M4 syscall returns. No reserve/ACK is inferred from queue acceptance.
     #[cfg(feature="fec2_product_record")]
@@ -8451,6 +8490,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut tx_records=Vec::<crate::memory::FrozenRecord>::with_capacity(32);
             let mut tx_presentations=Vec::<Presentation>::with_capacity(32);
             let mut tx_actual_firstsend=Vec::<(wbd_types::RecordPn,u64)>::with_capacity(32);
+            let mut native_clock_receipts=Vec::<NativeM4Clock>::with_capacity(32);
+            let mut native_m4_counts=[0u64;3];
             // One reusable TUN read slot, not 128 enlarged M1 owner slabs.
             let mut jumbo_read=vec![0u8;M0_TUN_IPV4_MAX];
             let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
@@ -8460,6 +8501,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut tcp_out=VecDeque::<Vec<u8>>::new();
             let fair_native_turn=native_tcp_owner.is_some() && std::env::var_os("WBD_M0_NATIVE_INGRESS_FIRST").as_deref()==Some(std::ffi::OsStr::new("1"));
             let native_round_robin=native_tcp_owner.is_some()&&std::env::var_os("WBD_M0_LINUX_PARITY").as_deref()==Some(std::ffi::OsStr::new("1"));
+            let native_m4_clock=native_round_robin&&std::env::var_os("WBD_M0_NATIVE_M4_CLOCK").as_deref()==Some(std::ffi::OsStr::new("1"));
             let mut ingress_turn_peak=0usize;
             let mut ingress_with_pending=0u64;
             let mut publish_calls=0u64;
@@ -8558,13 +8600,18 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             true
                         }else{!fair_native_turn||input_empty||input_turns>=32||tcp_out.len()>=64};
                         if let Some(frame)=tcp_out.front().filter(|_|output_first){
-                            let loan={let Ok(mut e)=tx_cell.lock()else{break};
+                            let loan=if let Some(slab)=tx_prefetched.pop(){Ok(slab)}else{let Ok(mut e)=tx_cell.lock()else{break};
                                 if e.phase!=PH_ACTIVE{break}
                                 #[cfg(feature="fec2_product_record")]
                                 let floor=if e.rx_feedback.is_some() && e.fixed_pending.is_none()&&e.fixed_applied.is_none(){M0_NORMAL_FEEDBACK_SLAB_RESERVE}else{0};
                                 #[cfg(not(feature="fec2_product_record"))]
                                 let floor=0;
-                                e.arena.allocate_preserving(floor)};
+                                let first=e.arena.allocate_preserving(floor);
+                                if native_m4_clock&&first.is_ok(){
+                                    let extra=7.min(tcp_out.len().saturating_sub(1)).min(31usize.saturating_sub(tx_pending.len()+jumbo_queue.len()));
+                                    for _ in 0..extra{match e.arena.allocate_preserving(floor){Ok(s)=>tx_prefetched.push(s),Err(_)=>break}}
+                                }
+                                first};
                             let Ok(mut slab)=loan else{break};
                             let n=frame.len();
                             if n>M0_SMALL_ARENA_PAYLOAD{
@@ -8572,7 +8619,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                 jumbo_queue.push_back(tcp_out.pop_front().unwrap());continue
                             }
                             slab.writable()[14..14+n].copy_from_slice(frame);
-                            if native_round_robin&&frame.len()>40&&frame.len()>20+usize::from(frame[32]>>4)*4{if let Some(owner)=native_tcp_owner.as_mut(){if owner.admit(false,frame,Instant::now()).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}}
+                            if native_round_robin&&!native_m4_clock&&frame.len()>40&&frame.len()>20+usize::from(frame[32]>>4)*4{if let Some(owner)=native_tcp_owner.as_mut(){if owner.admit(false,frame,Instant::now()).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}}
                             tcp_out.pop_front();tx_pending.push((slab,n));continue
                         }
                         if input_turns==32{
@@ -8798,16 +8845,29 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     continue
                 }
                 let slice_start=Instant::now();
-                match background_tun_once(
+                // Unused ready loans return before sealing, same original owner rule.
+                tx_prefetched.clear();native_clock_receipts.clear();
+                let result=background_tun_once(
                     &tx_cell,&tun,&stop_tx,ifindex,&tx_ifname,&mut tx_storage,
                     split_ingress,&mut tx_pending,&mut tx_prefetched,
                     &mut tx_records,&mut tx_presentations,
                     &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo,
+                    native_m4_clock,&mut native_clock_receipts,
                     #[cfg(feature="fec2_product_record")]
                     &stats,
                     #[cfg(feature="fec2_product_record")]
                     fec_ingress_on
-                ){
+                );
+                // No Entry lock is held. Even a failed seal or definite
+                // unsent suffix settles the inner TCP attempt, never an
+                // outer re-seal/retry. A copied PN alone is a positive M4 receipt.
+                if let Some(owner)=native_tcp_owner.as_mut(){
+                    for receipt in native_clock_receipts.drain(..){
+                        native_m4_counts[if receipt.copied{0}else if receipt.pn.is_some(){1}else{2}]+=1;
+                        if owner.admit_header(false,&receipt.header,receipt.len,receipt.at).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                    }
+                }
+                match result{
                     Ok(done)=>{
                         #[cfg(feature="fec2_product_record")]
                         if egress_diag && done.failed {
@@ -8902,6 +8962,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             active_jumbo.take();
             jumbo_queue.clear();
             if native_tcp_owner.is_some(){
+                if native_m4_clock{eprintln!("WBD_M0_TCP_M4_CLOCK copied={} not_proven_copied={} no_normal_pn={}",native_m4_counts[0],native_m4_counts[1],native_m4_counts[2]);}
                 eprintln!("WBD_M0_TCP_PUBLISH calls={} local_batch_max={} middle_batch_max={} pending_peak={} local_write_failed={} ingress_first={} ingress_turn_peak={} ingress_with_pending={} admission_drain_before_service={}",publish_calls,local_batch_max,middle_batch_max,pending_peak,local_write_failed,fair_native_turn,ingress_turn_peak,ingress_with_pending,native_round_robin);
             }
             if native_tcp_owner.take().is_some(){eprintln!("WBD_DUAL_RUST_TCP_OWNER_STOP generation={} flows_and_sockets_dropped=1",generation);}

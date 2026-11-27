@@ -50,7 +50,7 @@ jobs:
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Exercise opt-in parity profile on actual native TUN
         run: |
-          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/parity WBD_M0_LINUX_PARITY=1 WBD_M0_MIDDLE_CC=cubic WBD_M0_ACK_PROBE=2 python3 -u tools/m0_dual_rust_tcp_local.py
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/parity WBD_M0_LINUX_PARITY=1 WBD_M0_MIDDLE_CC=cubic WBD_M0_ACK_PROBE=2 WBD_M0_NATIVE_M4_CLOCK=1 python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Retain exact native binary for performance jobs
         run: |
           (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
