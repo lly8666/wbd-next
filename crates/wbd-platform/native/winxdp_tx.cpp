@@ -673,6 +673,9 @@ extern "C" int wbd_xdp_open_rotatable_carrier(DWORD index,const UINT8* local4,co
     if(count!=1&&count!=2&&count!=4)return 0;
     return open_carrier(index,ports,count,FALSE,handles,local4);
 }
+extern "C" int wbd_xdp_rx_is_rotatable(void* raw){
+    return static_cast<RxOwner*>(raw)->port_set!=nullptr;
+}
 extern "C" int wbd_xdp_rx_change_port(void* raw,UINT16 port,BOOL add){
     auto* o=static_cast<RxOwner*>(raw);
     if(!o->port_set||!port)return 0;

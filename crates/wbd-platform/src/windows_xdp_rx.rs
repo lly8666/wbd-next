@@ -12,6 +12,7 @@ extern "C"{
     fn wbd_xdp_open_carrier(index:u32,ports:*const u16,count:u32,udp:i32,handles:*mut *mut c_void)->i32;
     fn wbd_xdp_open_rotatable_carrier(index:u32,local4:*const u8,ports:*const u16,count:u32,handles:*mut *mut c_void)->i32;
     fn wbd_xdp_rx_change_port(raw:*mut c_void,port:u16,add:i32)->i32;
+    fn wbd_xdp_rx_is_rotatable(raw:*mut c_void)->i32;
     fn wbd_xdp_rx_cold_read(raw:*mut c_void,dst:*mut u8,cap:usize)->i32;
     fn wbd_xdp_tx_cold_write(raw:*mut c_void,bytes:*const u8,len:usize)->i32;
     fn wbd_xdp_rx_close(raw:*mut c_void);
@@ -40,6 +41,9 @@ pub fn cold_open_rotatable(index:u32,local4:[u8;4],ports:&[u16])->Result<(usize,
 }
 /// Serialized cold port control. Caller owns the live carrier and ensures
 /// retirement of the exact native lane before releasing its port.
+pub unsafe fn is_rotatable(raw:usize)->bool{
+    unsafe{wbd_xdp_rx_is_rotatable(raw as *mut c_void)!=0}
+}
 pub unsafe fn cold_change_port(raw:usize,port:u16,add:bool)->Result<(),TxError>{
     if unsafe{wbd_xdp_rx_change_port(raw as *mut c_void,port,add as i32)}==0{
         return Err(TxError::IoFailed)

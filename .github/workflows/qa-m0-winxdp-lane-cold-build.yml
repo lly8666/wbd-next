@@ -1,0 +1,33 @@
+name: M0 Windows Game lane candidate native compile
+run-name: "M0 Windows Game cold candidate source build | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-winxdp']
+    paths: ['.github/workflows/qa-m0-winxdp-lane-cold-build.yml']
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Compile actual Windows Rust XDP DLL
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust install failed'}
+          nuget install Microsoft.XDP-for-Windows.Sdk -Version 1.4.0 -OutputDirectory xdp-packages -NonInteractive
+          if($LASTEXITCODE -ne 0){throw 'XDP SDK unavailable'}
+          $env:WBD_XDP_SDK_INCLUDE=(Get-ChildItem xdp-packages -Recurse -Filter xdpapi.h | Where-Object {$_.Directory.Name -eq 'include'} | Select-Object -First 1).Directory.FullName
+          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,winxdp_native_trial'
+          $vs=& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          New-Item -ItemType Directory -Force xdp-build | Out-Null
+          $cmd='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo +1.85.1 build --locked -p wbd-engine --release --features '+$features+' && copy /Y target\release\wbd_engine.dll xdp-build\wbd_engine.dll'
+          cmd.exe /d /s /c $cmd
+          if($LASTEXITCODE -ne 0){throw 'native candidate compile failed'}
+          [ordered]@{source_sha=$env:GITHUB_SHA;scope='compile only, portable FEC';dll=(Get-FileHash xdp-build/wbd_engine.dll).Hash} | ConvertTo-Json | Set-Content xdp-build/manifest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: winxdp-lane-candidate-compile, path: xdp-build/, retention-days: 14, if-no-files-found: error}

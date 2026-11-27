@@ -148,6 +148,84 @@ enum GameTcpColdCommand{
     Prepare(SyncSender<Result<u16,i32>>),
     Enable(u16,SyncSender<Result<u16,i32>>),
 }
+// Cold TLS for ONE candidate port runs through the existing two native
+// carrier owners. No second ring reader, no Go access to a live XSK.
+// Only candidate frames enter this FIFO; active siblings keep the fast path.
+#[cfg(feature="winxdp_native_trial")]
+struct GameColdCandidate {
+    port:AtomicU32,
+    rx:Mutex<VecDeque<Vec<u8>>>,
+    changed:std::sync::Condvar,
+    tx:Mutex<Option<(u16,Vec<u8>,SyncSender<i32>)>>,
+    tx_pending:AtomicBool,
+    raw_rx:usize,
+    initial_ports:[u16;4],
+}
+#[cfg(feature="winxdp_native_trial")]
+impl GameColdCandidate {
+    fn new(raw_rx:usize,lanes:&[LaneConfig])->Self{
+        Self{port:AtomicU32::new(0),rx:Mutex::new(VecDeque::new()),
+            changed:std::sync::Condvar::new(),tx:Mutex::new(None),
+            tx_pending:AtomicBool::new(false),raw_rx,
+            initial_ports:std::array::from_fn(|i|lanes.get(i).map_or(0,|l|l.local_port))}
+    }
+    fn offer_rx(&self,port:u16,frame:&[u8]){
+        if self.port.load(Ordering::Acquire)!=u32::from(port)||frame.len()>FRAME_CAP{return}
+        if let Ok(mut q)=self.rx.lock(){
+            // Recheck after lock: an aborted cold attempt can no longer
+            // receive anything from the old port, including queued frames.
+            if self.port.load(Ordering::Acquire)==u32::from(port)&&q.len()<EARLY_CAP{
+                q.push_back(frame.to_vec());self.changed.notify_one();
+            }
+        }
+    }
+    fn read(&self,port:u16,dst:&mut [u8])->i32{
+        let Ok(q)=self.rx.lock()else{return -1};
+        let Ok((mut q,_))=self.changed.wait_timeout_while(q,Duration::from_millis(50),|q|
+            q.is_empty()&&self.port.load(Ordering::Acquire)==u32::from(port))
+            else{return -1};
+        if self.port.load(Ordering::Acquire)!=u32::from(port){return -1}
+        let Some(frame)=q.pop_front()else{return 0};
+        if frame.len()>dst.len(){return -1}
+        dst[..frame.len()].copy_from_slice(&frame);frame.len() as i32
+    }
+    fn close(&self,port:u16)->Result<(),i32>{
+        if self.port.load(Ordering::Acquire)!=u32::from(port){return Err(INVALID)}
+        // No queued TX may run after this point. The original TX worker
+        // holds this lock only during one genuine candidate frame send.
+        let mut tx=self.tx.lock().map_err(|_|BAD_STAGE)?;
+        self.port.store(0,Ordering::Release);
+        if let Some((_,_,reply))=tx.take(){let _=reply.send(-1);}
+        self.tx_pending.store(false,Ordering::Release);
+        let mut rx=self.rx.lock().map_err(|_|BAD_STAGE)?;
+        rx.clear();self.changed.notify_all();
+        unsafe{wbd_platform::windows_xdp_rx::cold_change_port(self.raw_rx,port,false)}
+            .map_err(|_|BAD_STAGE)
+    }
+    fn begin(&self,port:u16)->Result<(),i32>{
+        if port==0||self.initial_ports.contains(&port)||self.port.load(Ordering::Acquire)!=0{
+            return Err(INVALID)
+        }
+        // Publish the exact new port after the socket is exclusively held
+        // and the existing XDP program can receive it. SYN starts later.
+        unsafe{wbd_platform::windows_xdp_rx::cold_change_port(self.raw_rx,port,true)}
+            .map_err(|_|BAD_STAGE)?;
+        self.port.store(u32::from(port),Ordering::Release);Ok(())
+    }
+    fn send_one(&self,npf:&mut GameTx)->Result<(),i32>{
+        if !self.tx_pending.load(Ordering::Acquire){return Ok(())}
+        let mut tx=self.tx.lock().map_err(|_|BAD_STAGE)?;
+        let Some((port,frame,reply))=tx.take()else{
+            self.tx_pending.store(false,Ordering::Release);return Ok(())
+        };
+        self.tx_pending.store(false,Ordering::Release);
+        if self.port.load(Ordering::Acquire)!=u32::from(port){let _=reply.send(-1);return Ok(())}
+        let result=send_lane(npf,0,&[&frame]);
+        let _=reply.send(if result.accepted_prefix==1&&result.uncertain_index.is_none(){1}else{-1});
+        if result.error.is_some(){return Err(BAD_STAGE)}
+        Ok(())
+    }
+}
 struct GameSession{
     stop:Arc<WakeEvent>,tx_wake:Arc<WakeEvent>,rx_wake:Arc<WakeEvent>,
     early:Arc<Mutex<VecDeque<(usize,u32,Vec<u8>)>>>,
@@ -156,6 +234,8 @@ struct GameSession{
     repair_enabled:bool, // read back from constructed actual GameOuter
     first_owner:u64,epoch:[u8;16],luid:u64,ifindex:u32,
     tcp_control:Option<SyncSender<GameTcpColdCommand>>,
+    #[cfg(feature="winxdp_native_trial")]
+    cold_candidate:Option<Arc<GameColdCandidate>>,
 }
 static GAME_NATIVE:OnceLock<Mutex<BTreeMap<u64,GameSession>>>=OnceLock::new();
 fn sessions()->&'static Mutex<BTreeMap<u64,GameSession>>{
@@ -473,6 +553,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     direct_wake:Arc<WakeEvent>,
     tcp_control:Option<Receiver<GameTcpColdCommand>>,
     split_clock:Instant,
+    #[cfg(feature="winxdp_native_trial")] cold_candidate:Option<Arc<GameColdCandidate>>,
 )->i32{
     let mut id=1u16;
     // Resolve once at cold TX start; release defaults to original path.
@@ -493,6 +574,8 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
     loop{
         if c.stop.load(Ordering::Acquire){return OK}
+        #[cfg(feature="winxdp_native_trial")]
+        if let Some(candidate)=cold_candidate.as_ref(){if let Err(e)=candidate.send_one(&mut npf){return e}}
         // PLAN029: ONE original Game TX classifies already-copied Wintun
         // frames before GameAdapter staging. Direct sockets and DNS use
         // the same NativeSplitWorker as Normal; Game FEC/PN never sees Direct.
@@ -1083,6 +1166,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     tx_wake:Arc<WakeEvent>,early:Arc<Mutex<VecDeque<(usize,u32,Vec<u8>)>>>,
     c:Arc<GameCounters>,direct_returns:Option<Receiver<Vec<u8>>>,
     tunnel_dns:Option<Arc<Mutex<TunnelDnsMap>>>,split_clock:Instant,
+    #[cfg(feature="winxdp_native_trial")] cold_candidate:Option<Arc<GameColdCandidate>>,
 )->i32{
     let mut ledgers:Vec<AckLedger>=lanes.iter().map(|x|AckLedger::new(x.rx_seq)).collect();
     let mut deferred:Vec<Option<DeferredFec>>=(0..lanes.len()).map(|_|None).collect();
@@ -1243,7 +1327,10 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                         let Some(p)=ipv4.get(off+2..off+4)else{continue};
                         let port=u16::from_be_bytes([p[0],p[1]]);
                         let i=usize::from(port.wrapping_sub(lanes[0].local_port));
-                        if i>=lanes.len()||lanes[i].local_port!=port{continue}
+                        if i>=lanes.len()||lanes[i].local_port!=port{
+                            if let Some(candidate)=cold_candidate.as_ref(){candidate.offer_rx(port,batch.frame(j));}
+                            continue
+                        }
                         match receive_game_carrier_frame(&cfg,&lanes,i,ipv4,&group,&outer,&mut tun,&c,
                     &mut ledgers,&mut deferred,&early,&tx_wake,tunnel_dns.as_ref(),
                     split_clock.elapsed().as_millis() as u64){
@@ -1383,6 +1470,14 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
     let repair_enabled=match outer.lock(){
         Ok(v)=>v.repair_enabled,Err(_)=>return BAD_STAGE,
     };
+    #[cfg(feature="winxdp_native_trial")]
+    let cold_candidate=if lanes.len()==4&&unsafe{wbd_platform::windows_xdp_rx::is_rotatable(lanes[0].rx_capture)}{
+        Some(Arc::new(GameColdCandidate::new(lanes[0].rx_capture,&lanes)))
+    }else{None};
+    #[cfg(feature="winxdp_native_trial")]
+    let tx_candidate=cold_candidate.clone();
+    #[cfg(feature="winxdp_native_trial")]
+    let rx_candidate=cold_candidate.clone();
     let tx_outer=Arc::clone(&outer);
     let rx_outer=Arc::clone(&outer);
     let tx_group=Arc::clone(&group);
@@ -1405,7 +1500,8 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
     let rx=match thread::Builder::new().name("wbd-game-native-rx".into()).spawn(move||{
         let rc=rx_loop(cfg,lanes,rx_group,rx_outer,tun_tx,captures,
             Arc::clone(&rx_stop),rx_notify,wake_tx,rx_early,
-            Arc::clone(&rx_counter),direct_receiver,tunnel_dns,rx_clock);
+            Arc::clone(&rx_counter),direct_receiver,tunnel_dns,rx_clock,
+            #[cfg(feature="winxdp_native_trial")] rx_candidate);
         if rc!=OK{
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=worker_exit rc={rc}");
             rx_counter.err.store(rc,Ordering::Release);
@@ -1416,7 +1512,8 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
     let tx=match thread::Builder::new().name("wbd-game-native-tx".into()).spawn(move||{
         let rc=tx_loop(cfg,tx_lanes,tx_group,tx_outer,tun_rx,senders,
             Arc::clone(&tx_stop),tx_notify,Arc::clone(&tx_counters),
-            split,direct_sender,direct_wake,tcp_receiver,tx_clock);
+            split,direct_sender,direct_wake,tcp_receiver,tx_clock,
+            #[cfg(feature="winxdp_native_trial")] tx_candidate);
         if rc!=OK{
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=worker_exit rc={rc}");
             tx_counters.err.store(rc,Ordering::Release);
@@ -1436,6 +1533,8 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
         first_owner:cfg.first.owner,epoch:cfg.first.epoch,
         luid:cfg.first.luid,ifindex:cfg.first.ifindex,
         tcp_control:tcp_sender,
+        #[cfg(feature="winxdp_native_trial")]
+        cold_candidate,
     });
     OK
 }
@@ -1484,6 +1583,54 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v4_tcp_control(
     q.port=port;
     unsafe{ptr.write(q)};
     OK
+}
+// Serialized original cold candidate transport. The group handle comes
+// from the already authenticated live native Game4 owner, not the wire.
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_win_game_candidate_port(h:u64,port:u16,add:u32)->i32{
+    let map=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+    let Some(s)=map.get(&h)else{return UNKNOWN};
+    if s.counters.stop.load(Ordering::Acquire)||add>1{return BAD_STAGE}
+    let Some(c)=s.cold_candidate.as_ref()else{return INVALID};
+    match if add==1{c.begin(port)}else{c.close(port)}{Ok(())=>OK,Err(e)=>e}
+}
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_game_candidate_read(h:u64,port:u16,dst:*mut u8,cap:usize)->i32{
+    if dst.is_null()||cap==0||cap>4096{return -1}
+    let c={
+        let Ok(map)=sessions().lock()else{return -1};
+        let Some(s)=map.get(&h)else{return -1};
+        if s.counters.stop.load(Ordering::Acquire){return -1}
+        let Some(c)=s.cold_candidate.as_ref()else{return -1};Arc::clone(c)
+    };
+    c.read(port,unsafe{std::slice::from_raw_parts_mut(dst,cap)})
+}
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_game_candidate_write(h:u64,port:u16,frame:*const u8,len:usize)->i32{
+    if frame.is_null()||len<54||len>FRAME_CAP{return -1}
+    let bytes=unsafe{std::slice::from_raw_parts(frame,len)};
+    // Actual original-Go IPv4/TCP packet builder supplies the frame. Do
+    // not permit an active sibling's port to be used as the cold producer.
+    let off=14+usize::from(bytes[14]&15)*4;
+    if bytes[12..14]!=[8,0]||bytes[14]>>4!=4||bytes[23]!=6||
+       off<34||off+20>len||u16::from_be_bytes([bytes[off],bytes[off+1]])!=port{return -1}
+    let (reply,rx)=sync_channel(1);
+    let wake={
+        let Ok(map)=sessions().lock()else{return -1};
+        let Some(s)=map.get(&h)else{return -1};
+        if s.counters.stop.load(Ordering::Acquire){return -1}
+        let Some(c)=s.cold_candidate.as_ref()else{return -1};
+        let Ok(mut tx)=c.tx.lock()else{return -1};
+        if c.port.load(Ordering::Acquire)!=u32::from(port)||tx.is_some(){return -1}
+        *tx=Some((port,bytes.to_vec(),reply));
+        c.tx_pending.store(true,Ordering::Release);
+        Arc::clone(&s.tx_wake)
+    };
+    if wake.wake().is_err(){return -1}
+    rx.recv_timeout(Duration::from_secs(2)).unwrap_or(-1)
 }
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_win_game_native_v3_early(
@@ -1573,6 +1720,11 @@ pub extern "C" fn wbd_m0_win_game_native_v3_stop(h:u64)->i32{
     if counters.download_diag{
         let v=counters.download_bp.each_ref().map(|x|x.load(Ordering::Relaxed));
         eprintln!("WBD_XDP_GAME_DOWNLOAD_STOP wintun_full={} deferred_created={} deferred_retry_full={} deferred_finished={} deferred_early_queued={} deferred_early_full={}",v[0],v[1],v[2],v[3],v[4],v[5]);
+    }
+    #[cfg(feature="winxdp_native_trial")]
+    if let Some(c)=session.cold_candidate.as_ref(){
+        let port=c.port.load(Ordering::Acquire) as u16;
+        if port!=0&&c.close(port).is_err(){return STOP_INCOMPLETE}
     }
     eprintln!("M0_PLAN027_GAME_NATIVE_STOP_JOIN group={h} tx_finished=true rx_finished=true tx_rc={tx} rx_rc={rx}");
     if tx!=OK&&tx!=BAD_STAGE&&tx!=AUTHENTICATED_PEER_DEAD{return tx}
