@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2474,
-  "checkpoint_sha": "95ccae927418ef33f903cbc304d25967a42b39ed",
+  "sequence": 2475,
+  "checkpoint_sha": "19503db65d14bb2699ba6654c7a47947f45426c7",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收ba5ed73 native45922396205及ARM45922396199同SOURCE完整ABBA；并核旧中间SOURCE586706c native45922258989/ABBA45922259026在途实际结果，不重派。重点本机ingress/SharedTUN损失、BBR steady state、吞吐CPU/GiB、多流及Stop；若失败定位首异常。",
+  "next_action": "刷新9ede62e同SOURCE native/core和零损BBR/CUBIC八轮ABBA资格/结果，不重派。先核实际并发reset是否消失，若失败按RESET_ACCEPT/NO_FLOW收据定位；若通过再核吞吐/CPU、真实ingress/SharedTUN、BBR稳态与Stop。",
   "unverified": true,
-  "last_tested_source": "65aae40cdbd99c0a9957518db1748ad533181bdc",
+  "last_tested_source": "ba5ed73969c66af5f6313bfec98ca78657ef812a",
   "evidence_refs": [
-    "docs/evidence/M0/20261127-DUAL-RUST-TCP-CONSOLIDATED-PARITY-RESULT.json"
+    "docs/evidence/M0/20261127-DUAL-RUST-TCP-NATIVE-ADMISSION-RESULT.json"
   ],
   "context_refs": [
     "docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md",
-    "docs/devlog/M0/20261127-DUAL-RUST-TCP-NATIVE-OWNER-HANDOFF.md",
-    "docs/evidence/M0/20261127-DUAL-RUST-TCP-PARITY-HOTPATH-RESULT.json"
+    "docs/devlog/M0/20261127-NATIVE-ADMISSION-REGRESSION-HANDOFF.md",
+    "docs/evidence/M0/20261127-DUAL-RUST-TCP-CONSOLIDATED-PARITY-RESULT.json"
   ],
   "open_requests": [],
-  "partial_summary": "PR80 ba5ed73集中改每流实际准入配额、fresh DATA TUN/M1接收时钟、BBR admitted pipe、正常ACK/DATA预测和缓冲复用、ready ingress/output交错。原TLS-like/TCP-like载体路径未改，未新增队列/线程。未验证，真实M4/重传时序、实际GSO等效、恢复和无HOL尚未证明；65aae40功能PASS/性能FAIL证据保留。"
+  "partial_summary": "586706c native PASS但完整24/24性能未达标，BBR0 261.17→194.96Mbps；ba5ed73 344 core双ISA PASS但parity并发reset双ISA FAIL，性能未启动；9ede62e修正准入先后、RTO/FIN及ready TUN批次锁，未验证。旧外层及MTU不改，无新队列/线程，治理旧红灯保留。"
 }
