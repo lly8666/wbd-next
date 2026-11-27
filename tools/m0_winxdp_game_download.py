@@ -4,6 +4,8 @@ from m0_wl_perf_v2_config import read_scenario
 SECONDS=30
 STREAMS=4
 PORT=5202
+TARGET="198.18.77.2"
+NS="h2441-origin"
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"result/wl-public"
 E=ROOT/"result/winxdp-game-download"
@@ -40,13 +42,14 @@ def tcp_app(side,flag,directory):
     if side=="linux":
         with socket.socket() as listener:
             listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-            listener.bind(("10.66.0.1",PORT));listener.listen(STREAMS);listener.settimeout(.25)
+            listener.bind((TARGET,PORT));listener.listen(STREAMS);listener.settimeout(.25)
             print("GAME_TCP_LISTEN",flush=True)
             limit=time.monotonic()+28
             while len(sockets)<STREAMS and time.monotonic()<limit and not flag.exists():
                 try:
                     c,_=listener.accept()
                     c.setsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF,4*1024*1024)
+                    c.setsockopt(socket.IPPROTO_TCP,socket.TCP_CONGESTION,b"cubic")
                     import struct
                     c.setsockopt(socket.SOL_SOCKET,47,struct.pack("=Q",int(250*125000/STREAMS)))
                     sockets.append(c)
@@ -56,7 +59,7 @@ def tcp_app(side,flag,directory):
             c=socket.socket()
             try:
                 c.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,16*1024*1024)
-                c.bind(("10.66.0.2",0));c.settimeout(20);c.connect(("10.66.0.1",PORT))
+                c.bind(("10.66.0.2",0));c.settimeout(20);c.connect((TARGET,PORT))
                 return c,None
             except OSError as e:c.close();return None,repr(e)
         with concurrent.futures.ThreadPoolExecutor(max_workers=STREAMS) as pool:
@@ -82,7 +85,23 @@ def tcp_app(side,flag,directory):
     (out/("game-tcp-"+side+".json")).write_text(json.dumps(row,indent=2))
     print("GAME_TCP_RESULT "+json.dumps(row),flush=True)
 
-def measure_tcp(root,out,unix,win_product,linux_product,scenario):
+def measure_tcp(root,out,wsl,unix,win_product,linux_product,scenario):
+    # Use the same isolated forwarded origin topology as H2441. A
+    # connection to 10.66.0.1 is LOCAL and never enters TCP TPROXY.
+    wsl("ip","netns","add",NS)
+    try:
+        wsl("ip","link","add","h2441host","type","veth","peer","name","h2441peer")
+        wsl("ip","link","set","h2441peer","netns",NS)
+        wsl("ip","addr","add","198.18.77.1/24","dev","h2441host")
+        wsl("ip","link","set","h2441host","up")
+        for args in (("link","set","lo","up"),("addr","add",TARGET+"/24","dev","h2441peer"),("link","set","h2441peer","up"),("route","add","default","via","198.18.77.1")):
+            wsl("ip","netns","exec",NS,"ip",*args)
+        (out/"game-tcp-origin-route.json").write_text(wsl("ip","-j","route","get",TARGET))
+        return _measure_tcp(root,out,unix,win_product,linux_product,scenario)
+    finally:
+        wsl("ip","netns","del",NS)
+
+def _measure_tcp(root,out,unix,win_product,linux_product,scenario):
     flag=out/"game-tcp-start.flag";flag.unlink(missing_ok=True)
     script=root/"tools/m0_winxdp_game_download.py";processes=[]
     def wait_marker(p,path,marker,seconds):
@@ -92,7 +111,7 @@ def measure_tcp(root,out,unix,win_product,linux_product,scenario):
             time.sleep(.1)
     with (out/"game-tcp-linux.log").open("w") as ll,(out/"game-tcp-windows.log").open("w") as wl:
         try:
-            l=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3","-u",unix(script),"tcp-app","linux",unix(flag),unix(out)],stdout=ll,stderr=subprocess.STDOUT);processes.append(l)
+            l=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","ip","netns","exec",NS,"python3","-u",unix(script),"tcp-app","linux",unix(flag),unix(out)],stdout=ll,stderr=subprocess.STDOUT);processes.append(l)
             wait_marker(l,out/"game-tcp-linux.log","GAME_TCP_LISTEN",10)
             w=subprocess.Popen([sys.executable,"-u",str(script),"tcp-app","windows",str(flag),str(out)],stdout=wl,stderr=subprocess.STDOUT);processes.append(w)
             wait_marker(w,out/"game-tcp-windows.log","GAME_TCP_CONNECTED",25)
@@ -103,8 +122,10 @@ def measure_tcp(root,out,unix,win_product,linux_product,scenario):
                 if time.monotonic()>=end:raise RuntimeError("TCP diagnostic deadline")
                 time.sleep(.2)
             rows={side:json.loads((out/("game-tcp-"+side+".json")).read_text()) for side in ("windows","linux")}
-            status="MEASURED_TCP_DOWNLOAD" if rows["windows"]["connected_streams"] and rows["linux"]["connected_streams"] else "TCP_NO_CONNECTION"
-            return {"status":status,"windows":rows["windows"],"linux":rows["linux"],"sender_scope":"SOCKET_ACCEPTED_BYTES_NOT_DELIVERED","receiver_scope":"FIRST_TCP_STREAM_BYTES_IN_30S"}
+            accepts=(out/"server.log").read_text(errors="replace").count("WBD_TCP_SPLICE_ACCEPT target="+TARGET+":"+str(PORT)+" cc=bbr")
+            status=("MEASURED_TCP_DOWNLOAD" if rows["windows"]["connected_streams"]==rows["linux"]["connected_streams"]==STREAMS and accepts>=STREAMS
+                    else "TCP_PARTIAL_OR_BBR_NOT_PROVED")
+            return {"status":status,"bbr_accepts":accepts,"windows":rows["windows"],"linux":rows["linux"],"sender_scope":"SOCKET_ACCEPTED_BYTES_NOT_DELIVERED","receiver_scope":"FIRST_TCP_STREAM_BYTES_IN_30S"}
         finally:
             for p in processes:
                 if p.poll() is None:p.terminate()
@@ -122,10 +143,11 @@ def kernel_sample(flag,output):
             row={"elapsed_s":time.monotonic()-start}
             for key,args in (("eth0",["tc","-s","-j","qdisc","show","dev","eth0"]),
                              ("ifb",["tc","-s","-j","qdisc","show","dev","ifbwlm0"]),
-                             ("ss",["ss","-tin","sport",":5202"])):
+                             ("ss",["ss","-tin","( sport = :5202 or dport = :5202 or sport = :46180 )"]),
+                             ("origin_ss",["ip","netns","exec",NS,"ss","-tin","sport",":5202"])):
                 try:
                     p=subprocess.run(args,text=True,capture_output=True,timeout=3)
-                    row[key]=json.loads(p.stdout) if key!="ss" and p.returncode==0 else p.stdout
+                    row[key]=json.loads(p.stdout) if key in ("eth0","ifb") and p.returncode==0 else p.stdout
                 except Exception as e:row[key+"_error"]=repr(e)
             f.write(json.dumps(row)+"\n");f.flush()
             time.sleep(max(0,2-(time.monotonic()-start)%2))
@@ -155,8 +177,10 @@ def summary(case,mode,transport,rc):
         if t>0:
             for k in ("cpu_total_s","cpu_user_s","cpu_kernel_s"):
                 if k in cpu[-1] and k in cpu[0]:resource[k+"_per_s"]=(cpu[-1][k]-cpu[0][k])/t
+            named=[x for x in cpu[1:] if x.get("thread_cpu",{}).get("named_rust_workers",0)==2]
+            resource["named_rust_worker_samples"]=len(named)
             for k in ("rust_tx_cpu_delta_s","rust_rx_cpu_delta_s","rust_tx_kernel_delta_s","rust_rx_kernel_delta_s"):
-                resource[k+"_per_s"]=sum(x.get("thread_cpu",{}).get(k,0) for x in cpu[1:])/t
+                resource[k+"_per_s"]=sum(x["thread_cpu"][k] for x in named)/t if len(named)==len(cpu)-1 else None
             for k in ("working_set_bytes","private_bytes"):
                 vals=[x[k] for x in cpu if k in x]
                 if vals:resource["peak_"+k]=max(vals)
@@ -187,6 +211,8 @@ def summary(case,mode,transport,rc):
          "windows_cpu":resource,"wire":wire,"tx":receipts("WBD_XDP_TX_STOP "),"rx":receipts("WBD_XDP_RX_STOP "),
          "tx_lab":receipts("WBD_XDP_TX_LAB "),"rx_lab":receipts("WBD_XDP_RX_LAB "),
          "wintun_backpressure":receipts("WBD_XDP_GAME_DOWNLOAD_STOP "),
+         "rss_default":receipts("WBD_XDP_SINGLE_RSS_READY "),"rss_ready":receipts("WBD_XDP_RX_READY "),
+         "bbr":report.get("game_download_bbr"),"bbr_accepts":v.get("tcp_download",{}).get("bbr_accepts"),
          "fec_backend":lines("M0_WINDOWS_GAME_M4_FEC_BACKEND_READBACK"),"outer_stop":lines("WBD_GAME_FEC_NORMAL_OUTER_STOP"),
          "fec_applied":[l[-600:] for l in server.splitlines() if "V4_PUBLIC_GAME_FEC_APPLIED role=server" in l][-4:],
          "native_telemetry_last":telemetry[-3:],"linux_tun_link":report.get("linux_tun_link_kernel"),"linux_tun_fq":report.get("linux_tun_fq_kernel")}
@@ -208,7 +234,8 @@ def matrix():
                 if p.is_file() and not p.name.endswith("owned.json"):p.unlink()
         env=dict(os.environ,WBD_WL_PUBLIC_MODE=mode,WBD_WL_PUBLIC_MODES=mode,
                  WBD_WL_V2_SCENARIO=str(scenario.relative_to(ROOT)).replace("\\","/"),
-                 WBD_XDP_LAB_POLICY="original",WBD_XDP_LAB_TX="2048",WBD_XDP_LAB_RX="16384",WBD_XDP_LAB_QUANTUM="32")
+                 WBD_XDP_GAME_DOWNLOAD_BBR="1",
+                 WBD_XDP_LAB_POLICY="",WBD_XDP_LAB_TX="2048",WBD_XDP_LAB_RX="16384",WBD_XDP_LAB_QUANTUM="32")
         shutil.copyfile(scenario,case/"scenario.json")
         flag=OUT/("game-tcp-start.flag" if transport=="tcp" else "wl-n0-start.flag")
         def guest(p):return "/mnt/"+p.drive[0].lower()+p.as_posix()[2:]
@@ -227,10 +254,13 @@ def matrix():
             for p in OUT.glob(pat):
                 if p.is_file() and not p.name.endswith("owned.json"):shutil.copyfile(p,case/p.name)
         row=summary(case,mode,transport,rc);rows.append(row)
-        (E/"summary.json").write_text(json.dumps(rows,indent=2))
+        (E/("summary-"+transport+".json")).write_text(json.dumps(rows,indent=2))
         if rc==124 or row["stop"]!="PASS_BOTH_OWNED":
             print("WINXDP_GAME_DOWNLOAD_STOP_MISSING "+mode,flush=True);break
-    return 0 if len(rows)==4 and all(r["rc"]==0 and r["stop"]=="PASS_BOTH_OWNED" for r in rows) else 2
+    return 0 if len(rows)==4 and all(r["rc"]==0 and r["stop"]=="PASS_BOTH_OWNED" and
+        r["rss_default"] and r["rx"] and all(x.get("queues")==1 for x in r["rx"]) and
+        (r["bbr"] or {}).get("ready") and (r["bbr"] or {}).get("stop") and
+        (transport!="tcp" or (r["bbr_accepts"] or 0)>=STREAMS) for r in rows) else 2
 
 if __name__=="__main__":
     if len(sys.argv)>1 and sys.argv[1]=="tcp-app":tcp_app(*sys.argv[2:])

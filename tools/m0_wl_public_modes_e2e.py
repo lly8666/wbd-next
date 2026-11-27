@@ -189,6 +189,11 @@ for mode in modes:
   v2_delivery_ok=(v2.get("scenario_sha256")==scene["scenario_sha256"] and
     v2.get("owned_stop")=="PASS_BOTH_OWNED" and
     v2.get("status") in ("MEASURED_TCP_DOWNLOAD","MEASURED_BOTH_OS_KERNEL","CAPACITY_LIMITED_GENERATOR_OFFER"))
+  if os.environ.get("WBD_XDP_GAME_DOWNLOAD_BBR")=="1":
+   bbr=result.get("game_download_bbr",{})
+   v2_delivery_ok=v2_delivery_ok and bbr.get("ready") and bbr.get("stop")
+   if os.environ.get("WBD_XDP_GAME_DOWNLOAD_TRANSPORT")=="tcp":
+    v2_delivery_ok=v2_delivery_ok and bbr.get("accepted",0)>=4
  passed=rc==0 and result.get("mode_public","").startswith("PASS_ACTUAL_") and (
   not performance or str(result.get("WL_N0","")).startswith("PASS_SCOPED_")) and (
   not stress or str(result.get("WL_P200","")).startswith("PASS_SCOPED_")) and v2_delivery_ok

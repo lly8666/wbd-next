@@ -560,6 +560,17 @@ try:
   report["h2441_server_kernel"]={"uname":wsl("uname","-a"),"registered_cc":inventory,"requested_proxy":h2441_cc or "nat"}
   if h2441_cc and h2441_cc not in inventory.split():raise RuntimeError("H2441_ENVIRONMENT_BBR_UNAVAILABLE_NO_FALLBACK")
   h2441_flags=" --tun-fq-maxrate 0"+(" --tcp-proxy-cc bbr --tcp-proxy-port 46180" if h2441_cc else "")
+ game_download_bbr=os.environ.get("WBD_XDP_GAME_DOWNLOAD_BBR")=="1"
+ if game_download_bbr:
+  assert is_game and not p030_managed
+  try:wsl("modprobe","tcp_bbr",timeout=10)
+  except RuntimeError:pass
+  inventory=wsl("sysctl","-n","net.ipv4.tcp_available_congestion_control")
+  report["game_download_bbr_kernel"]={"registered_cc":inventory,"requested_proxy":"bbr"}
+  if "bbr" not in inventory.split():raise RuntimeError("GAME_DOWNLOAD_BBR_UNAVAILABLE")
+  # Keep the previous Game TUN/FQ configuration; only the forwarded TCP
+  # path changes. UDP never enters the TCP splice owner.
+  h2441_flags=" --tcp-proxy-cc bbr --tcp-proxy-port 46180"
  if p030_managed:
   managed_cfg={"listen":peer+":443","server-name":"wbd-v4.example.test","raw-interface":"eth0",
       "tun-name":"wbdwl4","tun-ipv4":"10.66.0.1/24","lease-pool":"10.66.0.128/25",
@@ -2713,7 +2724,7 @@ print(json.dumps(result),flush=True)
    print(netem("arm"),flush=True)
    if os.environ.get("WBD_XDP_GAME_DOWNLOAD_TRANSPORT")=="tcp":
     from m0_winxdp_game_download import measure_tcp
-    measured=measure_tcp(root,out,unix,w,s,scenario)
+    measured=measure_tcp(root,out,wsl,unix,w,s,scenario)
     print(netem("snapshot"),flush=True)
     report["linux_tun_link_kernel"]=link_delta(tun_link_before,tun_link_snapshot("after"))
     report["linux_tun_fq_kernel"]=fq_delta(tun_fq_before,tun_fq_snapshot("after"))
@@ -2979,6 +2990,12 @@ print(json.dumps(result),flush=True)
  if s.returncode or stop_marker not in server_stop_text:raise RuntimeError("Linux original Rust Stop missing; exit="+str(s.returncode)+" expected="+stop_marker)
  if p030_managed and ("V4_PUBLIC_MIXED_NORMAL_STOP_DRAINED reason=server-close remaining_flows=0" not in server_stop_text or not re.search(r"V4_PUBLIC_SHARED_TUN_STOP generation=[^\n]*reader_joined=1",server_stop_text) or "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED owned_rule_deleted=1" not in server_stop_text):
   raise RuntimeError("Linux managed native Stop receipts missing")
+ if game_download_bbr:
+  report["game_download_bbr"]={"ready":"WBD_TCP_SPLICE_READY tun=wbdwl4 port=46180 cc=bbr" in server_stop_text,
+    "stop":"WBD_TCP_SPLICE_STOP error=<nil>" in server_stop_text,
+    "accepted":server_stop_text.count("WBD_TCP_SPLICE_ACCEPT target=198.18.77.2:5202 cc=bbr")}
+  if not report["game_download_bbr"]["ready"] or not report["game_download_bbr"]["stop"]:
+   raise RuntimeError("GAME_DOWNLOAD_BBR_OWNER_RECEIPT_MISSING")
  report["stop"]="PASS_BOTH_OWNED"
  if p029b_b4:
   # Signed source-locked proof: no synthetic OS/Ready, no single- or

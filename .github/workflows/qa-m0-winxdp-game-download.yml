@@ -1,5 +1,5 @@
-name: M0 WinXDP Game 250M 400ms 30pct download
-run-name: "M0 Game download 250M 400ms 30pct TCP UDP | ${{ github.sha }}"
+name: M0 WinXDP default single RSS Game BBR download
+run-name: "M0 Game single RSS BBR 250M 400ms 30pct TCP UDP | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
@@ -60,6 +60,11 @@ jobs:
           $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration,winxdp_native_trial'
           $vs=& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
           New-Item -ItemType Directory -Force xdp-build | Out-Null
+          # Compile the real non-lab default as well as the instrumented DLL.
+          $env:WBD_XDP_PRESSURE_LAB='0'
+          $release='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo +1.85.1 build --locked -p wbd-engine --release --features '+$features+' && copy /Y target\release\wbd_engine.dll xdp-build\wbd_engine-release.dll'
+          cmd.exe /d /s /c $release
+          if($LASTEXITCODE -ne 0){throw 'non-lab default single RSS build failed'}
           $env:WBD_XDP_PRESSURE_LAB='1'
           $cmd='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo +1.85.1 build --locked -p wbd-engine --release --features '+$features+' && copy /Y target\release\wbd_engine.dll xdp-build\wbd_engine.dll && cargo +1.85.1 test --locked -p wbd-engine --release --features '+$features+' winxdp_fixed_product_arena_retains_original_fec_budget_and_rx_headroom -- --nocapture'
           cmd.exe /d /s /c $cmd
@@ -73,17 +78,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        replica: [A,B,C,D,E,F,G,H]
-        transport: [tcp,udp]
+        replica: [A,B,C,D,E,F,G,H,I,J]
     runs-on: windows-2025
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       GH_TOKEN: ${{ github.token }}
       PYTHONUTF8: '1'
       WBD_XDP_PRESSURE_LAB: '1'
       WBD_XDP_GAME_DOWNLOAD_DIAG: '1'
-      WBD_XDP_GAME_DOWNLOAD_TRANSPORT: ${{ matrix.transport }}
-      WBD_XDP_LAB_POLICY: original
+      WBD_XDP_GAME_DOWNLOAD_BBR: '1'
+      WBD_XDP_LAB_POLICY: ''
       WBD_WL_OUTER_REPAIR: 'on'
       WBD_WL_PUBLIC_MODE: normal
       WBD_WL_NATIVE_OUTER_MTU_REQUEST: default1460
@@ -108,7 +112,7 @@ jobs:
           python tools/m0_h2476_gate.py h2442-out/cpu-names.json h2442-out/cpu-gate.json
           if($LASTEXITCODE -ne 0){throw 'CPU gate receipt failed'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with: {name: 'h2476-game-download-cpu-gate-${{ matrix.transport }}-${{ matrix.replica }}', path: h2442-out/cpu-gate.json, if-no-files-found: error, retention-days: 14}
+        with: {name: 'h2476-game-download-cpu-gate-${{ matrix.replica }}', path: h2442-out/cpu-gate.json, if-no-files-found: error, retention-days: 14}
       - name: Fetch already qualified exact WinXDP installed release
         if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
         shell: pwsh
@@ -237,15 +241,15 @@ jobs:
         shell: pwsh
         run: |
           $m=Get-Content lab-build/lab-manifest.json -Raw | ConvertFrom-Json
-          git diff --exit-code c047c9efdd3f2da39f01a2c0fa58a2b2d2d2b06a HEAD -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_winxdp_release_package.ps1 tools/m0_plan028_h1640_win_gui_compile.ps1 tools/m0_winxdp_driver_setup.cs ':!crates/wbd-engine/src/v4_windows_game_native_runtime.rs'
+          git diff --exit-code 86bf98bc7a97652c46ce437ba18349d5cdb17f33 HEAD -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_winxdp_release_package.ps1 tools/m0_plan028_h1640_win_gui_compile.ps1 tools/m0_winxdp_driver_setup.cs ':!crates/wbd-platform/native/winxdp_tx.cpp'
           if($LASTEXITCODE -ne 0){throw 'frozen lab product sources changed'}
           if($m.source_sha -ne $env:GITHUB_SHA -or !$m.lab -or (Get-FileHash lab-build/wbd_engine.dll).Hash.ToLowerInvariant() -ne $m.dll){throw 'lab identity mismatch'}
           Copy-Item lab-build/wbd_engine.dll result/wl-public/wbd_engine.dll -Force
           "WBD_XDP_TESTED_DLL_SHA=$($m.source_sha)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: 'Four 30-second Game download scenes'
+      - name: 'Eight 30-second Game single RSS BBR download scenes'
         shell: pwsh
         if: ${{ (steps.cpu_gate.outputs.eligible == 'true') }}
-        timeout-minutes: 23
+        timeout-minutes: 28
         run: |
           $ErrorActionPreference='Stop'
           $guestText=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 | Out-String)
@@ -300,8 +304,17 @@ jobs:
             Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
             New-NetFirewallHyperVRule -Name ($name+'-bare') -DisplayName ($name+'-bare') -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $hostIP[0].IPAddress -LocalPorts @('5202') | Out-Null
             $env:WBD_WL_BINARY_SOURCE=$env:WBD_XDP_TESTED_DLL_SHA
+            # Same screened CPU and setup for both transports; no ABBA.
+            $env:WBD_XDP_GAME_DOWNLOAD_TRANSPORT='udp'
             & python -u tools/m0_winxdp_game_download.py
-            if($LASTEXITCODE -ne 0){throw 'Game diagnostic matrix incomplete'}
+            $udpRc=$LASTEXITCODE
+            # Avoid starting another owner if previous teardown did not complete.
+            $u=Get-Content result/winxdp-game-download/summary-udp.json -Raw | ConvertFrom-Json
+            if(@($u).Count -eq 0 -or @($u)[-1].stop -ne 'PASS_BOTH_OWNED'){throw 'UDP owner Stop missing'}
+            $env:WBD_XDP_GAME_DOWNLOAD_TRANSPORT='tcp'
+            & python -u tools/m0_winxdp_game_download.py
+            $tcpRc=$LASTEXITCODE
+            if($udpRc -ne 0 -or $tcpRc -ne 0){throw "Game diagnostic incomplete UDP=$udpRc TCP=$tcpRc"}
           } finally {
             if($neighbor){& netsh.exe interface ipv4 delete neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "store=active" | Out-Null}
             Remove-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
@@ -312,7 +325,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: winxdp-game-download-${{ matrix.transport }}-${{ matrix.replica }}
+          name: winxdp-game-download-${{ matrix.replica }}
           path: |
             h2442-out/cpu-gate.json
             h2439-out/build-identity.json
@@ -342,7 +355,9 @@ jobs:
               if len(gates)!=1 or not json.loads(gates[0].read_text(encoding="utf-8-sig")).get("eligible"):continue
               for f in root.rglob("measurement.json"):
                   x=json.loads(f.read_text())
-                  if x.get("stop")=="PASS_BOTH_OWNED" and x.get("status") in ("MEASURED_TCP_DOWNLOAD","MEASURED_BOTH_OS_KERNEL","CAPACITY_LIMITED_GENERATOR_OFFER"):
+                  b=x.get("bbr") or {}
+                  single=x.get("rss_default") and x.get("rx") and all(q.get("queues")==1 for q in x["rx"])
+                  if x.get("stop")=="PASS_BOTH_OWNED" and single and b.get("ready") and b.get("stop") and (x["transport"]!="tcp" or (x.get("bbr_accepts") or 0)>=4) and x.get("status") in ("MEASURED_TCP_DOWNLOAD","MEASURED_BOTH_OS_KERNEL","CAPACITY_LIMITED_GENERATOR_OFFER"):
                       covered.add((x["transport"],x["mode"]))
                   print("WINXDP_GAME_DOWNLOAD_RESULT "+json.dumps(x))
           print("WINXDP_GAME_DOWNLOAD_COVERAGE "+json.dumps(sorted(covered)))

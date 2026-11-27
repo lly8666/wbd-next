@@ -315,10 +315,11 @@ struct RxOwner {
     RxQueue* queues;
     unsigned char* umem;
     UINT32 count,next,batch_queue,batch_index,batch_count;
+    bool single;
+    HANDLE rss_scope;
 #ifdef WBD_XDP_PRESSURE_LAB
     UINT32 quantum,slots;
-    bool pooled,recycle,single;
-    HANDLE rss_scope;
+    bool pooled,recycle;
     UINT32 pool_next,pool_total,pool_base,free_count;
     UINT32* free_slots;
 #endif
@@ -345,9 +346,10 @@ void close_rx(RxOwner* o){
     if(o->umem)VirtualFree(o->umem,0,MEM_RELEASE);
 #ifdef WBD_XDP_PRESSURE_LAB
     if(o->free_slots)HeapFree(GetProcessHeap(),0,o->free_slots);
-    // The official driver restores the lower-edge RSS setting on handle close.
-    if(o->rss_scope)CloseHandle(o->rss_scope);
 #endif
+    // One scoped mapping per steady carrier, released after all RX sockets.
+    // The driver restores the previous lower-edge table on handle close.
+    if(o->rss_scope)CloseHandle(o->rss_scope);
     for(UINT32 i=0;i<o->port_count;++i)if(o->ports[i]!=INVALID_SOCKET)closesocket(o->ports[i]);
     if(o->wsa)WSACleanup();
     HeapFree(GetProcessHeap(),0,o);
@@ -419,6 +421,10 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     o->port_count=port_count;
     for(UINT32 i=0;i<MaxPorts;++i)o->ports[i]=INVALID_SOCKET;
     UINT32 slots=udp?DnsSlots:RxSlots;
+    // All steady TCP-shaped carriers share one actual RSS queue, including
+    // the 2/4 Game ports. Cold DNS is a separate short-lived UDP carrier.
+    bool single=!udp;
+    bool inspect_mapping=single;
 #ifdef WBD_XDP_PRESSURE_LAB
     if(!udp)slots=lab_value("WBD_XDP_LAB_RX",RxSlots,4096,8192,16384);
     o->slots=slots;
@@ -429,6 +435,10 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     const bool single_policy=!std::strcmp(policy,"rx-single")||
         !std::strcmp(policy,"rx-single-reclaim")||!std::strcmp(policy,"rx-single-wake")||
         !std::strcmp(policy,"rx-single-cipher");
+    // Explicit historical lab policies retain their old A/B meaning.
+    // With no policy, the production default is exercised even in a lab DLL.
+    if(policy[0])single=!udp&&single_policy;
+    inspect_mapping=single||(!udp&&GetEnvironmentVariableA("WBD_XDP_SINGLE_RSS",nullptr,0)>0);
 #endif
     HRESULT hr=E_FAIL;
     WSADATA wd{};
@@ -461,15 +471,12 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     hr=XdpRssGetCapabilities(adapter,&caps,&capSize);
     if(FAILED(hr)){CloseHandle(adapter);adapter=nullptr;goto fail;}
     o->count=caps.NumberOfReceiveQueues?caps.NumberOfReceiveQueues:1;
-#ifdef WBD_XDP_PRESSURE_LAB
-    // Isolated runner only. Official v1.4 offload.c sets State=Enabled
-    // unconditionally (TODO disable). Keep the existing hash/key and
-    // table length; set every entry to one currently valid processor.
-    // Generic rss.c assigns one queue per distinct processor, starting
-    // at queue0. The scoped interface handle restores the original table.
-    if(!udp&&port_count==1&&(single_policy||
-        GetEnvironmentVariableA("WBD_XDP_SINGLE_RSS",nullptr,0)>0)){
-        const bool single=single_policy;
+    // Official v1.4 RSS disable is not implemented. Retain hash/key
+    // and table length, map all entries to one existing processor.
+    // Generic assigns the single processor to queue0. Native physical
+    // NIC qualification is separate; do not silently omit RSS queues
+    // without the actual table change and readback.
+    if(inspect_mapping){
         alignas(XDP_RSS_CONFIGURATION) unsigned char buf[4096]{};
         auto* cfg=reinterpret_cast<XDP_RSS_CONFIGURATION*>(buf);
         UINT32 bytes=sizeof(buf);
@@ -532,7 +539,6 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
             std::fprintf(stderr,"WBD_XDP_SINGLE_RSS_READY processors=1 queues=1 entries=%u\n",entries);
         }
     }
-#endif
     if(adapter){CloseHandle(adapter);adapter=nullptr;}
     // Original worker waits on two additional Stop/Direct handles.
     // Explicit scope of this candidate; never silently omit real queues.
