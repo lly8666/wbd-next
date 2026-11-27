@@ -1,12 +1,13 @@
 """Use the actual WSL guest's executable PATH for all test-only commands."""
 import json,pathlib,re,subprocess,sys,time
 from m0_h2475_profile import GUEST_PATH
+from m0_wl_windows_bounded_cmd import run_captured
 ROOT=pathlib.Path.cwd()
 def wpath(p):
     p=p.resolve()
     return "/mnt/"+p.drive[0].lower()+"/"+"/".join(p.relative_to(p.anchor).parts)
 def wsl(*a,timeout=30):
-    p=subprocess.run(["wsl.exe","-d","Ubuntu","-u","root","--exec","/usr/bin/env","PATH="+GUEST_PATH,*map(str,a)],capture_output=True,text=True,timeout=timeout)
+    p=run_captured(["wsl.exe","-d","Ubuntu","-u","root","--exec","/usr/bin/env","PATH="+GUEST_PATH,*map(str,a)],timeout,max_output_bytes=8*1024*1024)
     if p.returncode:raise RuntimeError(f"guest {a[0]} rc={p.returncode}: "+(p.stderr+p.stdout)[-1000:])
     return p.stdout.strip()
 def save(p,d):p.write_text(json.dumps(d,indent=2)+"\n",encoding="utf-8")

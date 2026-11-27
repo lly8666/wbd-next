@@ -1,12 +1,19 @@
 """Actual Winsock/Linux TCP, independent sending/receiving; exact hash and bytes per flow."""
 import hashlib,json,socket,sys,time,threading,os
 BLOCK=bytes(range(256))*256
+# Same business window; separate bounded TCP drain on both peers.
+DRAIN_SECONDS=120 if os.environ.get("WBD_XDP_STRESS_PHASE")=="carrier-abba" else 65
 def exchange(sock,seconds,rate,send,receive,windows):
     sock.settimeout(.5)
     result={"sent":0,"received":0,"tx_sha256":"","rx_sha256":"","tx_end":"inactive","rx_end":"inactive","steady_rx_bytes":0,"max_rx_gap_s":0}
     result["socket_sndbuf"]=sock.getsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF)
     result["socket_rcvbuf"]=sock.getsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF)
     result["send_timeouts"]=0
+    result["drain_budget_s"]=DRAIN_SECONDS
+    result["last_rx_elapsed_s"]=None
+    result["rx_eof_elapsed_s"]=None
+    result["rx_after_business_bytes"]=0
+    result["tx_shutdown_elapsed_s"]=None
     start=time.monotonic();errors=[]
     def tx():
         h=hashlib.sha256()
@@ -26,18 +33,22 @@ def exchange(sock,seconds,rate,send,receive,windows):
                     result["sent"]+=n;h.update(BLOCK[:n])
                 result["tx_end"]="deadline"
             if not send:
-                while result["rx_end"]=="inactive" and time.monotonic()<start+seconds+65:time.sleep(.02)
+                while result["rx_end"]=="inactive" and time.monotonic()<start+seconds+DRAIN_SECONDS:time.sleep(.02)
             sock.shutdown(socket.SHUT_WR)
+            result["tx_shutdown_elapsed_s"]=time.monotonic()-start
         except Exception as e:errors.append("tx:"+repr(e));result["tx_end"]="error"
         finally:result["tx_sha256"]=h.hexdigest()
     def rx():
         h=hashlib.sha256();buf=bytearray(262144);last=start
         try:
-            while time.monotonic()<start+seconds+65:
+            while time.monotonic()<start+seconds+DRAIN_SECONDS:
                 try:n=sock.recv_into(buf)
                 except socket.timeout:continue
                 now=time.monotonic()
-                if not n:result["rx_end"]="eof";return
+                if not n:
+                    result["rx_end"]="eof";result["rx_eof_elapsed_s"]=now-start;return
+                result["last_rx_elapsed_s"]=now-start
+                if now-start>=seconds:result["rx_after_business_bytes"]+=n
                 result["received"]+=n;h.update(memoryview(buf)[:n])
                 if 10<=now-start<seconds-5:
                     result["steady_rx_bytes"]+=n
@@ -46,7 +57,7 @@ def exchange(sock,seconds,rate,send,receive,windows):
             result["rx_end"]="timeout"
         except Exception as e:errors.append("rx:"+repr(e));result["rx_end"]="error"
         finally:result["rx_sha256"]=h.hexdigest()
-    t=threading.Thread(target=tx);r=threading.Thread(target=rx);t.start();r.start();t.join(seconds+70);r.join(5)
+    t=threading.Thread(target=tx);r=threading.Thread(target=rx);t.start();r.start();t.join(seconds+DRAIN_SECONDS+5);r.join(5)
     if t.is_alive() or r.is_alive():
         sock.close();t.join(3);r.join(3);errors.append("exchange thread timeout")
     result["errors"]=errors
@@ -68,7 +79,7 @@ def serve(host,port,seconds,rate,direction,streams):
                 rows[i]=exchange(sock,seconds,rate/streams,*active(direction,False),False)
         for _ in range(streams):
             s,_=l.accept();t=threading.Thread(target=work,args=(s,));t.start();threads.append(t)
-        for t in threads:t.join(seconds+100)
+        for t in threads:t.join(seconds+DRAIN_SECONDS+35)
     assert all(x is not None for x in rows),rows
     out=summarize(rows,seconds)
     out["end"]="deadline" if out["end"]=="eof" else out["end"]
@@ -88,7 +99,7 @@ def client(host,port,local,seconds,case,connected):
                 rows[i]=exchange(sock,seconds,case["rate"]/n,*active(case["direction"],True),True)
         for i,sock in enumerate(socks):
             t=threading.Thread(target=work,args=(i,sock));t.start();threads.append(t)
-        for t in threads:t.join(seconds+100)
+        for t in threads:t.join(seconds+DRAIN_SECONDS+35)
         assert all(x is not None for x in rows),rows
         return summarize(rows,seconds)
     finally:

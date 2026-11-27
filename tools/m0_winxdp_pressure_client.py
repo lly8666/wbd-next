@@ -157,7 +157,7 @@ def case(i):
             if c['isolate']:isolate_background(d,physical,isolated)
             probe()
             print("H2448_NATIVE_COLD_PROBE_PASS case="+str(i),flush=True)
-            save(d/"shape.json",shape(c["loss"],200));time.sleep(1)
+            save(d/"shape.json",shape(c["loss"],c["delay"]));time.sleep(1)
             origin_route=route_for("192.0.2.2")
             save(d/"origin-route.json",origin_route)
             print("H2449_ORIGIN_ROUTE "+json.dumps(origin_route),flush=True)
@@ -172,6 +172,7 @@ def case(i):
                 t=threading.Thread(target=observe,daemon=True);samples.append(t);t.start()
             result.update(pressure_client("192.0.2.2",5400,"10.66.0.2",SECONDS,c,connected))
             result["business_start_mono"]=business.get("start")
+            print("WINXDP_TCP_BUSINESS_END case="+str(i)+" end="+str(result.get("end")),flush=True)
             after=snapshot()
             result["netem_packets"]={k:after["netem_packets"][k]-before["netem_packets"][k] for k in ("eth0","ifbwlm0")}
             result["kernel_counter_delta"]={k:v-before["counters"].get(k,v) for k,v in after["counters"].items()}
@@ -241,7 +242,9 @@ def main():
             order=list(range(len(CASES)))
             if os.environ["H2478_REPLICA"] in "BDFHJL":
                 order=[i for g in reversed(range(len(CASES)//4)) for i in range(4*g,4*g+4)]
-            if os.environ["H2478_REPLICA"]=="S":order=list(range(4,8))
+            # S reproduces the previous duplex tail failure, even off 9V45.
+            # Other replicas run only the H2480-style clean quartets.
+            order=[i for i in order if (CASES[i]["group"]=="lossy-duplex")== (os.environ["H2478_REPLICA"]=="S")]
         for i in order:
             CURRENT=i
             if abba:
@@ -274,6 +277,7 @@ def main():
             r["server_path_ok"]=r.get("server",{}).get("path_ok")
             r["server_rx_mbps"]=((r.get("server",{}).get("source") or {}).get("rx_mbps"))
             r["flow_gaps_s"]=[f.get("max_rx_gap_s") for f in r.get("flows",[])]
+            r["flow_tail"]={side:[{k:x.get(k) for k in ("sent","received","tx_end","rx_end","last_rx_elapsed_s","rx_eof_elapsed_s","tx_shutdown_elapsed_s","rx_after_business_bytes","errors")} for x in flows] for side,flows in (("windows",r.get("flows",[])),("linux",(r.get("server",{}).get("source") or {}).get("flows",[])))}
             r["socket_sendbufs"]=[f.get("socket_sndbuf") for f in r.get("flows",[])]
             r["socket_send_timeouts"]=[f.get("send_timeouts") for f in r.get("flows",[])]
             r["steady_process_cpu_cores"]=None
@@ -311,7 +315,7 @@ def main():
                 import statistics
                 group=[v for v in rows if v["group"]==r["group"]]
                 if len(group)==4:
-                    pair={"group":r["group"],"sequence":"".join(v["arm"] for v in group),"valid":all(v["pressure_valid"] for v in group)}
+                    pair={"group":r["group"],"sequence":"".join(v["arm"] for v in group),"valid":all(v["pressure_valid"] and v["cpu_s_per_gib"] is not None for v in group)}
                     for k in ("rx_mbps","server_rx_mbps","cpu_s_per_gib"):
                         for a in ("A","B"):
                             v=[x.get(k) for x in group if x["arm"]==a]
@@ -321,7 +325,7 @@ def main():
                     print("WINXDP_CARRIER_ABBA_PAIR "+json.dumps(pair),flush=True)
                     save(OUT/("pair-"+r["group"]+".json"),pair)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
-            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
+            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","policy","fec_ok","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
             if r.get("shape_clear_error") or not r.get("client_stop") or not r.get("server_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):
                 for pth in (SERVER/("case-"+str(i))/"server.log",SERVER/("case-"+str(i))/"source.log",d/"client.log"):
                     if pth.exists():
@@ -330,7 +334,7 @@ def main():
                 raise RuntimeError("owned cleanup failed; no next case")
         control("server","/finish")
         if p.wait(30)!=0:raise RuntimeError("local control exit")
-        if not all(r["pressure_valid"] for r in rows):raise SystemExit(2)
+        if len(rows)!=len(order) or not all(r["pressure_valid"] and (not abba or r["cpu_s_per_gib"] is not None) for r in rows):raise SystemExit(2)
     finally:
         try:shape(0,0)
         except Exception as e:print("PRESSURE_CLEANUP_ERROR",repr(e),flush=True)
