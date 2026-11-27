@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "source_sha": "e66a42b7cf9b7dc23722c189341b3df362df6297",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA core351, eight native functional profiles including candidate-specific bidirectional concurrent/UDP; four same-host loss cases and six cross-host clean BAAB measurements. Measurement and functionality PASS, not peak parity or final product qualification.",
+  "run_id": 46002012882,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140515775835,
+      "artifact_id": 15199280893,
+      "core_pass": 351,
+      "credit_gso": {
+        "groups": 123,
+        "segments": 1154
+      },
+      "credit_receipts": [
+        {
+          "role": "server",
+          "samples": 9,
+          "max_pending": 0
+        },
+        {
+          "role": "client",
+          "samples": 18,
+          "max_pending": 131072
+        }
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140515776245,
+      "artifact_id": 15198633299,
+      "core_pass": 351,
+      "credit_gso": {
+        "groups": 149,
+        "segments": 1593
+      },
+      "credit_receipts": [
+        {
+          "role": "server",
+          "samples": 9,
+          "max_pending": 0
+        },
+        {
+          "role": "client",
+          "samples": 18,
+          "max_pending": 131072
+        }
+      ]
+    }
+  ],
+  "local_loss": {
+    "order": [
+      "A1",
+      "B1",
+      "B2",
+      "A2"
+    ],
+    "injected_loss_pct": 0.5,
+    "added_rtt_ms": 400,
+    "offered_bps": 120000000,
+    "target_bytes": 100663296,
+    "mbps": [
+      66.71214830753007,
+      64.32592995748627,
+      60.116002957603634,
+      69.97886166640086
+    ],
+    "seconds": [
+      12.071360141000014,
+      12.519156248999991,
+      13.395873451,
+      11.507851782999978
+    ],
+    "client_cpu_s_per_gib": [
+      12.373333333333333,
+      12.266666666666666,
+      11.946666666666667,
+      12.053333333333333
+    ],
+    "server_cpu_s_per_gib": [
+      13.44,
+      13.76,
+      13.653333333333334,
+      13.013333333333334
+    ],
+    "bulk_stop_bytes_sent": [
+      101174537,
+      101252312,
+      101174537,
+      101193203
+    ],
+    "bulk_stop_bytes_retrans": [
+      511241,
+      589016,
+      511241,
+      529907
+    ],
+    "dsack": [
+      201,
+      239,
+      168,
+      203
+    ],
+    "timeouts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "credit_full_samples": [
+      0,
+      6,
+      5,
+      0
+    ],
+    "qdisc_cumulative_after_stop_drops": {
+      "rc0": [
+        477,
+        962,
+        1454,
+        1929
+      ],
+      "rs0": [
+        65,
+        115,
+        154,
+        195
+      ]
+    },
+    "seed_supported": false,
+    "all_hash_eof_profile_joined_stop": true,
+    "all_ingress_full_raw_drops_reset_zero": true,
+    "interpretation": "A mean68.3455 B62.2210Mbps, -8.96%; recovery similar, CPU/GiB25.44→25.813. Real throughput tradeoff, not loss non-regression. Stop sample not retirement."
+  },
+  "performance": {
+    "result": "PASS",
+    "scope": "Independent reverse order B/A/A/B, exact 1GiB/600M offer,400ms added RTT, zero injected, same binary, actual credit both endpoints, bare brackets.",
+    "run_id": 46002012764,
+    "job_ids": {
+      "client": 140518769949,
+      "server": 140518770282,
+      "relay": 140518770114
+    },
+    "artifact_ids": {
+      "client": 15199751652,
+      "server": 15199805495,
+      "relay": 15199695774
+    },
+    "bare_mbps": [
+      250.45952537336305,
+      240.85614679335737
+    ],
+    "order": [
+      "B1",
+      "A1",
+      "A2",
+      "B2"
+    ],
+    "mbps": [
+      201.4781557969268,
+      208.23197343443542,
+      241.30772578201348,
+      232.67994048719277
+    ],
+    "seconds": [
+      42.63457027400001,
+      41.251756156,
+      35.597428819000015,
+      36.91738348400003
+    ],
+    "client_cpu_s_per_gib": [
+      12.12,
+      12.9,
+      12.96,
+      13.49
+    ],
+    "server_cpu_s_per_gib": [
+      16.44,
+      18.56,
+      15.74,
+      15.14
+    ],
+    "means": {
+      "A": {
+        "mbps": 224.76984960822443,
+        "cpu_s_per_gib": 30.08,
+        "weighted_final_retrans_ratio": 0.11795385699441244
+      },
+      "B": {
+        "mbps": 217.07904814205978,
+        "cpu_s_per_gib": 28.595,
+        "weighted_final_retrans_ratio": 0.06823926427681516
+      }
+    },
+    "retired_bulk": {
+      "bytes_sent": [
+        1184441043,
+        1251859946,
+        1182801398,
+        1120317642
+      ],
+      "bytes_retrans": [
+        110699219,
+        178118122,
+        109059574,
+        46575818
+      ],
+      "dsack": [
+        8323,
+        14341,
+        11620,
+        3816
+      ],
+      "timeouts": [
+        1,
+        2,
+        1,
+        1
+      ],
+      "reorder": [
+        851,
+        517,
+        1376,
+        1219
+      ]
+    },
+    "server_ingress_full": [
+      1740,
+      10667,
+      1010,
+      0
+    ],
+    "client_ingress_full": [
+      1107,
+      8213,
+      5194,
+      364
+    ],
+    "server_m4_copied": [
+      1142194,
+      1207207,
+      1140609,
+      1080354
+    ],
+    "client_raw_packets": [
+      1058404,
+      1074572,
+      1061259,
+      1048473
+    ],
+    "server_pending_max_sample": [
+      131072,
+      29210662,
+      57382173,
+      131072
+    ],
+    "client_pending_max_sample": [
+      131072,
+      1874454,
+      885150,
+      131072
+    ],
+    "server_credit_full_samples": [
+      10,
+      0,
+      0,
+      14
+    ],
+    "client_credit_full_samples": [
+      2,
+      0,
+      0,
+      5
+    ],
+    "all_actual_hash_eof_direct_stop_profile_retired": true,
+    "all_packet_socket_drops_zero": true,
+    "relay_end_qdisc_drops_zero": true,
+    "interpretation": "Repeated recovery and CPU/GiB gains; throughput -3.42% here, +7.84% previous ABBA. Residual high retrans; no blanket performance non-regression."
+  },
+  "selection": {
+    "status": "SELECTED_RESEARCH_BRANCH_DEFAULT_PENDING_EXACT_NEW_SOURCE",
+    "candidate": "adjacent relay pending credit 128KiB",
+    "rollback": "WBD_M0_RELAY_PENDING_CREDIT=0",
+    "reason": "Repeated actual pause backpressure, bounded fresh pending, two independent clean cross-host blocks reduced retrans/ingress/CPU, eight candidate functional profiles, real loss exact transfer with ~9% throughput tradeoff. No permanent rate cap, no final Linux parity claim.",
+    "next_source": "4490614810ea79ced51fe7612d23d26465dad632",
+    "next_candidate": "client ingress-first opt-in WBD_M0_CLIENT_INGRESS_FIRST=1"
+  },
+  "governance": {
+    "main_h2505": "PASS",
+    "run_id": 46002145775,
+    "branch_governance": "FAIL inherited",
+    "branch_run_id": 46002012785
+  },
+  "physical": "NOT_RUN",
+  "review": "Five actual ZIPs CRC opened, eight exact source functional summaries, both core logs351, four loss rows and seed/qdisc/Stop, six cross-host rows, actual credit/probe/retired/hash/direct and endpoint/raw/relay counters. New source not yet qualified."
+}
