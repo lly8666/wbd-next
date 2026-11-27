@@ -1,5 +1,5 @@
 name: M0 existing Linux timed lane rotation two modes
-run-name: "M0 Normal and Game4 genuine timer rotation | ${{ github.sha }}"
+run-name: "M0 Normal and Game4 genuine timer rotation current fixture | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']

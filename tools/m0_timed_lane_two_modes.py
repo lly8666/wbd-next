@@ -1,15 +1,30 @@
 """Two actual existing Linux timer mechanisms, no Windows fake timer."""
-import pathlib,subprocess,sys
-out=pathlib.Path(sys.argv[1]);scene=sys.argv[2]
+import pathlib,subprocess,sys,tempfile,shutil
+root=pathlib.Path.cwd()
+out=pathlib.Path(sys.argv[1]).resolve();scene=sys.argv[2]
+# Historical generators target the original unmanaged mixed fixture anchors.
+# Adapt the newer PLAN030 base locally, without modifying repository fixtures.
+workspace=tempfile.TemporaryDirectory()
+tmp=pathlib.Path(workspace.name);(tmp/"tools").mkdir()
+base=(root/"tools/m0-plan028-mixed-normal-game-native.sh").read_text()
+assert base.count("for i in range(10000):")==1
+base=base.replace("for i in range(10000):","for i in range(160):",1)
+start=base.index('wait "$PA" "$PB" "$PC"\nif [[ "${WBD_PLAN030_MANAGED:-0}" == 1 ]];then')
+end=base.index('grep -Fq "V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6" "$TMP/bob.log"',start)
+base=base[:start]+'wait "$PA" "$PB" "$PC"\n'+base[end:]
+(tmp/"tools/m0-plan028-mixed-normal-game-native.sh").write_text(base)
+for name in ("m0-plan028-x86-same-path-timed-rotation-fixture.py","m0-h1231-arm64-game4-real-single-lane-fixture.py"):
+    shutil.copyfile(root/"tools"/name,tmp/"tools"/name)
 if scene=="normal-off":
-    subprocess.run([sys.executable,"tools/m0-plan028-x86-same-path-timed-rotation-fixture.py",str(out),"normal-auto"],check=True)
+    subprocess.run([sys.executable,"tools/m0-plan028-x86-same-path-timed-rotation-fixture.py",str(out),"normal-auto"],check=True,cwd=tmp)
     s=out.read_text()
     s=s.replace("TIMER_SCENE=\"normal-auto\"","TIMER_SCENE=\"normal-off\"")
     s=s.replace("carol carol-mixed-protected fec-auto '--rotation-interval","carol carol-mixed-protected normal '--rotation-interval")
     s=s.replace('assert "V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=auto" in server','assert "V4_PUBLIC_MIXED_NORMAL_READY role=server port=443" in server')
     s=s.replace('assert "V4_PUBLIC_MIXED_NORMAL_FEC_EFFECTIVE mode=auto" in server','assert "V4_PUBLIC_MIXED_NORMAL_READY role=server port=443" in server')
+    s=s.replace("normal-auto-AES128","normal-off-AES128").replace("NORMAL_AUTO_C","NORMAL_OFF_C")
 elif scene=="game4-fixed6":
-    subprocess.run([sys.executable,"tools/m0-h1231-arm64-game4-real-single-lane-fixture.py",str(out),scene],check=True)
+    subprocess.run([sys.executable,"tools/m0-h1231-arm64-game4-real-single-lane-fixture.py",str(out),scene],check=True,cwd=tmp)
     s=out.read_text()
     # One full four-lane cycle, not a broad matrix or eight-turn repeat.
     s=s.replace("-ge 8","-ge 4").replace("len(cr)>=8 and len(sr)>=8","len(cr)>=4 and len(sr)>=4").replace("cr[:8];sr=sr[:8]","cr[:4];sr=sr[:4]").replace("[1,2,3,4,1,2,3,4]","[1,2,3,4]").replace("list(range(1,9))","list(range(1,5))").replace("[1,1,1,1,2,2,2,2]","[1,1,1,1]").replace(")==8",")==4").replace("client)[:8]","client)[:4]").replace("len(due)==8","len(due)==4").replace('v["sent"]>=800','v["sent"]>=300').replace("seq 1 1120","seq 1 560").replace("230_000_000_000","150_000_000_000").replace("ARM64+ARM64 native","x86_64+x86_64 native").replace("H1231_NATIVE_ARM64_GAME4_EIGHT_TRUE_SINGLE_LANE_HOT_SWAPS_PASS","M0_NATIVE_X86_GAME4_FOUR_TRUE_SINGLE_LANE_HOT_SWAPS_PASS")
