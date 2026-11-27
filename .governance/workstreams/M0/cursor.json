@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2478,
-  "checkpoint_sha": "06e23ff61c2dad5d3c3a0f1e54bf8e799c773804",
+  "sequence": 2479,
+  "checkpoint_sha": "015d532de15239d52460592bdda326e2e32df4a1",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "核对495586c精确SOURCE双ISA原生及ARM BBR0 400ms ABBA；读取真实业务、M4、local drops、CPU和容量收据；先判断差距再施工inner attempt与真实本地IO，不重复派单。",
+  "next_action": "核对05bb056d776eedaa9b17e917f29f8f11c3d5b9f7精确双ISA原生/late ACK RST回归与ARM BBR0 ABBA；495586c x86 parity并发reset FAIL，ARM性能NOT_RUN。真实业务与收据通过后再推inner attempt/IO。",
   "unverified": true,
   "last_tested_source": "392ee066c8bbcea96c20dea0ef76d73f497f6b87",
   "evidence_refs": [
@@ -23,8 +23,9 @@
     "docs/evidence/M0/20261127-DUAL-RUST-TCP-NATIVE-ADMISSION-RESULT.json",
     "docs/devlog/M0/20261127-M0-M4-CLOCK-RECOVERY-HANDOFF.md",
     "docs/evidence/M0/20261127-DUAL-RUST-TCP-NATIVE-REGRESSION-REPAIR-RESULT.json",
-    "docs/devlog/M0/20261127-M0-M4-CLOCK-NATIVE-RESULT-HANDOFF.md"
+    "docs/devlog/M0/20261127-M0-M4-CLOCK-NATIVE-RESULT-HANDOFF.md",
+    "docs/devlog/M0/20261127-M0-DUAL-TCP-LATE-RST-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "392ee06双ISA344 core+M4专项1/1及原生Normal通过，正向M4 copied收据；未跑性能。495586c仅缩窄夹具至BBR零损ABBA并补足原生触发，新SOURCE未验；旧splice保留。"
+  "partial_summary": "392ee06原生限域PASS；495586c产品相同但x86 parity并发reset FAIL，ARM性能NOT_RUN。失败ZIP定位TIME_WAIT晚RST触发异常关闭；05bb056保持原TIME_WAIT并加回归，未验证。H2478治理PASS；旧splice保留。"
 }
