@@ -1,5 +1,5 @@
 name: M0 WinXDP forwarded TCP repair focused
-run-name: "M0 single RSS BBR TCP repair two Game modes | ${{ github.sha }}"
+run-name: "M0 single RSS BBR TCP repair second CPU screen two Game modes | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        replica: [A,B,C,D,E,F,G,H]
+        replica: [A,B,C,D,E,F]
     runs-on: windows-2025
     timeout-minutes: 25
     env:

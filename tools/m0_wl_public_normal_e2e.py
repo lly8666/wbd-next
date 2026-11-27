@@ -684,6 +684,8 @@ try:
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
   "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",(game_route if p029b_game_case else "bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 or p029b_b4 else "all" if p029_v3 or p029b_b5 else "bypass-lan"),"--outer-repair",outer_repair]
+ if game_download_bbr and os.environ.get("WBD_XDP_GAME_DOWNLOAD_TRANSPORT")=="tcp":
+  args[args.index("--route-mode")+1]="all"
  if p029b_game_padding:
   # Signed original Game V5 selector; never bypass Go saved cold config.
   args.extend(["--startup-padding",p029b_game_padding])

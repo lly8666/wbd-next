@@ -84,6 +84,7 @@ def tcp_app(side,flag,directory):
                     c.setsockopt(socket.SOL_SOCKET,47,struct.pack("=Q",int(250*125000/STREAMS)))
                     sockets.append(c)
                 except socket.timeout:continue
+        print("GAME_TCP_ORIGIN_CONNECTED "+str(len(sockets)),flush=True)
     else:
         def connect(i):
             c=socket.socket()
@@ -148,10 +149,13 @@ def _measure_tcp(root,out,unix,win_product,linux_product,scenario,arm):
             wait_marker(l,out/"game-tcp-linux.log","GAME_TCP_LISTEN",10)
             w=subprocess.Popen([sys.executable,"-u",str(script),"tcp-app","windows",str(flag),str(out)],stdout=wl,stderr=subprocess.STDOUT);processes.append(w)
             wait_marker(w,out/"game-tcp-windows.log","GAME_TCP_CONNECTED",25)
-            accepted=(out/"server.log").read_text(errors="replace").count("WBD_TCP_SPLICE_ACCEPT target="+TARGET+":"+str(PORT)+" cc=bbr")
             startup=(out/"game-tcp-windows.log").read_text(errors="replace")
-            (out/"game-tcp-before-netem.json").write_text(json.dumps({"windows":startup,"bbr_accepts":accepted}))
-            if "GAME_TCP_CONNECTED 4 errors=[]" not in startup or accepted<STREAMS:
+            if "GAME_TCP_CONNECTED 4 errors=[]" in startup:
+                wait_marker(l,out/"game-tcp-linux.log","GAME_TCP_ORIGIN_CONNECTED 4",10)
+            accepted=(out/"server.log").read_text(errors="replace").count("WBD_TCP_SPLICE_ACCEPT target="+TARGET+":"+str(PORT)+" cc=bbr")
+            origin=(out/"game-tcp-linux.log").read_text(errors="replace")
+            (out/"game-tcp-before-netem.json").write_text(json.dumps({"windows":startup,"origin":origin,"bbr_accepts":accepted}))
+            if "GAME_TCP_CONNECTED 4 errors=[]" not in startup or "GAME_TCP_ORIGIN_CONNECTED 4" not in origin or accepted<STREAMS:
                 raise RuntimeError("TCP pre-netem connection or BBR acceptance failed: "+startup[-600:])
             # Keep loss/RTT/rate exactly as previous run during the 30s
             # measurement, not during connection setup.
@@ -164,7 +168,7 @@ def _measure_tcp(root,out,unix,win_product,linux_product,scenario,arm):
                 time.sleep(.2)
             rows={side:json.loads((out/("game-tcp-"+side+".json")).read_text()) for side in ("windows","linux")}
             accepts=(out/"server.log").read_text(errors="replace").count("WBD_TCP_SPLICE_ACCEPT target="+TARGET+":"+str(PORT)+" cc=bbr")
-            status=("MEASURED_TCP_DOWNLOAD" if rows["windows"]["connected_streams"]==rows["linux"]["connected_streams"]==STREAMS and accepts>=STREAMS
+            status=("MEASURED_TCP_DOWNLOAD" if rows["windows"]["connected_streams"]==rows["linux"]["connected_streams"]==STREAMS and accepts>=STREAMS and rows["windows"]["window_bytes"]>0
                     else "TCP_PARTIAL_OR_BBR_NOT_PROVED")
             return {"status":status,"bbr_accepts":accepts,"windows":rows["windows"],"linux":rows["linux"],"sender_scope":"SOCKET_ACCEPTED_BYTES_NOT_DELIVERED","receiver_scope":"FIRST_TCP_STREAM_BYTES_IN_30S"}
         finally:
