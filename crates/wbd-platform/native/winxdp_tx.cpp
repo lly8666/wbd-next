@@ -265,6 +265,8 @@ struct RxQueue {
     UINT32 peak_ready;
     LARGE_INTEGER held_at;
     bool sampled;
+    bool pending_fast;
+    UINT64 pending_skips,event_checks;
 #endif
 };
 struct RxOwner {
@@ -329,6 +331,13 @@ HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue,UINT32 slots,XSK_BIND_FLA
 HRESULT arm_queue(RxQueue* q){
     XSK_NOTIFY_RESULT_FLAGS flags{};
     if(q->pending){
+#ifdef WBD_XDP_PRESSURE_LAB
+        // Negative fast path only. Actual event still owns result/rearm.
+        if(q->pending_fast&&!HasOverlappedIoCompleted(&q->ov)){
+            ++q->pending_skips;return S_OK;
+        }
+        ++q->event_checks;
+#endif
         if(WaitForSingleObject(q->event,0)!=WAIT_OBJECT_0)return S_OK;
         HRESULT hr=XskGetNotifyAsyncResult(&q->ov,&flags);
         q->pending=false;
@@ -353,6 +362,9 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     if(!udp)slots=lab_value("WBD_XDP_LAB_RX",RxSlots,4096,8192,16384);
     o->slots=slots;
     o->quantum=udp?1:lab_value("WBD_XDP_LAB_QUANTUM",32,16,32,32);
+    char policy[32]{};
+    GetEnvironmentVariableA("WBD_XDP_LAB_POLICY",policy,sizeof(policy));
+    const bool pending_fast=!udp&&port_count==1&&!std::strcmp(policy,"rx-pending");
 #endif
     HRESULT hr=E_FAIL;
     WSADATA wd{};
@@ -398,6 +410,9 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     for(UINT32 i=0;i<o->count;++i){
         auto* q=&o->queues[i];
         q->umem=o->umem+size_t(i)*slots*RxChunk;
+#ifdef WBD_XDP_PRESSURE_LAB
+        q->pending_fast=pending_fast;
+#endif
         hr=open_queue(q,index,i,slots,mode);if(FAILED(hr))goto fail;
         if(o->map){hr=XdpMapInsert(o->map,&i,&q->socket);if(FAILED(hr))goto fail;}
     }
@@ -544,6 +559,9 @@ extern "C" void wbd_xdp_rx_close(void* raw){
     auto* o=static_cast<RxOwner*>(raw);
     UINT64 received=0,batches=0,waits=0,dropped=0,truncated=0,received_bytes=0;
     HRESULT result=S_OK;
+#ifdef WBD_XDP_PRESSURE_LAB
+    UINT64 pending_skips=0,event_checks=0;
+#endif
     for(UINT32 i=0;i<o->count;++i){
         auto* q=&o->queues[i];
         XSK_STATISTICS s{};UINT32 size=sizeof(s);
@@ -552,6 +570,7 @@ extern "C" void wbd_xdp_rx_close(void* raw){
         received+=q->received;batches+=q->batches;waits+=q->waits;received_bytes+=q->received_bytes;
         dropped+=s.RxDropped;truncated+=s.RxTruncated;
 #ifdef WBD_XDP_PRESSURE_LAB
+        pending_skips+=q->pending_skips;event_checks+=q->event_checks;
         if(q->received){
             LARGE_INTEGER frequency;QueryPerformanceFrequency(&frequency);
             UINT64 us=q->max_hold_ticks*1000000/frequency.QuadPart;
@@ -561,6 +580,10 @@ extern "C" void wbd_xdp_rx_close(void* raw){
         if(q->received||s.RxDropped||s.RxTruncated)
             std::fprintf(stderr,"WBD_XDP_RX_QUEUE_STOP queue=%u received=%llu batches=%llu waits=%llu dropped=%llu truncated=%llu received_bytes=%llu\n",i,q->received,q->batches,q->waits,s.RxDropped,s.RxTruncated,q->received_bytes);
     }
+#ifdef WBD_XDP_PRESSURE_LAB
+    if(o->port_count==1&&o->slots!=DnsSlots)
+        std::fprintf(stderr,"WBD_XDP_RX_PENDING_LAB enabled=%u skipped=%llu event_checks=%llu\n",o->queues[0].pending_fast?1u:0u,pending_skips,event_checks);
+#endif
     std::fprintf(stderr,"WBD_XDP_RX_STOP received=%llu batches=%llu waits=%llu dropped=%llu truncated=%llu stats_hr=0x%08lx queues=%u received_bytes=%llu\n",received,batches,waits,dropped,truncated,(unsigned long)result,o->count,received_bytes);
     close_rx(o);
 }

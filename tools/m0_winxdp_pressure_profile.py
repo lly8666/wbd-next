@@ -82,3 +82,15 @@ if os.environ.get("WBD_XDP_STRESS_PHASE")=="normal-tune":
     ):
         CASES.append(dict(base,**w,rx_slots=16384,arm="A",group=w["name"]))
     CASES=[dict(c,budget=c["rate"]) for c in CASES]
+
+# Same ring and quantum; isolate inactive RSS event syscall cost.
+if os.environ.get("WBD_XDP_STRESS_PHASE")=="normal-efficiency":
+    assert PATH_MODE=="nat" and os.environ.get("WBD_XDP_PRESSURE_LAB")=="1"
+    base=dict(CASES[0],profile=-1,loss=0,mtu=1460,rx_slots=16384,tx_slots=2048,quantum=32,sndbuf=16777216)
+    workloads=[
+        dict(name="normal-down350",direction="down",rate=350,streams=1,delay=200,mtu=1160),
+        dict(name="normal-duplex175",direction="duplex",rate=175,streams=4,delay=20),
+        dict(name="normal-up350",direction="up",rate=350,streams=4,delay=20),
+    ]
+    seq="BAAB" if os.environ.get("H2478_REPLICA") in "BDFHJL" else "ABBA"
+    CASES=[dict(base,**w,arm=arm,group=w["name"],policy="original" if arm=="A" else "rx-pending",budget=w["rate"]) for w in workloads for arm in seq]
