@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "source_sha": "90de1b2791b62fe4440ca3f709b7f35cf5107167",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA native original six Normal profiles and ARM same-host eight ACK cases functional qualification only; cross-host sustained high retrans unresolved.",
+  "run_id": 45971858182,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140413954605,
+      "artifact_id": 15186120022,
+      "gso_groups": [
+        143,
+        218,
+        255
+      ],
+      "gso_segments": [
+        1465,
+        1478,
+        1468
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140413954308,
+      "artifact_id": 15185838445,
+      "gso_groups": [
+        286,
+        163,
+        180
+      ],
+      "gso_segments": [
+        2432,
+        1587,
+        1921
+      ]
+    }
+  ],
+  "local_recovery": {
+    "result": "PASS",
+    "order": [
+      "clean-A1",
+      "clean-B1",
+      "clean-B2",
+      "clean-A2",
+      "loss-A1",
+      "loss-B1",
+      "loss-B2",
+      "loss-A2"
+    ],
+    "mbps": [
+      206.0016831383682,
+      205.1783158087039,
+      205.13620766765635,
+      206.81576878837032,
+      62.939978979248,
+      63.200519901557406,
+      66.5779769210923,
+      31.634799097758144
+    ],
+    "actual_grant_sample": [
+      0,
+      79785,
+      79599,
+      0,
+      0,
+      7304,
+      7564,
+      0
+    ],
+    "all_cases_measured": true
+  },
+  "performance": {
+    "result": "FAIL",
+    "scope": "Three ARM hosts, BBR1, 400ms added RTT, 45s reverse single stream, MTU1160, zero injected loss, same-binary peak A/B/B/A and offered200M L/K/K/L, server ACK grant only B/K. All ten measured; high retrans goal not met, offered200M actual rates not matched.",
+    "run_id": 45971858261,
+    "job_ids": {
+      "client": 140417467340,
+      "server": 140417467318,
+      "relay": 140417467423
+    },
+    "artifact_ids": {
+      "client": 15185878644,
+      "server": 15185694610,
+      "relay": 15185519312
+    },
+    "bare_mbps": [
+      346.4220747410192,
+      399.6449126688476
+    ],
+    "bare_bulk_server_ss_sent_bytes": [
+      2023042216,
+      2300363512
+    ],
+    "bare_bulk_server_ss_retrans_bytes": [
+      21981508,
+      443128
+    ],
+    "order": [
+      "A1",
+      "B1",
+      "B2",
+      "A2",
+      "L1",
+      "K1",
+      "K2",
+      "L2"
+    ],
+    "mbps": [
+      140.50594611853057,
+      237.99799222382276,
+      146.86715080362586,
+      244.126168736956,
+      199.99766685294748,
+      199.99542246805262,
+      179.6077615728655,
+      195.56658985065053
+    ],
+    "means": {
+      "A": {
+        "mbps": 192.3160574277433,
+        "client_cpu_s_per_gib": 15.179729652459919,
+        "server_cpu_s_per_gib": 21.72287795346072
+      },
+      "B": {
+        "mbps": 192.43257151372433,
+        "client_cpu_s_per_gib": 14.722154069189378,
+        "server_cpu_s_per_gib": 20.947110821285044
+      },
+      "L": {
+        "mbps": 197.782128351799,
+        "client_cpu_s_per_gib": 18.88808853668898,
+        "server_cpu_s_per_gib": 18.70000843315236
+      },
+      "K": {
+        "mbps": 189.80159202045905,
+        "client_cpu_s_per_gib": 17.449118209013232,
+        "server_cpu_s_per_gib": 20.495435433398267
+      }
+    },
+    "weighted_bulk_snapshot_retrans_ratio": {
+      "A": 0.11542596146822726,
+      "B": 0.11202576466093007,
+      "L": 0.062037612422083686,
+      "K": 0.10005303639017041
+    },
+    "server_ingress_full": [
+      20231,
+      6208,
+      7949,
+      13395,
+      4762,
+      8216,
+      3874,
+      1340
+    ],
+    "client_ingress_full": [
+      338,
+      3317,
+      1111,
+      884,
+      0,
+      54,
+      0,
+      2802
+    ],
+    "server_m4_copied": [
+      1045120,
+      1465477,
+      1043175,
+      1472073,
+      1158139,
+      1161718,
+      1224533,
+      1189827
+    ],
+    "client_packet_socket_packets": [
+      861632,
+      1389020,
+      881845,
+      1406051,
+      1109584,
+      1111717,
+      1073936,
+      1110480
+    ],
+    "all_packet_socket_drops_zero": true,
+    "relay_qdisc_drops_zero": true,
+    "bulk_last_snapshot": {
+      "bytes_sent": [
+        1083775944,
+        1495774903,
+        1081758416,
+        1526512211,
+        1200964162,
+        1204682315,
+        1269665950,
+        1225222745
+      ],
+      "bytes_retrans": [
+        215161800,
+        95790957,
+        192959184,
+        86133220,
+        63128130,
+        66846283,
+        180719774,
+        87386713
+      ],
+      "dsack_dups": [
+        15949,
+        7363,
+        13352,
+        5564,
+        3530,
+        4464,
+        12926,
+        5674
+      ],
+      "timeouts": [
+        1,
+        2,
+        2,
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    "actual_server_grants": [
+      0,
+      205583,
+      131527,
+      0,
+      0,
+      312869,
+      198004,
+      0
+    ],
+    "approx_wall_relative_samples": {
+      "near_client_start_plus_10s_retrans": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "near_client_start_plus_20s_retrans": [
+        66484144,
+        55842305,
+        40902391,
+        56798564,
+        52236801,
+        52336799,
+        69046571,
+        66968183
+      ],
+      "qualification": "Independent VM wall clocks and periodic samples; approximate times, not exact event boundaries. All eight initially zero and high by later sample; short local run is not sustained proof."
+    },
+    "path_example_peak_A1": {
+      "server_wan_tx_delta": 1059174,
+      "relay_server_rx_delta": 930041,
+      "relay_client_tx_delta": 930043,
+      "client_wan_rx_delta": 861626,
+      "qualification": "Nonidentical snapshot windows/classes, not exact packet loss identity."
+    },
+    "interpretation": "Peak ACK grant reduces server full but no meaningful sustained retrans improvement; offered200M worse sampled retrans and lower delivered rate. Do not promote. Same RTT bare 1.0865/0.0193% retrans implies variable actual path despite zero injection. Earlier 3ca7efd 120M offered, four endpoint admission full0, A1 90.50M retrans12054088; B2 direct-read candidate at119.98M retrans20536776. No simple queue/cap explanation."
+  },
+  "physical": "NOT_RUN",
+  "review": "Five actual ZIPs materialized and CRC opened, six exact native summaries and eight local results, cross-host summary all ten rows, server per-case bulk samples, native M4/RX/ingress, endpoint link snapshots and relay qdisc, bare bulk ss. Main H2498 governance PASS, inherited branch governance issue remains.",
+  "next_source": "ed9171b1dc511ef2c359da2aa7b8c800ee7e576f"
+}
