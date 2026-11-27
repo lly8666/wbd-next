@@ -1520,23 +1520,24 @@ func(p *m0WinRustNativePeer) rotateNormal(ctx context.Context,o m0NativeV4Option
  closeHandoff()
  if e=transport.TakeNative();e!=nil{return 0,false,e}
  readers.Wait()
- // Native Stage may send the real authenticated client Health immediately.
- // After this boundary remote server promotion cannot be rolled back by Go.
- fatal=true
- if e=p.owner.StageNativeNormalCandidate(turn,next,transport);e!=nil{return 0,true,e}
+ // Stage installs B RX while A continues TX. The original server cold
+ // Commit proves B; client B Health is emitted only at native TX handoff.
+ if e=p.owner.StageNativeNormalCandidate(turn,next,transport);e!=nil{return 0,false,e}
  for len(early)>0{
   seg:=<-early
-  if e=p.owner.NativeNormalCandidateEarly(turn,port,seg.Seq,seg.Payload);e!=nil{return 0,true,e}
+  if e=p.owner.NativeNormalCandidateEarly(turn,port,seg.Seq,seg.Payload);e!=nil{return 0,false,e}
  }
  proof,stopProof:=context.WithTimeout(turn,6*time.Second);defer stopProof()
  check:=time.NewTicker(25*time.Millisecond);defer check.Stop()
  for{
   ready,e:=p.owner.NativeNormalCandidateReady(proof,port)
-  if e!=nil{return 0,true,e}
+  if e!=nil{return 0,false,e}
   if ready{break}
-  select{case <-proof.Done():return 0,true,proof.Err();case <-check.C:}
+  select{case <-proof.Done():return 0,false,proof.Err();case <-check.C:}
  }
  grace=m0WindowsRotationDelay(10*time.Second,20*time.Second)
+ // From TX publication B can authorize remote retirement of A.
+ fatal=true
  if e=p.owner.PromoteNativeNormalCandidate(turn,port,grace);e!=nil{return 0,true,e}
  transferred=true
  p.rotationRetiring=p.rotationCurrent;p.rotationCurrent=next

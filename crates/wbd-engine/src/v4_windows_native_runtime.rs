@@ -1449,8 +1449,6 @@ fn stage_sources(
              let next_tcp_due=split.as_ref()
                  .and_then(|owner|owner.next_tcp_cleanup_due_ms());
              let timeout=timeout.min(closed_tcp_cleanup_wait_ms(now_ms,next_tcp_due));
-             #[cfg(feature="winxdp_native_trial")]
-             let timeout=if carrier_blocked{timeout}else{timeout.min(rotation.as_ref().map_or(u32::MAX,|r|r.probe_wait_ms()))};
              // 3 old owner events + 16 existing TCP shards + at most
              // 16 ordinary Direct UDP FD_READ events = 35 (<64 WAIT_ANY).
              // Overflow UDP keeps its old timed scan. No per-flow thread.

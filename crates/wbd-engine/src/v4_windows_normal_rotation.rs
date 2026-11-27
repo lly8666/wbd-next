@@ -69,7 +69,7 @@ impl NormalRotation{
             owner==p.current.cfg.owner||tx_seq==0||rx_seq==0{return Err(INVALID)}
         let mut cfg=p.current.cfg;
         let old=p.current.lane.lock().map_err(|_|BAD_STAGE)?;
-        let mut e=entry.lock().map_err(|_|BAD_STAGE)?;
+        let e=entry.lock().map_err(|_|BAD_STAGE)?;
         if e.role_server||e.feature7||e.game_group.is_some()||
             !v3_ready(&e,cfg.epoch,cfg.luid,cfg.ifindex)||
             e.path_mtu!=old.path_mtu||e.path_mtu_is_outer!=old.path_mtu_is_outer||
@@ -77,9 +77,8 @@ impl NormalRotation{
             e.m2.is_none(){return Err(INVALID)}
         cfg.owner=owner;
         cfg.local_port=port;cfg.initial_tx_seq=tx_seq;cfg.initial_rx_seq=rx_seq;
-        // Original Normal authenticated client Health sends its existing
-        // cold burst; Linux promotes the new server /32 after real M4 RX.
-        e.m2.as_mut().ok_or(BAD_STAGE)?.health.arm_client_cold_ready(m2_clock().0);
+        // RX is live, but do not send B Health while A still owns fresh TX.
+        // The original Linux server sends its cold Commit independently.
         drop(e);drop(old);
         let next=NormalPath{cfg,lane:entry,counters:Arc::new(Counters::new(rx_seq,tx_seq)),sack};
         p.candidate=Some(next);
@@ -93,7 +92,6 @@ impl NormalRotation{
         if self.phase()!=PROBE{return Ok(false)}
         let p=self.candidate()?.ok_or(BAD_STAGE)?;
         if p.cfg.local_port!=port{return Err(INVALID)}
-        if p.counters.feedback_outer_bytes.load(Ordering::Acquire)==0{return Ok(false)}
         let e=p.lane.lock().map_err(|_|BAD_STAGE)?;
         let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
         // No old lane or TCP ACK can authorize this distinct incarnation.
@@ -113,11 +111,6 @@ impl NormalRotation{
         wake_rx:&WakeEvent)->Result<(Option<NormalPath>,bool),i32>{
         match self.phase(){
             COLD=>{self.transport.send_one(npf)?;Ok((None,false))},
-            PROBE=>{
-                let p=self.candidate()?.ok_or(BAD_STAGE)?;
-                let copied=send_control(&p.cfg,&p.lane,npf,&p.counters,ip_id)?;
-                Ok((None,copied))
-            },
             PROMOTE=>{
                 let mut p=self.paths.lock().map_err(|_|BAD_STAGE)?;
                 let next=p.candidate.take().ok_or(BAD_STAGE)?;
@@ -130,19 +123,23 @@ impl NormalRotation{
                 // or candidate TLS start. RX observes this same deadline.
                 p.deadline=Some(Instant::now()+p.grace);
                 self.phase.store(TX_SWITCHED,Ordering::Release);
-                drop(p);let _=wake_rx.wake();
+                drop(p);
+                // Last A batch is already submitted on this same carrier.
+                // Publish B's existing cold Health only at this TX handoff:
+                // Linux can now retire A without cutting off new A uplink.
+                {
+                    let mut e=next.lane.lock().map_err(|_|BAD_STAGE)?;
+                    e.m2.as_mut().ok_or(BAD_STAGE)?.health.arm_client_cold_ready(m2_clock().0);
+                }
+                // Use the original ready-only control path. If no TX credit,
+                // the ordinary new owner turn services the same due Health.
+                send_control(&next.cfg,&next.lane,npf,&next.counters,ip_id)?;
+                let _=wake_rx.wake();
                 Ok((Some(next),true))
             },
             ABORT=>{self.phase.store(ABORT_TX,Ordering::Release);let _=wake_rx.wake();Ok((None,false))},
             _=>Ok((None,false)),
         }
-    }
-    pub(super) fn probe_wait_ms(&self)->u32{
-        if self.phase()!=PROBE{return u32::MAX}
-        let Ok(Some(p))=self.candidate()else{return u32::MAX};
-        let Ok(e)=p.lane.lock()else{return u32::MAX};
-        e.m2.as_ref().and_then(|m|m.health.next_tx_deadline()).map_or(u32::MAX,|d|
-            d.saturating_sub(m2_clock().0).div_ceil(1_000_000).max(1).min(u64::from(u32::MAX-1)) as u32)
     }
     fn rx_candidate(&self)->Result<Option<NormalPath>,i32>{
         let p=self.paths.lock().map_err(|_|BAD_STAGE)?;
