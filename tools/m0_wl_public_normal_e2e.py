@@ -561,6 +561,7 @@ try:
   if h2441_cc and h2441_cc not in inventory.split():raise RuntimeError("H2441_ENVIRONMENT_BBR_UNAVAILABLE_NO_FALLBACK")
   h2441_flags=" --tun-fq-maxrate 0"+(" --tcp-proxy-cc bbr --tcp-proxy-port 46180" if h2441_cc else "")
  game_download_bbr=os.environ.get("WBD_XDP_GAME_DOWNLOAD_BBR")=="1"
+ game_tcp_physical=None
  if game_download_bbr:
   assert is_game and not p030_managed
   try:wsl("modprobe","tcp_bbr",timeout=10)
@@ -571,6 +572,10 @@ try:
   # Keep the previous Game TUN/FQ configuration; only the forwarded TCP
   # path changes. UDP never enters the TCP splice owner.
   h2441_flags=" --tcp-proxy-cc bbr --tcp-proxy-port 46180"
+  if os.environ.get("WBD_XDP_GAME_DOWNLOAD_TRANSPORT")=="tcp":
+   from m0_winxdp_game_download import route_for
+   game_tcp_physical=route_for("192.0.2.2")
+   report["game_tcp_physical_before_apply"]=game_tcp_physical
  if p030_managed:
   managed_cfg={"listen":peer+":443","server-name":"wbd-v4.example.test","raw-interface":"eth0",
       "tun-name":"wbdwl4","tun-ipv4":"10.66.0.1/24","lease-pool":"10.66.0.128/25",
@@ -2721,10 +2726,9 @@ print(json.dumps(result),flush=True)
       "source":"REAL_IP_LINK_NOT_WINDOWS_NPF_OR_TC_FQ",
       "scenario_sha256":scenario["scenario_sha256"]}
     print("H491_ORIGINAL_TUN_QUEUE_ACTUAL "+json.dumps(report["linux_tun_queue_control"]),flush=True)
-   print(netem("arm"),flush=True)
    if os.environ.get("WBD_XDP_GAME_DOWNLOAD_TRANSPORT")=="tcp":
     from m0_winxdp_game_download import measure_tcp
-    measured=measure_tcp(root,out,wsl,unix,w,s,scenario)
+    measured=measure_tcp(root,out,wsl,unix,w,s,scenario,lambda:netem("arm"),game_tcp_physical)
     print(netem("snapshot"),flush=True)
     report["linux_tun_link_kernel"]=link_delta(tun_link_before,tun_link_snapshot("after"))
     report["linux_tun_fq_kernel"]=fq_delta(tun_fq_before,tun_fq_snapshot("after"))
@@ -2733,6 +2737,7 @@ print(json.dumps(result),flush=True)
       "measurement_duration_s":30,"tcp_download":measured}
     print("WINXDP_GAME_TCP_DOWNLOAD "+json.dumps(measured),flush=True)
    else:
+    print(netem("arm"),flush=True)
     # Existing 1Hz owner telemetry only: distinguish pre-run cumulative NPF
     # drops from measurements and never fabricate zero if no sample exists.
     npf_before=latest_counter(out/"client.log")
@@ -2993,7 +2998,7 @@ print(json.dumps(result),flush=True)
  if game_download_bbr:
   report["game_download_bbr"]={"ready":"WBD_TCP_SPLICE_READY tun=wbdwl4 port=46180 cc=bbr" in server_stop_text,
     "stop":"WBD_TCP_SPLICE_STOP error=<nil>" in server_stop_text,
-    "accepted":server_stop_text.count("WBD_TCP_SPLICE_ACCEPT target=198.18.77.2:5202 cc=bbr")}
+    "accepted":server_stop_text.count("WBD_TCP_SPLICE_ACCEPT target=192.0.2.2:5202 cc=bbr")}
   if not report["game_download_bbr"]["ready"] or not report["game_download_bbr"]["stop"]:
    raise RuntimeError("GAME_DOWNLOAD_BBR_OWNER_RECEIPT_MISSING")
  report["stop"]="PASS_BOTH_OWNED"

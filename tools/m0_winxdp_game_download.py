@@ -4,12 +4,42 @@ from m0_wl_perf_v2_config import read_scenario
 SECONDS=30
 STREAMS=4
 PORT=5202
-TARGET="198.18.77.2"
+TARGET="192.0.2.2"
 NS="h2441-origin"
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"result/wl-public"
 E=ROOT/"result/winxdp-game-download"
 MODES=("game2","game2-fec","game4","game4-fec")
+# The H2480 pressure fixture already qualified 192.0.2.2 as ordinary
+# tunneled business, unlike the project's reserved 198.18/16 FakeIP range.
+def ps_route(script):
+    p=subprocess.run(["powershell.exe","-NoProfile","-NonInteractive","-Command",
+        "$ErrorActionPreference='Stop';"+script],capture_output=True,text=True,timeout=20)
+    if p.returncode:raise RuntimeError(p.stderr[-1500:])
+    return p.stdout.strip()
+
+def route_for(host):
+    return json.loads(ps_route("Find-NetRoute -RemoteIPAddress '"+host+"' | Where-Object {$_.DestinationPrefix} | Select-Object -First 1 InterfaceIndex,InterfaceAlias,DestinationPrefix,NextHop,RouteMetric | ConvertTo-Json -Compress"))
+
+def isolate_routes(out,physical,owned):
+    # Same route isolation as m0_winxdp_pressure_client.py, confined to CI.
+    def add(prefix,r):
+        idx=int(r["InterfaceIndex"]);hop=r["NextHop"]
+        ps_route(f"New-NetRoute -DestinationPrefix '{prefix}' -InterfaceIndex {idx} -NextHop '{hop}' -RouteMetric 1 -PolicyStore ActiveStore | Out-Null")
+        owned.append((prefix,idx,hop))
+    for host in (TARGET,"10.66.0.1"):
+        r=route_for(host)
+        if r["InterfaceAlias"]!="WBDWLMAIN":raise RuntimeError("test destination not on Wintun: "+str(r))
+        if r["DestinationPrefix"]!=host+"/32":add(host+"/32",r)
+    for prefix in ("0.0.0.0/2","64.0.0.0/2","128.0.0.0/2","192.0.0.0/2"):add(prefix,physical)
+    check={host:route_for(host) for host in (TARGET,"10.66.0.1","8.8.8.8")}
+    (out/"game-tcp-windows-route.json").write_text(json.dumps(check,indent=2))
+    if any(check[x]["InterfaceAlias"]!="WBDWLMAIN" for x in (TARGET,"10.66.0.1")) or check["8.8.8.8"]["InterfaceIndex"]!=physical["InterfaceIndex"]:
+        raise RuntimeError("test route isolation failed")
+
+def restore_routes(owned):
+    for prefix,idx,hop in reversed(owned):
+        ps_route(f"Remove-NetRoute -DestinationPrefix '{prefix}' -InterfaceIndex {idx} -NextHop '{hop}' -PolicyStore ActiveStore -Confirm:$false")
 
 def tcp_flow(sock,side,start):
     sock.settimeout(.25)
@@ -66,7 +96,7 @@ def tcp_app(side,flag,directory):
             for c,err in pool.map(connect,range(STREAMS)):
                 if c is not None:sockets.append(c)
                 else:errors.append(err)
-        print("GAME_TCP_CONNECTED "+str(len(sockets)),flush=True)
+        print("GAME_TCP_CONNECTED "+str(len(sockets))+" errors="+json.dumps(errors),flush=True)
     limit=time.monotonic()+30
     while not flag.exists() and time.monotonic()<limit:time.sleep(.015)
     if not flag.exists():
@@ -85,23 +115,26 @@ def tcp_app(side,flag,directory):
     (out/("game-tcp-"+side+".json")).write_text(json.dumps(row,indent=2))
     print("GAME_TCP_RESULT "+json.dumps(row),flush=True)
 
-def measure_tcp(root,out,wsl,unix,win_product,linux_product,scenario):
+def measure_tcp(root,out,wsl,unix,win_product,linux_product,scenario,arm,physical):
     # Use the same isolated forwarded origin topology as H2441. A
     # connection to 10.66.0.1 is LOCAL and never enters TCP TPROXY.
+    owned=[]
     wsl("ip","netns","add",NS)
     try:
+        isolate_routes(out,physical,owned)
         wsl("ip","link","add","h2441host","type","veth","peer","name","h2441peer")
         wsl("ip","link","set","h2441peer","netns",NS)
-        wsl("ip","addr","add","198.18.77.1/24","dev","h2441host")
+        wsl("ip","addr","add","192.0.2.1/24","dev","h2441host")
         wsl("ip","link","set","h2441host","up")
-        for args in (("link","set","lo","up"),("addr","add",TARGET+"/24","dev","h2441peer"),("link","set","h2441peer","up"),("route","add","default","via","198.18.77.1")):
+        for args in (("link","set","lo","up"),("addr","add",TARGET+"/24","dev","h2441peer"),("link","set","h2441peer","up"),("route","add","default","via","192.0.2.1")):
             wsl("ip","netns","exec",NS,"ip",*args)
         (out/"game-tcp-origin-route.json").write_text(wsl("ip","-j","route","get",TARGET))
-        return _measure_tcp(root,out,unix,win_product,linux_product,scenario)
+        return _measure_tcp(root,out,unix,win_product,linux_product,scenario,arm)
     finally:
-        wsl("ip","netns","del",NS)
+        try:restore_routes(owned)
+        finally:wsl("ip","netns","del",NS)
 
-def _measure_tcp(root,out,unix,win_product,linux_product,scenario):
+def _measure_tcp(root,out,unix,win_product,linux_product,scenario,arm):
     flag=out/"game-tcp-start.flag";flag.unlink(missing_ok=True)
     script=root/"tools/m0_winxdp_game_download.py";processes=[]
     def wait_marker(p,path,marker,seconds):
@@ -115,6 +148,14 @@ def _measure_tcp(root,out,unix,win_product,linux_product,scenario):
             wait_marker(l,out/"game-tcp-linux.log","GAME_TCP_LISTEN",10)
             w=subprocess.Popen([sys.executable,"-u",str(script),"tcp-app","windows",str(flag),str(out)],stdout=wl,stderr=subprocess.STDOUT);processes.append(w)
             wait_marker(w,out/"game-tcp-windows.log","GAME_TCP_CONNECTED",25)
+            accepted=(out/"server.log").read_text(errors="replace").count("WBD_TCP_SPLICE_ACCEPT target="+TARGET+":"+str(PORT)+" cc=bbr")
+            startup=(out/"game-tcp-windows.log").read_text(errors="replace")
+            (out/"game-tcp-before-netem.json").write_text(json.dumps({"windows":startup,"bbr_accepts":accepted}))
+            if "GAME_TCP_CONNECTED 4 errors=[]" not in startup or accepted<STREAMS:
+                raise RuntimeError("TCP pre-netem connection or BBR acceptance failed: "+startup[-600:])
+            # Keep loss/RTT/rate exactly as previous run during the 30s
+            # measurement, not during connection setup.
+            print(arm(),flush=True)
             flag.write_text("REAL_TCP_SOCKETS_CONNECTED\n")
             end=time.monotonic()+42
             while any(p.poll() is None for p in processes):
@@ -224,8 +265,10 @@ def matrix():
     from m0_wl_windows_bounded_cmd import run_captured
     transport=os.environ["WBD_XDP_GAME_DOWNLOAD_TRANSPORT"]
     assert transport in ("tcp","udp")
+    modes=tuple(os.environ.get("WBD_XDP_GAME_DOWNLOAD_MODES",",".join(MODES)).split(","))
+    assert modes and all(x in MODES for x in modes)
     E.mkdir(parents=True,exist_ok=True);rows=[]
-    for mode in MODES:
+    for mode in modes:
         case=E/(transport+"-"+mode);case.mkdir()
         scenario=ROOT/"scenarios"/("xdp-game-download-"+mode+".json")
         read_scenario(scenario)
@@ -257,7 +300,7 @@ def matrix():
         (E/("summary-"+transport+".json")).write_text(json.dumps(rows,indent=2))
         if rc==124 or row["stop"]!="PASS_BOTH_OWNED":
             print("WINXDP_GAME_DOWNLOAD_STOP_MISSING "+mode,flush=True);break
-    return 0 if len(rows)==4 and all(r["rc"]==0 and r["stop"]=="PASS_BOTH_OWNED" and
+    return 0 if len(rows)==len(modes) and all(r["rc"]==0 and r["stop"]=="PASS_BOTH_OWNED" and
         r["rss_default"] and r["rx"] and all(x.get("queues")==1 for x in r["rx"]) and
         (r["bbr"] or {}).get("ready") and (r["bbr"] or {}).get("stop") and
         (transport!="tcp" or (r["bbr_accepts"] or 0)>=STREAMS) for r in rows) else 2

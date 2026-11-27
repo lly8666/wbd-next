@@ -1,0 +1,55 @@
+name: M0 existing Linux timed lane rotation two modes
+run-name: "M0 Normal and Game4 genuine timer rotation | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-winxdp']
+    paths: ['.github/workflows/qa-m0-timed-lane-two-modes.yml']
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  rotation:
+    strategy:
+      fail-fast: false
+      matrix:
+        scene: [normal-off, game4-fixed6]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Fetch same exact frozen Linux binaries used by WinXDP
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code 2eb7bda3b710643af3893a8f55c4716f0bfe2a15 HEAD -- crates r0 Cargo.toml Cargo.lock
+          git diff --exit-code 26b11e2da236e909b73f461964c52d5a86d42dca HEAD -- r0/go_overlay/internal/v4productcli crates/wbd-engine/src/v4_linux_tcp_splice.rs
+          GITHUB_SHA=26b11e2da236e909b73f461964c52d5a86d42dca bash tools/m0_h2476_fetch_frozen_linux.sh
+          cp -a linux-plan029-public-bundle fixed-build
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq iproute2 iptables openssl
+      - name: Actual timer driven native lane rotation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result
+          python3 tools/m0_timed_lane_two_modes.py "$RUNNER_TEMP/rotation.sh" "${{ matrix.scene }}"
+          bash -n "$RUNNER_TEMP/rotation.sh"
+          bash "$RUNNER_TEMP/rotation.sh" fixed-build >rotation.log 2>&1 || { tail -180 rotation.log; exit 1; }
+          if [[ "${{ matrix.scene }}" == normal-off ]];then
+            cat fixed-kernel-result/timed-evidence.json
+          else
+            cat fixed-kernel-result/hot-native-evidence.json
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: timed-lane-${{ matrix.scene }}
+          path: |
+            rotation.log
+            fixed-kernel-result/
+            h2439-out/build-identity.json
+          retention-days: 14
