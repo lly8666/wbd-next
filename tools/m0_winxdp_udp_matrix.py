@@ -56,7 +56,17 @@ def main():
         CASES=[[name+"-"+str(i),"fixed",16384 if arm=="A" else 4096,2048,32,"original",rate,loss,delay,size] for name,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
     if pool:
         seq="BAAB" if os.environ["H2478_REPLICA"] in "BDFHJL" else "ABBA"
-        CASES=[["maximum-small50-loss5-"+str(i),"fixed",16384,2048,32,"original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),50,5,20,288] for i,arm in enumerate(seq)]
+        workloads=[("maximum-small50-loss5","fixed",50,5,20,288)]
+        if os.environ.get("WBD_XDP_SINGLE_WIDE")=="1":
+            workloads=[
+                ("normal-large175","normal",175,0,20,1200),
+                ("normal-small50","normal",50,0,20,288),
+                ("normal-small100","normal",100,0,20,288),
+                ("maximum-large100-loss1","fixed",100,1,80,1200),
+                ("maximum-large50-loss10","fixed",50,10,200,1200),
+                ("fixed-small16384-100","fixed",100,5,20,288),
+            ]
+        CASES=[[name+"-"+str(i),mode,16384,2048,32,"original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),rate,loss,delay,size] for name,mode,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
     rows=[]
     order=list(range(len(CASES)))
     if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
@@ -69,11 +79,17 @@ def main():
         order=list(range(len(CASES)))
         if os.environ["H2478_REPLICA"] in "BDFHJL":order=list(range(8,len(CASES)))+list(range(4,8))+list(range(4))
         if os.environ["H2478_REPLICA"]=="S":order=list(range(4,8)) if maximum_memory else list(range(4)) if efficiency else list(range(4))+[8,9]
-    if pool:order=list(range(len(CASES)))
+    if pool:
+        order=list(range(len(CASES)))
+        if os.environ.get("WBD_XDP_SINGLE_WIDE")=="1":
+            replica=os.environ["H2478_REPLICA"]
+            g=0 if replica=="S" else (ord(replica)-ord("A"))%6
+            groups=[g,(g+3)%6]
+            order=[i for group in groups for i in range(4*group,4*group+4)]
     for i in order:
         name,mode,rx,tx,q,policy,rate,loss,delay,size=CASES[i]
         case=E/name;case.mkdir(exist_ok=False)
-        group=name.rsplit("-",1)[0] if tune and (maximum_memory or i<8) else name
+        group=name.rsplit("-",1)[0] if tune and (maximum_memory or pool or i<8) else name
         path=ROOT/"scenarios"/("xdp-pressure-"+group+".json")
         shutil.copyfile(path,case/"scenario.json")
         expected=read_scenario(path)["scenario_sha256"]
@@ -123,7 +139,7 @@ def main():
             row["carrier_ok"]=bool(row["tx"] and row["rx"]) and all(q.get("published",0)>0 and q.get("published")==q.get("completed_before_close") and q.get("invalid")==0 for q in row["tx"]) and all(q.get("truncated")==0 for q in row["rx"])
             row["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in row["rx_lab"]),default=0)
             if maximum_memory or pool:
-                row["fec_ok"]="WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6" in s
+                row["fec_ok"]=("WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6" in s)==(mode=="fixed")
                 row["lab_ok"]=row["lab_ok"] and row["fec_ok"]
                 row["fec_receipts"]=[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC2_INSTALLED" in l or ("FEC" in l and ("STOP" in l or "PARITY" in l))][-20:]
             if pool:
@@ -137,7 +153,7 @@ def main():
                 row["pending_lab"]=receipts("WBD_XDP_RX_PENDING_LAB ")
                 row["lab_ok"]=row["lab_ok"] and bool(row["pending_lab"]) and all(q.get("enabled")==int(row["arm"]=="B") and (row["arm"]=="A" or q.get("skipped",0)>0) for q in row["pending_lab"])
         rows.append(row)
-        if tune and (maximum_memory or i<8):
+        if tune and (maximum_memory or pool or i<8):
             import statistics
             pair=[x for x in rows if x["group"]==group]
             if len(pair)==4:
@@ -168,6 +184,13 @@ def main():
                         ar=[x for x in pair if x["arm"]==arm]
                         result[arm]["pending_skips"]=sum(q.get("skipped",0) for x in ar for q in x["pending_lab"])
                         result[arm]["event_checks"]=sum(q.get("event_checks",0) for x in ar for q in x["pending_lab"])
+                if pool:
+                    # A green delivery/Stop receipt is not target-rate evidence.
+                    result["all_arms_offered_at_target"]=all(
+                        all(x["offered"].get(k,0)>=.95*x["target"][k] for k in ("windows","linux") if x["target"].get(k,0)>0)
+                        for x in pair if isinstance(x.get("target"),dict) and isinstance(x.get("offered"),dict)
+                    ) and all(isinstance(x.get("target"),dict) and isinstance(x.get("offered"),dict) for x in pair)
+                    result["scope"]="MATCHED_OFFER" if result["valid"] and result["all_arms_offered_at_target"] else "COMPLETE_BELOW_OFFER" if result["valid"] else "INCOMPLETE"
                 print("WINXDP_NORMAL_UDP_PAIR "+json.dumps(result),flush=True)
                 (E/("pair-"+group+".json")).write_text(json.dumps(result,indent=2))
         if os.environ.get("WBD_XDP_UDP_PHASE")=="game-batch":

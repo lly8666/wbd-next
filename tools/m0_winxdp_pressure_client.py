@@ -228,7 +228,7 @@ def main():
     global CURRENT
     rows=[]
     log=(OUT/"server-control.log").open("w")
-    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"WBD_XDP_STRESS_PHASE="+os.environ.get("WBD_XDP_STRESS_PHASE",""),"H2478_REPLICA="+os.environ["H2478_REPLICA"],"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
+    p=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--cd",wpath(ROOT),"--exec","env","GITHUB_SHA="+os.environ["GITHUB_SHA"],"GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],"RUNNER_TEMP=/tmp","PATH="+GUEST_PATH,"WBD_H2476_PEER="+PEER,"WBD_XDP_PRESSURE_LAB="+os.environ.get("WBD_XDP_PRESSURE_LAB","0"),"WBD_XDP_PRESSURE_PATH="+os.environ.get("WBD_XDP_PRESSURE_PATH","bbr"),"WBD_XDP_STRESS_PHASE="+os.environ.get("WBD_XDP_STRESS_PHASE",""),"WBD_XDP_SINGLE_WIDE="+os.environ.get("WBD_XDP_SINGLE_WIDE","0"),"WBD_XDP_SINGLE_RSS="+os.environ.get("WBD_XDP_SINGLE_RSS","0"),"H2478_REPLICA="+os.environ["H2478_REPLICA"],"python3",wpath(ROOT/"tools/m0_winxdp_pressure_server.py")],stdout=log,stderr=subprocess.STDOUT)
     try:
         deadline=time.monotonic()+60
         while "H2442_SERVER_CONTROL_READY" not in (OUT/"server-control.log").read_text(errors="replace"):
@@ -255,7 +255,13 @@ def main():
                 order=(list(range(12,len(CASES))) if maximum_memory else [])+list(range(8,12))+list(range(4,8))+list(range(4))
             if os.environ["H2478_REPLICA"]=="S":
                 order=list(range(4,8))+[12,13] if maximum_memory else list(range(4)) if efficiency else list(range(4))+[8,10]
-        if pool:order=list(range(len(CASES)))
+        if pool:
+            order=list(range(len(CASES)))
+            if os.environ.get("WBD_XDP_SINGLE_WIDE")=="1":
+                replica=os.environ["H2478_REPLICA"]
+                g=0 if replica=="S" else (ord(replica)-ord("A"))%6
+                groups=[g,(g+3)%6]
+                order=[i for group in groups for i in range(4*group,4*group+4)]
         for i in order:
             CURRENT=i
             if abba:

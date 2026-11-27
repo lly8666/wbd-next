@@ -115,5 +115,14 @@ if os.environ.get("WBD_XDP_STRESS_PHASE")=="pool-qualification":
     assert PATH_MODE=="nat" and os.environ.get("WBD_XDP_PRESSURE_LAB")=="1"
     base=dict(CASES[0],rx_slots=16384,tx_slots=2048,quantum=32,sndbuf=16777216,streams=1,profile=-1,loss=0,mtu=1160)
     workloads=[dict(name="pool-down350",direction="down",rate=350,delay=200)]
+    if os.environ.get("WBD_XDP_SINGLE_WIDE")=="1":
+        workloads=[
+            dict(name="single-down350-mtu1460",direction="down",rate=350,delay=200,mtu=1460),
+            dict(name="single-up350",direction="up",rate=350,delay=20,streams=4,mtu=1460),
+            dict(name="single-duplex175",direction="duplex",rate=175,delay=20,streams=4,mtu=1460),
+            dict(name="single-max-loss1",direction="duplex",rate=100,delay=80,streams=4,mtu=1400,profile=6,loss=1),
+            dict(name="single-max-loss5",direction="duplex",rate=50,delay=200,streams=4,mtu=1400,profile=6,loss=5),
+            dict(name="single-max-loss10",direction="duplex",rate=10,delay=200,streams=4,mtu=1400,profile=6,loss=10),
+        ]
     seq="BAAB" if os.environ.get("H2478_REPLICA") in "BDFHJL" else "ABBA"
     CASES=[dict(base,**w,arm=arm,group=w["name"],policy="original" if arm=="A" else ("rx-single" if os.environ.get("WBD_XDP_SINGLE_RSS")=="1" else "rx-pool-recycle"),budget=w["rate"]) for w in workloads for arm in seq]
