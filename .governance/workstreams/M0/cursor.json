@@ -4,30 +4,31 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2511,
-  "checkpoint_sha": "5d3736da671f0c70d7cac30977c9b87a6ae210ef",
+  "sequence": 2512,
+  "checkpoint_sha": "68979bb8d29b5ebf8140a13a9a2c41372f75a155",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "收取117d0f8精确原生46032634286与三ARM ABBA46032634335；核对两项确定性测试、实际epoch preserved计数、同机源/manifest/hash/Stop/retired、四点身份与真实业务/重传/CPU；zero preserved不归因，不重复派单；继续核对app-limited、BBR带宽采样和实际服务，不加外层控制器。",
+  "next_action": "收取933d29b精确原生46034533957与三ARM ABBA46034534070；先验两项回归和实际功能，再看epoch preserved、应用/退役、四点身份与CPU/重传；不重复派单，不将编译失败视为机制否决。",
   "unverified": true,
-  "last_tested_source": "136d66fb79139144dd4e08a5e742ceccd493896c",
+  "last_tested_source": "117d0f82450adfdf879ddffef856564bd32a3b73",
   "evidence_refs": [
+    "docs/evidence/M0/20261128-DELIVERY-EPOCH-COMPILE-FAIL.json",
     "docs/evidence/M0/20261128-PATH-IDENTITY-ATTRIBUTION-RESULT.json",
     "docs/evidence/M0/20261127-PATH-SCREEN-NATIVE-QUALIFICATION-RESULT.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261127-M0-CLIENT-FIRST-READY-RX-DRAIN-HANDOFF.md",
-    "docs/evidence/M0/20261127-CLIENT-FIRST-SELECTED-CREDIT-RESULT.json",
     "docs/devlog/M0/20261127-M0-PATH-IDENTITY-SCREEN-HANDOFF.md",
     "docs/devlog/M0/20261127-M0-PATH-SCREEN-QUALIFICATION-BBR-RANDOM-FAIL.md",
     "docs/evidence/M0/20261127-CLIENT-FIRST-READY-DRAIN-RESULT.json",
     "docs/devlog/M0/20261127-M0-PATH-SCREEN-RETRY-AND-FEEDBACK-REVIEW.md",
     "docs/evidence/M0/20261128-PATH-IDENTITY-ATTRIBUTION-RESULT.json",
-    "docs/devlog/M0/20261128-M0-DELIVERY-EPOCH-HANDOFF.md"
+    "docs/devlog/M0/20261128-M0-DELIVERY-EPOCH-HANDOFF.md",
+    "docs/evidence/M0/20261128-DELIVERY-EPOCH-COMPILE-FAIL.json",
+    "docs/devlog/M0/20261128-M0-DELIVERY-EPOCH-COMPILE-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "136d66f原三机attempt2四接口匹配完成，未限速缺口主要在relay TX→client RX；160M降低重传但吞吐/CPU成本不晋级。117d0f8修正估算pipe零不等于实际outstanding零的采样时钟语义，双ISA及同源ABBA在途，未验。"
+  "partial_summary": "117d0f8双ISA编译FAIL，accessor错误放入struct，三机NOT_RUN。933d29b仅修正方法位置，新精确原生和ABBA已排队；原背压和外层契约不变。"
 }
