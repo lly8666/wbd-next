@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "source_sha": "74f7927fccdac022deb05b2507d1bb74b99f3f7c",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA core347 and six original native Normal profiles only; ARM additional recovery screen 11/12 completed, incomplete overall.",
+  "run_id": 45968640975,
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140403338955,
+      "artifact_id": 15183399742,
+      "core_pass": 347,
+      "gso_groups": [
+        203,
+        288,
+        64
+      ],
+      "gso_segments": [
+        1457,
+        2028,
+        862
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140403338615,
+      "artifact_id": 15184760933,
+      "core_pass": 347,
+      "gso_groups": [
+        291,
+        93,
+        211
+      ],
+      "gso_segments": [
+        2305,
+        1076,
+        2143
+      ]
+    }
+  ],
+  "performance": {
+    "result": "INCOMPLETE",
+    "scope": "Same-host ARM four netns 400ms added RTT; clean600M offered192MiB, 5ms forward jitter120M offered96MiB, separate0.5% IID both directions120M offered96MiB. Per-case target bytes/hash/EOF/Stop and actual profile; sampled Middle recovery not final flow counter.",
+    "order": [
+      "clean-bare",
+      "clean-default",
+      "clean-combined",
+      "jitter-bare",
+      "jitter-default",
+      "jitter-ack",
+      "jitter-rack",
+      "jitter-cubic",
+      "jitter-combined",
+      "loss-bare",
+      "loss-default",
+      "loss-combined"
+    ],
+    "status": [
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "MEASURED",
+      "INCOMPLETE"
+    ],
+    "actual_mbps": [
+      227.360459976304,
+      207.66761435766415,
+      209.2579097252659,
+      83.23138353240182,
+      78.0125731072577,
+      75.96162533512693,
+      75.56912172686603,
+      61.12020393049434,
+      30.414264137958256,
+      21.197635461203863,
+      69.0472251757815,
+      null
+    ],
+    "finished_all_exact_bytes_hash_eof": true,
+    "finished_paired_all_joined_stop": true,
+    "finished_paired_all_raw_drops_reset_zero": true,
+    "paired_finished_order": [
+      "clean-default",
+      "clean-combined",
+      "jitter-default",
+      "jitter-ack",
+      "jitter-rack",
+      "jitter-cubic",
+      "jitter-combined",
+      "loss-default"
+    ],
+    "paired_bulk_last_sample": {
+      "bytes_sent": [
+        200349980,
+        201326592,
+        91815441,
+        100669303,
+        100668892,
+        94309210,
+        100667444,
+        101208758
+      ],
+      "bytes_retrans": [
+        0,
+        0,
+        0,
+        6007,
+        5596,
+        3111,
+        4148,
+        545462
+      ],
+      "dsack_dups": [
+        0,
+        0,
+        0,
+        6,
+        6,
+        3,
+        4,
+        216
+      ],
+      "reord_seen": [
+        465,
+        465,
+        79768,
+        89934,
+        89078,
+        81444,
+        86493,
+        0
+      ],
+      "timeouts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "server_ingress_full": [
+        3881,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "client_ingress_full": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "client_cpu_s_per_gib": [
+        16.96,
+        16.853333333333335,
+        28.373333333333335,
+        28.906666666666666,
+        28.906666666666666,
+        29.973333333333333,
+        42.24,
+        12.693333333333333
+      ],
+      "server_cpu_s_per_gib": [
+        15.093333333333334,
+        14.506666666666668,
+        20.266666666666666,
+        20.8,
+        20.69333333333333,
+        22.400000000000002,
+        39.36,
+        13.973333333333334
+      ]
+    },
+    "loss_combined_failure": {
+      "error": "controlled transfer timeout",
+      "target_bytes": 100663296,
+      "server_last_state": "CloseWait",
+      "server_last_bytes_sent": 12600372,
+      "server_last_bytes_acked": 12401268,
+      "server_last_bytes_retrans": 76738,
+      "server_last_dsack": 17,
+      "server_last_timeouts": 0,
+      "client_middle_last_received": 6586809,
+      "server_ingress_full": 0,
+      "server_raw_drops": 0
+    },
+    "seed_supported": false,
+    "qdisc_counts_cumulative": true,
+    "interpretation": "Default BBR1 can deliver clean high-load and severe jitter with zero sampled retrans; real loss default0.539% and completes, conservative combined severely slower and incomplete. No RACK/CUBIC/combined selection. ACK branch predicate Established missed CloseWait bulk state; previous config flag did not prove intervention, no causal ACK attribution. Actual candidate must be corrected and retested."
+  },
+  "governance": {
+    "run_id": 45968640929,
+    "artifact_id": 15183563761,
+    "feature_card_size": "PASS",
+    "structure_state": "BLOCKED",
+    "reason": "verified cursor lacks reviewed PASS evidence",
+    "branch_cursor_sequence": 2416,
+    "main_h2496": "PASS"
+  },
+  "review": "Three actual ZIPs downloaded and CRC opened; six original exact source summaries, all 12 per-case recovery rows and failed raw client/server last TCP samples, qdisc/seed and actual governance structure.json. Main historical GSO and selected splice receipts re-read. Product baseline unchanged, not full performance or physical qualification.",
+  "physical": "NOT_RUN",
+  "next_source": "4bb9808167cac120170ba7e17d7ad07085a721a9"
+}
