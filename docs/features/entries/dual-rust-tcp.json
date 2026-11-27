@@ -47,7 +47,8 @@
     "docs/devlog/M0/20261127-CLIENT-FIRST-AND-NAPI-READY-DRAIN.md",
     "docs/devlog/M0/20261127-CLIENT-RX-REJECT-PATH-IDENTITY-SCREEN.md",
     "docs/devlog/M0/20261128-DELIVERY-EPOCH-ACTUAL-OUTSTANDING.md",
-    "docs/devlog/M0/20261128-DELIVERY-EPOCH-COMPILE-CORRECTION.md"
+    "docs/devlog/M0/20261128-DELIVERY-EPOCH-COMPILE-CORRECTION.md",
+    "docs/devlog/M0/20261128-APP-LIMITED-ACK-RENEWAL.md"
   ],
   "verification": [
     {
@@ -105,7 +106,8 @@
     "4490614 selected relay credit and rollback dual ISA PASS; client-first cross-host throughput +11.79%, CPU/GiB -8.11%, retrans4.2645→3.5662% but client full increased, opt-in retained. Independent reverse and bounded ready RX drain candidate pending.",
     "92d1db9 dual ISA351/12 native/5 local/10 cross-host PASS; client-first reverse throughput -3.98%, client full increased; RX drain actual394k follow-up packets no gain, rejected. Selected defaults unchanged; four-interface identity diagnostic pending.",
     "136d66f three-host 46024068630 attempt2 exact app/retirement; uncapped vs cap160 sampled outer identity gaps 659/1/4/865, mainly relay TX to client RX. New delivery epoch correction separates actual unacknowledged transmission from estimated pipe zero; native/source ABBA pending. No fixed cap, controller or protocol change.",
-    "117d0f8 native46032634286 both ISA build FAIL: Rate accessor inserted in struct, not impl; performance46032634335 prepare FAIL and all measurement skipped. Correct accessor location only, unchanged runtime algorithm and tests, exact new SOURCE qualification pending."
+    "117d0f8 native46032634286 both ISA build FAIL: Rate accessor inserted in struct, not impl; performance46032634335 prepare FAIL and all measurement skipped. Correct accessor location only, unchanged runtime algorithm and tests, exact new SOURCE qualification pending.",
+    "933d29b dual ISA353/8 functional/3 local and 6/6 three ARM PASS measurements. B epoch preserved just once per server bulk flow; throughput A242.69/B275.29M, weighted retrans5.50/4.12%, not causal; all remained Startup/ProbeRtt. New candidate removes pre-ACK app-limited renewal only under existing Linux parity, retains real write/timer marks, compares exact sources; not yet qualified."
   ],
   "promotion": null
 }

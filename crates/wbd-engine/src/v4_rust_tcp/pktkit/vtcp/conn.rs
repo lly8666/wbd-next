@@ -3394,8 +3394,10 @@ impl Conn {
         // that never was, or stop reporting congestion that was. Before
         // the ACK is taken, so that what it lets go carries the echo.
         self.ecn.on_receive(seg, self.rx_ecn);
-        // Before anything this ACK lets go (draft-ietf-ccwg-bbr §4.1.2.4).
-        self.check_app_limited();
+        // Linux parity: an ACK is network feedback, not an application
+        // write or retransmission timer observing an idle producer. Do not
+        // extend the app-limited bubble on every ACK before relay refill.
+        if !self.cfg.linux_parity { self.check_app_limited(); }
         // The window comes first: the flush below must see this segment's.
         let wnd_changed = self.update_send_window(seg);
         let now = self.now;
@@ -11339,6 +11341,27 @@ mod tests {
         read_all(&mut s);
         deliver(&mut c, &acks);
         assert!(!c.score.rate().is_app_limited());
+    }
+
+    #[test]
+    fn linux_parity_ack_does_not_extend_application_limited_bubble() {
+        let mut c = Conn::new(big(40717, 80));
+        let mut s = Conn::new(big(80, 40717));
+        drive_handshake(&mut c, &mut s);
+        c.cfg.linux_parity = true;
+        let (_, data) = c.write(&[1; 1000]);
+        assert!(c.score.rate().is_app_limited(), "actual write observes idle producer");
+        advance(Duration::from_millis(10));
+        let mut acks = deliver(&mut s, &data);
+        if acks.is_empty() { acks = delack_expired(&mut s); }
+        assert!(!acks.is_empty());
+        deliver(&mut c, &acks);
+        assert_eq!(c.send_buf.as_ref().unwrap().unacked(), 0);
+        assert!(!c.score.rate().is_app_limited(), "ACK must not renew the delivered bubble");
+        deliver(&mut c, &acks);
+        assert!(!c.score.rate().is_app_limited(), "duplicate ACK is not a new idle observation");
+        c.write(&[2; 1000]);
+        assert!(c.score.rate().is_app_limited(), "real subsequent write still marks idle");
     }
 
     // --- PLPMTUD -------------------------------------------------------------
