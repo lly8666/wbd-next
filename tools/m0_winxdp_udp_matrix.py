@@ -10,7 +10,7 @@ CASES=[["fixed-base-first","fixed",16384,2048,32,"original",350,5,20,1200],["fix
 def run_case(env,log,mode):
     # Existing inner mode budget: 240s Game, 690s other V2 scenes.
     # Leave cleanup room, but never continue on a timed-out outer owner.
-    budget=320 if mode.startswith("game") else 760
+    budget=360 if env.get("WBD_XDP_UDP_PHASE")=="pool-qualification" else 320 if mode.startswith("game") else 760
     child=subprocess.Popen([sys.executable,"-u","tools/m0_wl_public_modes_e2e.py"],
                            env=env,stdout=log,stderr=subprocess.STDOUT)
     start=time.monotonic()
@@ -36,7 +36,8 @@ def main():
     if os.environ.get("WBD_XDP_UDP_PHASE")=="game-direction":CASES=[["game2-fec-dir-up","game2-fec",16384,2048,32,"original",100,5,20,288],["game2-fec-dir-down","game2-fec",16384,2048,32,"original",100,5,20,288],["game2-fec-dir-duplex50","game2-fec",16384,2048,32,"original",50,5,20,288],["game2-fec-dir-duplex100","game2-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-dir-up","game4-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-dir-down","game4-fec",16384,2048,32,"original",100,5,20,288],["game4-fec-dir-duplex50","game4-fec",16384,2048,32,"original",50,5,20,288],["game4-fec-dir-duplex100","game4-fec",16384,2048,32,"original",100,5,20,288]]
     efficiency=os.environ.get("WBD_XDP_UDP_PHASE")=="normal-efficiency"
     maximum_memory=os.environ.get("WBD_XDP_UDP_PHASE")=="maximum-memory"
-    tune=os.environ.get("WBD_XDP_UDP_PHASE") in ("normal-tune","normal-efficiency","maximum-memory")
+    pool=os.environ.get("WBD_XDP_UDP_PHASE")=="pool-qualification"
+    tune=os.environ.get("WBD_XDP_UDP_PHASE") in ("normal-tune","normal-efficiency","maximum-memory","pool-qualification")
     if tune:
         workloads=[("normal-small100",100,0,20,288),("normal-large250",250,0,20,1200)]
         seq="BAAB" if os.environ["H2478_REPLICA"] in "BDFHJL" else "ABBA"
@@ -53,6 +54,9 @@ def main():
         workloads=[("maximum-large100-loss1",100,1,80,1200),("maximum-small50-loss5",50,5,20,288),("maximum-large50-loss10",50,10,200,1200)]
         seq="BAAB" if os.environ["H2478_REPLICA"] in "BDFHJL" else "ABBA"
         CASES=[[name+"-"+str(i),"fixed",16384 if arm=="A" else 4096,2048,32,"original",rate,loss,delay,size] for name,rate,loss,delay,size in workloads for i,arm in enumerate(seq)]
+    if pool:
+        seq="BAAB" if os.environ["H2478_REPLICA"] in "BDFHJL" else "ABBA"
+        CASES=[["maximum-small50-loss5-"+str(i),"fixed",16384,2048,32,"original" if arm=="A" else "rx-pool",50,5,20,288] for i,arm in enumerate(seq)]
     rows=[]
     order=list(range(len(CASES)))
     if os.environ["H2478_REPLICA"] in "BDFHJL":order.reverse()
@@ -65,6 +69,7 @@ def main():
         order=list(range(len(CASES)))
         if os.environ["H2478_REPLICA"] in "BDFHJL":order=list(range(8,len(CASES)))+list(range(4,8))+list(range(4))
         if os.environ["H2478_REPLICA"]=="S":order=list(range(4,8)) if maximum_memory else list(range(4)) if efficiency else list(range(4))+[8,9]
+    if pool:order=list(range(len(CASES)))
     for i in order:
         name,mode,rx,tx,q,policy,rate,loss,delay,size=CASES[i]
         case=E/name;case.mkdir(exist_ok=False)
@@ -113,14 +118,17 @@ def main():
              "tx":receipts("WBD_XDP_TX_STOP "),"rx":receipts("WBD_XDP_RX_STOP "),"tx_lab":receipts("WBD_XDP_TX_LAB "),"rx_lab":receipts("WBD_XDP_RX_LAB "),
              "fatal":[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC_ARENA_FULL" in l or "WBD_WINDOWS_NATIVE_WORKER_FAILURE" in l],"stats":stats,"tun_fq":r.get("linux_tun_fq_kernel"),"tun_link":r.get("linux_tun_link_kernel")}
         if tune:
-            row.update(resource,group=group,arm=("A" if policy=="original" else "B") if efficiency else ("A" if rx==16384 else "B"),rx_slots=rx)
+            row.update(resource,group=group,arm=("A" if policy=="original" else "B") if (efficiency or pool) else ("A" if rx==16384 else "B"),rx_slots=rx)
             row["lab_ok"]=bool(row["tx_lab"] and row["rx_lab"]) and all(q.get("slots")==tx for q in row["tx_lab"]) and all(q.get("slots")==rx and q.get("quantum")==32 for q in row["rx_lab"])
             row["carrier_ok"]=bool(row["tx"] and row["rx"]) and all(q.get("published",0)>0 and q.get("published")==q.get("completed_before_close") and q.get("invalid")==0 for q in row["tx"]) and all(q.get("truncated")==0 for q in row["rx"])
             row["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in row["rx_lab"]),default=0)
-            if maximum_memory:
+            if maximum_memory or pool:
                 row["fec_ok"]="WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6" in s
                 row["lab_ok"]=row["lab_ok"] and row["fec_ok"]
                 row["fec_receipts"]=[l[:500] for l in s.splitlines() if "WBD_WINDOWS_FEC2_INSTALLED" in l or ("FEC" in l and ("STOP" in l or "PARITY" in l))][-20:]
+            if pool:
+                row["rx_pool"]=receipts("WBD_XDP_RX_POOL_STOP ")
+                row["lab_ok"]=row["lab_ok"] and bool(row["rx_pool"]) and all(q.get("enabled")==int(row["arm"]=="B") and (row["arm"]=="A" or (q.get("max_queue_posted",0)>=8192 and q.get("expanded_samples",0)>0)) for q in row["rx_pool"]) and all(q.get("dropped")==0 for q in row["rx"]) and all(q.get("credit_limited")==0 for q in row["tx"])
             if efficiency:
                 row["pending_lab"]=receipts("WBD_XDP_RX_PENDING_LAB ")
                 row["lab_ok"]=row["lab_ok"] and bool(row["pending_lab"]) and all(q.get("enabled")==int(row["arm"]=="B") and (row["arm"]=="A" or q.get("skipped",0)>0) for q in row["pending_lab"])
@@ -139,10 +147,16 @@ def main():
                         "rx_peak_sampled":max(x["rx_peak_sampled"] for x in ar),
                         "rx_drops":sum(q.get("dropped",0) for x in ar for q in x["rx"]),
                         "tx_credit_limited":sum(q.get("credit_limited",0) for x in ar for q in x["tx"])}
-                    if maximum_memory:
+                    if maximum_memory or pool:
                         for key in ("steady_peak_working_set_bytes","steady_peak_private_bytes"):
                             vals=[x.get(key) for x in ar]
                             result[arm][key]=statistics.mean(vals) if all(v is not None for v in vals) else None
+                if pool:
+                    for arm in ("A","B"):
+                        ar=[x for x in pair if x["arm"]==arm]
+                        result[arm]["pool_backing_bytes"]=max(q["backing_bytes"] for x in ar for q in x["rx_pool"])
+                        result[arm]["pool_expanded_samples"]=sum(q["expanded_samples"] for x in ar for q in x["rx_pool"])
+                        result[arm]["pool_max_queue_posted"]=max(q["max_queue_posted"] for x in ar for q in x["rx_pool"])
                 if efficiency:
                     for arm in ("A","B"):
                         ar=[x for x in pair if x["arm"]==arm]

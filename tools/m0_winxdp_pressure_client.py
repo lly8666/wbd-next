@@ -247,13 +247,15 @@ def main():
             order=[i for i in order if (CASES[i]["group"]=="lossy-duplex")== (os.environ["H2478_REPLICA"]=="S")]
         efficiency=os.environ.get("WBD_XDP_STRESS_PHASE")=="normal-efficiency"
         maximum_memory=os.environ.get("WBD_XDP_STRESS_PHASE")=="maximum-memory"
-        tune=os.environ.get("WBD_XDP_STRESS_PHASE") in ("normal-tune","normal-efficiency","maximum-memory")
+        pool=os.environ.get("WBD_XDP_STRESS_PHASE")=="pool-qualification"
+        tune=os.environ.get("WBD_XDP_STRESS_PHASE") in ("normal-tune","normal-efficiency","maximum-memory","pool-qualification")
         if tune:
             order=list(range(len(CASES)))
             if os.environ["H2478_REPLICA"] in "BDFHJL":
                 order=(list(range(12,len(CASES))) if maximum_memory else [])+list(range(8,12))+list(range(4,8))+list(range(4))
             if os.environ["H2478_REPLICA"]=="S":
                 order=list(range(4,8))+[12,13] if maximum_memory else list(range(4)) if efficiency else list(range(4))+[8,10]
+        if pool:order=list(range(len(CASES)))
         for i in order:
             CURRENT=i
             if abba:
@@ -326,6 +328,9 @@ def main():
                 r["carrier_ok"]=r["tx"].get("published",0)>0 and r["tx"].get("published")==r["tx"].get("completed_before_close") and r["rx"].get("received",0)>0
                 r["pressure_valid"]=r["pressure_valid"] and r["carrier_ok"]
                 r["rx_peak_sampled"]=max((q.get("peak_ready_sampled",0) for q in r["rx_lab"]),default=0)
+                if pool:
+                    r["rx_pool"]=receipt("WBD_XDP_RX_POOL_STOP ")
+                    r["pressure_valid"]=r["pressure_valid"] and r["rx_pool"].get("enabled")==int(r["arm"]=="B") and r["rx"].get("dropped")==0 and r["tx"].get("credit_limited")==0 and (r["arm"]=="A" or (r["rx_pool"].get("max_queue_posted",0)>=8192 and r["rx_pool"].get("expanded_samples",0)>0))
                 if efficiency:
                     r["pending_lab"]=receipt("WBD_XDP_RX_PENDING_LAB ")
                     r["pressure_valid"]=r["pressure_valid"] and r["pending_lab"].get("enabled")==int(r["arm"]=="B") and (r["arm"]=="A" or r["pending_lab"].get("skipped",0)>0)
@@ -358,6 +363,10 @@ def main():
                             pair[arm+"_rx_peak_sampled"]=max(x["rx_peak_sampled"] for x in ar)
                             pair[arm+"_rx_drops"]=sum(x["rx"].get("dropped",0) for x in ar)
                             pair[arm+"_tx_credit_limited"]=sum(x["tx"].get("credit_limited",0) for x in ar)
+                            if pool:
+                                pair[arm+"_pool_backing_bytes"]=max(x["rx_pool"].get("backing_bytes",0) for x in ar)
+                                pair[arm+"_pool_expanded_samples"]=sum(x["rx_pool"].get("expanded_samples",0) for x in ar)
+                                pair[arm+"_pool_max_queue_posted"]=max(x["rx_pool"].get("max_queue_posted",0) for x in ar)
                             if efficiency:
                                 pair[arm+"_pending_skips"]=sum(x["pending_lab"].get("skipped",0) for x in ar)
                                 pair[arm+"_event_checks"]=sum(x["pending_lab"].get("event_checks",0) for x in ar)
@@ -367,7 +376,7 @@ def main():
                     print(("WINXDP_NORMAL_TUNE_PAIR " if tune else "WINXDP_CARRIER_ABBA_PAIR ")+json.dumps(pair),flush=True)
                     save(OUT/("pair-"+r["group"]+".json"),pair)
             save(OUT/"summary.json",{"tested_release":os.environ.get("WBD_XDP_TESTED_DLL_SHA","bceefcd096c9a4b0301db46184210834f75775db"),"fixture_sha":os.environ["GITHUB_SHA"],"replica":os.environ["H2478_REPLICA"],"rows":rows})
-            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","pending_lab","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","fec_receipts","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
+            print("WINXDP_PRESSURE_CASE "+json.dumps({k:r[k] for k in ("case","name","arm","group","carrier_ok","cpu_s_per_gib","binary_identity","direction","streams","rate","loss","profile","status","sent","received","rx_mbps","server_rx_mbps","flow_gaps_s","flow_tail","socket_sendbufs","socket_send_timeouts","steady_process_cpu_cores","server_rc","server_stop","server_path_ok","tx","rx","rx_queues","tx_lab","rx_lab","rx_peak_sampled","rx_slots","rx_pool","pending_lab","steady_peak_working_set_bytes","steady_peak_private_bytes","policy","fec_ok","fec_receipts","traffic_ok","lab_ok","loss_observed","fatal","exact_hash","pressure_valid","kernel_counter_delta","error") if k in r}),flush=True)
             if r.get("shape_clear_error") or not r.get("client_stop") or not r.get("server_stop") or r.get("underlay_cleanup_error") or r.get("isolation_cleanup_error"):
                 for pth in (SERVER/("case-"+str(i))/"server.log",SERVER/("case-"+str(i))/"source.log",d/"client.log"):
                     if pth.exists():

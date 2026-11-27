@@ -267,6 +267,8 @@ struct RxQueue {
     bool sampled;
     bool pending_fast;
     UINT64 pending_skips,event_checks;
+    UINT32 posted;
+    UINT64 expanded_samples;
 #endif
 };
 struct RxOwner {
@@ -279,8 +281,13 @@ struct RxOwner {
     UINT32 count,next,batch_queue,batch_index,batch_count;
 #ifdef WBD_XDP_PRESSURE_LAB
     UINT32 quantum,slots;
+    bool pooled;
+    UINT32 pool_next,pool_total;
 #endif
 };
+#ifdef WBD_XDP_PRESSURE_LAB
+constexpr UINT32 PoolBase=512,PoolWarm=8192;
+#endif
 struct RxFrame { const unsigned char* data; size_t len; };
 void close_rx(RxOwner* o){
     if(o->program)CloseHandle(o->program);
@@ -306,7 +313,7 @@ HRESULT rx_poke(RxQueue* q){
     XSK_NOTIFY_RESULT_FLAGS flags{};
     return XskNotifySocket(q->socket,XSK_NOTIFY_FLAG_POKE_RX,0,&flags);
 }
-HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue,UINT32 slots,XSK_BIND_FLAGS mode){
+HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue,UINT32 slots,XSK_BIND_FLAGS mode,UINT32 first,UINT32 initial,UINT32 total){
     HRESULT hr;
     XSK_UMEM_REG reg{};
     XSK_RING_INFO_SET info{};
@@ -315,7 +322,7 @@ HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue,UINT32 slots,XSK_BIND_FLA
     if(!q->event)return HRESULT_FROM_WIN32(GetLastError());
     q->ov.hEvent=q->event;
     hr=XskCreate(&q->socket);if(FAILED(hr))return hr;
-    reg.TotalSize=slots*RxChunk;reg.ChunkSize=RxChunk;reg.Address=q->umem;
+    reg.TotalSize=UINT64(total)*RxChunk;reg.ChunkSize=RxChunk;reg.Address=q->umem;
     hr=XskSetSockopt(q->socket,XSK_SOCKOPT_UMEM_REG,&reg,sizeof(reg));if(FAILED(hr))return hr;
     hr=XskBind(q->socket,index,queue,XSK_BIND_FLAG_RX|mode);if(FAILED(hr))return hr;
     hr=XskSetSockopt(q->socket,XSK_SOCKOPT_RX_RING_SIZE,&slots,sizeof(slots));if(FAILED(hr))return hr;
@@ -323,9 +330,12 @@ HRESULT open_queue(RxQueue* q,DWORD index,UINT32 queue,UINT32 slots,XSK_BIND_FLA
     hr=XskActivate(q->socket,XSK_ACTIVATE_FLAG_NONE);if(FAILED(hr))return hr;
     hr=XskGetSockopt(q->socket,XSK_SOCKOPT_RING_INFO,&info,&size);if(FAILED(hr))return hr;
     XskRingInitialize(&q->rx,&info.Rx);XskRingInitialize(&q->fill,&info.Fill);
-    if(XskRingProducerReserve(&q->fill,slots,&fi)!=slots)return E_FAIL;
-    for(UINT32 i=0;i<slots;++i)*static_cast<UINT64*>(XskRingGetElement(&q->fill,fi+i))=UINT64(i)*RxChunk;
-    XskRingProducerSubmit(&q->fill,slots);
+    if(XskRingProducerReserve(&q->fill,initial,&fi)!=initial)return E_FAIL;
+    for(UINT32 i=0;i<initial;++i)*static_cast<UINT64*>(XskRingGetElement(&q->fill,fi+i))=UINT64(first+i)*RxChunk;
+    XskRingProducerSubmit(&q->fill,initial);
+#ifdef WBD_XDP_PRESSURE_LAB
+    q->posted=initial;
+#endif
     return rx_poke(q);
 }
 HRESULT arm_queue(RxQueue* q){
@@ -401,7 +411,18 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     // Explicit scope of this candidate; never silently omit real queues.
     if(o->count>MaxRxQueues){hr=HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);goto fail;}
     o->queues=static_cast<RxQueue*>(HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(RxQueue)*o->count));
-    o->umem=static_cast<unsigned char*>(VirtualAlloc(nullptr,size_t(o->count)*slots*RxChunk,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE));
+    {
+        UINT32 backing=o->count*slots;
+#ifdef WBD_XDP_PRESSURE_LAB
+        o->pooled=!udp&&port_count==1&&o->count>1&&slots==RxSlots&&!std::strcmp(policy,"rx-pool");
+        if(o->pooled){
+            o->pool_next=o->count*PoolBase;
+            o->pool_total=o->pool_next+2*(slots-PoolBase);
+            backing=o->pool_total;
+        }
+#endif
+        o->umem=static_cast<unsigned char*>(VirtualAlloc(nullptr,size_t(backing)*RxChunk,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE));
+    }
     if(!o->queues||!o->umem){hr=E_OUTOFMEMORY;goto fail;}
     if(o->count>1){
         hr=XdpMapCreate(&o->map,XDP_MAP_TYPE_XSKMAP);if(FAILED(hr))goto fail;
@@ -409,11 +430,14 @@ static RxOwner* open_rx(DWORD index,const UINT16* ports,UINT32 port_count,BOOL u
     }
     for(UINT32 i=0;i<o->count;++i){
         auto* q=&o->queues[i];
-        q->umem=o->umem+size_t(i)*slots*RxChunk;
+        UINT32 first=0,initial=slots,total=slots;
 #ifdef WBD_XDP_PRESSURE_LAB
         q->pending_fast=pending_fast;
+        if(o->pooled){q->umem=o->umem;first=i*PoolBase;initial=PoolBase;total=o->pool_total;}
+        else
 #endif
-        hr=open_queue(q,index,i,slots,mode);if(FAILED(hr))goto fail;
+        q->umem=o->umem+size_t(i)*slots*RxChunk;
+        hr=open_queue(q,index,i,slots,mode,first,initial,total);if(FAILED(hr))goto fail;
         if(o->map){hr=XdpMapInsert(o->map,&i,&q->socket);if(FAILED(hr))goto fail;}
     }
     for(UINT32 i=0;i<port_count;++i){
@@ -494,6 +518,10 @@ extern "C" size_t wbd_xdp_rx_borrow(void* raw,RxFrame* frames,size_t max){
                 ++q->samples;
                 UINT32 ready=ReadUInt32Acquire(q->rx.SharedProducer)-*q->rx.SharedConsumer;
                 if(ready>q->peak_ready)q->peak_ready=ready;
+                if(o->pooled){
+                    const auto* d=static_cast<XSK_BUFFER_DESCRIPTOR*>(XskRingGetElement(&q->rx,o->batch_index));
+                    if(d->Address.BaseAddress>=UINT64(o->count)*PoolBase*RxChunk)++q->expanded_samples;
+                }
                 QueryPerformanceCounter(&q->held_at);
             }
 #endif
@@ -508,19 +536,39 @@ extern "C" int wbd_xdp_rx_release(void* raw){
     auto* q=&o->queues[o->batch_queue];
     UINT32 n=o->batch_count,fi;
     if(!n)return 1;
+#ifdef WBD_XDP_PRESSURE_LAB
+    // Only the existing RX owner allocates never-posted offsets.
+    UINT32 extra=0;
+    if(o->pooled&&q->posted<o->slots&&o->pool_next<o->pool_total){
+        UINT32 target=q->posted;
+        if(q->posted==PoolBase&&q->received==n)target=PoolWarm;
+        else if(n>=32&&ReadUInt32Acquire(q->rx.SharedProducer)-*q->rx.SharedConsumer>=q->posted/2)
+            target=o->slots;
+        extra=target-q->posted;
+        const UINT32 unused=o->pool_total-o->pool_next;
+        if(extra>unused)extra=unused;
+    }
+    if(XskRingProducerReserve(&q->fill,n+extra,&fi)!=n+extra)return 0;
+#else
     if(XskRingProducerReserve(&q->fill,n,&fi)!=n)return 0;
+#endif
     for(UINT32 i=0;i<n;++i){
         auto* d=static_cast<XSK_BUFFER_DESCRIPTOR*>(XskRingGetElement(&q->rx,o->batch_index+i));
         *static_cast<UINT64*>(XskRingGetElement(&q->fill,fi+i))=d->Address.BaseAddress;
     }
-    XskRingConsumerRelease(&q->rx,n);XskRingProducerSubmit(&q->fill,n);
+    XskRingConsumerRelease(&q->rx,n);
 #ifdef WBD_XDP_PRESSURE_LAB
+    for(UINT32 i=0;i<extra;++i)*static_cast<UINT64*>(XskRingGetElement(&q->fill,fi+n+i))=UINT64(o->pool_next+i)*RxChunk;
+    o->pool_next+=extra;q->posted+=extra;
+    XskRingProducerSubmit(&q->fill,n+extra);
     if(q->sampled){
         LARGE_INTEGER now;QueryPerformanceCounter(&now);
         UINT64 ticks=UINT64(now.QuadPart-q->held_at.QuadPart);
         if(ticks>q->max_hold_ticks)q->max_hold_ticks=ticks;
         q->sampled=false;
     }
+#else
+    XskRingProducerSubmit(&q->fill,n);
 #endif
     o->batch_count=0;
     return !XskRingProducerNeedPoke(&q->fill)||SUCCEEDED(rx_poke(q));
@@ -560,7 +608,8 @@ extern "C" void wbd_xdp_rx_close(void* raw){
     UINT64 received=0,batches=0,waits=0,dropped=0,truncated=0,received_bytes=0;
     HRESULT result=S_OK;
 #ifdef WBD_XDP_PRESSURE_LAB
-    UINT64 pending_skips=0,event_checks=0;
+    UINT64 pending_skips=0,event_checks=0,expanded_samples=0;
+    UINT32 max_posted=0;
 #endif
     for(UINT32 i=0;i<o->count;++i){
         auto* q=&o->queues[i];
@@ -571,6 +620,8 @@ extern "C" void wbd_xdp_rx_close(void* raw){
         dropped+=s.RxDropped;truncated+=s.RxTruncated;
 #ifdef WBD_XDP_PRESSURE_LAB
         pending_skips+=q->pending_skips;event_checks+=q->event_checks;
+        expanded_samples+=q->expanded_samples;
+        if(q->posted>max_posted)max_posted=q->posted;
         if(q->received){
             LARGE_INTEGER frequency;QueryPerformanceFrequency(&frequency);
             UINT64 us=q->max_hold_ticks*1000000/frequency.QuadPart;
@@ -581,8 +632,12 @@ extern "C" void wbd_xdp_rx_close(void* raw){
             std::fprintf(stderr,"WBD_XDP_RX_QUEUE_STOP queue=%u received=%llu batches=%llu waits=%llu dropped=%llu truncated=%llu received_bytes=%llu\n",i,q->received,q->batches,q->waits,s.RxDropped,s.RxTruncated,q->received_bytes);
     }
 #ifdef WBD_XDP_PRESSURE_LAB
-    if(o->port_count==1&&o->slots!=DnsSlots)
+    if(o->port_count==1&&o->slots!=DnsSlots){
         std::fprintf(stderr,"WBD_XDP_RX_PENDING_LAB enabled=%u skipped=%llu event_checks=%llu\n",o->queues[0].pending_fast?1u:0u,pending_skips,event_checks);
+        std::fprintf(stderr,"WBD_XDP_RX_POOL_STOP enabled=%u backing_bytes=%llu posted=%u max_queue_posted=%u expanded_samples=%llu reserve_remaining=%u\n",
+            o->pooled?1u:0u,UINT64(o->pooled?o->pool_total:o->count*o->slots)*RxChunk,
+            o->pooled?o->pool_next:o->count*o->slots,max_posted,expanded_samples,o->pooled?o->pool_total-o->pool_next:0);
+    }
 #endif
     std::fprintf(stderr,"WBD_XDP_RX_STOP received=%llu batches=%llu waits=%llu dropped=%llu truncated=%llu stats_hr=0x%08lx queues=%u received_bytes=%llu\n",received,batches,waits,dropped,truncated,(unsigned long)result,o->count,received_bytes);
     close_rx(o);
