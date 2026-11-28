@@ -205,6 +205,7 @@ impl ClientFlow {
                 if n == 0 { break }
                 budget-=n;
             }
+            if from.conn.readable()==0 { to.conn.note_native_source_dry(); }
             if bounded&&budget==0&&from.conn.readable()!=0&&to.conn.relay_send_available()!=0{self.drive_due=Some(Instant::now());}
             if !*fin_forwarded && from.conn.fin_received() &&
                 from.conn.readable() == 0 && to.conn.is_established() {
@@ -342,6 +343,7 @@ impl ServerFlow {
                 match self.stream.read(&mut scratch[..n]) {
                     Ok(0) => {
                         self.origin_eof = true;
+                        self.middle.conn.note_native_source_dry();
                         self.middle.close(&mut out)?;
                         break
                     }
@@ -351,7 +353,7 @@ impl ServerFlow {
                         self.middle.emit(packets, &mut out)?;
                         budget -= n;
                     }
-                    Err(e) if e.kind() == io::ErrorKind::WouldBlock => break,
+                    Err(e) if e.kind() == io::ErrorKind::WouldBlock => { self.middle.conn.note_native_source_dry(); break; }
                     Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
                     Err(e) => { eprintln!("WBD_M0_TCP_ORIGIN_ERROR tuple={:?} op=read error={:?}",self.tuple(),e); self.middle.abort(&mut out)?; break }
                 }

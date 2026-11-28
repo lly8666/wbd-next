@@ -727,6 +727,8 @@ pub struct Conn {
     native_resume: Option<Instant>,
     native_credit: usize,
     native_waiting: bool,
+    // Latest actual upstream empty observation, not an inference from SendBuf.
+    native_source_dry: bool,
     native_ack_grant_deferred:u64,
     /// The smoothed round trip pacing goes by: SRTT's average (1/8) of
     /// the send-to-ACK times of the newest segment each ACK delivers,
@@ -995,6 +997,7 @@ impl Conn {
             native_resume: None,
             native_credit: usize::MAX,
             native_waiting:false,
+            native_source_dry:true,
             native_ack_grant_deferred:0,
             pace_srtt: None,
             pace_late: Duration::ZERO,
@@ -1082,6 +1085,13 @@ impl Conn {
         if self.cfg.native_owner_turn { self.native_credit=32usize.saturating_sub(self.score.native_pending_count()); }
     }
     pub(crate) fn native_turn_enabled(&self)->bool{self.cfg.native_owner_turn}
+    /// Existing producer observed an empty receive ring, WouldBlock or EOF.
+    pub(crate) fn note_native_source_dry(&mut self) {
+        if self.cfg.native_owner_turn && !self.native_source_dry {
+            self.native_source_dry = true;
+            self.check_app_limited();
+        }
+    }
     /// Pure ACKs while the send direction is open can advance state
     /// before the next existing native send grant, including when the
     /// peer already half-closed (CloseWait). The same grant gates both
@@ -1277,8 +1287,8 @@ impl Conn {
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
         eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} relay_pending_limit={} relay_pending_bytes={} relay_available={} info={:?}",
             wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.cfg.relay_pending_limit.unwrap_or(0),self.send_buf.as_ref().map_or(0,|s|s.pending()),self.relay_send_available(),self.info());
-        eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?} rate_epoch_preserved={}",
-            wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline),self.score.rate().epoch_preserved());
+        eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?} rate_epoch_preserved={} native_source_dry={}",
+            wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline),self.score.rate().epoch_preserved(),self.native_source_dry);
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
         if let Some(bbr)=self.cc.as_bbr1(){bbr.probe(leg,id,wall_ns);}
     }
@@ -4536,7 +4546,10 @@ impl Conn {
             (self.fin_queued&&self.score.native_pending()==0&&self.send_buf.as_ref().is_some_and(|s|s.pending()==0));
         if resume{self.native_waiting=false;self.native_resume=Some(self.now);}
         let last=self.score.native_pending()==0;
-        if last{self.schedule_loss_probe();}
+        if last{
+            if self.native_source_dry { self.check_app_limited(); }
+            self.schedule_loss_probe();
+        }
         first||resume||last
     }
 
@@ -4939,6 +4952,7 @@ impl Conn {
         let live = !self.closed && self.state != State::Closed;
         // Before timers that may send (draft-ietf-ccwg-bbr §4.1.2.4).
         if live
+            && (!self.cfg.native_owner_turn || self.native_source_dry)
             && [
                 self.reo_deadline,
                 self.pto_deadline,
@@ -5490,14 +5504,17 @@ impl Conn {
         if self.state != State::Established && self.state != State::CloseWait && !early {
             return (0, Vec::new());
         }
-        // Before the new data is queued (draft-ietf-ccwg-bbr §4.1.2.4).
-        self.check_app_limited();
+        // A successful relay refill proves supply, even if the previous
+        // native grant consumed all pending bytes. Only an observed dry
+        // producer can start a new app-limited bubble on the native path.
+        if !self.cfg.native_owner_turn || self.native_source_dry { self.check_app_limited(); }
         let n = self.send_buf.as_mut().unwrap().write(buf);
         // The owner reads exactly send_available() bytes, so a successful
         // write filling the last byte also means the upstream is backpressured.
         // Keep the existing ACK-time autotuning and global growth budget.
         self.snd_nospace = n < buf.len() || self.send_buf.as_ref().unwrap().available() == 0;
         if n > 0 {
+            self.native_source_dry = false;
             self.flush_send_queue();
         }
         (n, self.take_outgoing())
@@ -11362,6 +11379,42 @@ mod tests {
         assert!(!c.score.rate().is_app_limited(), "duplicate ACK is not a new idle observation");
         c.write(&[2; 1000]);
         assert!(c.score.rate().is_app_limited(), "real subsequent write still marks idle");
+    }
+
+    #[test]
+    fn native_refill_is_not_dry_until_the_producer_observes_it() {
+        let mut c = Conn::new(big(40718, 80));
+        let mut s = Conn::new(big(80, 40718));
+        drive_handshake(&mut c, &mut s);
+        c.cfg.linux_parity = true;
+        c.cfg.native_owner_turn = true;
+        c.begin_native_turn();
+        let (_, data) = c.write(&[1; 500]);
+        assert!(!data.is_empty());
+        assert!(c.score.rate().is_app_limited());
+        for wire in &data {
+            let p = parse(wire);
+            if !p.payload.is_empty() { c.native_admit(p.seq,p.payload.len() as u32,test_now()); }
+        }
+        advance(Duration::from_millis(10));
+        let mut acks = deliver(&mut s, &data);
+        if acks.is_empty() { acks = delack_expired(&mut s); }
+        assert!(!acks.is_empty());
+        deliver(&mut c, &acks);
+        assert_eq!(c.send_buf.as_ref().unwrap().unacked(),0);
+        assert!(!c.score.rate().is_app_limited());
+        c.begin_native_turn();
+        let (_, data) = c.write(&[2; 500]);
+        assert!(!data.is_empty());
+        assert!(!c.score.rate().is_app_limited(), "ready refill is not source starvation");
+        c.note_native_source_dry();
+        assert!(!c.score.rate().is_app_limited(), "native reservations not yet drained");
+        for wire in &data {
+            let p = parse(wire);
+            if !p.payload.is_empty() { c.native_admit(p.seq,p.payload.len() as u32,test_now()); }
+        }
+        assert!(c.score.rate().is_app_limited(), "observed source dry after native admission");
+        assert!(c.native_source_dry);
     }
 
     // --- PLPMTUD -------------------------------------------------------------
