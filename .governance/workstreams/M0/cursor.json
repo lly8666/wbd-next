@@ -4,20 +4,21 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2557,
-  "checkpoint_sha": "1805e2f8581366084f41146b213fa76c14715292",
+  "sequence": 2558,
+  "checkpoint_sha": "2cd5dbf8814df1f4c81c0cbaa54801209e045615",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收 H2557 exact harness 1805e2f 的12项1/3/5%独立三ARM弱网ABBA；先核中继实际ready及GE/FIFO、随后真实业务hash/EOF/Stop/恢复/CPU/RTT，不重复在途或合格场景。L2 OPEN。",
+  "next_action": "从H2557真实server-middle时间序列及pktkit BBRv3 rate sample/ACK/RACK/loss-bound更新定位共同弱网塌陷；选择与BBR1同源同场景辨别性对照，勿补跑已否决矩阵。L2 OPEN。",
   "unverified": true,
   "last_tested_source": "c9f200da4d50574426ce65c59a47ffc69ee2e211",
   "evidence_refs": [],
   "context_refs": [
-    "docs/devlog/M0/20261128-M0-L2-RAW-EDT-FQ-FUSION.md"
+    "docs/evidence/M0/20261128-L2-WEAK-SPLICE-H2557-RESULT.json",
+    "docs/devlog/M0/20261128-M0-L2-WEAK-SPLICE-H2557-ACCEPTANCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2555/H2556 16项run均cancelled；中继原始job140987285298/140987289350 WEAK_PROFILE，旧拓扑初始impair(0,0,iid)被专用internet guard拒绝。H2557修复cold IID接入与已有ping timeout缺os import，12项重新触发一次，产品c9f200d与旧splice26b11e2不变，复用ARM artifacts15263705152/15264725995；当前未验中继ready及业务。"
+  "partial_summary": "H2557 8完整组全部性能否决，3不完整，3% B ARM调度错位最终cancelled。41 MEASURED/44，42 hash，44 joined Stop；22 Rust legs两端ingress full及Shared-TUN queue full均0。证据已归档；未选择候选，产品不变。"
 }
