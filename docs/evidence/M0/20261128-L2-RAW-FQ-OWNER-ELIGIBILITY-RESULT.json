@@ -1,0 +1,58 @@
+{
+  "source_sha": "911743fa3951d1ae723eab7d93037b80b1958759",
+  "run_id": 46138025986,
+  "action": "SUCCESS",
+  "artifact_verified": true,
+  "result": "PASS",
+  "scope": "native synthetic RAW IP_HDRINCL FQ eligibility and fd lifetime; not product or physical performance",
+  "artifacts": {
+    "x86_64": 15260646617,
+    "aarch64": 15260566078
+  },
+  "crc_verified": 2,
+  "results": {
+    "aarch64": {
+      "same_socket_median_us": [
+        3.556,
+        6.4155
+      ],
+      "separate_socket_median_us": [
+        4.0075,
+        6.732
+      ],
+      "max_same_socket_us": [
+        12.487,
+        17.087
+      ],
+      "eligible_pairs": 32,
+      "immediate_first": 32,
+      "eligible_close": 16,
+      "received_after_close": 16,
+      "qdisc_drops": 0
+    },
+    "x86_64": {
+      "same_socket_median_us": [
+        3.6435,
+        7.173
+      ],
+      "separate_socket_median_us": [
+        5.208,
+        7.2525
+      ],
+      "max_same_socket_us": [
+        7.325,
+        15.397
+      ],
+      "eligible_pairs": 32,
+      "immediate_first": 32,
+      "eligible_close": 16,
+      "received_after_close": 16,
+      "qdisc_drops": 0
+    }
+  },
+  "horizons_ns": [
+    1000000,
+    20000000
+  ],
+  "decision": "shared socket earlier eligibility passed this scope, no per-inner-flow sockets justified; close does not cancel accepted future skb, require actual socket-memory release for owned retirement; product mixed-load/Stop still unqualified"
+}

@@ -157,8 +157,11 @@ impl ClientFlow {
     }
     pub(crate) fn tuple(&self) -> Tuple { self.middle.tuple }
     fn begin_turn(&mut self){self.local.conn.begin_native_turn();self.middle.conn.begin_native_turn();}
-    pub(crate) fn admit(&mut self,local:bool,seq:u32,len:u32,now:Instant)->bool{
-        if local{self.local.conn.native_admit(seq,len,now)}else{self.middle.conn.native_admit(seq,len,now)}
+    pub(crate) fn middle_edt_rate(&self,seq:u32,len:u32)->Option<(u64,Option<Instant>)>{
+        self.middle.conn.native_edt_rate(seq,len)
+    }
+    pub(crate) fn admit(&mut self,local:bool,seq:u32,len:u32,now:Instant,edt:Option<Instant>)->bool{
+        if local{self.local.conn.native_admit(seq,len,now)}else{self.middle.conn.native_admit_at(seq,len,now,edt)}
     }
     pub(crate) fn on_local(&mut self, p: &Packet) -> io::Result<ClientOutput> {
         self.begin_turn();let mut out = ClientOutput::default();
@@ -276,7 +279,10 @@ impl ServerFlow {
             write: !self.origin_write_closed && self.middle.conn.readable() != 0,
         }
     }
-    pub(crate) fn admit(&mut self,seq:u32,len:u32,now:Instant)->bool{self.middle.conn.native_admit(seq,len,now)}
+    pub(crate) fn middle_edt_rate(&self,seq:u32,len:u32)->Option<(u64,Option<Instant>)>{
+        self.middle.conn.native_edt_rate(seq,len)
+    }
+    pub(crate) fn admit(&mut self,seq:u32,len:u32,now:Instant,edt:Option<Instant>)->bool{self.middle.conn.native_admit_at(seq,len,now,edt)}
     pub(crate) fn on_packet(&mut self, p: &Packet) -> io::Result<Packets> {
         if self.ack_drain{self.middle.conn.begin_native_ack_turn(&p.segment);}else{self.middle.conn.begin_native_turn();}
         let mut out = Vec::new();

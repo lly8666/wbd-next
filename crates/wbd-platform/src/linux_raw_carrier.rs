@@ -43,6 +43,11 @@ const SO_ATTACH_FILTER:c_int=26;
 const SO_RCVBUF:c_int=8;
 const SO_SNDBUF:c_int=7;
 const SIOCOUTQ:u64=0x5411;
+const SO_TXTIME:c_int=61;
+#[repr(C)]
+struct RawTxtime{clockid:c_int,flags:u32}
+#[repr(C)]
+struct RawTimespec{sec:i64,nsec:i64}
 // Linux doubles a SO_RCVBUF request for bookkeeping; 4 MiB requested
 // yields up to 8 MiB effective per owned raw RX socket, capped by rmem_max.
 // A 4 MiB request is ~20x the observed 212,992-byte guest default. This is
@@ -69,6 +74,7 @@ struct SockAddrLl {
 }
 unsafe extern "C" {
     fn socket(domain:c_int,typ:c_int,proto:c_int)->c_int;
+    fn clock_gettime(clock:c_int,value:*mut RawTimespec)->c_int;
     fn bind(fd:c_int,addr:*const c_void,len:u32)->c_int;
     fn setsockopt(fd:c_int,level:c_int,opt:c_int,value:*const c_void,len:u32)->c_int;
     fn getsockopt(fd:c_int,level:c_int,opt:c_int,value:*mut c_void,len:*mut u32)->c_int;
@@ -185,6 +191,7 @@ pub struct ScopedRawIpv4Tx {
     stopped:AtomicBool,
     borrow:BorrowFence,
     serialize:Mutex<()>,
+    txtime_submitted:AtomicBool,
 }
 impl ScopedRawIpv4Tx {
     /// Open only after authenticated Go V4 Detach/Commit in the SAME
@@ -222,8 +229,19 @@ impl ScopedRawIpv4Tx {
         Ok(Self{
             fd,ifindex:actual,ifname:ifname.to_owned(),generation,
             mtu:observed.kernel_mtu as usize,budget,stopped:AtomicBool::new(false),
-            borrow:BorrowFence::default(),serialize:Mutex::new(())
+            borrow:BorrowFence::default(),serialize:Mutex::new(()),txtime_submitted:AtomicBool::new(false)
         })
+    }
+    /// Cold explicit EDT candidate on the original owned RAW socket.
+    pub fn configure_txtime(&self)->Result<(),RawTxError>{
+        let opt=RawTxtime{clockid:1,flags:0};
+        let rc=unsafe{setsockopt(self.fd.as_raw_fd(),SOL_SOCKET,SO_TXTIME,(&opt as *const RawTxtime).cast(),8)};
+        if rc==0{Ok(())}else{Err(RawTxError::Kernel(errno()))}
+    }
+    pub fn txtime_clock()->(Instant,u64){
+        let at=Instant::now();let mut t=RawTimespec{sec:0,nsec:0};
+        assert_eq!(unsafe{clock_gettime(1,&mut t)},0);
+        (at,t.sec as u64*1_000_000_000+t.nsec as u64)
     }
     /// No packet payload, owner or socket mutation.
     pub fn diagnostic_tx_socket(&self)->Result<RawTxSocketReadback,RawTxError>{
@@ -253,7 +271,18 @@ impl ScopedRawIpv4Tx {
     }
     pub fn stop_until(&self,deadline:Instant)->StopResult{
         self.begin_stop();
-        self.borrow.wait_drained_until(deadline)
+        let loans=self.borrow.wait_drained_until(deadline);
+        if loans!=StopResult::Drained||!self.txtime_submitted.load(Ordering::Acquire){return loans}
+        // Actual native evidence: closing an fd does not cancel an SKB
+        // accepted with future eligibility. Cold Stop/route retirement only.
+        loop{
+            let mut bytes:c_int=0;
+            let rc=unsafe{ioctl(self.fd.as_raw_fd(),SIOCOUTQ,&mut bytes)};
+            if rc==0&&bytes==0{return StopResult::Drained}
+            let left=deadline.saturating_duration_since(Instant::now());
+            if rc!=0||left.is_zero(){return StopResult::Pending{outstanding:1}}
+            std::thread::sleep(left.min(Duration::from_millis(1)));
+        }
     }
     pub fn outstanding(&self)->usize{self.borrow.outstanding()}
     /// A SYN/route tuple MUST be supplied by the credential-checked Go
@@ -906,6 +935,12 @@ impl ScopedRawIpv4Tx {
         &self,generation:u32,records:&[H],tuple:Ipv4Tuple<'_>,
         presentations:&[Presentation],
     )->KernelSendReport {
+        self.send_kernel_multimsg_at(generation,records,tuple,presentations,None)
+    }
+    pub fn send_kernel_multimsg_at<H:FrozenRecordHandle>(
+        &self,generation:u32,records:&[H],tuple:Ipv4Tuple<'_>,
+        presentations:&[Presentation],txtimes:Option<&[u64]>,
+    )->KernelSendReport {
         if generation!=self.generation {
             return raw_batch_failure(0,RawTxError::InvalidScope)
         }
@@ -954,7 +989,8 @@ impl ScopedRawIpv4Tx {
         }
         let result=linux_batch::submit_scatter_fd(
             self.fd.as_raw_fd(),std::net::SocketAddrV4::new(dest,0),
-            &headers,&sizes,records,None);
+            &headers,&sizes,records,txtimes);
+        if txtimes.is_some()&&result.outcome.accepted_prefix>0{self.txtime_submitted.store(true,Ordering::Release);}
         if result.signal.invalidates_path(){self.budget.invalidate()}
         result
     }

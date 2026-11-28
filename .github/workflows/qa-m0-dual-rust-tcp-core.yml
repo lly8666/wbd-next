@@ -104,6 +104,9 @@ jobs:
         run: |
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/bbr3-seed600 WBD_M0_MIDDLE_CC=bbr3 WBD_M0_BBR3_INITIAL_600M=1 WBD_M0_NATIVE_FEEDBACK=service WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
           for role in server client;do grep -q 'WBD_M0_BBR .* initial_pacing_rate=75000000' "dual-tcp-out/bbr3-seed600/normal/$role.log";done
+      - name: Original RAW FQ earned-train EDT actual paired product
+        run: |
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/edt WBD_M0_MIDDLE_CC=bbr3 WBD_M0_BBR3_INITIAL_600M=1 WBD_M0_NATIVE_FEEDBACK=service WBD_M0_NATIVE_EDT=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Selected baseline local clean pause weak regression
         if: matrix.arch == 'aarch64'
         env:

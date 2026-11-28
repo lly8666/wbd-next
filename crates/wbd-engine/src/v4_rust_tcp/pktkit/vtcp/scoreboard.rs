@@ -410,12 +410,13 @@ impl Scoreboard {
 
     fn push_tx(&mut self, start: u64, end: u64, xmit: u64, tx: u64) {
         if self.rack_on {
-            self.tq.push_back(TxRec {
-                start,
-                end,
-                xmit,
-                tx,
-            });
+            let rec=TxRec{start,end,xmit,tx};
+            // A real immediate retransmission can precede a previously
+            // accepted future EDT. RACK's scan is in transmission-time order.
+            if self.tq.back().is_some_and(|last|last.xmit>xmit){
+                let i=self.tq.partition_point(|r|(r.xmit,r.end)<=(xmit,end));
+                self.tq.insert(i,rec);
+            }else{self.tq.push_back(rec);}
         }
     }
 
@@ -456,6 +457,14 @@ impl Scoreboard {
     /// Actual native admission, in the same flow's existing output order.
     /// No second network ACK, no invented wire completion. An explicit
     /// failed TUN attempt is also timed so ordinary TCP can recover it.
+    pub(crate) fn is_native_pending(&self,seq:u32,len:u32)->bool{
+        if seq_before(seq,self.una){return false}
+        let off=self.off(seq);
+        self.idx(off).is_some_and(|i|{let seg=&self.segs[i];seg.has(NATIVE_PENDING)&&seg.start==off&&seg.len()==u64::from(len)})
+    }
+    pub(crate) fn head_send_at(&self)->Option<Instant>{
+        self.segs.front().filter(|s|!s.has(NATIVE_PENDING)).map(|s|self.epoch+Duration::from_nanos(s.xmit))
+    }
     pub(crate) fn admit_native(&mut self,seq:u32,len:u32,now:Instant)->bool{
         if seq_before(seq,self.una){return false}
         let off=self.off(seq);
