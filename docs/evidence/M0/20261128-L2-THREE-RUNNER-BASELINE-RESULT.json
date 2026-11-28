@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "source_sha": "7cc67428ed47e57347c36104d72047bff985b699",
+  "result": "MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW",
+  "runtime_code_unchanged_from": "db760553eaf5b20e01d1c9c6452ab45281cc3812",
+  "runtime_code_changed": false,
+  "trigger": {
+    "empty_commit": "93a9ae9b2b997e996b2608e6805031962170311a",
+    "workflow_metadata_commit": "7cc67428ed47e57347c36104d72047bff985b699",
+    "governance_snapshot_sync": "c67a1e54f2824dde36e7d0ba39d74c57ea68428e",
+    "reason": "Empty commit had no changed paths and did not match product workflow path filters. Workflow-metadata-only change triggered native and three-runner workflows. Stale M0 registry/cursor and missing evidence refs were synced from current main; governance then passed."
+  },
+  "native": {
+    "run_id": 46105447590,
+    "status": "success",
+    "x86_64": {
+      "artifact_id": 15247531646,
+      "manifest_sha256": "e03f1483ad261d25cb1cfde73cbb2dc75505ead057e26def20ac2f11cbdb0322",
+      "functional_status": "FUNCTIONAL_PASS",
+      "upload_bytes": 2097152,
+      "download_bytes": 3145728,
+      "hash_match": true,
+      "tcp_halfclose": true,
+      "udp_nat_echo": true,
+      "concurrent_connections": 8,
+      "raw_rx_drops": 0
+    },
+    "aarch64": {
+      "artifact_id": 15247438141,
+      "manifest_sha256": "bfb603bbb5b118f7ac43b7f0780653e5031cf8daa3c44ed691ab60d284fe15e9",
+      "functional_status": "FUNCTIONAL_PASS",
+      "upload_bytes": 2097152,
+      "download_bytes": 3145728,
+      "hash_match": true,
+      "tcp_halfclose": true,
+      "udp_nat_echo": true,
+      "concurrent_connections": 8,
+      "raw_rx_drops": 0
+    },
+    "m4_clock_unit": "PASS",
+    "selected_profiles": [
+      "Normal",
+      "BBR1",
+      "CUBIC",
+      "relay admission rollback"
+    ]
+  },
+  "local_weak": {
+    "artifact_id": 15247438141,
+    "source_a": "a99be828cc4011eb6c9a9d6088503346ce83227d",
+    "source_b": "7cc67428ed47e57347c36104d72047bff985b699",
+    "order": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "rtt_ms": 400,
+    "offered_bps": 120000000,
+    "target_bytes": 100663296,
+    "loss_pct": 0.5,
+    "mean_mbps": {
+      "A": 65.73100672098589,
+      "B": 62.90903790029597
+    },
+    "mean_cpu_s_per_gib": {
+      "A": 26.026666666666664,
+      "B": 25.76
+    },
+    "weighted_retrans_pct": {
+      "A": 0.5165223343669156,
+      "B": 0.510405
+    },
+    "timeouts": 0,
+    "all_hash_eof_stop": true,
+    "bulk_stop_sample": true,
+    "bulk_retired": false,
+    "status": "MEASURED_REQUIRES_RECOVERY_REVIEW"
+  },
+  "three_runner": {
+    "run_id": 46105447669,
+    "status": "MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW",
+    "architecture": "aarch64",
+    "distinct_native_machines": 3,
+    "order": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "target_bytes": 1073741824,
+    "offered_bps": 600000000,
+    "rtt_ms": 400,
+    "injected_netem_loss_pct": 0,
+    "outer_mtu": 1160,
+    "mode": "Normal",
+    "outer_repair": "on",
+    "kernel_cc": "BBR",
+    "middle_cc": "BBR1",
+    "source_a": "a99be828cc4011eb6c9a9d6088503346ce83227d",
+    "source_b": "7cc67428ed47e57347c36104d72047bff985b699",
+    "means": {
+      "A": {
+        "mbps": 325.1767070016506,
+        "client_cpu_s_per_gib": 14.585,
+        "server_cpu_s_per_gib": 13.915,
+        "weighted_retrans_byte_ratio": 0.02571558036844656
+      },
+      "B": {
+        "mbps": 301.22645224958046,
+        "client_cpu_s_per_gib": 14.54,
+        "server_cpu_s_per_gib": 13.585,
+        "weighted_retrans_byte_ratio": 0.02454532154358626
+      }
+    },
+    "derived": {
+      "throughput_change_pct": -7.365304536388139,
+      "retrans_change_percentage_points": -0.11702588248602985,
+      "combined_endpoint_cpu_change_pct": -1.3157894736842146
+    },
+    "bare_brackets_mbps": [
+      279.10962329078336,
+      295.9289502646881
+    ],
+    "bare_bracket_mean_mbps": 287.5192867777357,
+    "all_four_application_hashes_match": true,
+    "all_four_eof": true,
+    "all_four_app_exit_zero": true,
+    "relay_netem_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "retired_middle_flow_samples": true,
+    "weighted_retrans_samples": {
+      "A": {
+        "retrans_bytes": 56681383,
+        "sent_bytes": 2204165031
+      },
+      "B": {
+        "retrans_bytes": 54037033,
+        "sent_bytes": 2201520681
+      }
+    },
+    "per_leg": [
+      {
+        "leg": "A",
+        "mbps": 323.5734473872881,
+        "retrans_bytes": 30260697,
+        "sent_bytes": 1104002521,
+        "timeouts": 1,
+        "dsack_dups": 1995,
+        "reord_seen": 11554
+      },
+      {
+        "leg": "B",
+        "mbps": 290.8026234718815,
+        "retrans_bytes": 22579638,
+        "sent_bytes": 1096321462,
+        "timeouts": 1,
+        "dsack_dups": 1416,
+        "reord_seen": 11436
+      },
+      {
+        "leg": "B",
+        "mbps": 311.6502810272795,
+        "retrans_bytes": 31457395,
+        "sent_bytes": 1105199219,
+        "timeouts": 0,
+        "dsack_dups": 2921,
+        "reord_seen": 12288
+      },
+      {
+        "leg": "A",
+        "mbps": 326.77996661601304,
+        "retrans_bytes": 26420686,
+        "sent_bytes": 1100162510,
+        "timeouts": 1,
+        "dsack_dups": 1813,
+        "reord_seen": 10256
+      }
+    ]
+  },
+  "path_taps": {
+    "artifact_ids": {
+      "client": 15247911980,
+      "server": 15247666984,
+      "relay": 15247037941
+    },
+    "all_taps_valid": true,
+    "kernel_capture_drops": 0,
+    "unique_packet_identities": {
+      "server_tx": 97074,
+      "server_vx_tx": 97074,
+      "relay_server_vx_rx": 69831,
+      "relay_rx": 69831,
+      "relay_tx": 95995,
+      "relay_client_vx_tx": 95995,
+      "client_vx_rx": 77445,
+      "client_rx": 77445
+    },
+    "adjacent_identity_set_differences": {
+      "server_vx_tx_to_relay_server_vx_rx": {
+        "missing_next": 29647,
+        "extra_next": 2404
+      },
+      "relay_rx_to_relay_tx": {
+        "missing_next": 2404,
+        "extra_next": 28568
+      },
+      "relay_client_vx_tx_to_client_vx_rx": {
+        "missing_next": 27578,
+        "extra_next": 9028
+      }
+    },
+    "interpretation": "Packet-identity differences are not yet attributed. They do not by themselves prove byte loss; segmentation/offload and capture-point behavior remain possible. Preserve raw tap artifacts."
+  },
+  "interpretation": "Successful measurement run, not performance PASS. Three-runner comparison used a99be82 as A, not the authorized db76055 baseline. It shows about 2.5% retired inner TCP retransmission despite zero injected netem loss, but capacity brackets and cross-tap identity differences require review. B runtime is unchanged from db76055.",
+  "next": "Use exact db76055 artifact from run 46102235913 as A; implement isolated high-RTT receive-window growth candidate B; run dual-ISA native, same-host weak ABBA, and exact-source three-runner clean ABBA. No fixed cap, new controller, outer-wire change, or cross-flow HOL."
+}
