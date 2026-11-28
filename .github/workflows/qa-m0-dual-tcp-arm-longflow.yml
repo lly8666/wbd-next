@@ -1,4 +1,4 @@
-name: M0 three ARM BBRv3 EDT ACK2 ACK4 ACK8 symmetric 180s
+name: M0 three ARM Linux-inspired versus WBD grouped EDT GSO 180s ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -242,7 +242,7 @@ jobs:
           test -s h2228-out/server-ready.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
-      - name: Keep the same ARM server through six 180s symmetric ACK-ratio legs
+      - name: Keep the same ARM server through four 180s grouped EDT combination ABBA legs
         run: bash tools/m0_h2228_three_runner_case.sh server-wait
       - name: Finish and qualify header-only path sample
         if: always()
@@ -332,7 +332,7 @@ jobs:
             sleep .2
           done
           test -s h2228-out/path-sample-ready.json
-      - name: Run six 180s symmetric ACK-ratio legs
+      - name: Run four 180s grouped EDT combination ABBA legs
         run: |
           for i in $(seq 1 150);do
             gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-server-ready -D h2228-server-ready >/dev/null 2>&1 && break

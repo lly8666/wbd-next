@@ -9,10 +9,10 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# New explicit user comparison. Two symmetric occurrences per ACK ratio.
-ORDER=("2","4","8","8","4","2")
+# Two combinations, same-source symmetric ABBA.
+ORDER=("L","P","P","L")
 CASES=tuple(range(len(ORDER)))
-PROFILES={k:"dual-rust-bbr3-edt-ack"+k for k in ORDER}
+PROFILES={"L":"linux-inspired-adaptive-group-edt-ack2-ready-gso","P":"wbd-train8-edt-ack4-ready-gso"}
 PRODUCT_SOURCE=os.environ["GITHUB_SHA"]
 SOURCES={k:PRODUCT_SOURCE for k in ORDER}
 def dual(i):return i>=0 and ORDER[i]!="S"
@@ -20,14 +20,15 @@ def splice(i):return i>=0 and ORDER[i]=="S"
 def loss_for(i):return 0.0
 def cc_for(i):return "cubic" if i<0 or ORDER[i]=="R" else "bbr"
 def rust_cc(i):return "bbr" if dual(i) else None
-def ack_for(k):return k
+def ack_for(k):return "2" if k=="L" else "4"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
 def offer(i):return None
 def target_bytes(i):return None
 def profile_env(k,server):
     return ["WBD_M0_MIDDLE_CC=bbr3","WBD_M0_BBR3_INITIAL_600M=1",
-            "WBD_M0_NATIVE_EDT=1","WBD_M0_LOCAL_READY_GROUP=0"]+(["WBD_M0_NATIVE_FEEDBACK=service"] if server else [])
+            "WBD_M0_NATIVE_EDT="+("linux" if k=="L" else "train8"),
+            "WBD_M0_LOCAL_READY_GROUP="+("0" if server else "1")]+(["WBD_M0_NATIVE_FEEDBACK=service"] if server else [])
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_tcp_long_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2","180"]
@@ -145,8 +146,21 @@ def edt_receipt(log,k,role):
     if not values:return {"valid":False,"enabled":True}
     timed=sum(int(x["timed_copied"]) for x in values)
     maximum=max(int(x["max_delay_ns"]) for x in values)
-    return {"valid":maximum<=1_000_000 and (role!="server" or timed>0),
-            "enabled":True,"timed_copied":timed,"max_delay_ns":maximum}
+    planned=sum(int(x["planned_copied"]) for x in values)
+    heads=sum(int(x["group_heads"]) for x in values)
+    group=max(int(x["max_group"]) for x in values)
+    expected=2 if k=="L" else 8
+    valid=maximum<=1_000_000 and all(int(x["mode"])==expected for x in values)
+    if role=="server":valid=valid and planned>0 and group>=2 and (k=="L" or timed>0)
+    return {"valid":valid,"enabled":True,"mode":expected,"timed_copied":timed,"max_delay_ns":maximum,
+            "planned_copied":planned,"group_heads":heads,"max_group":group}
+def ready_receipt(log):
+    rows=[dict(re.findall(r"(\w+)=(\d+)",x)) for x in log.splitlines() if "WBD_M0_LOCAL_READY_GROUP " in x]
+    joins=sum(int(x["joins"]) for x in rows)
+    segments=sum(int(x["segments"]) for x in rows)
+    return {"valid":bool(rows) and joins>0 and segments>0,"joins":joins,"segments":segments}
+def kernel_defaults():
+    return h.ns(N,"sh","-c","uname -r; for k in tcp_min_tso_segs tcp_tso_rtt_log tcp_tso_win_divisor tcp_comp_sack_delay_ns tcp_comp_sack_nr tcp_limit_output_bytes; do p=/proc/sys/net/ipv4/$k; if test -r $p; then echo $k=$(cat $p); fi; done; ip -d -j link show dev wan0").stdout
 def common():
     return ["--server-name","wbd-h2228.example.test","--route-key-hex-file",fixture.TMP/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--tun-fq-maxrate-mbps","0"]
@@ -221,6 +235,7 @@ def server_close():
         result["experiment"]=profile(i,ORDER[i])
         result["edt"]=edt_receipt(log,ORDER[i],"server")
         result["fq_initial"]=load(d/"fq-initial.json")
+        result["kernel_defaults"]=kernel_defaults()
         result["fq_after_stop"]=fq_state()
         result["native_counters"]=[s for s in log.splitlines() if "V4_PUBLIC_RX_CHAIN role=" in s or "V4_PUBLIC_TX_CHAIN role=" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s or "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s]
     save(d/"result.json",result);CURRENT=fixture.current=None
@@ -379,6 +394,8 @@ def client_case(i):
             row["client_stop"]=rc==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and log.count("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client")==1 and (not dual(i) or "WBD_DUAL_RUST_TCP_OWNER_STOP" in log)
             row["wire"]=[s for s in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in s]
             row["edt"]=edt_receipt(log,k,"client")
+            row["ready_group"]=ready_receipt(log)
+            row["kernel_defaults"]=kernel_defaults()
             row["fq_after_stop"]=fq_state()
             row["probe"]=probe_receipt(log,"client-middle",k,i) if dual(i) else {"valid":True}
             row["native_counters"]=[s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s or "WBD_M0_LOCAL_TUN_GSO" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s]
@@ -396,7 +413,7 @@ def client_case(i):
         if row["status"]=="MEASURED" and dual(i) and not row.get("server_receipt",{}).get("bulk_retired"):row["status"]="INCOMPLETE_RECOVERY_SAMPLE"
         if row["status"]=="MEASURED":
             sr=row["server_receipt"]
-            if not (row["edt"]["valid"] and sr["edt"]["valid"]):row["status"]="INCOMPLETE_EDT_RECEIPT"
+            if not (row["edt"]["valid"] and sr["edt"]["valid"] and row["ready_group"]["valid"]):row["status"]="INCOMPLETE_EDT_OR_GSO_RECEIPT"
             elif not all(x.get("qlen")==0 and x.get("backlog")==0 for x in (row["fq_after_stop"],sr["fq_after_stop"])):row["status"]="INCOMPLETE_FQ_DRAIN"
             elif not all(x["fq_initial"]["options"]==x["fq_after_stop"]["options"] for x in (row,sr)):row["status"]="INCOMPLETE_FQ_CHANGE"
         if row["status"]=="MEASURED" and i<0 and not row.get("server_receipt",{}).get("origin_app",{}).get("kernel_final_valid"):row["status"]="INCOMPLETE_KERNEL_FINAL"
@@ -422,8 +439,8 @@ def client():
             "real_three_runner_l3_relay":True,"all_three_distinct_native_machines":distinct,"architecture":"aarch64","added_rtt_ms":400,
             "planned_source_seconds":180,"application_offer":"saturated","outer_mtu":1160,"product_tun_fq_maxrate_mbps":0,
             "initial_rust_bbr_pacing_bytes_s":75000000,"kernel_cc":"bbr","server_native_feedback_mode":2,"client_native_feedback_mode":0,
-            "edt_product_enabled_by_arm":{k:True for k in ORDER},"endpoint_wan_qdisc":"fq all arms","server_middle_ack_ratio":2,"client_middle_ack_ratio_by_arm":{k:int(k) for k in ORDER},"order":list(ORDER),"profiles":PROFILES,
-            "status":"MEASURED_EDT_ACK_RATIO_DIAGNOSTIC" if complete else "INCOMPLETE","rows":rows}
+            "edt_product_enabled_by_arm":{k:True for k in ORDER},"endpoint_wan_qdisc":"fq all arms","server_middle_ack_ratio":2,"client_middle_ack_ratio_by_arm":{k:int(ack_for(k)) for k in ORDER},"client_ready_group":True,"order":list(ORDER),"profiles":PROFILES,
+            "status":"MEASURED_GROUP_EDT_COMBINATION_DIAGNOSTIC" if complete else "INCOMPLETE","rows":rows}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

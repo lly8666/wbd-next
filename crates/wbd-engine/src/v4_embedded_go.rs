@@ -6469,19 +6469,19 @@ struct TxTurnCompletion{
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct NativeM4Clock{
-    header:[u8;40],len:usize,pn:Option<wbd_types::RecordPn>,at:Instant,copied:bool,edt:Option<Instant>,
+    header:[u8;40],len:usize,pn:Option<wbd_types::RecordPn>,at:Instant,copied:bool,edt:Option<Instant>,edt_group_pos:u8,
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl NativeM4Clock{
     fn from_inner(ip:&[u8],at:Instant)->Option<Self>{
         if ip.len()<40||ip[0]!=0x45||ip[9]!=6||ip[33]&0x07!=0||20+usize::from(ip[32]>>4)*4>=ip.len(){return None}
-        Some(Self{header:ip[..40].try_into().unwrap(),len:ip.len(),pn:None,at,copied:false,edt:None})
+        Some(Self{header:ip[..40].try_into().unwrap(),len:ip.len(),pn:None,at,copied:false,edt:None,edt_group_pos:0})
     }
     fn settle(&mut self,ready:&[(wbd_types::RecordPn,u64)],copied:usize,at:Instant){
         if let Some(pn)=self.pn{
             if let Some(i)=ready.iter().position(|(p,_)|*p==pn){self.at=at;self.copied=i<copied;}
         }
-        if !self.copied{self.edt=None;}
+        if !self.copied{self.edt=None;self.edt_group_pos=0;}
     }
 }
 #[cfg(all(test,any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -6498,32 +6498,59 @@ fn native_m4_clock_only_counts_actual_copied_prefix(){
     let mut missing=NativeM4Clock::from_inner(&ip,now).unwrap();missing.pn=Some(wbd_types::RecordPn(4));missing.settle(&ready,1,later);assert!(!missing.copied);assert_eq!(missing.at,now);
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn native_edt_group_size(mode:u8,rate:u64,len:u32)->u8{
+    match mode{
+        // Linux high-RTT tcp_tso_autosize rate component, clamped to
+        // the existing 32 independent ready records (not a GSO skb).
+        2=>((rate>>10)/u64::from(len)).clamp(2,32) as u8,
+        8=>8,
+        _=>1,
+    }
+}
+#[cfg(all(test,any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn native_edt_group_size_high_rtt(){
+    assert_eq!(native_edt_group_size(2,75_000_000,1040),32);
+    assert_eq!(native_edt_group_size(2,8_320_000,1040),7);
+    assert_eq!(native_edt_group_size(2,100_000,1040),2);
+    assert_eq!(native_edt_group_size(8,75_000_000,1040),8);
+    assert_eq!(native_edt_group_size(1,75_000_000,1040),1);
+}
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn plan_native_edt(owner:&NativeTcpOwner,receipts:&mut [NativeM4Clock],
-    ready:&[(wbd_types::RecordPn,u64)],base:Instant,mono:u64)->Option<[u64;32]>{
-    // Same 32 ready records and one pre-existing millisecond pacing quantum.
-    // No future grant, no waiting to fill a batch, no global sequencing.
+    ready:&[(wbd_types::RecordPn,u64)],base:Instant,mono:u64,mode:u8)->Option<[u64;32]>{
+    // Same earned records, same single-millisecond horizon. Grouped modes
+    // assign one eligibility to several independent frozen records. No
+    // new grant or queue, no delay to fill a group.
     let horizon=base+Duration::from_millis(1);
-    let mut groups=[(0u64,base,base,false);32]; // flow, initial tail, next, exceeds quantum
+    // flow, initial tail, next byte-clock, exceeds horizon, group start,
+    // group position, group size. Byte clock is unchanged from EDT1.
+    let mut groups=[(0u64,base,base,false,base,0u8,1u8);32];
     let mut count=0usize;
-    let mut plans=[None;32]; // ready index -> (receipt, group, planned time)
+    let mut plans=[None;32];
     for (receipt_index,receipt) in receipts.iter().enumerate(){
         let Some(pn)=receipt.pn else{continue};
         let Some(i)=ready.iter().position(|(p,_)|*p==pn)else{continue};
         let Some((id,len,rate,tail))=owner.edt_info(&receipt.header,receipt.len)else{continue};
         let g=if let Some(g)=groups[..count].iter().position(|x|x.0==id){g}else{
-            let g=count;count+=1;let start=tail.map_or(base,|t|t.max(base));
-            groups[g]=(id,start,start,false);g
+            let g=count;count+=1;let at=tail.map_or(base,|t|t.max(base));
+            groups[g]=(id,at,at,false,at,0,native_edt_group_size(mode,rate,len));g
         };
         let entry=&mut groups[g];
-        let at=entry.2;
+        if entry.5==0||entry.5==entry.6{
+            entry.4=entry.2;entry.5=0;
+        }
+        entry.5+=1;
+        let at=entry.4;
         if at>horizon{entry.3=true;}
-        plans[i]=Some((receipt_index,g,at));
-        entry.2=at+Duration::from_secs_f64(f64::from(len)/rate as f64);
+        plans[i]=Some((receipt_index,g,at,entry.5));
+        entry.2+=Duration::from_secs_f64(f64::from(len)/rate as f64);
     }
     let mut times=[mono;32];let mut any=false;
     for (i,plan) in plans.into_iter().enumerate(){
-        let Some((receipt,g,at))=plan else{continue};
+        let Some((receipt,g,at,pos))=plan else{continue};
         let due=if groups[g].3{groups[g].1}else{at};
+        if !groups[g].3{receipts[receipt].edt_group_pos=pos;}
         if due>base{
             receipts[receipt].edt=Some(due);
             times[i]=mono+due.duration_since(base).as_nanos() as u64;any=true;
@@ -6914,7 +6941,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     jumbo_read:&mut [u8],jumbo_queue:&mut VecDeque<Vec<u8>>,
     active_jumbo:&mut Option<PendingOriginalJumbo>,
     native_m4_clock:bool,native_clock_receipts:&mut Vec<NativeM4Clock>,
-    native_edt_owner:Option<&NativeTcpOwner>,
+    native_edt_owner:Option<&NativeTcpOwner>,native_edt_mode:u8,
     #[cfg(feature="fec2_product_record")]
     ingress:&LoopCounts,
     #[cfg(feature="fec2_product_record")]
@@ -7456,7 +7483,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     };
     let txtimes=if let Some(owner)=native_edt_owner.filter(|_|!native_clock_receipts.is_empty()&&admitted!=0){
         let (base,mono)=ScopedRawIpv4Tx::txtime_clock();
-        plan_native_edt(owner,native_clock_receipts,actual_firstsend,base,mono)
+        plan_native_edt(owner,native_clock_receipts,actual_firstsend,base,mono,native_edt_mode)
     }else{None};
     let m4_submit_at=if native_m4_clock&&!native_clock_receipts.is_empty(){Some(Instant::now())}else{None};
     let report=if stop.load(Ordering::Acquire)||admitted==0{None}else{
@@ -8142,7 +8169,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     if e.raw_tx_lease_mtu==0{return BAD_STAGE}
     // Explicit paired Normal/off research entry, with the existing shared TUN.
     let dual_tcp=std::env::var("WBD_M0_DUAL_RUST_TCP").ok().as_deref()==Some("1");
-    let native_edt=dual_tcp&&std::env::var_os("WBD_M0_NATIVE_EDT").as_deref()==Some(std::ffi::OsStr::new("1"));
+    let native_edt_mode=if dual_tcp{match std::env::var_os("WBD_M0_NATIVE_EDT").as_deref().and_then(|s|s.to_str()){
+        Some("1")=>1,Some("linux")=>2,Some("train8")=>8,_=>0,
+    }}else{0};
+    let native_edt=native_edt_mode!=0;
     if native_edt{
         if e.raw_tx.as_ref().unwrap().configure_txtime().is_err(){return INVALID}
     }
@@ -8606,6 +8636,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut native_clock_receipts=Vec::<NativeM4Clock>::with_capacity(32);
             let mut native_m4_counts=[0u64;3];
             let mut edt_copied=0u64;let mut edt_max_delay_ns=0u64;
+            let mut edt_planned=0u64;let mut edt_group_heads=0u64;let mut edt_group_max=0u8;
             // One reusable TUN read slot, not 128 enlarged M1 owner slabs.
             let mut jumbo_read=vec![0u8;M0_TUN_IPV4_MAX];
             let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
@@ -9041,7 +9072,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     &mut tx_records,&mut tx_presentations,
                     &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo,
                     native_m4_clock,&mut native_clock_receipts,
-                    if native_edt{native_tcp_owner.as_ref()}else{None},
+                    if native_edt{native_tcp_owner.as_ref()}else{None},native_edt_mode,
                     #[cfg(feature="fec2_product_record")]
                     &stats,
                     #[cfg(feature="fec2_product_record")]
@@ -9053,6 +9084,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if let Some(owner)=native_tcp_owner.as_mut(){
                     for receipt in native_clock_receipts.drain(..){
                         native_m4_counts[if receipt.copied{0}else if receipt.pn.is_some(){1}else{2}]+=1;
+                        if receipt.copied&&receipt.edt_group_pos!=0{
+                            edt_planned+=1;edt_group_heads+=u64::from(receipt.edt_group_pos==1);edt_group_max=edt_group_max.max(receipt.edt_group_pos);
+                        }
                         if let Some(edt)=receipt.edt.filter(|&t|t>receipt.at){
                             edt_copied+=1;edt_max_delay_ns=edt_max_delay_ns.max(edt.duration_since(receipt.at).as_nanos() as u64);
                         }
@@ -9155,7 +9189,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             jumbo_queue.clear();
             if native_tcp_owner.is_some(){
                 if local_ready_group{eprintln!("WBD_M0_LOCAL_READY_GROUP joins={} flushes={} segments={}",local_ready_joins,local_ready_flushes,local_ready_segments);}
-                if native_edt{eprintln!("WBD_M0_TCP_EDT timed_copied={} max_delay_ns={}",edt_copied,edt_max_delay_ns);}
+                if native_edt{eprintln!("WBD_M0_TCP_EDT timed_copied={} max_delay_ns={} mode={} planned_copied={} group_heads={} max_group={}",edt_copied,edt_max_delay_ns,native_edt_mode,edt_planned,edt_group_heads,edt_group_max);}
                 if native_m4_clock{eprintln!("WBD_M0_TCP_M4_CLOCK copied={} not_proven_copied={} no_normal_pn={}",native_m4_counts[0],native_m4_counts[1],native_m4_counts[2]);}
                 if local_gso_groups!=0||std::env::var_os("WBD_M0_LOCAL_TUN_GSO").as_deref()==Some(std::ffi::OsStr::new("1")){eprintln!("WBD_M0_LOCAL_TUN_GSO groups={} segments={}",local_gso_groups,local_gso_segments);}
                 eprintln!("WBD_M0_TCP_PUBLISH calls={} local_batch_max={} middle_batch_max={} pending_peak={} local_write_failed={} ingress_first={} ingress_turn_peak={} ingress_with_pending={} admission_drain_before_service={} ingress_first_service_turns={}",publish_calls,local_batch_max,middle_batch_max,pending_peak,local_write_failed,fair_native_turn,ingress_turn_peak,ingress_with_pending,native_round_robin,ingress_first_service_turns);

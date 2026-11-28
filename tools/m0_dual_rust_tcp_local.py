@@ -56,7 +56,7 @@ def make():
         ns(n,"iptables","-A","OUTPUT","-o","wan0","-p","tcp",flag,"443","--tcp-flags","RST","RST","-j","DROP")
     ns(S,"iptables","-t","nat","-A","POSTROUTING","-o","exit0","-s","10.66.0.0/24","-j","MASQUERADE")
     ns(T,"tc","qdisc","replace","dev","app0","root","fq","maxrate","600mbit")
-    if os.environ.get("WBD_M0_NATIVE_EDT")=="1":
+    if os.environ.get("WBD_M0_NATIVE_EDT") in ("1","linux","train8"):
         for endpoint in (C,S):
             ns(endpoint,"tc","qdisc","replace","dev","wan0","root","fq")
     save(O/"topology.json",{n:{"routes":ns(n,"ip","route"),"links":json.loads(ns(n,"ip","-j","link")),"cc":ns(n,"sysctl","-n","net.ipv4.tcp_congestion_control")} for n in N})
@@ -161,14 +161,16 @@ def functional():
             row["local_ready_group"]={k:int(values[k]) for k in ("joins","flushes","segments")}
             assert row["local_ready_group"]["joins"]>0 and row["local_ready_group"]["segments"]>0,row["local_ready_group"]
             assert "WBD_M0_LOCAL_READY_GROUP " not in sl
-        if os.environ.get("WBD_M0_NATIVE_EDT")=="1":
+        if os.environ.get("WBD_M0_NATIVE_EDT") in ("1","linux","train8"):
             row["edt"]={}
             for role,log in (("server",sl),("client",cl)):
                 receipt=next(x for x in log.splitlines() if "WBD_M0_TCP_EDT " in x)
                 values=dict(w.split("=",1) for w in receipt.split() if "=" in w)
-                row["edt"][role]={k:int(values[k]) for k in ("timed_copied","max_delay_ns")}
-            assert row["edt"]["server"]["timed_copied"]>0,row["edt"]
-            assert all(v["max_delay_ns"]<=1_000_000 for v in row["edt"].values()),row["edt"]
+                row["edt"][role]={k:int(values[k]) for k in ("timed_copied","max_delay_ns","mode","planned_copied","group_heads","max_group")}
+            edt_mode={"1":1,"linux":2,"train8":8}[os.environ["WBD_M0_NATIVE_EDT"]]
+            assert all(v["mode"]==edt_mode and v["max_delay_ns"]<=1_000_000 for v in row["edt"].values()),row["edt"]
+            if edt_mode==1:assert row["edt"]["server"]["timed_copied"]>0,row["edt"]
+            else:assert row["edt"]["server"]["planned_copied"]>0 and row["edt"]["server"]["max_group"]>=2,row["edt"]
             row["edt_qdisc"]={n:json.loads(ns(n,"tc","-s","-j","qdisc","show","dev","wan0")) for n in (C,S)}
         if os.environ.get("WBD_M0_ACK_PROBE") in ("4","8"):
             ratio=os.environ["WBD_M0_ACK_PROBE"]
