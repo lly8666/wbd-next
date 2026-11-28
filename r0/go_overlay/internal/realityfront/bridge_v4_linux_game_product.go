@@ -260,7 +260,7 @@ func sameOriginalGameLaneHotIdentity(old,next V4ColdSessionSnapshot,lane uint8)b
 // GameAdapter, kernel socket, or the selected old lane's owner. It is
 // correct to keep all four live and try another cold association later.
 // NEVER tag native-M4-commit/old-Stop uncertainty with this sentinel.
-var ErrV4GameLaneUncommittedCold=errors.New("Game new TLS lane failed before native M4 commit")
+
 
 // Fresh original TLS for lane N occurs on a new genuine FakeTCP association.
 // Its authenticated epoch MUST equal the one still owned by the other three

@@ -1,5 +1,9 @@
 package realityfront
 
+import "errors"
+
+var ErrV4GameLaneUncommittedCold=errors.New("Game new TLS lane failed before native M4 commit")
+
 // PLAN012 original-Go Game 2/4 cold set. This is a read-only bridge input,
 // never a credential grant, FEC2 public opt-in, kernel send, or Stop authority.
 // Only genuine post-TLS V4 sessions can supply ColdSnapshot. Each original

@@ -520,7 +520,7 @@ func(g *V4WindowsAuthenticatedGameGroup) PrepareOriginalGameLaneCandidate(
  if e!=nil{return nil,e}
  base.LaneID=lane
  session,e:=establishWindowsGameLaneTLS(ctx,assoc,base,epoch,fec,padding)
- if e!=nil{return nil,e}
+ if e!=nil{return nil,fmt.Errorf("%w: %w",ErrV4GameLaneUncommittedCold,e)}
  fresh,e:=session.ColdSnapshot()
  actualLease,le:=session.AuthenticatedLeaseIPv4()
  if e!=nil||le!=nil||session.Epoch!=epoch||fresh.Cipher()!=cipher||

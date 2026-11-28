@@ -1266,6 +1266,10 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
     let mut deferred_direct_tcp:Option<Vec<u8>>=None;
     #[cfg(feature="winxdp_native_trial")]
     let (mut parked,mut retiring,mut old_frames,mut next_frames)=(None::<usize>,None::<GameLaneHandoff>,VecDeque::<Vec<u8>>::new(),VecDeque::<Vec<u8>>::new());
+    #[cfg(feature="winxdp_native_trial")]
+    let mut next_slot:Option<usize>=None;
+    #[cfg(feature="winxdp_native_trial")]
+    let mut contiguous=true;
     loop{
         if c.stop.load(Ordering::Acquire){
             return abort_deferred_fec(&group,&mut deferred)
@@ -1308,6 +1312,8 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
                 let Some(mut h)=candidate.switched.lock().ok().and_then(|mut h|h.take())else{return BAD_STAGE};
                 let slot=h.slot;
                 lanes[slot]=h.next;
+                contiguous=lanes.iter().enumerate().all(|(i,l)|l.local_port==lanes[0].local_port.wrapping_add(i as u16));
+                next_slot=Some(slot);
                 // The old ledger is no longer a TX authority. The candidate
                 // replay state and its verified ACK ledger move intact.
                 std::mem::swap(&mut ledgers[slot],&mut h.ack);
@@ -1321,8 +1327,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
                     slot+1,h.old.owner,h.next.owner,h.old.local_port,h.next.local_port);
                 retiring=Some(h);
             }
-            if let Some(h)=retiring.as_mut(){
-                let slot=h.slot;
+            if let Some(slot)=next_slot{
                 for _ in 0..32{
                     if deferred[slot].is_some(){break}
                     let Some(frame)=next_frames.pop_front()else{break};
@@ -1334,6 +1339,10 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
                         }
                     }
                 }
+                if next_frames.is_empty(){next_slot=None;if retiring.is_none(){candidate.promotion.store(0,Ordering::Release);}}
+            }
+            if let Some(h)=retiring.as_mut(){
+                let slot=h.slot;
                 for _ in 0..32{
                     if deferred[slot].is_some(){break}
                     let Some(frame)=old_frames.pop_front()else{break};
@@ -1348,7 +1357,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
                         slot+1,h.retired.handle,h.old.local_port);
                     candidate.last_retired.store(h.retired.handle,Ordering::Release);
                     retiring=None;old_frames.clear();
-                    candidate.promotion.store(0,Ordering::Release);
+                    if next_slot.is_none(){candidate.promotion.store(0,Ordering::Release);}
                 }
             }
             if candidate.staged.load(Ordering::Acquire)&&parked.is_none(){
@@ -1439,6 +1448,8 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
             let due=h.deadline.saturating_duration_since(Instant::now()).as_millis().max(1) as u32;
             timeout.min(if !old_frames.is_empty()||!next_frames.is_empty(){due.min(5)}else{due})
         }else{timeout};
+        #[cfg(feature="winxdp_native_trial")]
+        let timeout=if next_slot.is_some(){timeout.min(5)}else{timeout};
         let mut verified=false;
         #[cfg(not(feature="winxdp_native_trial"))]
         {
@@ -1502,7 +1513,11 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
                         let off=usize::from(ipv4[0]&15)*4;
                         let Some(p)=ipv4.get(off+2..off+4)else{continue};
                         let port=u16::from_be_bytes([p[0],p[1]]);
-                        let Some(i)=lanes.iter().position(|l|l.local_port==port)else{
+                        let idx=if contiguous{
+                            let i=port.wrapping_sub(lanes[0].local_port) as usize;
+                            (i<lanes.len()).then_some(i)
+                        }else{lanes.iter().position(|l|l.local_port==port)};
+                        let Some(i)=idx else{
                             if let Some(h)=retiring.as_mut().filter(|h|h.old.local_port==port){
                                 if deferred[h.slot].is_some(){if old_frames.len()<EARLY_CAP{old_frames.push_back(batch.frame(j).to_vec());}}
                                 else if let Err(e)=receive_retiring_game(&cfg,h,ipv4,&group,&mut tun,&c,&mut deferred,
