@@ -67,6 +67,7 @@ for mode in modes:
   350 if game_stages else 240 if (slow and mode.startswith("game"))
   else 690 if slow else 165)
  if env.get("WBD_XDP_WINDOWS_ROTATION")=="1":mode_seconds=330 if mode.startswith("game") else 225
+ if env.get("WBD_XDP_CANDIDATE_FAILURE")=="1":mode_seconds=420
  # H1907: only this EXACT signed Normal original-owner 10-GiB challenge
  # gets 900s inside its separate 1060s PID supervisor and the existing
  # 24-minute Windows step watchdog. Never widen ordinary 165s Normal.

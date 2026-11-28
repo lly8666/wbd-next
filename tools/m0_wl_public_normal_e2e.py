@@ -1904,7 +1904,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   # Install real 200ms each way before observing either timer turn.
   def rotation_netem(action):
    return run(["wsl.exe","-d","Ubuntu","-u","root","--","python3",
-     unix(root/"tools"/"m0_wl_netem.py"),action,unix(out),"rotation-400ms-loss0"],timeout=35)
+     unix(root/"tools"/"m0_wl_netem.py"),("arm-candidate-failure" if action=="arm" and os.environ.get("WBD_XDP_CANDIDATE_FAILURE")=="1" else action),unix(out),"rotation-400ms-loss0"],timeout=35)
   print(rotation_netem("arm"),flush=True)
   try:
    rotation_report=measure_rotation(root,out,unix,w,s)

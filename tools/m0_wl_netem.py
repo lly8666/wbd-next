@@ -15,6 +15,8 @@ import time
 from m0_wl_impairment_profile import get_profile, ingress_ports_for_mode
 
 action, directory = sys.argv[1:3]
+candidate_failure=action=="arm-candidate-failure"
+if candidate_failure:action="arm"
 profile_name = sys.argv[3] if len(sys.argv)>3 else "n0"
 scenario_path = sys.argv[4] if len(sys.argv)>4 else None
 profile = get_profile(profile_name, side="windows", configfile=scenario_path)
@@ -59,7 +61,7 @@ def clean():
     errors = []
     # Delete only exact owned handle/ifb. Keep state if any cleanup failed.
     if state.get("ingress"):
-        r = call("tc", "qdisc", "del", "dev", "eth0", "handle", "ffff:", "ingress", checked=False)
+        r = call("tc", "qdisc", "del", "dev", "eth0", "clsact", checked=False) if state.get("candidate_failure") else call("tc", "qdisc", "del", "dev", "eth0", "handle", "ffff:", "ingress", checked=False)
         if r["rc"]: errors.append("owned ingress removal: " + r["stderr"])
         else: state["ingress"] = False
     if state.get("egress"):
@@ -92,7 +94,7 @@ if action == "arm":
         raise RuntimeError("foreign ifb device name exists")
     state = {"owner": "M0-WL-N0-ETH0-IFB", "interface": iface,
              "profile": profile_name, "egress": False, "ingress": False, "ifb_created": False,
-             "stage_index": 0, "ingress_ports": list(ingress_ports)}
+             "stage_index": 0, "ingress_ports": list(ingress_ports), "candidate_failure":candidate_failure}
     persist(state)
     try:
         call("ip", "link", "add", iface, "type", "ifb")
@@ -107,16 +109,22 @@ if action == "arm":
         call("tc", "qdisc", "add", "dev", iface, "root", "handle", "10:", *native_netem(profile))
         call("tc", "qdisc", "add", "dev", "eth0", "root", "handle", "20:", *native_netem(egress_profile))
         state["egress"] = True; persist(state)
-        call("tc", "qdisc", "add", "dev", "eth0", "handle", "ffff:", "ingress")
+        if candidate_failure:
+            call("tc","qdisc","add","dev","eth0","clsact")
+        else:
+            call("tc", "qdisc", "add", "dev", "eth0", "handle", "ffff:", "ingress")
         state["ingress"] = True; persist(state)
         # Genuine Game2/4 cold TLS uses 2/4 distinct original server
         # destination ports. Impair all lanes, but never unrelated traffic.
         for order, port in enumerate(ingress_ports, 1):
-            call("tc", "filter", "add", "dev", "eth0", "parent", "ffff:",
+            call("tc", "filter", "add", "dev", "eth0", *(["ingress"] if candidate_failure else ["parent","ffff:"]),
                  "protocol", "ip", "prio", str(order), "u32",
                  "match", "ip", "protocol", "6", "0xff",
                  "match", "ip", "dport", str(port), "0xffff",
                  "action", "mirred", "egress", "redirect", "dev", iface)
+        if candidate_failure:
+            # Drop only cold SYNACKs, not established data.
+            call("tc","filter","add","dev","eth0","egress","protocol","ip","pref","10","flower","ip_proto","tcp","src_port","443","tcp_flags","0x12/0x12","action","drop")
         snapshot = probe()
         root = [x for x in snapshot["eth0"] if x.get("kind") == "netem"]
         incoming = [x for x in snapshot["ifb"] if x.get("kind") == "netem"]
@@ -135,6 +143,13 @@ if action == "arm":
     except Exception:
         clean()
         raise
+elif action=="candidate-release":
+    state=json.loads(owner.read_text())
+    assert state.get("candidate_failure") and state.get("owner")=="M0-WL-N0-ETH0-IFB"
+    rows=json.loads(call("tc","-s","-j","filter","show","dev","eth0","egress")["stdout"])
+    (out/"windows-timer-candidate-drop.json").write_text(json.dumps(rows,indent=2))
+    call("tc","filter","del","dev","eth0","egress","protocol","ip","pref","10")
+    print("REAL_CANDIDATE_SYNACK_BLOCK_RELEASED",flush=True)
 elif action in ("blackhole", "recover"):
     # Touch only the qdiscs we created via arm; no host-global policy edit.
     if profile_name!="v2" or not scenario_path or not owner.exists():

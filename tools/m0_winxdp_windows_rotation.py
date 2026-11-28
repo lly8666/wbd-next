@@ -6,7 +6,7 @@ def echo():
         sock.bind(("10.66.0.1",45903))
         print("WINDOWS_ROTATION_ECHO_READY",flush=True)
         sock.settimeout(.5)
-        until=time.monotonic()+235
+        until=time.monotonic()+330
         while time.monotonic()<until:
             try:data,peer=sock.recvfrom(2048)
             except socket.timeout:continue
@@ -26,7 +26,10 @@ def measure_rotation(root,out,unix,win,server):
             # a 400ms RTT, no app retry, and no catch-up send burst.
             start=time.monotonic();seq=0;receipts=[];errors=[];gen_receipts={}
             sent={};seen=set();ready=0;retired=0;mbb=False;last_log=0.;next_send=start;drain_until=None
-            game=os.environ['WBD_WL_PUBLIC_MODE'].startswith('game');target=5 if game else 3
+            game=os.environ['WBD_WL_PUBLIC_MODE'].startswith('game')
+            fault=os.environ.get("WBD_XDP_CANDIDATE_FAILURE")=="1"
+            target=2 if fault else (5 if game else 3)
+            failure_at=None;failure_seen=False
             prefix=b"WBD_WINDOWS_TIMER_NATIVE/"
             with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
                 sock.bind(("10.66.0.2",0));sock.setblocking(False)
@@ -39,7 +42,14 @@ def measure_rotation(root,out,unix,win,server):
                         retired=client.count("WBD_WINDOWS_GAME_SINGLE_LANE_OLD_STOP" if game else "WBD_WINDOWS_NORMAL_MBB_OLD_EXACT_STOP")
                         mbb="scope=normal_mbb" in client
                         last_log=now
-                    if drain_until is None and (now-start>=(200 if game else 110) or (ready>=target and gen_receipts.get(target,0)>=20 and (not (mbb or game) or retired>=target-1))):
+                        if fault and not failure_seen:
+                            marker="WBD_WINDOWS_GAME_SINGLE_LANE_RETRY" if game else "WBD_WINDOWS_NORMAL_MBB_CANDIDATE_FAILED fatal=false"
+                            if marker in client:
+                                assert ready==1 and retired==0,client[-4000:]
+                                failure_at=now-start
+                                subprocess.run(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(root/"tools/m0_wl_netem.py"),"candidate-release",unix(out),"rotation-400ms-loss0"],check=True,timeout=25)
+                                failure_seen=True
+                    if drain_until is None and (now-start>=(265 if fault else (200 if game else 110)) or (ready>=target and gen_receipts.get(target,0)>=20 and (not (mbb or game) or retired>=target-1))):
                         drain_until=now+1.5
                     if drain_until is not None and now>=drain_until:break
                     if drain_until is None and now>=next_send:
@@ -83,7 +93,9 @@ def measure_rotation(root,out,unix,win,server):
                 "rtt_p99_ms":rtts[min(len(rtts)-1,int(len(rtts)*.99))] if rtts else None,
                 "max_successful_receive_gap_ms":max((b["elapsed_ms"]-a["elapsed_ms"] for a,b in zip(receipts,receipts[1:])),default=None),
                 "worst_receipt_gaps":worst_gaps,"receipts":receipts}
+            if fault:result.update(candidate_failure_seen=failure_seen,candidate_failure_elapsed_s=failure_at)
             (out/"windows-timer-business.json").write_text(json.dumps(result,indent=2))
+            if fault and not failure_seen:raise RuntimeError("no real candidate failure observed")
             if not all(gen_receipts.get(i,0)>0 for i in range(1,target+1)):
                 raise RuntimeError("missing same-socket business in every actual rotation interval: "+str(gen_receipts))
             # Save diagnostic evidence even on continuity failure. Final
@@ -97,6 +109,7 @@ def measure_rotation(root,out,unix,win,server):
 def audit_stop(out):
     client=(out/"client.log").read_text(errors="replace")
     server=(out/"server.log").read_text(errors="replace")
+    if os.environ.get("WBD_XDP_CANDIDATE_FAILURE")=="1":return audit_candidate_failure(out,client,server)
     if "scope=normal_mbb" in client:return audit_normal_mbb(out,client,server)
     if "scope=game_slot" in client:return audit_game_slot(out,client,server)
     arms=[tuple(map(int,x)) for x in re.findall(r"WBD_WINDOWS_TIMER_ROTATION_ARMED min_ms=(\d+) max_ms=(\d+) actual_delay_ms=(\d+) scope=full_generation unix_ms=(\d+)",client)]
@@ -220,6 +233,47 @@ def audit_game_slot(out,client,server):
     assert 350<=business["rtt_p50_ms"]<=500 and result["max_gap_ms"]<=100,result
     result["continuity"]="PASS_ZERO_MISSING_SAME_SOCKET"
     (out/"windows-timer-audit.json").write_text(json.dumps(result,indent=2))
+    return result
+
+
+def audit_candidate_failure(out,client,server):
+    b=json.loads((out/"windows-timer-business.json").read_text())
+    game=os.environ["WBD_WL_PUBLIC_MODE"].startswith("game")
+    fail="WBD_WINDOWS_GAME_SINGLE_LANE_RETRY" if game else "WBD_WINDOWS_NORMAL_MBB_CANDIDATE_FAILED fatal=false"
+    ready="WBD_WINDOWS_GAME_SINGLE_LANE_READY" if game else "WBD_WINDOWS_NORMAL_MBB_GENERATION_READY"
+    lines=client.splitlines()
+    assert client.count(fail)==1 and client.count(ready)==1
+    fi=next(i for i,x in enumerate(lines) if fail in x)
+    ri=next(i for i,x in enumerate(lines) if ready in x)
+    due=[i for i,x in enumerate(lines) if "WBD_WINDOWS_TIMER_ROTATION_DUE" in x]
+    assert len(due)==2 and due[0]<fi<due[1]<ri
+    changes=[(int(p),int(a)) for p,a in re.findall(r"WBD_XDP_RX_PORT_CHANGE port=(\d+) add=(\d+) same_program_umem=1",client)]
+    assert len(changes)==4 and changes[0][1]==1 and changes[1]==(changes[0][0],0) and changes[2][1]==1 and changes[2][0]!=changes[0][0] and changes[3][1]==0,changes
+    assert client.count("WBD_WINDOWS_CLIENT_READY")==1 and client.count("WBD_XDP_RX_STOP ")==1 and client.count("WBD_XDP_TX_STOP ")==1
+    old=changes[3][0];new=changes[2][0];failed=changes[0][0]
+    if game:
+        assert client.count("WBD_WINDOWS_GAME_NATIVE_APPLIED")==1 and client.count("WBD_WINDOWS_GAME_NATIVE_DISCONNECTED")==1
+        assert client.count("WBD_WINDOWS_GAME_SLOT_PROMOTED")==1
+        assert server.count("V4_PUBLIC_GAME_SINGLE_LANE_READY role=server")==1
+        assert re.search(r"V4_PUBLIC_GAME_SINGLE_LANE_READY role=server .*client_port="+str(new)+r" server_port=443",server)
+    else:
+        assert client.count("WBD_WINDOWS_NATIVE_APPLIED_V1")==1 and client.count("WBD_WINDOWS_NATIVE_DISCONNECTED_V1")==1
+        assert server.count("source=authenticated_client_native_Health old_route_promoted=1")==1
+    def packets(v):
+        if isinstance(v,dict):return max([int(v.get("packets",0))]+[packets(x) for x in v.values()])
+        if isinstance(v,list):return max([0]+[packets(x) for x in v])
+        return 0
+    drops=packets(json.loads((out/"windows-timer-candidate-drop.json").read_text()))
+    assert drops>0
+    assert b["candidate_failure_seen"] and b["missing"]==0 and not b["socket_errors"] and b["sent"]==b["socket_accepted"]
+    assert b["max_successful_receive_gap_ms"]<1000
+    t=b["candidate_failure_elapsed_s"]*1000
+    receipts=b["receipts"]
+    assert sum(1 for r in receipts if t-10000<r["elapsed_ms"]<t)>100
+    assert sum(1 for r in receipts if t<r["elapsed_ms"]<t+10000)>100
+    result={"result":"PASS_REAL_COLD_SYNACK_FAILURE_KEEP_OLD_NEXT_PERIOD","scope":b["scope"],"old_port":old,"failed_port":failed,"new_port":new,"synack_drops":drops,"missing":b["missing"],"sent":b["sent"],"max_gap_ms":b["max_successful_receive_gap_ms"],"candidate_failure_elapsed_s":b["candidate_failure_elapsed_s"],"same_native_owner":True,"two_timer_turns":True}
+    (out/"windows-timer-audit.json").write_text(json.dumps(result,indent=2))
+    print("WINXDP_CANDIDATE_FAILURE_PASS "+json.dumps(result),flush=True)
     return result
 
 if __name__=="__main__":echo()
