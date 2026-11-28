@@ -57,11 +57,17 @@ if os.environ.get("WBD_XDP_STRESS_PHASE")=="carrier-abba":
         dict(name="clean-down350",direction="down",rate=350,streams=1,loss=0,delay=200,profile=-1,mtu=1160),
         dict(name="lossy-duplex",direction="duplex",rate=400,streams=4,loss=5,delay=80,profile=6,mtu=1400),
     ]
-    CASES=[dict(base,**c,arm=arm,group=c["name"]) for c in workloads for arm in "ABBA"]
-    # Prior A/C both completed ABBA. Deliberately reverse all main replicas
-    # for this follow-up; S repeats the historical lossy ABBA exactly.
-    if os.environ.get("H2478_REPLICA")!="S":
-        CASES=[dict(c,arm="B" if c["arm"]=="A" else "A") for c in CASES]
+    if os.environ.get("WBD_XDP_CARRIER_CURRENT")=="1":
+        # Retain historical 250/350M workloads; add 650M at default
+        # outer MTU and larger original TCP send buffer, same for both arms.
+        workloads.insert(2,dict(name="clean-down650",direction="down",rate=650,streams=1,loss=0,delay=200,profile=-1,mtu=1460,sndbuf=16777216))
+        order="BAAB" if os.environ.get("H2478_REPLICA") in "BDFHJL" else "ABBA"
+        CASES=[dict(base,**work,arm=arm,group=work["name"],budget=work["rate"]) for work in workloads for arm in order]
+    else:
+        CASES=[dict(base,**c,arm=arm,group=c["name"]) for c in workloads for arm in "ABBA"]
+        # Historical follow-up retains its original reverse order.
+        if os.environ.get("H2478_REPLICA")!="S":
+            CASES=[dict(c,arm="B" if c["arm"]=="A" else "A") for c in CASES]
 
 # Normal-only tuning, same instrumented WinXDP binary in every arm.
 if os.environ.get("WBD_XDP_STRESS_PHASE")=="normal-tune":
