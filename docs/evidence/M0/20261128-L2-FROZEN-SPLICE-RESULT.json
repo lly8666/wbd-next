@@ -1,0 +1,472 @@
+{
+  "schema_version": 1,
+  "source_sha": "e4d15c359e8531ea2a4dad01325c6eb88915c158",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact source native qualification and ARM L2 measurement validity. Overall L2 parity NOT_MET: weak CPU out of band, full connection first-data not measured.",
+  "native_run": 46091497798,
+  "native_artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140813214772,
+      "artifact_id": 15241671393,
+      "core_pass": 355,
+      "functional_profiles": 4
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140813215015,
+      "artifact_id": 15240997856,
+      "core_pass": 355,
+      "functional_profiles": 4
+    }
+  ],
+  "native_recovery": {
+    "order": [
+      "normal-selected",
+      "pause-selected",
+      "loss-selected"
+    ],
+    "mbps": [
+      340.2315402008903,
+      162.5780575126648,
+      66.73509336611156
+    ],
+    "bytes_sent": [
+      536870912,
+      536870912,
+      101163130
+    ],
+    "bytes_retrans": [
+      0,
+      0,
+      499834
+    ],
+    "all_exact_hash_stop": true
+  },
+  "comparison": {
+    "run_id": 46091497818,
+    "artifacts": [
+      {
+        "role": "server",
+        "job_id": 140814812285,
+        "artifact_id": 15241662313
+      },
+      {
+        "role": "relay",
+        "job_id": 140814812279,
+        "artifact_id": 15242062150
+      },
+      {
+        "role": "client",
+        "job_id": 140814812298,
+        "artifact_id": 15241738053
+      }
+    ],
+    "baseline": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "manifest_sha256": {
+      "A": "d63d1dabacde9f05b27835f68d55c45640032fa8c815ced62860dc96b3ed2ae6",
+      "B": "2542dc2ba49eb03b61de1f7c6f88f2a5f4f21c73c66863de25baebc21d39bf18"
+    },
+    "order": [
+      "B",
+      "A",
+      "A",
+      "B",
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "loss_pct": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1
+    ],
+    "bare_mbps": [
+      334.94405029502246,
+      329.0647639996825
+    ],
+    "mbps": [
+      222.65168116980428,
+      248.29584118792462,
+      292.16586110551947,
+      291.32219667182113,
+      62.05626254288276,
+      78.79713706160042,
+      71.75549790204376,
+      73.87399116393938
+    ],
+    "product_cpu_s_per_gib": [
+      26.39,
+      26.28,
+      27.07,
+      27.1,
+      32.16,
+      41.24,
+      38.88,
+      31.32
+    ],
+    "endpoint_user_cpu_s_per_gib": [
+      13.05,
+      9.31,
+      9.44,
+      13.12,
+      10.96,
+      18.76,
+      17.36,
+      10.88
+    ],
+    "endpoint_system_cpu_s_per_gib": [
+      13.34,
+      16.97,
+      17.63,
+      13.98,
+      21.2,
+      22.48,
+      21.52,
+      20.44
+    ],
+    "host_cpu_s_per_gib": [
+      77.99,
+      86.5,
+      87.76,
+      77.69,
+      115.76,
+      132.92,
+      130.72,
+      109.64
+    ],
+    "post_request_first_data_seconds": [
+      0.9136019860000033,
+      0.4554831399999557,
+      0.45653559900000573,
+      0.9126334590000056,
+      0.45588742299997875,
+      0.9122569849999991,
+      0.9113118760000134,
+      0.4562781819998918
+    ],
+    "full_connect_first_data": "NOT_MEASURED",
+    "rust_bulk_bytes_sent": [
+      1103964152,
+      null,
+      null,
+      1101572830,
+      null,
+      271399202,
+      271571344,
+      null
+    ],
+    "rust_bulk_bytes_retrans": [
+      30222328,
+      null,
+      null,
+      27831006,
+      null,
+      2963746,
+      3135888,
+      null
+    ],
+    "rust_bulk_dsack": [
+      2339,
+      null,
+      null,
+      2680,
+      null,
+      479,
+      767,
+      null
+    ],
+    "rust_bulk_timeouts": [
+      2,
+      null,
+      null,
+      0,
+      null,
+      1,
+      0,
+      null
+    ],
+    "rust_server_ingress_full": [
+      40,
+      null,
+      null,
+      0,
+      null,
+      0,
+      0,
+      null
+    ],
+    "rust_client_ingress_full": [
+      949,
+      null,
+      null,
+      1060,
+      null,
+      0,
+      0,
+      null
+    ],
+    "relay_netem": {
+      "direction_order": [
+        "server_to_client",
+        "client_to_server"
+      ],
+      "emitted": [
+        [
+          1062487,
+          126129
+        ],
+        [
+          1040654,
+          178936
+        ],
+        [
+          1038713,
+          196843
+        ],
+        [
+          1067364,
+          119859
+        ],
+        [
+          264725,
+          27103
+        ],
+        [
+          264347,
+          20816
+        ],
+        [
+          264880,
+          23802
+        ],
+        [
+          266375,
+          27545
+        ]
+      ],
+      "drops": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          2768,
+          222
+        ],
+        [
+          2736,
+          211
+        ],
+        [
+          2728,
+          240
+        ],
+        [
+          2642,
+          263
+        ]
+      ],
+      "seed_supported": false
+    },
+    "all_exact_app_hash_eof_profile_stop": true,
+    "rust_retired_all": true,
+    "path_sample": {
+      "points": [
+        "server_tx",
+        "relay_rx",
+        "relay_tx",
+        "client_rx"
+      ],
+      "counts": [
+        [
+          16710,
+          16539,
+          16539,
+          16285
+        ],
+        [
+          16225,
+          16225,
+          16225,
+          16197
+        ],
+        [
+          16199,
+          16198,
+          16198,
+          16181
+        ],
+        [
+          16713,
+          16648,
+          16648,
+          16329
+        ],
+        [
+          4166,
+          4166,
+          4116,
+          4116
+        ],
+        [
+          4153,
+          4153,
+          4105,
+          4105
+        ],
+        [
+          4137,
+          4137,
+          4080,
+          4080
+        ],
+        [
+          4184,
+          4184,
+          4139,
+          4133
+        ]
+      ],
+      "adjacent_missing_multiset": [
+        [
+          171,
+          0,
+          254
+        ],
+        [
+          0,
+          0,
+          28
+        ],
+        [
+          1,
+          0,
+          17
+        ],
+        [
+          65,
+          0,
+          319
+        ],
+        [
+          0,
+          50,
+          0
+        ],
+        [
+          0,
+          48,
+          0
+        ],
+        [
+          0,
+          57,
+          0
+        ],
+        [
+          0,
+          45,
+          6
+        ]
+      ],
+      "adjacent_extra_multiset": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "capture_kernel_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scope": "Header identity multiset by paired port. Not physical loss or equivalent inner TCP retrans count."
+    },
+    "means": {
+      "clean": {
+        "A": {
+          "mbps": 270.230851146722,
+          "cpu": 26.675
+        },
+        "B": {
+          "mbps": 256.9869389208127,
+          "cpu": 26.745
+        }
+      },
+      "loss1": {
+        "A": {
+          "mbps": 67.96512685341106,
+          "cpu": 31.74,
+          "user_cpu": 10.92,
+          "system_cpu": 20.82
+        },
+        "B": {
+          "mbps": 75.27631748182209,
+          "cpu": 40.06,
+          "user_cpu": 18.06,
+          "system_cpu": 22
+        }
+      }
+    }
+  },
+  "interpretation": "Clean throughput and CPU within engineering band. Weak throughput above old, weak product CPU 126.2% of old, user accounts for 7.14 of 8.32 extra CPU-s/GiB; no ingress full in B weak. Post-request first data excludes connect and cannot establish end-to-end regression. No retirement. Next profile actual weak CPU and measure full connect clock.",
+  "physical": "NOT_RUN",
+  "next_source": "45a68b5a515c7699b9d2ecced0b03e54c8e62421"
+}
