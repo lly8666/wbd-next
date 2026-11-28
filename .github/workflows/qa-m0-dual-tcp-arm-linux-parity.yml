@@ -1,4 +1,4 @@
-name: M0 ARM L2 frozen splice vs selected Rust clean and actual loss
+name: M0 ARM L2 weak CPU and full connection timing diagnostic
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with: {persist-credentials: false}
       - name: Preflight harness syntax before acquiring three runners
-        run: python3 -m py_compile tools/m0_dual_tcp_arm_linux_parity.py
+        run: python3 -m py_compile tools/m0_dual_tcp_arm_linux_parity.py tools/m0_dual_rust_tcp_app.py
       - name: Wait for exact same-commit dual-ISA functional and core qualification
         id: qualified
         run: |
@@ -188,7 +188,11 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump linux-tools-generic
+          PERF_BIN="$(find -L /usr/lib/linux-tools /usr/lib/linux-tools-* -name perf -type f 2>/dev/null | sort -u | tail -1)"
+          test -x "$PERF_BIN"
+          "$PERF_BIN" --version | tee h2228-out/perf-version.txt
+          echo "DUAL_TCP_PERF_BIN=$PERF_BIN" >> "$GITHUB_ENV"
           mkdir -p bundles/A bundles/B
           gh run download 45821912542 -R "$GITHUB_REPOSITORY" -n dual-tcp-old-arm-build -D bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
@@ -227,7 +231,7 @@ jobs:
           test -s h2228-out/path-sample-ready.json
       - name: Start preset server and real origin control
         run: |
-          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py server >h2228-out/server-control.log 2>&1 </dev/null &
+          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG,DUAL_TCP_PERF_BIN nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py server >h2228-out/server-control.log 2>&1 </dev/null &
           for i in $(seq 1 200);do
             test ! -s h2228-out/server-ready.json || break
             sleep 1
@@ -235,7 +239,7 @@ jobs:
           test -s h2228-out/server-ready.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
-      - name: Keep the same ARM server through all eight legs
+      - name: Keep the same ARM server through both diagnostic legs and brackets
         run: bash tools/m0_h2228_three_runner_case.sh server-wait
       - name: Finish and qualify header-only path sample
         if: always()
@@ -277,7 +281,11 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump linux-tools-generic
+          PERF_BIN="$(find -L /usr/lib/linux-tools /usr/lib/linux-tools-* -name perf -type f 2>/dev/null | sort -u | tail -1)"
+          test -x "$PERF_BIN"
+          "$PERF_BIN" --version | tee h2228-out/perf-version.txt
+          echo "DUAL_TCP_PERF_BIN=$PERF_BIN" >> "$GITHUB_ENV"
           mkdir -p bundles/A bundles/B
           gh run download 45821912542 -R "$GITHUB_REPOSITORY" -n dual-tcp-old-arm-build -D bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
@@ -314,14 +322,14 @@ jobs:
             sleep .2
           done
           test -s h2228-out/path-sample-ready.json
-      - name: Wait server control and run path attribution screen
+      - name: Wait server control and run weak CPU and full connection timing diagnostic
         run: |
           for i in $(seq 1 150);do
             gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-server-ready -D h2228-server-ready >/dev/null 2>&1 && break
             sleep 4
           done
           test -s h2228-server-ready/server-ready.json
-          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG python3 -u tools/m0_dual_tcp_arm_linux_parity.py client
+          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG,DUAL_TCP_PERF_BIN python3 -u tools/m0_dual_tcp_arm_linux_parity.py client
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with: {name: h2228-client-result, path: h2228-out/summary.json, retention-days: 5, if-no-files-found: warn}

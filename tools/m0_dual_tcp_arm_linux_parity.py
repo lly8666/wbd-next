@@ -9,20 +9,19 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# L2: frozen old Linux kernel splice vs selected dual Rust TCP.
-# Clean and real IID loss blocks, unchanged workload within each block.
-ORDER=("B","A","A","B","A","B","B","A")
-CASES=(-1,0,1,2,3,4,5,6,7,-2)
+# Diagnostic only: one old/new weak-network pair, not another performance qualification.
+ORDER=("A","B")
+CASES=(-1,0,1,-2)
 PROFILES={"A":"frozen-linux-kernel-splice","B":"selected-dual-rust-tcp"}
 SOURCES={"A":"26b11e2da236e909b73f461964c52d5a86d42dca","B":os.environ["GITHUB_SHA"]}
-def loss_for(i):return 1.0 if i>=4 else 0.0
+def loss_for(i):return 1.0 if i>=0 else 0.0
 def cc_for(i):return "bbr"
 def rust_cc(i):return "bbr1"
 def ack_for(k):return "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
-def offer(i):return 120_000_000 if i>=4 else 600_000_000
-def target_bytes(i):return (256 if i>=4 else 1024)*1024*1024
+def offer(i):return 120_000_000 if i>=0 else 600_000_000
+def target_bytes(i):return (256 if i>=0 else 1024)*1024*1024
 def profile_env(k,server):
     return []
 def app_args(i,role):
@@ -37,6 +36,7 @@ TARGET="192.0.2.2"
 PORT=5400
 PEERS=ROOT/"h2228-peer"
 PROCS={}
+PROFILES_RUNNING={}
 CURRENT=None
 FOLDER=None
 TICK=os.sysconf("SC_CLK_TCK")
@@ -59,6 +59,29 @@ def spawn(key,ns,log,*args):
         p=subprocess.Popen(["ip","netns","exec",ns,*map(str,args)],stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
     PROCS[key]=p
     return p
+def start_profile(role,d):
+    # Reuse the product PID, no product changes or stack memory collection.
+    # Flat cpu-clock sampling is diagnostic; throughput under perf is not a gate.
+    with (d/"perf-record.log").open("w") as log:
+        p=subprocess.Popen([os.environ["DUAL_TCP_PERF_BIN"],"record","-e","cpu-clock","-F","99","-p",str(PROCS[role].pid),"-o",str(d/"perf.data")],stdout=log,stderr=subprocess.STDOUT)
+    PROFILES_RUNNING[role]=(p,d)
+def finish_profile(role):
+    item=PROFILES_RUNNING.pop(role,None)
+    if item is None:return None
+    p,d=item
+    if p.poll() is None:p.send_signal(signal.SIGINT)
+    try:p.wait(15)
+    except subprocess.TimeoutExpired:p.kill();p.wait()
+    rc=None
+    if (d/"perf.data").is_file():
+        with (d/"perf-report.txt").open("w") as log:
+            rc=subprocess.run([os.environ["DUAL_TCP_PERF_BIN"],"report","--stdio","--no-children","--sort","comm,dso,symbol","--percent-limit","0.3","-i",str(d/"perf.data")],stdout=log,stderr=subprocess.STDOUT,timeout=45).returncode
+    report=(d/"perf-report.txt").read_text(errors="replace") if (d/"perf-report.txt").is_file() else ""
+    sample=re.search(r"(?m)^# Samples:\s*(\S+)",report)
+    status={"record_rc":p.returncode,"report_rc":rc,"sample_count_label":sample.group(1) if sample else None,
+            "scope":"DIAGNOSTIC_ONLY","valid":rc==0 and bool(sample and sample.group(1)!="0")}
+    save(d/"profile-status.json",status)
+    return status
 def stop(key):
     p=PROCS.pop(key,None)
     if p is None:return None
@@ -161,6 +184,7 @@ def server_start(i):
     save(FOLDER/"direct-before-ready.json",readiness)
     if not all(x["direct"] for x in readiness[-1]["paths"].values()):
         raise RuntimeError("server direct path not ready before measurement")
+    if i>=0:start_profile("server",FOLDER)
     return {"case":i,"ready":True,"direct_readiness":readiness[-1]}
 def server_sample():
     d=snapshot("server")
@@ -179,8 +203,9 @@ def server_close():
     if p and p.poll() is None:
         try:p.wait(20)
         except subprocess.TimeoutExpired:pass
+    profile_status=finish_profile("server") if i>=0 else None
     rc={key:stop(key) for key in list(PROCS)}
-    result={"case":i,"rc":rc,"final_sample":sample,"final_sample_error":sample_error}
+    result={"case":i,"rc":rc,"final_sample":sample,"final_sample_error":sample_error,"cpu_profile":profile_status}
     try:result["origin_app"]=load(d/"origin.log")
     except Exception as e:result["origin_app_error"]=repr(e)
     if i>=0:
@@ -210,6 +235,7 @@ def server():
             print("ARM_DUAL_SERVER_READY",flush=True)
             s.serve_forever()
     finally:
+        finish_profile("server")
         for key in list(PROCS):stop(key)
         h.root("ip","netns","del",ORIGIN,allow_fail=True)
 def control(path,body=None):
@@ -338,6 +364,7 @@ def client_case(i):
         if not all(all(y["direct"] for y in x["paths"].values()) for x in (pre,before)):
             row["status"]="PATH_NOT_QUALIFIED"
             raise RuntimeError("cold endpoint path at actual pre-app snapshot")
+        if i>=0:start_profile("client",d)
         row["start_wall_ns"]=time.time_ns()
         cmd=["ip","netns","exec",N,*app_args(i,"recovery-client")]
         save(d/"app-argv.json",cmd)
@@ -384,6 +411,7 @@ def client_case(i):
                    client=delta(pre,post,gib),server=delta(before,after,gib))
     except Exception as e:row["error"]=repr(e)
     finally:
+        if i>=0:row["cpu_profile"]=finish_profile("client")
         try:shape(0,0)
         except Exception as e:row["shape_clear_error"]=repr(e)
         rc=stop("client")
@@ -420,11 +448,11 @@ def client():
             for i in CASES[1:]:
                 rows.append(client_case(i));save(OUT/"rows.json",rows)
         means={};recovery={}
-        for loss in (0.0,1.0):
+        for loss in (1.0,):
             for k in PROFILES:
                 key=("clean" if not loss else "loss1")+"-"+k
                 v=[x for x in rows if x["leg"]==k and x["loss_pct"]==loss and x["status"]=="MEASURED"]
-                if len(v)!=2:continue
+                if len(v)!=1:continue
                 means[key]={"n":len(v),"profile":PROFILES[k],"mbps":statistics.mean(x["mbps"] for x in v),
                     "client_product_cpu_s_per_gib":statistics.mean(x["client"]["product"]["cpu_s_per_gib"] for x in v),
                     "server_product_cpu_s_per_gib":statistics.mean(x["server"]["product"]["cpu_s_per_gib"] for x in v)}
@@ -435,14 +463,15 @@ def client():
                 if all(s and s["bytes_sent"]>0 for s in samples):
                     sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                     recovery[key]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
-        complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==2*len(PROFILES)
-        summary={"recovery_snapshot_scope":"Rust B final bulk flow; old kernel splice A live ss/namespace counters, not equivalent inner retrans populations","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"frozen Linux kernel BBR splice A vs selected Rust BBR1-style B, clean B/A/A/B 1GiB/600M; IID1% A/B/B/A 256MiB/120M; uncapped, bare brackets, same outer MTU1160/Normal/repair; algorithm versions not identical","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
+        profiles_complete=complete and all(x.get("cpu_profile",{}).get("valid") and x.get("server_receipt",{}).get("cpu_profile",{}).get("valid") for x in rows if x["case"]>=0)
+        summary={"recovery_snapshot_scope":"Rust B final bulk flow; old kernel splice A live ss/namespace counters, not equivalent inner retrans populations","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"diagnostic flat cpu-clock profiles of exact old splice A and selected Rust B; real IID1% A/B 256MiB/120M, bare clean brackets; same outer MTU1160/Normal/repair; actual connect-to-first-data and post-request clocks","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"DIAGNOSTIC_ONLY" if profiles_complete else "DIAGNOSTIC_INCOMPLETE","application_complete":complete,"profiles_complete":profiles_complete,"rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
         (fixture.TMP/"route-key.hex").unlink(missing_ok=True)
         for p in fixture.TMP.glob("install-*"):p.unlink(missing_ok=True)
-    if not complete:raise SystemExit(2)
+    if not profiles_complete:raise SystemExit(2)
 if __name__=="__main__":
     assert os.uname().machine=="aarch64"
     if sys.argv[1]=="server":server()

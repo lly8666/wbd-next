@@ -38,7 +38,9 @@ if role in ("recovery-origin","recovery-client"):
                 c.shutdown(socket.SHUT_WR)
                 print(json.dumps({"sent_bytes":n,"sha256":digest.hexdigest(),"offer_bps":offer,"seconds":time.monotonic()-start,"max_sendall_seconds":max_sendall,"sendall_over_250ms_seconds":blocked_s}),flush=True)
     else:
+        connect_started=time.monotonic()
         with socket.create_connection((host,port),timeout=30) as c:
+            connected_at=time.monotonic()
             c.sendall(request);c.shutdown(socket.SHUT_WR)
             start=time.monotonic();first=None;n=0;paused=0.0
             while True:
@@ -52,7 +54,9 @@ if role in ("recovery-origin","recovery-client"):
             elapsed=time.monotonic()-start
             assert n==target,(n,target)
             print(json.dumps({"received_bytes":n,"sha256":digest.hexdigest(),"eof":True,"seconds":elapsed,
-                "first_data_seconds":first-start if first is not None else None,"mbps":n*8/elapsed/1e6,"paused_seconds":paused}),flush=True)
+                "first_data_seconds":first-start if first is not None else None,
+                "connect_seconds":connected_at-connect_started,"request_sent_from_connect_seconds":start-connect_started,
+                "first_data_from_connect_seconds":first-connect_started if first is not None else None,"mbps":n*8/elapsed/1e6,"paused_seconds":paused}),flush=True)
     raise SystemExit(0)
 
 host="198.18.77.2"
