@@ -58,7 +58,8 @@
     "docs/devlog/M0/20261128-L2-CLEAN-INNER-DELIVERY-ATTRIBUTION.md",
     "docs/devlog/M0/20261128-L2-CLEAN-CARRIER-EIGHT-TAP.md",
     "docs/devlog/M0/20261128-L2-LINUX-RECEIVE-RTT-FEEDBACK.md",
-    "docs/devlog/M0/20261128-L2-FRESH-ARRIVAL-DRS-FEEDBACK.md"
+    "docs/devlog/M0/20261128-L2-FRESH-ARRIVAL-DRS-FEEDBACK.md",
+    "docs/devlog/M0/20261128-L2-DRS-WEAK-LOCAL-ISOLATION.md"
   ],
   "verification": [
     {
@@ -127,7 +128,8 @@
     "8d7e8af exact native356/ISA, 8 profiles/3 local, weak ABBA6/6; A60.91/B77.34M, CPU52.58/46.16, weighted retrans1.039/1.056%; A2 low and B1 first data +1s; retain OFO ownership as research baseline, no causal L2 promotion. All paired outer sample deficits at netem. Next clean sampled inner DATA actual M4 attempt/PN/outer seq vs authenticated RX queue result; diagnostic only.",
     "c16c381 exact native356/ISA, clean diagnostic4/4. Inner sample TX16718 all copied; RX16260 (14 refused); 535 same-seq/len repeated ranges, first absent455, accepted66, refused14. No identity collisions/extras. 248 unique intersection with outer stratum:238 all taps+RX,6 gap before relay,4 after relay; no capture kernel drops. Not proof of physical loss or timing of accepted original. Remove product trace; clean frozen splice vs selected Rust BAAB with eight owned WAN/VXLAN taps to locate local vs carrier gaps; no throughput promotion based on diagnostic.",
     "63f4c10 exact native356/ISA and clean eight-tap BAAB6/6: old303.52M/Rust292.56M, CPU26.31/26.76; full first ~884ms. All gaps inter-VXLAN, A58/B925, second link12/853. Rust retired retrans2.55/3.15%, local zero. Old middle receiver ~441ms rcv_rtt and rcv_ssthresh ~30MB at 15s, Rust client-middle ~632–1020ms and 64MiB advertised; exact Linux distinct full timestamp echo, downward immediate/upward only empty receive queue correction pending. No proof causal, no rate cap.",
-    "a99be82 native357/ISA and 8 functional/3 local. Clean ABBA application6/6, relay workflow FAIL due partial JSON read during final publication; final raw ZIP 8/8 capture valid, no drops, not overall PASS. A299.74/B289.01M CPU27.685/27.165 retrans3.5045/2.9750%; RTT final ~450–463 vs445–445.23ms, all grow to64MiB. Actual rcv_space jumps near whole window by9–13s; old kernel rb64MiB/rcv_ssthresh30.15MB different skb accounting. Candidate fresh retained sequence progress and elapsed-normalized consumption as DRS input, same growth equation; not exact Linux formula, no rate/window cap; test actual gap-release/elapsed and ownership. Fixture publication atomic. Clean ABBA pending."
+    "a99be82 native357/ISA and 8 functional/3 local. Clean ABBA application6/6, relay workflow FAIL due partial JSON read during final publication; final raw ZIP 8/8 capture valid, no drops, not overall PASS. A299.74/B289.01M CPU27.685/27.165 retrans3.5045/2.9750%; RTT final ~450–463 vs445–445.23ms, all grow to64MiB. Actual rcv_space jumps near whole window by9–13s; old kernel rb64MiB/rcv_ssthresh30.15MB different skb accounting. Candidate fresh retained sequence progress and elapsed-normalized consumption as DRS input, same growth equation; not exact Linux formula, no rate/window cap; test actual gap-release/elapsed and ownership. Fixture publication atomic. Clean ABBA pending.",
+    "151106b native359/ISA, 8 functional and 3 ARM local, clean ABBA6/6 with valid atomic eight taps; A303.58/B305.34M CPU26.015/26.005, retrans2.5398/2.1884%, path gaps841/665; B rcv_space23.84/31.08MB vs A67.1MB but all cap64MiB by5s. ARM local actual0.5% loss prior58.71/current25.68M on different hosts/seeds; B slower window growth, not causal. Freeze runtime, compare exact a99be82 vs current same ARM local weak ABBA96MiB/120M, 400ms; no new cross-host test or window control."
   ],
   "promotion": null
 }

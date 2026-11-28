@@ -161,22 +161,39 @@ def functional():
 def controlled_recovery():
     # Diagnostic, not peak or CPU parity qualification. Same machine, actual
     # sockets and original carrier, no tailnet. Each case gets fresh netem.
-    global DELAY,LOSS
+    global DELAY,LOSS,ROOT
     DELAY=200
     rows=[]
     common=["--server-name","wbd-h2228.example.test","--route-key-hex-file",O/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--dual-rust-tcp"]
-    # Qualify the corrected core on selected defaults, not rejected candidates.
+    # Selected candidate clean and pause controls, then isolate the weak
+    # signal on this SAME host using the exact pre-DRS and current builds.
+    current=ROOT
+    baseline=os.environ.get("DUAL_TCP_DRS_BASELINE")
     cases=[
-        ("normal-selected",True,600_000_000,{},0,0,512),
-        ("pause-selected",True,600_000_000,{},0,0,512),
-        ("loss-selected",True,120_000_000,{},0,0.5,96),
+        ("normal-selected",True,600_000_000,{},0,0,512,"B"),
+        ("pause-selected",True,600_000_000,{},0,0,512,"B"),
     ]
-    for label,paired,offered,profile,jitter,loss,mib in cases:
+    if baseline:
+        previous=pathlib.Path(baseline).resolve()
+        sources={"A":"a99be828cc4011eb6c9a9d6088503346ce83227d","B":os.environ["GITHUB_SHA"]}
+        bundles={"A":previous,"B":current}
+        builds={}
+        for leg,bundle in bundles.items():
+            manifest=json.loads((bundle/"manifest.json").read_text())
+            assert manifest["source_sha"]==sources[leg]
+            builds[leg]={"manifest":manifest,"manifest_sha256":hashlib.sha256((bundle/"manifest.json").read_bytes()).hexdigest()}
+        save(O/"builds.json",builds)
+        cases.extend((f"loss-{i}-{leg}",True,120_000_000,{},0,0.5,96,leg) for i,leg in enumerate(("A","B","B","A")))
+    else:
+        bundles={"B":current}
+        cases.append(("loss-selected",True,120_000_000,{},0,0.5,96,"B"))
+    for label,paired,offered,profile,jitter,loss,mib,leg in cases:
+        ROOT=bundles[leg]
         target_bytes=mib*1024*1024
         d=O/label;d.mkdir()
         server=client=origin=app=None
-        row={"case":label,"paired":paired,"offered_bps":offered,"target_bytes":target_bytes,"added_rtt_ms":400,"injected_loss_pct":loss,"forward_jitter_ms":jitter,"profile":profile,"status":"INCOMPLETE"}
+        row={"case":label,"leg":leg,"product_source_sha":json.loads((ROOT/"manifest.json").read_text())["source_sha"],"paired":paired,"offered_bps":offered,"target_bytes":target_bytes,"added_rtt_ms":400,"injected_loss_pct":loss,"forward_jitter_ms":jitter,"profile":profile,"status":"INCOMPLETE"}
         try:
             # Establish the product/control connection on the clean
             # 400ms path, then apply the requested data-phase impairment.
@@ -253,6 +270,7 @@ def controlled_recovery():
             sent=json.loads((d/"origin.json").read_text())
             row.update(sender_bytes=sent["sent_bytes"],received_bytes=received["received_bytes"],mbps=received["mbps"],
                 seconds=received["seconds"],first_data_seconds=received["first_data_seconds"],
+                first_data_from_connect_seconds=received["first_data_from_connect_seconds"],
                 sender_sha256=sent["sha256"],receiver_sha256=received["sha256"],
                 byte_match=sent["sent_bytes"]==received["received_bytes"]==target_bytes,
                 hash_match=sent["sha256"]==received["sha256"],eof=received["eof"],
@@ -265,6 +283,16 @@ def controlled_recovery():
             save(d/"application-result.json",row)
             # Preserve both the application completion and later owner state.
             row["qdisc_after_app"]=path_counts()
+            if loss:
+                observed={}
+                for dev in ("rc0","rs0"):
+                    before=next(q for q in row["qdisc_before"][dev] if q["kind"]=="netem")
+                    after=next(q for q in row["qdisc_after_app"][dev] if q["kind"]=="netem")
+                    emitted=after["packets"]-before["packets"]
+                    drops=after["drops"]-before["drops"]
+                    observed[dev]={"emitted":emitted,"drops":drops,"ratio":drops/(emitted+drops) if emitted+drops else None}
+                row["actual_netem"]=observed
+                assert all(v["emitted"]>0 and v["drops"]>0 for v in observed.values()),observed
             save(d/"links-after-app.json",{n:json.loads(ns(n,"ip","-s","-j","link")) for n in N})
             if paired:
                 stop(client);stop(server)
@@ -335,7 +363,8 @@ def controlled_recovery():
             save(d/"result.json",row)
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, corrected delivery epoch and selected adjacent credit; normal, paused consumer and actual 0.5% loss; exact application, selected profile, qdisc and Stop","rows":rows,
+    ROOT=current
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, selected clean and pause controls; exact-source pre-DRS A vs current B actual 0.5% loss ABBA when baseline supplied; exact application, selected profile, qdisc and Stop; live/Stop sample not necessarily retired","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)

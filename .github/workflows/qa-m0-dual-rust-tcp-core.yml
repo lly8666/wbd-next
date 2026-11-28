@@ -72,10 +72,17 @@ jobs:
       - name: Explicit old relay admission rollback native functionality
         run: |
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/credit-off WBD_M0_RELAY_PENDING_CREDIT=0 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
-      - name: Selected relay credit normal pause and actual loss checks
+      - name: Selected clean pause and same-host exact-source weak DRS ABBA
         if: matrix.arch == 'aarch64'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+          set -euo pipefail
+          mkdir -p drs-baseline
+          gh run download 46099524549 -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D drs-baseline
+          tar -C drs-baseline -xf drs-baseline/bundle.tar
+          (cd drs-baseline && sha256sum -c SHA256SUMS)
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 DUAL_TCP_DRS_BASELINE="$PWD/drs-baseline" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Retain exact native binary for performance jobs
         run: |
           (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
