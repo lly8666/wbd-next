@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2551,
-  "checkpoint_sha": "1c1a0295dbb49b531d8e65e241d6a0f0a9c76d53",
+  "sequence": 2552,
+  "checkpoint_sha": "645214e256f78f4da79ca3c3e8ee51029f9ff9d0",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收H2551双ISA实际ready-only client TUN GSO grouping，真实joins/原hash/并发/UDP/Stop。PASS后同源A/B比较CPU/GiB/实际GSO/ACK/吞吐/弱网小流；不复活已拒绝EDT分时，不改变ACK阈值，不重复旧queue测试。L2 OPEN。",
+  "next_action": "先验收H2551 exact1c1a0295 native46142829814独立ready-group；H2552用户明确要求EDT+ACK4/8，新645214e双ISA功能与同三ARM 2/4/8/8/4/2各180s，BBR3 seed600/400ms/zero injection，server ACK2/client变比率、ready-group OFF；验实际ACK比例/CPU/吞吐/retired重传/低延迟及FQ，保留H2550拒绝结论，不晋级默认。",
   "unverified": true,
   "last_tested_source": "9677716be3e3f46e7918e3225ad46cbb54e37563",
   "evidence_refs": [],
@@ -19,5 +19,5 @@
     "docs/devlog/M0/20261128-M0-L2-RAW-EDT-FQ-FUSION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2550 46141391064 PASS完整测量，A/E302.26/276.26M，CPU34.79/43.55，retired重传0.5211/0.1290%，ACK/DATA26.40/45.55%，GSO覆盖53.05/10.85%；性能拒绝，恢复pre-EDT运行时代码，保留全部证据。H2551仅已有就绪同流本地TUN输出合并候选，双ISA未验。旧x86 queue自动触发归档。"
+  "partial_summary": "H2550 per-record EDT ACK2性能拒绝。H2551 ready-group独立SOURCE/Action保留。H2552按用户新授权仅实验恢复EDT，Middle正常累计ACK4/8，原timer不超过40ms，gap/DSACK/ECN/FIN/窗口/OS/outer ACK不改；同源六臂对照已提交，未验证。L2 OPEN。"
 }
