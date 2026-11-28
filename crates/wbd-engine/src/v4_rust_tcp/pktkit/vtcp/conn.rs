@@ -2862,6 +2862,20 @@ impl Conn {
         }
         self.note_alive();
 
+        if self.cfg.autotune && self.cfg.linux_parity && self.ts_ok {
+            // Measure before adding this segment to the readable queue,
+            // as Linux's receive path does. Repeated echoes and queued
+            // application data must not inflate the receive RTT clock.
+            if let Some((_, ecr)) = get_timestamp(&seg.options) {
+                let ms = self.ts_now().wrapping_sub(ecr);
+                if ecr != 0 && ms < 1 << 20 {
+                    self.rcv_space.measure_ts_linux(ecr, Duration::from_millis(u64::from(ms)),
+                        seg.payload.len() >= self.rcv_mss as usize,
+                        self.recv_buf.as_ref().unwrap().readable());
+                }
+            }
+        }
+
         if !seg.payload.is_empty() {
             // Released: nobody will ever read this, and ACKing it would tell
             // the peer it was delivered. Linux resets instead
@@ -3136,7 +3150,7 @@ impl Conn {
             self.stats.data_segs_in += 1;
             self.stats.bytes_received += n as u64;
         }
-        if n > 0 && self.cfg.autotune {
+        if n > 0 && self.cfg.autotune && !(self.cfg.linux_parity && self.ts_ok) {
             self.rcv_rtt_measure(seg);
         }
 

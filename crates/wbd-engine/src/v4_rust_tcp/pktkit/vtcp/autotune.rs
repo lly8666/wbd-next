@@ -92,6 +92,8 @@ pub(crate) struct RcvSpace {
     /// connection that may send nothing to time: the least time a window's
     /// worth of data took to arrive, or smoothed timestamp echoes.
     rtt: Option<Duration>,
+    /// Most recent timestamp echo considered by Linux-style receive RTT.
+    last_tsecr: u32,
     /// While timing a window: the sequence number that ends it, and when it
     /// began.
     rtt_mark: Option<(u32, Instant)>,
@@ -107,6 +109,7 @@ impl RcvSpace {
             time: Instant::now(),
             space: space.max(1),
             rtt: None,
+            last_tsecr: 0,
             rtt_mark: None,
         }
     }
@@ -159,6 +162,22 @@ impl RcvSpace {
             return;
         }
         self.rtt = Some(self.rtt.map_or(sample, |r| (r * 7 + sample) / 8));
+    }
+
+    /// Linux tcp_rcv_rtt_measure_ts/tcp_rcv_rtt_update: one observation per
+    /// new echo, only on a full-sized segment. A shorter observation can
+    /// replace the estimate immediately; a longer one is usable only if
+    /// the application has drained the in-order queue before this arrival.
+    pub(crate) fn measure_ts_linux(&mut self, ecr:u32, sample:Duration, full:bool, unread:usize) {
+        if ecr == self.last_tsecr { return; }
+        self.last_tsecr = ecr;
+        if !full || sample.is_zero() { return; }
+        match self.rtt {
+            None => self.rtt = Some(sample),
+            Some(old) if sample < old => self.rtt = Some(sample),
+            Some(old) if unread == 0 => self.rtt = Some((old * 7 + sample) / 8),
+            _ => {}
+        }
     }
 
     /// The receiver's round-trip estimate, and the most read in a round
@@ -302,6 +321,23 @@ mod tests {
         low.measure_ts(Duration::from_micros(500));
         low.on_read(20_000);
         assert_eq!(low.adjust_linux(t + MS, 0, 0), Some(60_000));
+    }
+
+    #[test]
+    fn linux_receive_rtt_counts_new_full_echo_and_not_unread_inflation() {
+        let mut r = RcvSpace::new(10_000);
+        r.measure_ts_linux(1, 400 * MS, true, 0);
+        r.measure_ts_linux(1, 800 * MS, true, 0);
+        assert_eq!(r.snapshot().0, Some(400 * MS));
+        r.measure_ts_linux(2, 800 * MS, true, 1);
+        assert_eq!(r.snapshot().0, Some(400 * MS));
+        r.measure_ts_linux(3, 800 * MS, false, 0);
+        r.measure_ts_linux(3, 800 * MS, true, 0);
+        assert_eq!(r.snapshot().0, Some(400 * MS));
+        r.measure_ts_linux(4, 380 * MS, true, 100);
+        assert_eq!(r.snapshot().0, Some(380 * MS));
+        r.measure_ts_linux(5, 460 * MS, true, 0);
+        assert_eq!(r.snapshot().0, Some(390 * MS));
     }
 
     #[test]
