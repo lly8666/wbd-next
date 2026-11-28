@@ -96,6 +96,10 @@ jobs:
           for profile in service;do
             sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT="dual-tcp-out/$profile" WBD_M0_NATIVE_FEEDBACK="$profile" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
           done
+      - name: Native actual BBR1 600M initial pacing seed functionality
+        run: |
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/bbr1-seed600 WBD_M0_BBR1_INITIAL_600M=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+          for role in server client;do grep -q 'WBD_M0_BBR1 .* initial_pacing_rate=75000000' "dual-tcp-out/bbr1-seed600/normal/$role.log";done
       - name: Selected baseline local clean pause weak regression
         if: matrix.arch == 'aarch64'
         env:

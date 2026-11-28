@@ -16,6 +16,7 @@ enum Mode { Startup, Drain, ProbeBw, ProbeRtt }
 pub struct Bbr1 {
     mss:u32, init:u32, cwnd:u32, rate:u64,
     startup_pacing_gain:f64,
+    initial_pacing_rate:Option<u64>,
     mode:Mode, cycle:usize, cycle_at:Instant,
     round:u64, next_round:u64, bw_samples:VecDeque<(u64,u64)>, bw:u64,
     full_bw:u64, full_rounds:u8, full:bool,
@@ -30,7 +31,7 @@ pub struct Bbr1 {
 impl Bbr1 {
     pub fn new(mss:u32,now:Instant)->Self{
         let mss=mss.max(1); let init=initial_window(mss);
-        Self{mss,init,cwnd:init,rate:(HIGH*f64::from(init)*1000.) as u64,startup_pacing_gain:HIGH,
+        Self{mss,init,cwnd:init,rate:(HIGH*f64::from(init)*1000.) as u64,startup_pacing_gain:HIGH,initial_pacing_rate:None,
             mode:Mode::Startup,cycle:0,cycle_at:now,round:0,next_round:0,
             bw_samples:VecDeque::with_capacity(10),bw:0,full_bw:0,full_rounds:0,full:false,
             min_rtt:None,min_stamp:now,seen_rtt:false,probe_until:None,probe_round:0,probe_saved:0,
@@ -46,6 +47,13 @@ impl Bbr1 {
             self.startup_pacing_gain=1.5;
             self.rate=(self.startup_pacing_gain*f64::from(self.init)*1000.) as u64;
         }
+        self
+    }
+    // Diagnostic seed only: not a measured bandwidth, a cap or an initial cwnd.
+    // The existing Startup maximum-rate rule applies until actual full_bw.
+    pub(crate) fn with_initial_pacing_rate(mut self,rate:Option<u64>)->Self{
+        self.initial_pacing_rate=rate;
+        if let Some(rate)=rate{self.rate=rate;}
         self
     }
     fn min_pipe(&self)->u32{4*self.mss}
@@ -158,7 +166,7 @@ impl Bbr1 {
         if let Some(r)=a.newest_rtt.or(a.rtt).filter(|r|!r.is_zero()){
             if !self.seen_rtt{
                 self.seen_rtt=true;
-                self.rate=(self.startup_pacing_gain*f64::from(self.cwnd)/r.as_secs_f64()) as u64;
+                if self.initial_pacing_rate.is_none(){self.rate=(self.startup_pacing_gain*f64::from(self.cwnd)/r.as_secs_f64()) as u64;}
             }
             if expired||self.min_rtt.is_none_or(|old|r<=old){self.min_rtt=Some(r);self.min_stamp=a.now;}
         }
@@ -179,8 +187,8 @@ impl Bbr1 {
     }
     pub(crate) fn probe(&self,leg:&str,id:u64,wall_ns:u128){
         let (pg,cg)=self.gains();
-        eprintln!("WBD_M0_BBR1 wall_ns={} leg={} id={} phase={:?} cycle={} bw={} min_rtt={:?} round={} full_bw={} full_bw_reached={} pacing_gain={} cwnd_gain={} startup_pacing_gain={} cwnd={} pacing_rate={} recovery={} conservation={} extra_acked={} lt_bw={} lt_previous={} tso_goal={}",
-            wall_ns,leg,id,self.mode,self.cycle,self.bw,self.min_rtt,self.round,self.full_bw,self.full,pg,cg,self.startup_pacing_gain,self.cwnd,self.rate,self.recovery,self.conserve_until.is_some(),self.extra[0].max(self.extra[1]),self.lt_bw,self.lt_previous,self.tso_goal());
+        eprintln!("WBD_M0_BBR1 wall_ns={} leg={} id={} phase={:?} cycle={} bw={} min_rtt={:?} round={} full_bw={} full_bw_reached={} pacing_gain={} cwnd_gain={} startup_pacing_gain={} cwnd={} pacing_rate={} recovery={} conservation={} extra_acked={} lt_bw={} lt_previous={} tso_goal={} initial_pacing_rate={}",
+            wall_ns,leg,id,self.mode,self.cycle,self.bw,self.min_rtt,self.round,self.full_bw,self.full,pg,cg,self.startup_pacing_gain,self.cwnd,self.rate,self.recovery,self.conserve_until.is_some(),self.extra[0].max(self.extra[1]),self.lt_bw,self.lt_previous,self.tso_goal(),self.initial_pacing_rate.unwrap_or(0));
     }
 }
 impl CongestionController for Bbr1{
@@ -250,6 +258,21 @@ mod tests{
             tx_in_flight:bytes,..Default::default()}),newly_acked:bytes,newly_lost:lost,
             delivered:prior+u64::from(bytes),newest_rtt:Some(Duration::from_millis(100)),
             ..Ack::of(now,bytes,bytes)});
+    }
+    #[test]
+    fn initial_600m_is_pacing_seed_not_capacity_or_fixed_cap(){
+        let now=Instant::now();
+        let original=Bbr1::new(1000,now);
+        let mut b=Bbr1::new(1000,now).with_initial_pacing_rate(Some(75_000_000));
+        assert_eq!(b.cwnd(),original.cwnd());
+        assert_eq!(b.bw,0);
+        assert_eq!(b.pacing_rate(),Some(75_000_000));
+        feed(&mut b,now+Duration::from_millis(100),0,1_000_000,0,false);
+        assert_eq!(b.pacing_rate(),Some(75_000_000));
+        assert_eq!(b.bw,1_000_000);
+        b.full=true;
+        feed(&mut b,now+Duration::from_millis(200),100_000,1_000_000,0,false);
+        assert!(b.pacing_rate().unwrap()<75_000_000);
     }
     #[test]
     fn gentle_startup_changes_only_startup_pacing_gain(){

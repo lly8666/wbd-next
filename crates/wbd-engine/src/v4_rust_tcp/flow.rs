@@ -67,6 +67,7 @@ impl Endpoint {
                 }
             }else{None},
             gentle_bbr1_startup:middle&&parity&&std::env::var_os("WBD_M0_BBR1_STARTUP15").as_deref()==Some(std::ffi::OsStr::new("1")),
+            bbr1_initial_pacing_rate:if middle&&matches!(cc,CongestionKind::Bbr1)&&std::env::var_os("WBD_M0_BBR1_INITIAL_600M").as_deref()==Some(std::ffi::OsStr::new("1")){Some(75_000_000)}else{None},
             native_bounded_pacing: parity || std::env::var_os("WBD_M0_BOUNDED_PACE").as_deref() == Some(std::ffi::OsStr::new("1")),
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()

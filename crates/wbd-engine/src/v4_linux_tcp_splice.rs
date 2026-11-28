@@ -127,8 +127,21 @@ impl Flow{
         Ok(())
     }
 }
+// Diagnostic only, one read on the actual client-facing BBR socket before
+// it is dropped. Splice pipe EOF need not mean all TCP bytes are ACKed.
+fn probe_close(f:&Flow,kind:&str){
+    let mut b=[0u8;256];let mut n=b.len() as u32;
+    let rc=unsafe{getsockopt(f.client.as_raw_fd(),6,11,b.as_mut_ptr().cast(),&mut n)};
+    if rc==0&&n>=216{
+        let u32_at=|i:usize|u32::from_ne_bytes(b[i..i+4].try_into().unwrap());
+        let u64_at=|i:usize|u64::from_ne_bytes(b[i..i+8].try_into().unwrap());
+        eprintln!("WBD_M0_SPLICE_TCP_INFO kind={} state={} unacked={} total_retrans={} bytes_acked={} bytes_sent={} bytes_retrans={} down={} snd_mss={} pmtu={}",
+            kind,b[0],u32_at(24),u32_at(100),u64_at(120),u64_at(200),u64_at(208),f.down.bytes,u32_at(16),u32_at(60));
+    }else{eprintln!("WBD_M0_SPLICE_TCP_INFO_UNAVAILABLE rc={} len={}",rc,n);}
+}
 fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>,pacing:Option<u64>)->io::Result<()>{
     let e=ep.as_raw_fd();
+    let probe=std::env::var_os("WBD_M0_ACK_PROBE").is_some();
     let local_listener=listener.local_addr()?;
     let mut flows=HashMap::<u64,Flow>::new();let mut id=1u64;
     let mut events=[Event{events:0,token:0};128];
@@ -138,7 +151,7 @@ fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>,pacing:Option<u64>)
         for ev in events.iter().take(n as usize){
             let token=ev.token;let bits=ev.events;
             if token==1 { // stop eventfd
-                for (_,f) in flows.drain(){eprintln!("WBD_TCP_SPLICE_DONE up={} down={}",f.up.bytes,f.down.bytes)}
+                for (_,f) in flows.drain(){if probe{probe_close(&f,"stop");}eprintln!("WBD_TCP_SPLICE_DONE up={} down={}",f.up.bytes,f.down.bytes)}
                 let _=stop;return Ok(())
             }
             if token==0{
@@ -179,6 +192,7 @@ fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>,pacing:Option<u64>)
             };
             if !matches!(outcome,Ok(true)){
                 if let Some(f)=flows.remove(&key){
+                    if probe{probe_close(&f,"retire");}
                     eprintln!("WBD_TCP_SPLICE_DONE up={} down={} result={:?}",f.up.bytes,f.down.bytes,outcome);
                 }
             }
