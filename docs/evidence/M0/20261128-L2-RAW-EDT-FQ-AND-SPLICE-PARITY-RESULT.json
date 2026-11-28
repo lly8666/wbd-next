@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "37d4e69b881acd621f659814db141b9998f53b7c",
+  "harness_sha": "fca1618d25f05275c22bd579bac98484c77216dd",
+  "result": "NATIVE_TIMING_CAPABILITY_MEASURED_PRODUCT_CPU_GAP_OPEN",
+  "artifact_verified": true,
+  "scope": "Four same-ISA native RAW scatter timing groups; synthetic local UDP over veth, not product performance. Separate two old splice vs C actual-product groups.",
+  "timing": {
+    "build_run": 46127070836,
+    "artifacts": {
+      "x86_64": 15255808454,
+      "aarch64": 15256585348
+    },
+    "binary_sha256": {
+      "x86_64": "c2605f96f4b9fd2df897ab3c7bb5f4ab915d956b437e4126593d62322406c9cd",
+      "aarch64": "d9fc3d472a6052c8e30d1d2b282402d9aa8f9937197b8c5145a4e6a241d6edd4"
+    },
+    "groups": [
+      {
+        "arch": "x86_64",
+        "order": "ABBA",
+        "run": 46127155690,
+        "artifact": 15255674226,
+        "summary_sha256": "8294b23a35d247ad2574a458b6765d2675cf08a0cf2fd689eb52460945dd3c0f",
+        "cpu": "Intel Xeon 6975P-C",
+        "gap_median_us": [
+          1.545,
+          15.273,
+          15.443,
+          1.671
+        ],
+        "span_median_us": [
+          53.609,
+          469.681,
+          471.853,
+          54.986
+        ],
+        "submit_median_us": [
+          60.186,
+          40.039,
+          33.691,
+          61.92
+        ],
+        "sender_cpu_s": [
+          0.012123,
+          0.00885,
+          0.008348,
+          0.012309
+        ],
+        "throttled_delta": [
+          0,
+          2795,
+          3086,
+          0
+        ],
+        "timed_error_p99_us": [
+          40.034,
+          39.206
+        ]
+      },
+      {
+        "arch": "x86_64",
+        "order": "BAAB",
+        "run": 46127155705,
+        "artifact": 15256401337,
+        "summary_sha256": "5bfb6ab497209662aa41a712fa21c1ce87343ec1dbb71af86137be4cc663dc67",
+        "cpu": "AMD EPYC 9V74",
+        "gap_median_us": [
+          5.519,
+          3.395,
+          3.315,
+          15.443
+        ],
+        "span_median_us": [
+          466.224,
+          108.491,
+          106.338,
+          464.451
+        ],
+        "submit_median_us": [
+          64.897,
+          120.459,
+          116.253,
+          65.838
+        ],
+        "sender_cpu_s": [
+          0.01473,
+          0.023301,
+          0.020406,
+          0.01418
+        ],
+        "throttled_delta": [
+          3697,
+          0,
+          0,
+          4034
+        ],
+        "timed_error_p99_us": [
+          25.609,
+          23.605
+        ]
+      },
+      {
+        "arch": "aarch64",
+        "order": "ABBA",
+        "run": 46127155690,
+        "artifact": 15256196169,
+        "summary_sha256": "a529694dc53a5e72b66a3493c13b2b598d53142677264c7cbe9c84497e6efa71",
+        "cpu": "Neoverse-N2",
+        "gap_median_us": [
+          1.92,
+          15.449,
+          15.449,
+          1.96
+        ],
+        "span_median_us": [
+          66.019,
+          472.083,
+          476.292,
+          65.891
+        ],
+        "submit_median_us": [
+          78.627,
+          62.083,
+          43.098,
+          77.387
+        ],
+        "sender_cpu_s": [
+          0.017289,
+          0.016216,
+          0.012007,
+          0.01647
+        ],
+        "throttled_delta": [
+          0,
+          3205,
+          4049,
+          0
+        ],
+        "timed_error_p99_us": [
+          24.459,
+          18.253
+        ]
+      },
+      {
+        "arch": "aarch64",
+        "order": "BAAB",
+        "run": 46127155705,
+        "artifact": 15255938343,
+        "summary_sha256": "63747c74d94e862fda7726b59d7865f05fd5c9c861e089b5fa2839b702579b0e",
+        "cpu": "Neoverse-N2",
+        "gap_median_us": [
+          15.456,
+          1.992,
+          1.976,
+          15.464
+        ],
+        "span_median_us": [
+          476.246,
+          67.858,
+          66.562,
+          475.55
+        ],
+        "submit_median_us": [
+          45.881,
+          80.643,
+          78.714,
+          54.753
+        ],
+        "sender_cpu_s": [
+          0.011682,
+          0.015773,
+          0.015516,
+          0.013261
+        ],
+        "throttled_delta": [
+          4014,
+          0,
+          0,
+          3591
+        ],
+        "timed_error_p99_us": [
+          18.81,
+          22.001
+        ]
+      }
+    ],
+    "common": {
+      "batch_size": 32,
+      "batches_per_leg": 128,
+      "datagrams_per_leg": 4096,
+      "target_gap_us": 15.467,
+      "all_65536_received_unique": true,
+      "all_zero_missing_duplicates_adjacent_inversions": true,
+      "all_fq_drops_zero": true,
+      "all_queue_drain_zero": true,
+      "immediate_post_outq_bytes": 0,
+      "timed_post_outq_median_bytes": 73728,
+      "all_no_early_over20us": true,
+      "scope": "SO_TIMESTAMPNS receiver software timestamps, same host; CPU sender process including startup, not whole system; SIOCOUTQ socket memory accounting not wire byte count or exact TX release callback. ARM jobs separate Actions but identical reported hostname, do not claim distinct physical machines. One x86 timed leg median gap5.519us, microburst clustering remains."
+    }
+  },
+  "splice": {
+    "source_A": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "source_B": "12b17ccfd4dc3354fa7dddecd0450bd1552cc540",
+    "artifact_A": 15112597057,
+    "artifact_B": 15250585479,
+    "manifest_A": "eee5c3b559e4d61c4acb880b32fd845f2fdf82eb6e314c3b64694a1241aa45c4",
+    "manifest_B": "03801dfeffc36d8a7615b2b63b02920a1c12c73c0b1384a446c2d6497bd45241",
+    "groups": [
+      {
+        "order": "ABBA",
+        "run": 46127070904,
+        "artifact": 15255988369,
+        "summary_sha256": "9a8d3ed49def310484d632d33f3827a38ab2365460266698df29600209ed1412",
+        "cpu": "AMD EPYC 7763",
+        "mbps": [
+          242.66177590930243,
+          271.92448164284053,
+          283.0117022731345,
+          251.24948388802383
+        ],
+        "client_cpu": [
+          16.87,
+          31.7,
+          31.56,
+          17
+        ],
+        "server_cpu": [
+          24.03,
+          28.23,
+          27.99,
+          24.6
+        ],
+        "host_cpu": [
+          52.72,
+          73.22,
+          71.34,
+          52.6
+        ],
+        "first_data_s": [
+          0.802532763,
+          0.802611726,
+          0.802621378,
+          0.802701333
+        ]
+      },
+      {
+        "order": "BAAB",
+        "run": 46127070901,
+        "artifact": 15256490606,
+        "summary_sha256": "c89af7e563362fc0782f49b274e4e78771e033279509a909349d7891a6ef491c",
+        "cpu": "Intel Xeon 6975P-C",
+        "mbps": [
+          409.30780893692446,
+          415.66083720005975,
+          415.7904908037439,
+          409.938965298996
+        ],
+        "client_cpu": [
+          13.08,
+          8.73,
+          8.67,
+          13.27
+        ],
+        "server_cpu": [
+          10.81,
+          11.56,
+          11.41,
+          11.05
+        ],
+        "host_cpu": [
+          31.91,
+          27.97,
+          27.6,
+          31.88
+        ],
+        "first_data_s": [
+          0.802224741,
+          0.802411534,
+          0.802268809,
+          0.802624975
+        ]
+      }
+    ],
+    "common": {
+      "rtt_ms": 400,
+      "offer_bps": 600000000,
+      "target_bytes": 1073741824,
+      "outer_mtu": 1160,
+      "all_eight_hash_eof_owned_stop": true,
+      "all_netem_actual_drops_zero": true,
+      "all_four_rust_natural_bulk_retired_zero_retrans_zero_rto": true,
+      "scope": "Actual old product vs historical C, not EDT product. Two x86 groups, no ARM parity or weak/modes promotion."
+    }
+  },
+  "decision": "Accept native EDT/FQ capability only. Existing live scatter passes None. No production TSQ/EDT activation or full system CPU claim. Old splice vs C now confirms current x86 client CPU cost +86.77/+51.44%; host +37.26/+14.79%, throughput +12.36/-1.47%, no Rust retrans and equal first data. Stop speculative BBR microtuning. Next actual owner integration must map per-flow existing pacing eligibility to original accepted PN/EDT, keep one controller and logical event clock distinct from planned departure, bound local queued resources with actual release, preserve no new cross-flow HOL/outer immutable repair/generation Stop. First verify real owner and small-flow/partial/Stop, then matched C vs candidate local/weak/three-host. Native complete product regression still running at review (x86 passed, ARM ongoing), L2 OPEN."
+}
