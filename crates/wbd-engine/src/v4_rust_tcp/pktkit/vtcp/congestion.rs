@@ -163,8 +163,6 @@ pub trait CongestionController: Send {
         None
     }
     fn as_bbr1(&self) -> Option<&super::bbr1::Bbr1> { None }
-    /// Actual receiver credit blocked a send with data ready. Not application starvation.
-    fn note_rwnd_limited(&mut self) {}
     /// A loss was detected with `flight_size` bytes outstanding: set
     /// ssthresh. The connection then brings cwnd down to it.
     fn on_loss(&mut self, flight_size: u32);

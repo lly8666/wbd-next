@@ -87,6 +87,9 @@ pub(crate) struct RcvSpace {
     mark: u64,
     /// Distinct retained receive sequence progress at the same measurement edge.
     arrival_mark: u64,
+    // One preceding measurement with distinct arrivals ahead of consumption.
+    pair_previous: Option<(u64,u64,Duration)>,
+    pair_hits: u64,
     time: Instant,
     /// The most read in one measurement so far.
     space: usize,
@@ -109,6 +112,8 @@ impl RcvSpace {
             copied: 0,
             mark: 0,
             arrival_mark: 0,
+            pair_previous: None,
+            pair_hits: 0,
             time: Instant::now(),
             space: space.max(1),
             rtt: None,
@@ -125,8 +130,11 @@ impl RcvSpace {
         self.space = space.max(1);
         self.mark = self.copied;
         self.arrival_mark = arrived;
+        self.pair_previous = None;
         self.time = now;
     }
+
+    pub(crate) fn pair_hits(&self)->u64{self.pair_hits}
 
     /// Move the start of the current measurement `by` into the past, as if
     /// that much time had gone by since.
@@ -207,7 +215,7 @@ impl RcvSpace {
     /// the next TCP leg is not a new network arrival. Measure both actual
     /// consumption and distinct retained arrivals over the same elapsed
     /// interval, expressed per receiver RTT. Preserve the growth equation.
-    pub(crate) fn adjust_linux(&mut self, now: Instant, unread: usize, ooo_span: usize, arrived: u64) -> Option<usize> {
+    pub(crate) fn adjust_linux(&mut self, now: Instant, unread: usize, ooo_span: usize, arrived: u64, pair:bool) -> Option<usize> {
         let rtt = self.rtt?;
         let elapsed = now.saturating_duration_since(self.time);
         if elapsed < rtt { return None; }
@@ -216,8 +224,21 @@ impl RcvSpace {
         self.mark = self.copied;
         self.arrival_mark = arrived;
         self.time = now;
-        let copied = ((u128::from(copied.min(fresh)) * rtt.as_nanos() / elapsed.as_nanos())
-            .min(usize::MAX as u128)) as usize;
+        let normalize=|c:u64,f:u64,dt:Duration| ((u128::from(c.min(f))*rtt.as_nanos()/dt.as_nanos()).min(usize::MAX as u128)) as usize;
+        let mut measured=normalize(copied,fresh,elapsed);
+        // A gap can put retention and consumption in adjacent epochs. Use
+        // both real intervals once, only when their imbalances complement
+        // each other. Old released bytes alone cannot grow the estimate.
+        if pair {
+            if let Some((c,f,dt))=self.pair_previous.take(){
+                if copied>fresh {
+                    let combined=normalize(c.saturating_add(copied),f.saturating_add(fresh),dt+elapsed);
+                    if combined>measured && combined>self.space {measured=combined;self.pair_hits+=1;}
+                }
+            }
+            if ooo_span>0 && fresh>copied {self.pair_previous=Some((copied,fresh,elapsed));}
+        }
+        let copied=measured;
         if copied <= self.space { return None; }
         let window = copied.saturating_mul(2);
         // Actual previous ARM fixture: tcp_rcvbuf_low_rtt=1000 us.
@@ -326,14 +347,14 @@ mod tests {
         r.time = t;
         r.measure_ts(100 * MS);
         r.on_read(30_000);
-        assert_eq!(r.adjust_linux(t + 50 * MS, 10_000, 500, 30_000), None);
+        assert_eq!(r.adjust_linux(t + 50 * MS, 10_000, 500, 30_000, false), None);
         // copied=20k, window=40k, growth=80k, OOO span=500.
-        assert_eq!(r.adjust_linux(t + 100 * MS, 10_000, 500, 30_000), Some(120_500));
+        assert_eq!(r.adjust_linux(t + 100 * MS, 10_000, 500, 30_000, false), Some(120_500));
         let mut low = RcvSpace::new(10_000);
         low.time = t;
         low.measure_ts(Duration::from_micros(500));
         low.on_read(20_000);
-        assert_eq!(low.adjust_linux(t + Duration::from_micros(500), 0, 0, 20_000), Some(60_000));
+        assert_eq!(low.adjust_linux(t + Duration::from_micros(500), 0, 0, 20_000, false), Some(60_000));
     }
 
     #[test]
@@ -344,22 +365,38 @@ mod tests {
         r.measure_ts(100 * MS);
         // 80k already retained, only 20k consumed during this RTT.
         r.on_read(20_000);
-        assert_eq!(r.adjust_linux(t + 100 * MS, 0, 0, 80_000), Some(120_000));
+        assert_eq!(r.adjust_linux(t + 100 * MS, 0, 0, 80_000, false), Some(120_000));
         // A repaired hole releases 60k, but only 10k arrived this RTT.
         r.on_read(60_000);
-        assert_eq!(r.adjust_linux(t + 200 * MS, 0, 0, 90_000), None);
+        assert_eq!(r.adjust_linux(t + 200 * MS, 0, 0, 90_000, false), None);
         assert_eq!(r.snapshot().1, 20_000);
         // 60k genuinely new bytes, but over three RTTs, not one.
         r.on_read(60_000);
-        assert_eq!(r.adjust_linux(t + 500 * MS, 0, 0, 150_000), None);
+        assert_eq!(r.adjust_linux(t + 500 * MS, 0, 0, 150_000, false), None);
         assert_eq!(r.snapshot().1, 20_000);
         // Actual increased supply and consumption still grow the window.
         r.on_read(30_000);
-        assert_eq!(r.adjust_linux(t + 600 * MS, 0, 0, 180_000), Some(120_000));
+        assert_eq!(r.adjust_linux(t + 600 * MS, 0, 0, 180_000, false), Some(120_000));
         assert_eq!(r.snapshot().1, 30_000);
         r.restart(10_000, t + 600 * MS, 180_000);
         r.on_read(5_000);
-        assert_eq!(r.adjust_linux(t + 700 * MS, 0, 0, 185_000), None);
+        assert_eq!(r.adjust_linux(t + 700 * MS, 0, 0, 185_000, false), None);
+    }
+
+    #[test]
+    fn relay_drs_pairs_complementary_adjacent_arrival_and_consumption(){
+        let t=Instant::now();
+        let mut r=RcvSpace::new(10_000);
+        r.time=t;
+        r.measure_ts(100*MS);
+        r.on_read(5_000);
+        assert_eq!(r.adjust_linux(t+100*MS,0,45_000,50_000,true),None);
+        r.on_read(45_000);
+        assert_eq!(r.adjust_linux(t+200*MS,0,0,60_000,true),Some(200_000));
+        assert_eq!(r.pair_hits(),1);
+        r.on_read(45_000);
+        assert_eq!(r.adjust_linux(t+300*MS,0,0,60_000,true),None);
+        assert_eq!(r.pair_hits(),1);
     }
 
     #[test]

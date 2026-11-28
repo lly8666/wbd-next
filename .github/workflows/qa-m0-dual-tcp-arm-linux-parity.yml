@@ -5,11 +5,15 @@ on:
       arm:
         required: true
         type: string
+      order:
+        required: true
+        type: string
 permissions:
   contents: read
   actions: read
 env:
   WBD_M0_FEEDBACK_ARM: ${{ inputs.arm }}
+  WBD_M0_FEEDBACK_ORDER: ${{ inputs.order }}
   WBD_DUAL_TCP_ARM: '1'
   WBD_H2442_ARM_SERVER: '1'
   WBD_H2418_DIAG: '1'
@@ -65,7 +69,7 @@ jobs:
           test "$(jq -r .source_sha linux-plan029-public-bundle/manifest.json)" = "$GITHUB_SHA"
       - name: Matched local weak comparison
         run: |
-          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 WBD_M0_FEEDBACK_ARM="$WBD_M0_FEEDBACK_ARM" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 WBD_M0_FEEDBACK_ARM="$WBD_M0_FEEDBACK_ARM" WBD_M0_FEEDBACK_ORDER="$WBD_M0_FEEDBACK_ORDER" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Preserve local evidence
         if: always()
         run: |
@@ -248,7 +252,7 @@ jobs:
           test -s h2228-out/path-sample-ready.json
       - name: Start preset server and real origin control
         run: |
-          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG,WBD_M0_FEEDBACK_ARM nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py server >h2228-out/server-control.log 2>&1 </dev/null &
+          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG,WBD_M0_FEEDBACK_ARM,WBD_M0_FEEDBACK_ORDER nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py server >h2228-out/server-control.log 2>&1 </dev/null &
           for i in $(seq 1 200);do
             test ! -s h2228-out/server-ready.json || break
             sleep 1
@@ -339,7 +343,7 @@ jobs:
             sleep 4
           done
           test -s h2228-server-ready/server-ready.json
-          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG,WBD_M0_FEEDBACK_ARM python3 -u tools/m0_dual_tcp_arm_linux_parity.py client
+          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG,WBD_M0_FEEDBACK_ARM,WBD_M0_FEEDBACK_ORDER python3 -u tools/m0_dual_tcp_arm_linux_parity.py client
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with: {name: h2228-client-result, path: h2228-out/summary.json, retention-days: 5, if-no-files-found: warn}

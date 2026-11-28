@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "source_sha": "502f12d3aea71584d1430cdedeec7f7b91724bc8",
+  "result": "FAIL",
+  "scope": "F performance rejection; dual ISA functional PASS. C remains experimental reference, no L2 promotion.",
+  "artifact_verified": true,
+  "native": {
+    "run": 46114632704,
+    "artifacts": {
+      "arm": 15251153341,
+      "x86": 15250899917
+    },
+    "build_artifacts": {
+      "arm": 15251063973,
+      "x86": 15251053630
+    },
+    "manifest_sha256": {
+      "arm": "f917937459665ea7504345ce47c3ce2fcb32131f26828cfb10471033dd03ea7a",
+      "x86": "b00b31347340b8e107103f510b513262bd19351e1dc6133ca20898c0cc66a65f"
+    },
+    "functional_profiles_per_isa": 6
+  },
+  "three": {
+    "run": 46114632726,
+    "status": "MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW",
+    "artifacts": {
+      "summary": 15250894019,
+      "server": 15250469437,
+      "client": 15250419555,
+      "relay": 15250339820
+    },
+    "summary_sha256": "0c4fd8847f670609e9aa9003eaddef98455efadd4334bc449e9e437741cdc164",
+    "reference": "A=C service epoch",
+    "order": [
+      "A",
+      "F",
+      "F",
+      "A"
+    ],
+    "rtt_ms": 400,
+    "offer_bps": 600000000,
+    "target_bytes": 1073741824,
+    "injected_loss_pct": 0,
+    "mbps": [
+      326.7798005695253,
+      313.2773767235829,
+      275.68957507613027,
+      312.5106982226299
+    ],
+    "means_mbps": {
+      "A": 319.6452493960776,
+      "F": 294.48347589985656
+    },
+    "endpoint_cpu": {
+      "A": [
+        14.575,
+        15.905
+      ],
+      "F": [
+        13.06,
+        15.195
+      ]
+    },
+    "retired_sent": {
+      "A": 2171739078,
+      "F": 2210629062
+    },
+    "retired_retrans": {
+      "A": 24255430,
+      "F": 63145414
+    },
+    "timeouts": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "bare_mbps": [
+      321.350550059347,
+      342.14343644270764
+    ],
+    "all_product_measured_hash_match": true,
+    "skip_max": [
+      0,
+      2,
+      6,
+      0
+    ],
+    "product_path_counts": [
+      [
+        16465,
+        16465,
+        16460,
+        16460,
+        16460,
+        16460,
+        16239,
+        16239
+      ],
+      [
+        16540,
+        16540,
+        16503,
+        16503,
+        16503,
+        16503,
+        16332,
+        16332
+      ],
+      [
+        16989,
+        16989,
+        16843,
+        16843,
+        16843,
+        16843,
+        16352,
+        16352
+      ],
+      [
+        16371,
+        16371,
+        16355,
+        16355,
+        16355,
+        16355,
+        16232,
+        16232
+      ]
+    ],
+    "first_hop_missing": [
+      5,
+      37,
+      146,
+      16
+    ],
+    "second_hop_missing": [
+      221,
+      171,
+      491,
+      123
+    ],
+    "all_other_adjacent_missing_and_extras_zero": true,
+    "all_capture_valid_kernel_drops_zero": true,
+    "path_scope": "Product tuple-only deterministic sampled identities, not physical loss rate."
+  },
+  "weak": {
+    "artifact": 15251114040,
+    "summary_sha256": "2869a98acc89c671f308746e0ceaf70fb4506d2a4fcb168e7415c823289632a0",
+    "scope": "live/Stop, not retired",
+    "rtt_ms": 400,
+    "offer_bps": 120000000,
+    "loss_pct": 0.5,
+    "target_bytes": 100663296,
+    "order": [
+      "A",
+      "F",
+      "F",
+      "A"
+    ],
+    "mbps": [
+      64.03312374267867,
+      62.58924319126933,
+      32.217208199525395,
+      61.85396647645278
+    ],
+    "endpoint_cpu": [
+      [
+        12.586666666666666,
+        14.4
+      ],
+      [
+        12.48,
+        14.08
+      ],
+      [
+        18.88,
+        25.066666666666666
+      ],
+      [
+        12.373333333333333,
+        13.866666666666667
+      ]
+    ],
+    "sent": [
+      101173500,
+      101306236,
+      101167278,
+      101176611
+    ],
+    "retrans": [
+      510204,
+      642940,
+      503982,
+      513315
+    ],
+    "timeouts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "max_peer_window": [
+      32808960,
+      40894464,
+      11702272,
+      34971648
+    ],
+    "rwnd_limited_s": [
+      0.257070038,
+      0.583718981,
+      2.47549588,
+      0.324256042
+    ],
+    "skip_max": [
+      0,
+      2,
+      7,
+      0
+    ],
+    "full_bw_reached": [
+      false,
+      false,
+      true,
+      false
+    ],
+    "all_measured": true,
+    "first_data_connect_s": [
+      0.8023584819999883,
+      0.8026012109999954,
+      0.8025158780000083,
+      0.8024333749999926
+    ],
+    "slow_F_client_buffer_plateau_bytes": 1569161,
+    "slow_F_client_ooo_span_sample_bytes": 1211600,
+    "slow_F_client_rcv_space_plateau_bytes": 268381,
+    "slow_F_client_readable_snapshot_bytes": 0
+  },
+  "interpretation": "F exercised but did not solve slow weak behavior and worsened clean throughput/retrans; reject and restore original BBR1. C reference retained. Slow F had ~1.57MB receiver limit, substantial OFO span and near-empty readable queue; same-epoch min of distinct arrivals/consumption may discard valid complementary observations across adjacent intervals. This is hypothesis, not proof. G tests one previous OFO fresh-surplus interval paired with current consumption-surplus, normalized by both real elapsed times; no window equation or outer changes. Forward AGGA and reverse GAAG independent Actions, shared exact binary and separate per-group baseline.",
+  "physical": "NOT_RUN"
+}
