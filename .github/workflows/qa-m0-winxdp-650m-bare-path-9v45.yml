@@ -1,0 +1,363 @@
+name: M0 WinXDP versus bare CUBIC 650M path reference
+run-name: "M0 WinXDP versus bare CUBIC 650M 40/400ms | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-winxdp']
+    paths: ['.github/workflows/qa-m0-winxdp-650m-bare-path-9v45.yml']
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  pressure:
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [A01,A02,A03,A04,A05,A06,A07,A08,A09,A10,B01,B02,B03,B04,B05,B06,B07,B08,B09,B10]
+    runs-on: windows-2025
+    timeout-minutes: 85
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONUTF8: '1'
+      WBD_XDP_PRESSURE_LAB: '0'
+      WBD_XDP_STRESS_PHASE: carrier-abba
+      WBD_XDP_CARRIER_CURRENT: '1'
+      WBD_XDP_PRESSURE_PATH: nat
+      H2478_REPLICA: ${{ startsWith(matrix.replica, 'B') && 'B' || 'A' }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {ref: '0961df72e5a3d752ac07f757d58eca8cfa31766a', persist-credentials: false, fetch-depth: 0}
+      - name: Identify actual Windows CPU before expensive setup
+        id: cpu_gate
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force h2442-out | Out-Null
+          $names=@()
+          try { $names=@(Get-CimInstance Win32_Processor -ErrorAction Stop | ForEach-Object { $_.Name } | Where-Object { $_ }) } catch { Write-Output 'CPU CIM unavailable' }
+          if($names.Count -eq 0){
+            try { $n=(Get-ItemProperty 'HKLM:\HARDWARE\DESCRIPTION\System\CentralProcessor\0' -ErrorAction Stop).ProcessorNameString; if($n){$names=@($n)} } catch { Write-Output 'CPU name unavailable' }
+          }
+          ConvertTo-Json -InputObject @($names) -Compress | Set-Content -Encoding utf8 h2442-out/cpu-names.json
+          python tools/m0_h2476_gate.py h2442-out/cpu-names.json h2442-out/cpu-gate.json
+          if($LASTEXITCODE -ne 0){throw 'CPU gate receipt failed'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: 'h2476-cpu-gate-${{ matrix.replica }}', path: h2442-out/cpu-gate.json, if-no-files-found: error, retention-days: 14}
+      - name: Fetch pinned driver installer package only
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        shell: bash
+        run: |
+          gh run download 45914310196 -R "$GITHUB_REPOSITORY" -n winxdp-release -D xdp-build
+      - name: Apply scoped RTT-only fixture variant
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path("tools/m0_winxdp_pressure_profile.py")
+          s=p.read_text(encoding="utf-8")
+          s+="""
+          # Same carrier, one flow and offer; only netem one-way delay differs.
+          base=next(c for c in CASES if c["group"]=="clean-down650")
+          order="BAAB" if os.environ["H2478_REPLICA"]=="B" else "ABBA"
+          CASES=[dict(base,name="rtt-supply650",group="rtt-supply650",arm=a,streams=1,delay=200 if a=="A" else 20) for a in order]
+          """
+          p.write_text(s,encoding="utf-8")
+          p=Path("tools/m0_winxdp_pressure_client.py")
+          s=p.read_text(encoding="utf-8")
+          def replace_once(old,new):
+              global s
+              assert s.count(old)==1,old
+              s=s.replace(old,new)
+          replace_once('if r["arm"]=="A":\n                    r["carrier_ok"]=not any','if m["carrier"]=="Npcap":\n                    r["carrier_ok"]=not any')
+          old="\n".join([(" "*20)+v for v in (
+              'time.sleep(20)',
+              'try:save(d/"origin-tcp-steady.json",{"ss":wsl("ip","netns","exec","h2442origin","ss","-tinm","( sport = :5400 )")})',
+              'except Exception as e:save(d/"origin-tcp-steady.json",{"error":repr(e)})')])
+          new="\n".join([(" "*20)+v for v in (
+              'for delay in (15,30,45,55):',
+              '    time.sleep(max(0,business["start"]+delay-time.monotonic()))',
+              '    try:save(d/("origin-tcp-steady-"+str(delay)+".json"),{"elapsed_s":time.monotonic()-business["start"],"ss":wsl("ip","netns","exec","h2442origin","ss","-tinm","( sport = :5400 )")})',
+              '    except Exception as e:save(d/("origin-tcp-steady-"+str(delay)+".json"),{"error":repr(e)})')])
+          replace_once(old,new)
+          p.write_text(s,encoding="utf-8")
+      - name: Validate comparison fixture syntax
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        shell: pwsh
+        run: |
+          python -m py_compile tools/m0_winxdp_bare_supply.py tools/m0_winxdp_pressure_client.py tools/m0_winxdp_pressure_server.py tools/m0_winxdp_pressure_tcp.py tools/m0_winxdp_pressure_profile.py
+          if($LASTEXITCODE -ne 0){throw 'pressure script syntax'}
+          python tools/test_m0_winxdp_pressure_tcp_drain.py
+          if($LASTEXITCODE -ne 0){throw 'TCP fixture drain regression'}
+      - name: Fetch exact frozen Linux x86_64 product for local WSL server
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        shell: bash
+        env:
+          WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+        run: |
+          # Deliberately freeze identical Linux bytes for both Windows product arms.
+          # Not a claim that current Linux source is unchanged; current Game changes
+          # are qualified separately with the same-source server.
+          GITHUB_SHA=26b11e2da236e909b73f461964c52d5a86d42dca bash tools/m0_h2476_fetch_frozen_linux.sh
+          cp -a linux-plan029-public-bundle linux-product
+      - name: WSL stage 1 - bounded distro inventory
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        id: wsl_inventory
+        shell: pwsh
+        timeout-minutes: 2
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force result,h2442-out | Out-Null
+          Write-Output 'H2476_WSL_INVENTORY_START'
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          $rc=$LASTEXITCODE
+          $known | Set-Content result/h2476-distro-list.txt
+          if($rc -ne 0){throw 'real WSL2 distro query unavailable'}
+          $need=($known -notmatch '(?im)^\s*Ubuntu\s*$')
+          "needs_import=$($need.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Output "H2476_WSL_INVENTORY_DONE needs_import=$need"
+      - name: WSL stage 2 - official pinned image download
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true') && steps.wsl_inventory.outputs.needs_import == 'true' }}
+        shell: pwsh
+        timeout-minutes: 4
+        run: |
+          $ErrorActionPreference='Stop'
+          $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+          Write-Output 'H2476_WSL_DOWNLOAD_START'
+          & python tools/m0_wl_windows_bounded_cmd.py 190 curl.exe --fail --location --connect-timeout 20 --max-time 180 --output $img 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl'
+          if($LASTEXITCODE -ne 0){throw 'Ubuntu pinned download failed'}
+          if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'Ubuntu real image checksum mismatch'}
+          Write-Output 'H2476_WSL_DOWNLOAD_HASH_PASS'
+      - name: WSL stage 3 - file-backed import with one owned retry
+        if: ${{ steps.wsl_inventory.outputs.needs_import == 'true' }}
+        shell: pwsh
+        timeout-minutes: 6
+        run: |
+          $ErrorActionPreference='Stop'
+          python -u tools/m0_h2476_import_wsl.py
+          if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 import failed'}
+      - name: WSL stage 4 - bounded guest network startup
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        shell: pwsh
+        timeout-minutes: 2
+        run: |
+          $ErrorActionPreference='Stop'
+          Write-Output 'H2476_WSL_BOOT_START'
+          $lines=(& python tools/m0_wl_windows_bounded_cmd.py 35 wsl.exe -d Ubuntu -u root --exec ip -4 -o addr show dev eth0 2>&1 | Out-String)
+          $rc=$LASTEXITCODE
+          $lines | Set-Content result/h2476-guest-network.txt
+          if($rc -ne 0){throw 'real independent Linux eth0 unavailable'}
+          $m=[regex]::Match($lines,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
+          if(-not $m.Success){throw 'real Linux guest does not have its own IPv4'}
+          $ip=$m.Groups[1].Value
+          if($ip -match '^(127\.|0\.)'){throw 'guest source is not a networked Linux kernel'}
+          $ip | Set-Content -Encoding ascii result/h1706-ubuntu-guest-ip.txt
+          Write-Output "H2476_WSL_BOOT_DONE ip=$ip"
+      - name: Prepare real WSL kernel tools
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          & python tools/m0_wl_windows_bounded_cmd.py 210 wsl.exe -d Ubuntu -u root --exec sh -c 'command -v iptables && command -v openssl && command -v python3 && command -v tc && command -v modprobe && command -v sudo || (apt-get update -qq && apt-get install -y -qq iproute2 iptables openssl python3 kmod sudo)'
+          if($LASTEXITCODE -ne 0){throw 'WSL prerequisites unavailable'}
+          & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root --exec sh -c 'command -v tcpdump && command -v ethtool || (apt-get update -qq && apt-get install -y -qq tcpdump ethtool)'
+          if($LASTEXITCODE -ne 0){throw 'H2480 ethtool/tcpdump prerequisites unavailable'}
+      - name: Extract final portable package and run the real bundled installer
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'runner already has Npcap; no clean XDP-only proof'}
+          $dir=Join-Path $PWD 'result/wl-public'
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Expand-Archive xdp-build/WBD-Windows-amd64-WinXDP.zip $dir -Force
+          $m=Get-Content "$dir/package-manifest.json" -Raw | ConvertFrom-Json -AsHashtable
+          if($m.source_sha -ne 'f6f84a873ec97eb70c9122acb99f6b379c030879'){throw 'package source mismatch'}
+          foreach($key in $m.files.Keys){
+            if((Get-FileHash (Join-Path $dir $key)).Hash.ToLowerInvariant() -ne $m.files[$key]){throw "package bytes mismatch: $key"}
+          }
+          $p=Start-Process "$dir/WBD.exe" -ArgumentList '--install-drivers' -WorkingDirectory $dir -Wait -PassThru
+          Get-Content "$dir/driver-install-result.txt"
+          if($p.ExitCode -ne 0){throw 'bundled GUI driver setup failed'}
+          Copy-Item "$dir/driver-install-result.txt" result/driver-first-install.txt
+          $p=Start-Process "$dir/WBD.exe" -ArgumentList '--install-drivers' -WorkingDirectory $dir -Wait -PassThru
+          Get-Content "$dir/driver-install-result.txt"
+          if($p.ExitCode -ne 0){throw 'bundled driver repeat setup failed'}
+          Copy-Item "$dir/driver-install-result.txt" result/driver-repeat-install.txt
+          # Original test harness expects the historical filename; same bytes.
+          Copy-Item "$dir/wbd-client.exe" "$dir/wbd-client-embedded.exe"
+          if($env:WBD_WL_PUBLIC_MODE -eq 'gui'){
+            # Exercise actual compiled original GUI controls and original Go check-config.
+            $p=Start-Process "$dir/WBD.exe" -ArgumentList '--self-test' -WorkingDirectory $dir -Wait -PassThru
+            $v=Get-Content "$dir/gui-test-result.json" -Raw | ConvertFrom-Json
+            Write-Output ('GUI_RECEIPT_STATUS='+$v.result+' checks='+@($v.checks).Count+' exit='+$p.ExitCode)
+            if($p.ExitCode -ne 0 -or $v.result -ne 'PASS'){
+              Write-Output ($v | ConvertTo-Json -Depth 5 -Compress)
+              throw 'actual WinForms self-test failed'
+            }
+          }
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'unexpected Npcap dependency'}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        with:
+          name: winxdp-current-ab-build
+          path: current-ab
+          run-id: 46097895116
+          github-token: ${{ github.token }}
+      - name: Stage identical frozen WinXDP release for both arms
+        if: ${{ steps.cpu_gate.outputs.eligible == 'true' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $b=Get-Content current-ab/current-dll-manifest.json -Raw | ConvertFrom-Json
+          $go=Get-Content current-ab/timer-go-manifest.json -Raw | ConvertFrom-Json
+          if($b.source_sha -ne '569b51abe62c499e1ea7e2f4e232f205756a891f' -or $go.source_sha -ne '569b51abe62c499e1ea7e2f4e232f205756a891f' -or $b.lab -ne $false -or $b.features -notmatch 'native_fec_acceleration'){throw 'release identity mismatch'}
+          if($b.dll -ne '2282d5a41538a519a7c6af4c7693359fa7ce0ab0cc2141991dd31b9f054a419d' -or $go.exe -ne 'ad3580ba0297f54e9ae9cf8ad404ee3cfcbf60811e14623f9bf69de451a7655f'){throw 'prior measured executable bytes mismatch'}
+          if((Get-FileHash current-ab/wbd_engine.dll).Hash.ToLowerInvariant() -ne $b.dll -or (Get-FileHash current-ab/wbd-client-embedded.exe).Hash.ToLowerInvariant() -ne $go.exe){throw 'release bytes mismatch'}
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'unexpected Npcap dependency'}
+          foreach($arm in @('A','B')){
+            New-Item -ItemType Directory -Force "carrier-ab/$arm" | Out-Null
+            Copy-Item current-ab/wbd_engine.dll "carrier-ab/$arm/wbd_engine.dll"
+            Copy-Item current-ab/wbd-client-embedded.exe "carrier-ab/$arm/wbd-client-embedded.exe"
+            [ordered]@{source_sha=$b.source_sha;artifact_run=46097895116;carrier='WinXDP';exe=$go.exe;dll=$b.dll;features=$b.features;lab=$b.lab} | ConvertTo-Json | Set-Content "carrier-ab/$arm/identity.json"
+          }
+          "WBD_XDP_TESTED_DLL_SHA=$($b.source_sha)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          git diff -- tools/m0_winxdp_pressure_profile.py tools/m0_winxdp_pressure_client.py | Out-File h2442-out/rtt-fixture.diff -Encoding utf8
+          Get-Content carrier-ab/A/identity.json,carrier-ab/B/identity.json
+      - name: Counterbalanced bare and tunneled 650M RTT quartets
+        shell: pwsh
+        if: ${{ (steps.cpu_gate.outputs.eligible == 'true') }}
+        timeout-minutes: 65
+        run: |
+          $ErrorActionPreference='Stop'
+          $guestText=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 | Out-String)
+          $guestIP=[regex]::Match($guestText,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/').Groups[1].Value
+          if(-not $guestIP){throw 'WSL guest address absent'}
+          $nic=@(Get-NetAdapter -IncludeHidden | Where-Object {$_.Name -match '^vEthernet \(WSL' -and $_.Status -eq 'Up'})
+          if($nic.Count -ne 1){throw 'WSL adapter ambiguous'}
+          $hostIP=@(Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex | Where-Object {$_.IPAddress -notmatch '^169\.254\.'})
+          $creator=@(Get-NetFirewallHyperVVMCreator | Where-Object {$_.FriendlyName -eq 'WSL'})
+          if($hostIP.Count -ne 1 -or $creator.Count -ne 1){throw 'WSL test endpoints ambiguous'}
+          $name='WBD-H2476-'+$env:GITHUB_RUN_ID
+          $rst=$false
+          $neighbor=$false
+          try{
+            & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
+            if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
+            & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443 -j DROP
+            if($LASTEXITCODE -ne 0){throw 'test RST suppression failed'}
+            $rst=$true
+            # Same configured source port for all modes. Original persisted
+            # cold tuple ordinal reserves successive lane/retry slots.
+            $ports=@(41031..41094 | ForEach-Object {[string]$_})
+            $appPorts=@('5202')
+            New-NetFirewallHyperVRule -Name $name -DisplayName $name -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $hostIP[0].IPAddress -LocalPorts @('443') -RemotePorts $ports | Out-Null
+            New-NetFirewallRule -Name ($name+'-tcp') -DisplayName ($name+'-tcp') -Direction Inbound -Action Allow -Protocol TCP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort $appPorts | Out-Null
+            New-NetFirewallRule -Name ($name+'-udp') -DisplayName ($name+'-udp') -Direction Inbound -Action Allow -Protocol UDP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort $appPorts | Out-Null
+            # Real NPF header showed original product SYN destination MAC equals
+            # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
+            # Linux eth0 MAC, never fabricate an IP/TLS/ACK or replace Npcap.
+            $guestLink=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 | ConvertFrom-Json)
+            if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 MAC lookup failed'}
+            $guestMAC=[string]$guestLink.address
+            $hostMAC=([string]$nic[0].MacAddress).Replace('-',':')
+            if(@($guestMAC.Split(':')).Count -ne 6 -or $guestMAC -eq $hostMAC){throw 'actual WSL2 guest Ethernet MAC invalid or same as Windows host'}
+            $existing=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction SilentlyContinue)
+            if(@($existing|Where-Object {$_.State -eq 'Permanent'}).Count -gt 0){throw 'foreign WSL neighbor present, refusing overwrite'}
+            [ordered]@{owner=$name;interface_index=$nic[0].InterfaceIndex;guest_ip=$guestIP;guest_mac=$guestMAC;source_host_mac=$hostMAC} |
+              ConvertTo-Json | Set-Content result/wl-public/native-wsl-neighbor-owner.json
+            & netsh.exe interface ipv4 set neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "neighbor=$($guestMAC.Replace(':','-'))" "store=active"
+            if($LASTEXITCODE -ne 0){throw 'native WSL2 exact Linux eth0 neighbor install failed'}
+            $neighbor=$true
+            $entry=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction Stop)
+            if($entry.Count -ne 1 -or $entry[0].LinkLayerAddress.Replace('-',':') -ne $guestMAC){throw 'real WSL2 guest neighbor MAC readback mismatch'}
+            Write-Output ('WL_REAL_GUEST_MAC_NEIGHBOR_BOUND mac='+$guestMAC)
+            # Pass only the exact MAC already read from ACTUAL Linux eth0 and
+            # verified by Windows NetNeighbor into this public Go/Npcap child.
+            # SendARP alone returned the host self MAC (proven wrong SYN L2).
+            $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_MAC=$guestMAC
+            $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4=$guestIP
+            $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4=[string]$hostIP[0].IPAddress
+            $env:WBD_PLAN024_NATIVE_VERIFIED_IFINDEX=[string]$nic[0].InterfaceIndex
+            Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
+            New-NetFirewallHyperVRule -Name ($name+'-bare') -DisplayName ($name+'-bare') -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $hostIP[0].IPAddress -LocalPorts @('5202') | Out-Null
+            # Counterbalance reference/product block order; never compare CPU
+            # of a WBD process against a nonexistent bare-path process.
+            $scripts=if($env:H2478_REPLICA -eq 'A'){@('m0_winxdp_bare_supply.py','m0_winxdp_pressure_client.py')}else{@('m0_winxdp_pressure_client.py','m0_winxdp_bare_supply.py')}
+            foreach($script in $scripts){
+              & python -u "tools/$script"
+              if($LASTEXITCODE -ne 0){throw "$script failed"}
+            }
+          } finally {
+            if($neighbor){& netsh.exe interface ipv4 delete neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "store=active" | Out-Null}
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+            Remove-NetFirewallHyperVRule -Name ($name+'-bare') -ErrorAction SilentlyContinue
+            Remove-NetFirewallRule -Name ($name+'-tcp'),($name+'-udp') -ErrorAction SilentlyContinue
+            if($rst){& wsl.exe -d Ubuntu -u root -- iptables -D OUTPUT -p tcp --tcp-flags RST RST --sport 443 -j DROP}
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: winxdp-bare-path-${{ matrix.replica }}
+          path: |
+            h2442-out/cpu-gate.json
+            h2442-out/rtt-fixture.diff
+            h2439-out/build-identity.json
+            h2476-out/
+            carrier-ab/A/identity.json
+            carrier-ab/B/identity.json
+            current-ab/current-dll-manifest.json
+            current-ab/timer-go-manifest.json
+            result/h2476-*.txt
+            result/wl-public/package-manifest.json
+            result/driver-first-install.txt
+            result/driver-repeat-install.txt
+          if-no-files-found: warn
+          retention-days: 14
+
+  coverage:
+    needs: pressure
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with: {pattern: 'winxdp-bare-path-*', path: evidence}
+      - name: Exact-release and matched bare CUBIC 9V45 receipts
+        shell: python
+        run: |
+          import json,os,pathlib,sys
+          source="569b51abe62c499e1ea7e2f4e232f205756a891f"
+          identity=(source,"2282d5a41538a519a7c6af4c7693359fa7ce0ab0cc2141991dd31b9f054a419d","ad3580ba0297f54e9ae9cf8ad404ee3cfcbf60811e14623f9bf69de451a7655f",46097895116,"WinXDP")
+          valid=[]
+          for root in sorted(pathlib.Path("evidence").glob("winxdp-bare-path-*")):
+              gates=list(root.rglob("cpu-gate.json"))
+              summaries=list(root.rglob("summary.json"))
+              if len(gates)!=1 or len(summaries)!=1:continue
+              gate=json.loads(gates[0].read_text(encoding="utf-8-sig"))
+              if not gate.get("eligible") or gate.get("source_sha")!=os.environ["GITHUB_SHA"]:continue
+              summary=json.loads(summaries[0].read_text())
+              if summary.get("tested_release")!=source or summary.get("fixture_sha")!=os.environ["GITHUB_SHA"]:continue
+              barefiles=list(root.rglob("bare-summary.json"))
+              if len(barefiles)!=1:continue
+              bare=json.loads(barefiles[0].read_text())
+              if len(bare["rows"])!=4 or not all(b.get("valid") and b.get("exact_hash") and b["sender"]["cc"]=="cubic" and b["sender"]["mss"]==1349 and b["delay_ms"]==(200 if b["arm"]=="A" else 20) for b in bare["rows"]):continue
+              rows=summary["rows"]
+              seq="".join(r["arm"] for r in rows)
+              expected="BAAB" if root.name.split("-")[-1].startswith("B") else "ABBA"
+              if seq!=expected or len(rows)!=4 or bare["sequence"]!=seq:continue
+              if not all(r.get("pressure_valid") and r.get("exact_hash") and r.get("client_stop") and r.get("server_stop") and r.get("cpu_s_per_gib") is not None and r.get("streams")==len(r.get("flows",[]))==1 and r["group"]=="rtt-supply650" and r["rate"]==650 and r["delay"]==(200 if r["arm"]=="A" else 20) and r["mtu"]==1460 and r["profile"]==-1 and r["loss"]==0 and r["path_mode"]=="nat" and tuple(r.get("binary_identity",{}).get(k) for k in ("source_sha","dll","exe","artifact_run","carrier"))==identity for r in rows):continue
+              pairs=list(root.rglob("pair-rtt-supply650.json"))
+              if len(pairs)!=1:continue
+              pair=json.loads(pairs[0].read_text())
+              if not pair.get("valid") or pair.get("sequence")!=seq:continue
+              samples=[]
+              for r in rows:
+                  d=summaries[0].parent/("case-"+str(r["case"]))
+                  samples.append({"arm":r["arm"],"case":r["case"],"snapshots":[json.loads(f.read_text()) for f in sorted(d.glob("origin-tcp-steady-*.json"))],"rx":r["rx"],"tx":r["tx"],"cpu_cores":r["steady_process_cpu_cores"],"rx_mbps":r["rx_mbps"],"flow_gaps_s":r["flow_gaps_s"]})
+              means={arm:{"tunneled_mbps":sum(r["rx_mbps"] for r in rows if r["arm"]==arm)/2,"bare_mbps":sum(r["rx_mbps"] for r in bare["rows"] if r["arm"]==arm)/2} for arm in ("A","B")}
+              valid.append({"runner":root.name,"sequence":seq,"block_order":"bare-first" if expected=="ABBA" else "tunnel-first","pair":pair,"cases":samples,"bare":bare,"means":means})
+              print("WINXDP_BARE_PATH_PAIR "+json.dumps({"runner":root.name,"sequence":seq,"means":means}))
+          pathlib.Path("bare-path-summary.json").write_text(json.dumps({"product_source":source,"fixture_sha":os.environ["GITHUB_SHA"],"comparison":"same release plus bare WSL root CUBIC reference; one flow, A=400ms B=40ms RTT; root versus NAT origin is a path reference, not isolated carrier effect","valid":valid},indent=2))
+          print("WINXDP_BARE_PATH_COVERAGE "+json.dumps([{"runner":r["runner"],"sequence":r["sequence"],"snapshot_counts":[len(c["snapshots"]) for c in r["cases"]]} for r in valid]))
+          sys.exit(0 if {r["sequence"] for r in valid}=={"ABBA","BAAB"} else 2)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: winxdp-bare-path-summary, path: bare-path-summary.json, if-no-files-found: error, retention-days: 30}
