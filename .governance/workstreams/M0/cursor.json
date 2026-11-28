@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2545,
-  "checkpoint_sha": "a8a8358f65f90d40e7f7e61593e7333a21f1fb92",
+  "sequence": 2546,
+  "checkpoint_sha": "cdd60c2d554a469db1dcb19351e88ebe4d65239b",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收a8a8358双ISA功能含BBR1 600M初始pacing，及用户指定同三ARM顺序一次每臂180s：裸CUBIC/Rust CUBIC/现存Linux splice BBR/Rust BBR1 seed600M，400ms零注入，持续供给无TUN限速；核逐秒交付/hash/退役和kernel socket final区分/CPU/路径。Linux BBR原生起步未改，无跨臂因果资格。随后实际owner融合EDT与资源释放/时钟/Stop，不叠第二控制器。L2 OPEN。",
+  "next_action": "验收cdd60c2d双ISA原生功能和BBR1/BBRv3同三ARM各180s诊断（46134184084、46134184014）；两臂600Mbps初始pacing、400ms零注入、持续供给、server service epoch C一致。核实逐秒业务、hash/EOF/Stop、retired重传、拥塞状态、CPU、路径和本地队列。无跨臂因果性能资格；不重复H2545四臂，L2 OPEN。",
   "unverified": true,
-  "last_tested_source": "37d4e69b881acd621f659814db141b9998f53b7c",
+  "last_tested_source": "a8a8358f65f90d40e7f7e61593e7333a21f1fb92",
   "evidence_refs": [
     "docs/evidence/M0/20261128-L2-RAW-EDT-NATIVE-REGRESSION-RESULT.json",
     "docs/evidence/M0/20261128-L2-RAW-EDT-FQ-AND-SPLICE-PARITY-RESULT.json"
@@ -26,8 +26,9 @@
     "docs/devlog/M0/20261128-M0-L2-THREE-RUNNER-PATH-FINGERPRINT.md",
     "docs/devlog/M0/20261128-M0-L2-STOP-MICROTUNING-AND-SPLICE-PARITY.md",
     "docs/devlog/M0/20261128-M0-L2-RAW-EDT-FQ-FUSION.md",
-    "docs/devlog/M0/20261128-M0-L2-180S-CONGESTION-DIAGNOSTIC.md"
+    "docs/devlog/M0/20261128-M0-L2-180S-CONGESTION-DIAGNOSTIC.md",
+    "docs/devlog/M0/20261128-M0-L2-BBR1-BBR3-180S-SEED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2544剩余原生ARM已过，双ISA五profile和ZIP完整。H2545增加诊断初始pacing 75MB/s（非BW、CWND、cap），透明代理socket收据、三机180s四臂一次；真实生产EDT仍None，现有FQ不重复。新source待验。"
+  "partial_summary": "H2545双ISA原生PASS；四臂实际完整MEASURED，server/relay收口缺字段FAIL，原ZIP证据保留。H2546按用户授权同三ARM BBR1/BBRv3各180s同600M初始pacing、同服务反馈，修正夹具收口，未改外层和生产默认；新SOURCE Actions在途。"
 }
