@@ -4,21 +4,21 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2561,
-  "checkpoint_sha": "6f8a0b58fc07dc91a0c6084c868e0d1379da21ea",
+  "sequence": 2562,
+  "checkpoint_sha": "74f31df9e592b24dc0804a79b7c24af19a441ecc",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收H2561同一三ARM 180s 1% ABC：26b11e2透明代理、172fca3历史BBR1、a8a8358 seeded BBR1；逐30s/实际交付/CPU/退休恢复。H2560三组60s预EDT BBRv3已结束success，尚须独立artifact验收；根据两批结果定位断点。L2 OPEN。",
+  "next_action": "验收H2561 180s 1% ABC历史BBR1持续性能；随后同源cdd60c2 seeded BBR1/BBRv3同组弱网对照，辨别controller与feedback作用，再决定是否推进EDT。L2 OPEN。",
   "unverified": true,
-  "last_tested_source": "c9f200da4d50574426ce65c59a47ffc69ee2e211",
+  "last_tested_source": "cdd60c2d554a469db1dcb19351e88ebe4d65239b",
   "evidence_refs": [],
   "context_refs": [
-    "docs/evidence/M0/20261128-L2-WEAK-HISTORY-H2559-RESULT.json",
-    "docs/devlog/M0/20261128-M0-L2-WEAK-HISTORY-H2559-ACCEPTANCE.md"
+    "docs/evidence/M0/20261128-L2-WEAK-HISTORY-H2560-RESULT.json",
+    "docs/devlog/M0/20261128-M0-L2-WEAK-HISTORY-H2560-ACCEPTANCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "用户追加180s 1%历史BBR1及下一版对照。按H2559两个历史版本解释极限BBR1，单组ABC复用3冻结产物，原60s夹具保持。H2560三组已结束未验收；H2561未测，不改产品。"
+  "partial_summary": "H2560三完整60s AD，12 ZIP CRC、manifest、6 hash/EOF/Stop、3自然退休、24 tap均核实，1/3/5%相对15.72/4.92/18.93%，每15s D递降，cwnd/BBR bw/inflight bound收缩，本地队列满均0。确认严重退化早于EDT，不证明算法本身唯一原因。H2561保留原run。"
 }
