@@ -1,4 +1,4 @@
-name: M0 dual Rust TCP Normal native product
+name: M0 dual Rust TCP Normal native product · exact-source refresh 2026-11-28
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]

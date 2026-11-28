@@ -1,4 +1,4 @@
-name: M0 ARM clean fresh arrival DRS feedback ABBA
+name: M0 ARM clean fresh arrival DRS feedback ABBA · exact-source refresh 2026-11-28
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
