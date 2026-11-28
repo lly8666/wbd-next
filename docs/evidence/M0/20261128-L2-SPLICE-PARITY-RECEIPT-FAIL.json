@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "58bdbd406063708634086948733745dd6a83ce58",
+  "result": "INCOMPLETE_FIXTURE_RECEIPT",
+  "scope": "Both exact old splice versus frozen C high RTT paired runs failed the fixture assertion, not completed paired performance",
+  "runs": [
+    {
+      "id": 46125284173,
+      "order": "ABBA",
+      "job": 140918414223,
+      "artifact": 15255775446
+    },
+    {
+      "id": 46125284195,
+      "order": "BAAB",
+      "job": 140918414251,
+      "artifact": 15254453988
+    }
+  ],
+  "observed_error": "AssertionError: missing natural bulk retirement",
+  "cause": "Fixture searched for trailing space after leg=server-middle in WBD_M0_TCP_FLOW_FINAL instead of matching the complete token; fix both wait and final predicate, retain partial result before asserting.",
+  "governance": "both passed",
+  "decision": "No complete parity result; rerun independent ABBA/BAAB only with corrected receipt predicate, exact same frozen product artifacts. Do not select runtime changes from incomplete data."
+}

@@ -269,11 +269,24 @@ pub(crate) fn submit_scatter_fd<H:FrozenRecordHandle>(
     fd:RawFd,destination:std::net::SocketAddrV4,
     headers:&[[u8;80];MAX_READY_TX],header_lens:&[usize;MAX_READY_TX],
     records:&[H],
+    // Absolute CLOCK_MONOTONIC nanoseconds from the existing pacing owner.
+    // None preserves the current immediate submission ABI.
+    txtimes:Option<&[u64]>,
 )->KernelSendReport{
     let submitted=records.len().min(MAX_READY_TX);
     if submitted==0{return KernelSendReport{
         outcome:TxBatchOutcome::copied_all(0),signal:KernelSendSignal::None
     }}
+    if txtimes.is_some_and(|t|t.len()<submitted){
+        return KernelSendReport{outcome:not_sent(TxError::IoFailed),
+            signal:KernelSendSignal::PreflightRejected}
+    }
+    // CMSG_LEN/CMSG_SPACE for one u64 on both supported 64-bit Linux ISAs.
+    // Aligned stack storage, no new queue, no payload copy, one syscall.
+    #[repr(C)]
+    #[derive(Clone,Copy)]
+    struct TxTimeCmsg{len:usize,level:c_int,kind:c_int,ns:u64}
+    let mut control=[TxTimeCmsg{len:24,level:1,kind:61,ns:0};MAX_READY_TX];
     let mut iovecs=[[CIovec::empty();2];MAX_READY_TX];
     let mut messages=[CMmsghdr::empty();MAX_READY_TX];
     let mut expected=[0usize;MAX_READY_TX];
@@ -300,6 +313,11 @@ pub(crate) fn submit_scatter_fd<H:FrozenRecordHandle>(
         messages[i].msg_hdr.msg_namelen=std::mem::size_of::<SockAddrIn>() as u32;
         messages[i].msg_hdr.msg_iov=std::ptr::addr_of_mut!(iovecs[i][0]);
         messages[i].msg_hdr.msg_iovlen=2;
+        if let Some(times)=txtimes{
+            control[i].ns=times[i];
+            messages[i].msg_hdr.msg_control=ptr::addr_of_mut!(control[i]).cast();
+            messages[i].msg_hdr.msg_controllen=std::mem::size_of::<TxTimeCmsg>();
+        }
     }
     // SAFETY: all headers live on caller stack for the entire synchronous
     // call, frozen records stay immutably borrowed and alive, two repr(C)
@@ -343,6 +361,74 @@ mod tests {
         let tx=UdpSocket::bind("127.0.0.1:0").unwrap();
         tx.connect(rx.local_addr().unwrap()).unwrap();
         (tx,rx)
+    }
+    // Run only in the owned native veth/FQ fixture. Synthetic UDP payload
+    // tests the identical IP_HDRINCL scatter syscall, not a product session.
+    #[test]
+    #[ignore = "requires owned network namespace, raw socket and sch_fq"]
+    fn native_raw_txtime_fq_scatter_receipt(){
+        use std::os::fd::{FromRawFd,OwnedFd};
+        #[repr(C)]
+        struct Timespec{sec:i64,nsec:i64}
+        #[repr(C)]
+        struct Txtime{clockid:c_int,flags:u32}
+        unsafe extern "C" {
+            fn socket(domain:c_int,kind:c_int,protocol:c_int)->c_int;
+            fn setsockopt(fd:c_int,level:c_int,option:c_int,value:*const c_void,len:u32)->c_int;
+            fn ioctl(fd:c_int,request:usize,...)->c_int;
+            fn clock_gettime(clock:c_int,value:*mut Timespec)->c_int;
+        }
+        fn now(clock:c_int)->u64{
+            let mut t=Timespec{sec:0,nsec:0};
+            assert_eq!(unsafe{clock_gettime(clock,&mut t)},0);
+            t.sec as u64*1_000_000_000+t.nsec as u64
+        }
+        fn outq(fd:c_int)->i32{
+            let mut n=0i32;
+            if unsafe{ioctl(fd,0x5411usize,&mut n as *mut i32)}==0{n}else{-1}
+        }
+        let timed=std::env::var("WBD_FQ_FIXTURE_MODE").unwrap()=="timed";
+        let fd=unsafe{socket(2,3|0x800|0x80000,255)};
+        assert!(fd>=0,"{}",io::Error::last_os_error());
+        let fd=unsafe{OwnedFd::from_raw_fd(fd)};
+        let fd=fd.as_raw_fd();
+        let on=1i32;
+        assert_eq!(unsafe{setsockopt(fd,0,3,(&on as *const i32).cast(),4)},0);
+        let sndbuf=1_048_576i32;
+        assert_eq!(unsafe{setsockopt(fd,1,7,(&sndbuf as *const i32).cast(),4)},0);
+        if timed{
+            let opt=Txtime{clockid:1,flags:0};
+            assert_eq!(unsafe{setsockopt(fd,1,61,(&opt as *const Txtime).cast(),8)},0,
+                "SO_TXTIME: {}",io::Error::last_os_error());
+        }
+        let dest=std::net::SocketAddrV4::new(std::net::Ipv4Addr::new(192,0,2,2),0);
+        let mut headers=[[0u8;80];MAX_READY_TX];
+        for h in &mut headers{
+            h[0]=0x45;h[2..4].copy_from_slice(&1160u16.to_be_bytes());h[8]=64;h[9]=17;
+            h[12..16].copy_from_slice(&[192,0,2,1]);h[16..20].copy_from_slice(&[192,0,2,2]);
+            h[20..22].copy_from_slice(&42000u16.to_be_bytes());h[22..24].copy_from_slice(&5202u16.to_be_bytes());
+            h[24..26].copy_from_slice(&1140u16.to_be_bytes());
+        }
+        let sizes=[40usize;MAX_READY_TX];
+        // 32 ready records per syscall, 15.5 us planned separation (~600M
+        // inside a train), one ms between starts. No per-packet wakeup.
+        for batch in 0..128u64{
+            let frames:Vec<_>=(0..32u64).map(|i|{
+                let mut bytes=[0u8;1120];bytes[..8].copy_from_slice(&(batch*32+i).to_be_bytes());
+                frame(&bytes,batch*32+i+1)
+            }).collect();
+            let wall=now(0);let mono=now(1);
+            let times:[u64;32]=std::array::from_fn(|i|mono+100_000+i as u64*15_467);
+            let pre=outq(fd);
+            let report=submit_scatter_fd(fd,dest,&headers,&sizes,&frames,timed.then_some(times.as_slice()));
+            let returned=now(1);let post=outq(fd);
+            println!("FQ_BATCH batch={} timed={} wall_ns={} mono_ns={} first_edt_ns={} last_edt_ns={} returned_ns={} outq_before={} outq_after={} accepted={} signal={:?}",
+                batch,timed,wall,mono,times[0],times[31],returned,pre,post,report.outcome.accepted_prefix,report.signal);
+            assert_eq!(report.outcome.accepted_prefix,32);
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        std::thread::sleep(Duration::from_millis(20));
+        println!("FQ_DRAIN outq={}",outq(fd));
     }
     #[test]
     fn r1_linux_sendmmsg_x86_64_glibc_ffi_layout_audited() {
@@ -544,7 +630,7 @@ mod tests {
         let lengths=[0usize;MAX_READY_TX];
         let addr=match rx.local_addr().unwrap(){
             std::net::SocketAddr::V4(v)=>v,_=>unreachable!()};
-        assert_eq!(submit_scatter_fd(tx.as_raw_fd(),addr,&blank,&lengths,&empty)
+        assert_eq!(submit_scatter_fd(tx.as_raw_fd(),addr,&blank,&lengths,&empty,None)
             .outcome,TxBatchOutcome::copied_all(0));
         for total in [1usize,32,33]{
             let frames:Vec<_>=(0..total).map(|i|frame(&[i as u8,0x9a],i as u64)).collect();
@@ -554,7 +640,7 @@ mod tests {
                 lens[i]=build_scatter_header(tuple,present,f,None,1500,
                     &mut headers[i]).unwrap();
             }
-            let report=submit_scatter_fd(tx.as_raw_fd(),addr,&headers,&lens,&frames);
+            let report=submit_scatter_fd(tx.as_raw_fd(),addr,&headers,&lens,&frames,None);
             assert_eq!(report.outcome.accepted_prefix,total.min(MAX_READY_TX));
             assert_eq!(report.outcome.uncertain_index,None);
             for i in 0..total.min(MAX_READY_TX){
@@ -575,7 +661,7 @@ mod tests {
             lens[i]=build_scatter_header(tuple,present,f,None,65535,
                 &mut headers[i]).unwrap();
         }
-        let short=submit_scatter_fd(tx.as_raw_fd(),addr,&headers,&lens,&frames);
+        let short=submit_scatter_fd(tx.as_raw_fd(),addr,&headers,&lens,&frames,None);
         assert_eq!(short.outcome.accepted_prefix,1);
         assert_eq!(short.signal,KernelSendSignal::PartialErrnoUnavailable);
         assert_eq!(rx.recv(&mut bytes).unwrap(),46);

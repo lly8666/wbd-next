@@ -1,0 +1,15 @@
+name: M0 RAW immediate versus EDT FQ ABBA
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths:
+      - '.github/workflows/qa-m0-raw-fq-abba.yml'
+      - '.github/workflows/qa-m0-raw-fq-timing.yml'
+      - 'tools/m0_raw_fq_timing_fixture.py'
+      - 'crates/wbd-platform/src/linux_batch.rs'
+permissions: {contents: read, actions: read}
+jobs:
+  compare:
+    uses: ./.github/workflows/qa-m0-raw-fq-timing.yml
+    with:
+      order: 'ABBA'

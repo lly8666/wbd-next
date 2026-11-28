@@ -8,6 +8,7 @@ on:
       - 'crates/wbd-engine/src/v4_owner_crypto.rs'
       - 'crates/wbd-platform/src/linux_tun_sink.rs'
       - 'crates/wbd-platform/src/linux_raw_carrier.rs'
+      - 'crates/wbd-platform/src/linux_batch.rs'
       - 'r0/go_overlay/assembly/manifest-plan020-m0.json'
       - 'r0/go_overlay/internal/v4productcli/linux.go'
       - 'tools/m0_dual_rust_tcp_*.py'
@@ -35,6 +36,22 @@ jobs:
       CGO_ENABLED: '1'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build exact native RAW timing test executable once
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-platform --lib --no-run --message-format=json > fq-build.jsonl
+          exe=$(jq -r 'select(.profile.test==true and .target.name=="wbd_platform" and .executable!=null) | .executable' fq-build.jsonl)
+          test -f "$exe"
+          mkdir -p fq-test-build
+          cp "$exe" fq-test-build/fq-test
+          printf '%s\n' "$GITHUB_SHA" > fq-test-build/source.txt
+          (cd fq-test-build && sha256sum fq-test > SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: fq-native-test-${{ matrix.arch }}
+          path: fq-test-build/
+          if-no-files-found: error
       - name: Build original product on exact native ISA
         shell: bash
         run: |

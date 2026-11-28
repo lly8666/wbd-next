@@ -188,7 +188,7 @@ def leg(i,k):
         if COMPARE=="c-splice" and k=="B":
             deadline=time.monotonic()+15
             while time.monotonic()<deadline:
-                if any("WBD_M0_TCP_FLOW_FINAL " in l and "leg=server-middle " in l for l in (d/"server.log").read_text().splitlines()):break
+                if any("WBD_M0_TCP_FLOW_FINAL " in l and "leg=server-middle" in l.split() for l in (d/"server.log").read_text().splitlines()):break
                 if server.poll() is not None or client.poll() is not None:break
                 time.sleep(.1)
         stop(client);stop(server)
@@ -217,8 +217,9 @@ def leg(i,k):
                     if ident and "bytes_sent" in fields and "bytes_retrans" in fields:bulk[ident[1]]={"flow_id":int(ident[1]),**fields,"line":l}
                 assert bulk
                 last=max(bulk.values(),key=lambda x:x["bytes_sent"])
-                row["bulk_retired"]=any("WBD_M0_TCP_FLOW_FINAL " in l and "leg=server-middle " in l and f' id={last["flow_id"]} ' in l for l in sl.splitlines())
+                row["bulk_retired"]=any("WBD_M0_TCP_FLOW_FINAL " in l and "leg=server-middle" in l.split() and f' id={last["flow_id"]} ' in l for l in sl.splitlines())
                 row["rust_bulk_snapshot"]=last
+                save(d/"prequalification-result.json",row)
                 assert row["bulk_retired"],"missing natural bulk retirement"
         if COMPARE in ("ack-splice","ack-bbr") and k=="B":
             for label,log in (("client",cl),("server",sl)):

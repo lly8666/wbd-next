@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2540,
-  "checkpoint_sha": "11a0aa6a50a87207e0861c3a31235877ff4845d7",
+  "sequence": 2541,
+  "checkpoint_sha": "58bdbd406063708634086948733745dd6a83ce58",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收11a0aa6真实三机AJJA/JAAJ完整双向四VX头部trace（固定历史C，600/360M，400ms零注入）；核capture drops/offload/时钟漂移/observer effect，按每hop正反向匹配测相对延迟、连续缺失、1/10/100ms突发、ACK聚集、实际路径和CPU。用实测联合分布校准单机，尚未复现Linux低Rust高前不改产品。L2 OPEN。",
+  "next_action": "验收58bdbd4两独立x86真实旧splice A（26b11e2/15112597057）对冻结C B（12b17cc/15250585479）ABBA/BAAB，400ms/600M/1GiB/MTU1160，真实hash/EOF/首到/CPU/qdisc/Stop/C退役。停止无依据微调；若接近计划性能带，结束本轮性能研究并推进剩余双ISA/模式/弱网功能资格；若实质落后，仅按剖析定位差异。旧代理不得提前删除，L2 OPEN。",
   "unverified": true,
-  "last_tested_source": "8c937a62a3ecd86c1c1347cdd23f93c3cbc2d0a5",
+  "last_tested_source": "11a0aa6a50a87207e0861c3a31235877ff4845d7",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-L2-X86-QUEUE-AND-THREE-RUNNER-PATH-RESULT.json"
+    "docs/evidence/M0/20261128-L2-THREE-RUNNER-PATH-FINGERPRINT-RESULT.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261128-M0-L2-RECEIVER-CREDIT-STARTUP.md",
     "docs/devlog/M0/20261128-M0-L2-PAIRED-RECEIVE-MEASUREMENT.md",
     "docs/devlog/M0/20261128-M0-L2-STALLED-RECEIVE-MEASUREMENT.md",
     "docs/devlog/M0/20261128-M0-L2-FROZEN-C-CAPACITY-DIAGNOSTIC.md",
     "docs/devlog/M0/20261128-M0-L2-ACCUMULATED-CREDIT-COMPARISON.md",
     "docs/devlog/M0/20261128-M0-L2-X86-CONTROLLED-PATH.md",
     "docs/devlog/M0/20261128-M0-L2-X86-RETRANS-THRESHOLD.md",
-    "docs/devlog/M0/20261128-M0-L2-THREE-RUNNER-PATH-FINGERPRINT.md"
+    "docs/devlog/M0/20261128-M0-L2-THREE-RUNNER-PATH-FINGERPRINT.md",
+    "docs/devlog/M0/20261128-M0-L2-STOP-MICROTUNING-AND-SPLICE-PARITY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2539四队列实验和双ISA完成，bare真实队列丢弃、重传1.164–1.842%，Rust0–0.181%，方向不符合目标。H2536旧样本确认高负载长尾/时间聚集/两hop不同；H2540两独立真实三机全双向头部采样待验，无运行时代码修改。"
+  "partial_summary": "H2540真实三机双向32组关联确认高负载缺失成串且方向不对称，600M退役重传1.185/1.536%，360M0.131/0.082%，吞吐几乎相同但CPU升。外层路径缺口真实存在，不等于物理定位或所有重传合理。H2541停止猜测参数，原产品直接对照替代裸TCP，未改运行时。"
 }
