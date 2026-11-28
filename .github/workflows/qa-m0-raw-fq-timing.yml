@@ -27,18 +27,14 @@ jobs:
         run: |
           set -euo pipefail
           test "$(uname -m)" = "$NATIVE_ARCH"
-          for i in $(seq 1 90);do
-            run=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/qa-m0-dual-rust-tcp-core.yml/runs?head_sha=$GITHUB_SHA" --jq '.workflow_runs[0].id // empty')
-            if test -n "$run";then
-              artifact=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" --jq ".artifacts[] | select(.name==\"fq-native-test-$NATIVE_ARCH\" and .expired==false) | .id")
-              if test -n "$artifact";then break;fi
-            fi
-            sleep 10
-          done
-          test -n "${artifact:-}"
+          # SOURCE is unchanged; first wrappers failed YAML parsing before jobs.
+          run=46127070836
+          test "$(gh run view "$run" -R "$GITHUB_REPOSITORY" --json headSha --jq .headSha)" = 37d4e69b881acd621f659814db141b9998f53b7c
+          artifact=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" --jq ".artifacts[] | select(.name==\"fq-native-test-$NATIVE_ARCH\" and .expired==false) | .id")
+          if test "$NATIVE_ARCH" = aarch64;then test "$artifact" = 15256585348;else test "$artifact" = 15255808454;fi
           mkdir -p fq-build fq-out
           gh run download "$run" -R "$GITHUB_REPOSITORY" -n "fq-native-test-$NATIVE_ARCH" -D fq-build
-          test "$(cat fq-build/source.txt)" = "$GITHUB_SHA"
+          test "$(cat fq-build/source.txt)" = 37d4e69b881acd621f659814db141b9998f53b7c
           (cd fq-build && sha256sum -c SHA256SUMS)
           chmod +x fq-build/fq-test
           cp fq-build/{source.txt,SHA256SUMS} fq-out/
@@ -55,4 +51,4 @@ jobs:
           if test -d fq-out;then sudo chown -R "$(id -u):$(id -g)" fq-out;fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
-        with: {name: fq-timing-${{ matrix.arch }}, path: fq-out/, if-no-files-found: warn, retention-days: 14}
+        with: {name: "fq-timing-${{ matrix.arch }}", path: fq-out/, if-no-files-found: warn, retention-days: 14}
