@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "source_sha": "37d4e69b881acd621f659814db141b9998f53b7c",
+  "run": 46127070836,
+  "result": "FUNCTIONAL_PASS_SCOPED",
+  "artifact_crc_clean": true,
+  "architectures": {
+    "x86_64": {
+      "artifact": 15256690416,
+      "build": 15256186485,
+      "manifest_sha256": "bf6ab436ed4b3e5abed06bfd13442a5a982b129dcead337927ecb2d8acbd4782"
+    },
+    "aarch64": {
+      "artifact": 15255864223,
+      "build": 15255764444,
+      "manifest_sha256": "b8e341976074d049fe9f8b9b0fd9f5ee577e1ee07bdd0fd10887f3d56e9589e8"
+    }
+  },
+  "functional_profiles_per_isa": [
+    "normal",
+    "inbox2048",
+    "cubic",
+    "credit-off",
+    "service"
+  ],
+  "arm_recovery_summary_status": "MEASURED_REQUIRES_RECOVERY_REVIEW",
+  "scope": "Normal native functional qualification of source 37d4e69, live scatter None; no product EDT qualification."
+}
