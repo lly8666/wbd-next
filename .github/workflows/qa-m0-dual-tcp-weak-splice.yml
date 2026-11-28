@@ -40,14 +40,11 @@ jobs:
           test "$(gh run view "$run" -R "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion)" = success
           test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" --jq '.artifacts[] | select(.name=="dual-tcp-native-build-aarch64" and .expired==false) | .id')" = 15263705152
           echo "run=$run" >> "$GITHUB_OUTPUT"
-          old=""
+          old=46147401831
           for i in $(seq 1 180);do
-            old=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/qa-m0-dual-tcp-weak-splice-build.yml/runs?head_sha=$GITHUB_SHA" --jq '.workflow_runs[0].id // empty')
-            if test -n "$old";then
-              gh run view "$old" -R "$GITHUB_REPOSITORY" --json headSha,status,conclusion > old-run.json
-              test "$(jq -r .headSha old-run.json)" = "$GITHUB_SHA"
-              if test "$(jq -r .status old-run.json)" = completed;then break;fi
-            fi
+            gh run view "$old" -R "$GITHUB_REPOSITORY" --json headSha,status,conclusion > old-run.json
+            test "$(jq -r .headSha old-run.json)" = "40a5ff7aec039b790228a3935d2418e60998079c"
+            if test "$(jq -r .status old-run.json)" = completed;then break;fi
             sleep 10
           done
           test -n "$old"

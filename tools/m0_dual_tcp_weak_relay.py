@@ -7,7 +7,17 @@ def impair(loss,delay,model):
     loss=float(loss);delay=int(delay)
     h.guard(model=="internet" and ((delay==0 and loss==0) or
         (delay==200 and loss in (1.,3.,5.))),"WEAK_PROFILE")
-    ge=h.ge_params(loss) if loss else None
+    # Dedicated 1/3/5 set; the historical helper excludes 3%.
+    # Same stationary GE equation, not an altered loss distribution.
+    ge=None
+    if loss:
+        target=loss/100
+        bad=(target-.001)/(.9-.001)
+        p=.25*bad/(1-bad)
+        ge={"transition_good_bad_pct":round(p*100,6),
+            "transition_bad_good_pct":25.0,"bad_loss_pct":90.0,
+            "good_loss_pct":0.1,"analytical_mean_loss_pct":loss,
+            "mean_bad_burst_packets":4.0}
     receipts={};jitter={};commands={}
     for role,dev in h.RDEV.items():
         # Clear between runs so Markov state and queued packets do not carry

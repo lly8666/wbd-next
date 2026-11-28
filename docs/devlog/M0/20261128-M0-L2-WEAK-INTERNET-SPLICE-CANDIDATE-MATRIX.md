@@ -7,3 +7,10 @@ Dedicated real relay egress model both directions: nominal 200ms each (400ms add
 ```feature-impact
 {"kind":"updated","ids":["dual-rust-tcp"],"reason":"User-authorized twelve matched weak Internet-like ARM scenarios against frozen native Linux splice; runtime unchanged, exact native artifacts reused."}
 ```
+
+
+H2556 fixture correction: the historical h.ge_params helper accepts only 1/5/10/20; original 3% runs 46147401709/46147401763/46147401600/46147401641 will reject the profile before any timed application leg. Dedicated weak fixture now calculates the exact same stationary GE equation for the declared 1/3/5 set. Only the four 3% workflow wrappers are re-triggered; 1% and 5% original source continue untouched. Shared exact old ARM baseline build46147401831 from 40a5ff7 reused; no duplicate build. Original failed/inflight runs retained; cancellation action unavailable through connector. Record final original statuses at acceptance. No runtime change.
+
+```feature-impact
+{"kind":"updated","ids":["dual-rust-tcp"],"reason":"Correct 3% relay fixture admission using same GE equation, re-trigger only affected four scenarios, retain shared source-pinned builds and original failures."}
+```

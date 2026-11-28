@@ -11,3 +11,5 @@ jobs:
       arm: 'D'
       loss: 3
     secrets: inherit
+
+# H2556: corrected 3% GE admission; reuse H2555 frozen ARM baseline build.
