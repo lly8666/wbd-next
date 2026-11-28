@@ -488,6 +488,17 @@ func(c *V4WindowsGameLaneCandidate) Abort(ctx context.Context)error{
  return c.owner.StopScopedOwner(ctx)
 }
 
+// Called only after the original candidate port has been removed and its
+// Go reader joined. No active or retiring member is released.
+func(g *V4WindowsAuthenticatedGameGroup) AbortNativeGameLaneCandidate(ctx context.Context,c *V4WindowsGameLaneCandidate)error{
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||g.joined==0||c==nil||c.lane<1||int(c.lane)>len(g.members)||
+  g.members[c.lane-1]!=c.old||(g.staged!=nil&&g.staged!=c){return errV4WindowsOwner}
+ if e:=c.Abort(ctx);e!=nil{return e}
+ if g.staged==c{g.staged=nil}
+ return nil
+}
+
 // Authenticate one same-epoch original Go TLS association just like the
 // Linux ReplaceClientGameLane. Do not hold g.mu across network or TLS:
 // the old group and all siblings remain live. The caller serializes

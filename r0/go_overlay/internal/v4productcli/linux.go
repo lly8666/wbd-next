@@ -1398,7 +1398,10 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     cancelSYN()
     if err!=nil{return err}
     // SYN loss must not consume the following independent TLS deadline.
-    dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
+    tlsBudget:=15*time.Second
+    dialBudget:=20*time.Second
+    if coldReauth{tlsBudget=30*time.Second;dialBudget=35*time.Second}
+    dialCtx,cancel:=context.WithTimeout(ctx,dialBudget)
     defer cancel()
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=syn_established unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(coldSynStart).Milliseconds())}
     var policy realityfront.AdmissionPolicy
@@ -1435,7 +1438,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
-        TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,VerifyServer:c.tlsVerifyServer,RootCAs:c.tlsRoots,Timeout:15*time.Second},
+        TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,VerifyServer:c.tlsVerifyServer,RootCAs:c.tlsRoots,Timeout:tlsBudget},
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
         AutoLease:c.autoIP,InstallationID:c.installation[:],
         ClientLimit:c.recordLimit,DesiredLanes:1,LaneID:1,Policy:policy,
@@ -1471,7 +1474,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         // forwarding until native B proves the peer actually committed B.
         // A timeout closes only B and preserves A's exact old mapping.
         err=waitOriginalNativeM4PeerProof(ctx,native.OriginalLoopPulse,
-            native.PromoteNormalAfterAuthenticatedPeerRx,5*time.Second)
+            native.PromoteNormalAfterAuthenticatedPeerRx,30*time.Second)
         if err!=nil{
             log.Printf("V4_PUBLIC_NORMAL_REMOTE_M4_UNPROVEN role=client generation=%d client_port=%d old_tun_route_preserved=1",
                 c.rotationGeneration,c.localPort)
@@ -2039,7 +2042,7 @@ func runSharedMultiServer(
         if proofErr:=p.PromoteNormalServerAfterAuthenticatedPeerRx();proofErr!=nil{
             proofErr=waitOriginalNativeServerClientM4Ready(runCtx,
                 p.OriginalLoopPulse,p.PromoteNormalServerAfterAuthenticatedPeerRx,
-                5*time.Second)
+                40*time.Second)
             if proofErr!=nil{
                 mu.Lock()
                 delete(detached,rec.assoc)

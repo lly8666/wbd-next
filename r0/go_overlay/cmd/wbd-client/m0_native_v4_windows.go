@@ -130,6 +130,12 @@ var errM0WindowsPhysicalPathChanged=errors.New("original Windows physical path c
 // Linux's simultaneous A+B owner handover or Game4 one-slot hot rekey.
 // One timer starts at actual M4/OS READY; no packet-plane work or goroutine.
 var errM0WindowsTimedRotation=errors.New("scheduled native Windows generation renewal")
+
+// Cold candidate budgets only. The old M4 owner remains live while the
+// candidate uses its own original SYN/TLS and authenticated proof window.
+const m0WindowsLaneTurnBudget=90*time.Second
+const m0WindowsLaneTLSBudget=30*time.Second
+const m0WindowsLaneProofBudget=30*time.Second
 func m0WindowsRotationDelay(min,max time.Duration)time.Duration{
  if min==max{return min}
  return min+time.Duration(mathrand.Int63n(int64(max-min)+1))
@@ -1418,7 +1424,7 @@ func(p *m0WinRustNativePeer) rotateNormal(ctx context.Context,o m0NativeV4Option
  if p.rotationCurrent==nil||p.rotationSession==nil||p.rotationRetiring!=nil||p.rotationStaged!=nil{
   return 0,true,windowsclient.ErrN4NativeGuard
  }
- turn,cancel:=context.WithTimeout(ctx,25*time.Second);defer cancel()
+ turn,cancel:=context.WithTimeout(ctx,m0WindowsLaneTurnBudget);defer cancel()
  ordinal,e:=m0WindowsReserveColdTupleOrdinal(o.StatePath);if e!=nil{return 0,false,e}
  port,e:=m0WindowsOriginalColdClientPort(o.SourcePort,ordinal);if e!=nil{return 0,false,e}
  cfg:=p.cfg;cfg.Flow.LocalPort=port
@@ -1511,6 +1517,7 @@ func(p *m0WinRustNativePeer) rotateNormal(ctx context.Context,o m0NativeV4Option
     }
   }}
  }()
+ auth.TLS.Timeout=m0WindowsLaneTLSBudget
  next,session,e:=p.rotationCurrent.PrepareOriginalNormalSuccessor(turn,assoc,auth,p.rotationSession,padding)
  close(pumpStop);<-pumpDone
  if e!=nil{return 0,false,e}
@@ -1539,7 +1546,7 @@ func(p *m0WinRustNativePeer) rotateNormal(ctx context.Context,o m0NativeV4Option
   seg:=<-early
   if e=p.owner.NativeNormalCandidateEarly(turn,port,seg.Seq,seg.Payload);e!=nil{return 0,false,e}
  }
- proof,stopProof:=context.WithTimeout(turn,6*time.Second);defer stopProof()
+ proof,stopProof:=context.WithTimeout(turn,m0WindowsLaneProofBudget);defer stopProof()
  check:=time.NewTicker(25*time.Millisecond);defer check.Stop()
  for{
   ready,e:=p.owner.NativeNormalCandidateReady(proof,port)

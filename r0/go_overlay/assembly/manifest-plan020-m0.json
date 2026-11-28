@@ -1448,7 +1448,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "dec8e998f003a25042a92ae69c55c1fcefe32103"
+      "result_blob": "4a2632db6d26278426395205bf72690a3ae12290"
     },
     {
       "kind": "create",
@@ -1526,7 +1526,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "abbf7cacc4766c039a38ef76c57a3bce68d138a9"
+      "result_blob": "3657f809d70639842351a53c0101d588d9c192a6"
     },
     {
       "kind": "create",
@@ -1622,7 +1622,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
-      "result_blob": "aeca8c4ef5f67f9aa9fef2d365e5c6548af53826"
+      "result_blob": "553ddf8e4015230ac7133188d987b29d7a667094"
     },
     {
       "kind": "create",
@@ -1786,7 +1786,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "b9f861c49c357b058d488efd85db7b34700aeffa"
+      "result_blob": "30ae84b951a34af883eefd36cd2471cbb73467a6"
     },
     {
       "kind": "replace",
@@ -1867,7 +1867,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "05e3f9b69aa19d2f645b2c6a2310d9518fee48de"
+      "result_blob": "1f3b091a5c1b242d691ee7fa17159b1f4bef28ca"
     },
     {
       "kind": "create",

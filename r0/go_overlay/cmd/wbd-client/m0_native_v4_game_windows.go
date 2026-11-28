@@ -401,16 +401,7 @@ outer:
    oldPort:=packet.flows[slot].LocalPort
    grace,fatal,turnErr:=packet.rotateGameLane(ctx,o,cfg,slot)
    if turnErr!=nil{
-    if fatal{
-     // A scheduled, authenticated candidate whose native reverse proof
-     // times out cannot prove the remote slot is unchanged. Join the
-     // existing group/WAL Stop and use the already-owned full generation
-     // renewal path instead of terminating the client process.
-     if turnErr==errM0WindowsTimedRotation{
-      fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_PROOF_TIMEOUT lane=%d scope=full_generation previous_owner_stop_required=1\n",slot+1)
-     }
-     runtimeErr=turnErr;break outer
-    }
+    if fatal{runtimeErr=turnErr;break outer}
     fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_RETRY lane=%d error=%v\n",slot+1,turnErr)
     stopRotation();rotation,stopRotation=m0WindowsArmRotation(o);continue
    }
@@ -458,14 +449,29 @@ outer:
 }
 
 func(p *m0WinRustGamePeer) rotateGameLane(ctx context.Context,o m0NativeV4Options,base realityfront.ClientAdmissionConfig,slot int)(grace time.Duration,fatal bool,err error){
- turn,cancel:=context.WithTimeout(ctx,30*time.Second);defer cancel()
+ turn,cancel:=context.WithTimeout(ctx,m0WindowsLaneTurnBudget);defer cancel()
  ordinal,e:=m0WindowsReserveColdTupleOrdinal(o.StatePath);if e!=nil{return 0,fatal,e}
  port,e:=m0WindowsOriginalColdClientPort(o.SourcePort,ordinal);if e!=nil{return 0,fatal,e}
  cfg:=p.cfgs[slot];cfg.Flow.LocalPort=port
  transport,e:=p.group.BeginNativeGameLaneCandidate(turn,cfg);if e!=nil{return 0,fatal,e}
  handed:=false
+ var candidate *realityfront.V4WindowsGameLaneCandidate
  var readers sync.WaitGroup
- defer func(){if !handed{if e:=transport.Close();e!=nil{fatal=true;err=errors.Join(err,e)}};readers.Wait()}()
+ defer func(){
+  // Before promotion only the new port/owner may be discarded. Do not
+  // free its crypto while the native candidate RX still owns it.
+  if !handed{
+   closeErr:=transport.Close()
+   readers.Wait()
+   if closeErr!=nil{fatal=true;err=errors.Join(err,closeErr);return}
+   if candidate!=nil{
+    cleanup,cancel:=context.WithTimeout(context.Background(),15*time.Second)
+    abortErr:=p.group.AbortNativeGameLaneCandidate(cleanup,candidate)
+    cancel()
+    if abortErr!=nil{fatal=true;err=errors.Join(err,abortErr)}
+   }
+  }else{readers.Wait()}
+ }()
  var seed [4]byte
  if _,e=rand.Read(seed[:]);e!=nil{return 0,fatal,e}
  flow:=p.flows[slot];flow.LocalPort=port
@@ -502,38 +508,32 @@ func(p *m0WinRustGamePeer) rotateGameLane(ctx context.Context,o m0NativeV4Option
  case e:=<-established:if e!=nil{return 0,fatal,e};break waitSyn
  case <-tick.C:if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{return 0,fatal,e}
  }}
- fatal=true
- candidate,e:=p.group.PrepareOriginalGameLaneCandidate(turn,assoc,base,uint8(slot+1))
- if e!=nil{return 0,!errors.Is(e,realityfront.ErrV4GameLaneUncommittedCold),e}
+ base.TLS.Timeout=m0WindowsLaneTLSBudget
+ candidate,e=p.group.PrepareOriginalGameLaneCandidate(turn,assoc,base,uint8(slot+1))
+ if e!=nil{return 0,false,e}
  closeHandoff()
- // Stage takes the cold reader/writer and transfers exact native owner.
- // From authenticated TLS onward Linux may already have replaced this slot;
- // a failed commit is not silently reported as an untouched old generation.
+ // Stage takes only the cold candidate reader/writer. The local selected
+ // slot remains unchanged until native promotion. Legacy remote servers
+ // may have already switched; that uncertainty must not stop siblings.
  if e=p.group.StageNativeLaneCandidate(turn,candidate,transport,flow.PeerPort);e!=nil{return 0,fatal,e}
  readers.Wait()
  for len(early)>0{seg:=<-early;if e=p.group.OfferNativeGameCandidateEarly(candidate,port,seg.Seq,seg.Payload);e!=nil{return 0,fatal,e}}
- proof,stopProof:=context.WithTimeout(turn,6*time.Second);defer stopProof()
+ proof,stopProof:=context.WithTimeout(turn,m0WindowsLaneProofBudget);defer stopProof()
  check:=time.NewTicker(25*time.Millisecond);defer check.Stop()
  for{
   ready,e:=p.group.NativeLaneCandidateReady(proof,candidate,transport)
-  if e!=nil{return 0,fatal,m0WindowsGameScheduledProofResult(ctx,proof,e)}
+  if e!=nil{return 0,false,e}
   if ready{break}
-  select{case <-proof.Done():return 0,fatal,m0WindowsGameScheduledProofResult(ctx,proof,proof.Err());case <-check.C:}
+  select{case <-proof.Done():
+   fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_PROOF_TIMEOUT lane=%d local_old_slot_preserved=1 remote_slot_unconfirmed=1\n",slot+1)
+   return 0,false,proof.Err();case <-check.C:}
  }
  grace=m0WindowsRotationDelay(10*time.Second,20*time.Second)
+ // Only an actual promotion command can leave local ownership uncertain.
+ fatal=true
  handed=true
  if e=p.group.PromoteNativeGameLane(turn,candidate,port,grace);e!=nil{return 0,fatal,e}
  p.flows[slot]=flow;p.cfgs[slot]=cfg
  return grace,false,nil
 }
 
- // Only the actual candidate-proof deadline can request scheduled renewal.
- // User Stop, physical path cancellation, and native/driver/cleanup errors
- // keep their existing meanings. The caller's exact Stop must succeed;
- // deferred candidate Close errors join this sentinel and prevent renewal.
-func m0WindowsGameScheduledProofResult(parent,proof context.Context,err error)error{
- if parent.Err()==nil&&proof.Err()==context.DeadlineExceeded&&err==context.DeadlineExceeded{
-  return errM0WindowsTimedRotation
- }
- return err
-}

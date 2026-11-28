@@ -246,7 +246,7 @@ func runOriginalLinuxClientPaths(
     var laneTurnCh <-chan originalGameLaneTurnResult
     var laneTurnOwner *originalClientGeneration
     var armedRotationDelay time.Duration
-    var laneColdRetries int
+    var scheduledTurn bool
     stopRotation:=func(){
         if rotationTimer!=nil{
             if !rotationTimer.Stop(){select{case <-rotationTimer.C:default:}}
@@ -255,7 +255,6 @@ func runOriginalLinuxClientPaths(
         rotationCh=nil
     }
     armRotation:=func(){
-        laneColdRetries=0
         stopRotation()
         if c.rotationInterval>0 && current!=nil && ctx.Err()==nil{
             armedRotationDelay=originalNextRotationDelay(c.rotationInterval,c.rotationJitter)
@@ -340,6 +339,7 @@ func runOriginalLinuxClientPaths(
             if !next.valid()||next==desired{continue}
             desired=next
             timerDue=false // a real path change supersedes the timed intent
+            scheduledTurn=false
             stopRotation()
             retry=0
             stopTimer()
@@ -363,6 +363,7 @@ func runOriginalLinuxClientPaths(
             // A successful B retires A through the exact existing
             // randomized grace; a failed B leaves A unaffected.
             timerDue=true
+            scheduledTurn=false
             stopRotation()
             log.Printf("V4_PUBLIC_PATH_PREDEAD_AUTH_REFRESH role=client old_generation=%d authenticated_health_stale=1 old_route_preserved=1 terminal_native_dead=0",current.seq)
             if err=launch();err!=nil{scheduleRetry("preterminal_auth_refresh")}
@@ -380,7 +381,7 @@ func runOriginalLinuxClientPaths(
                 log.Printf("V4_PUBLIC_PATH_CANDIDATE_FAILED role=client generation=%d class=%s",
                     a.seq,nativeColdFailureClass(e))
                 candidate=nil
-                scheduleRetry("ready_then_terminal")
+                if scheduledTurn&&current!=nil{scheduledTurn=false;timerDue=false;armRotation()}else{scheduleRetry("ready_then_terminal")}
                 continue
             default:
             }
@@ -388,6 +389,7 @@ func runOriginalLinuxClientPaths(
             previous:=current
             current=a
             timerDue=false
+            scheduledTurn=false
             retry=0
             stopTimer()
             armRotation()
@@ -426,6 +428,9 @@ func runOriginalLinuxClientPaths(
                 if retiring==nil{
                     if err=launch();err!=nil{scheduleRetry("superseding_path_open")}
                 }
+            }else if scheduledTurn&&current!=nil{
+                scheduledTurn=false;timerDue=false
+                armRotation()
             }else{
                 scheduleRetry("TLS_or_Rust_M4")
             }
@@ -454,19 +459,7 @@ func runOriginalLinuxClientPaths(
                 if errors.Is(answer.err,errOriginalGameLaneColdCandidate){
                     log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_COLD_RETRY_ARMED role=client generation=%d class=%s current_owner_preserved=1",
                         current.seq,nativeColdFailureClass(answer.err))
-                    // A transport timeout on an uncommitted candidate
-                    // gets two short fresh-tuple retries on the SAME
-                    // existing rotation timer, not a full rotation period.
-                    if laneColdRetries<2&&candidate==nil&&retiring==nil&&
-                        !errors.Is(answer.err,realityfront.ErrAdmissionAuth)&&
-                        !errors.Is(answer.err,context.Canceled)&&nativeColdTLSRetryable(answer.err){
-                        laneColdRetries++
-                        stopRotation()
-                        armedRotationDelay=originalPathRetry(laneColdRetries)
-                        rotationTimer=time.NewTimer(armedRotationDelay)
-                        rotationCh=rotationTimer.C
-                        continue
-                    }
+                    // Keep the original owner; arm the next normal interval below.
                 }else{
                     log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_ROTATION_FAILED role=client generation=%d class=%s",
                         current.seq,nativeColdFailureClass(answer.err))
@@ -510,11 +503,14 @@ func runOriginalLinuxClientPaths(
             }
             desired=actual
             timerDue=true
+            scheduledTurn=actual==current.path
             log.Printf("V4_PUBLIC_TIMER_ROTATION_DUE role=client current_generation=%d same_physical_interface_ipv4=%t unchanged_path=%t interval_ms=%d actual_delay_ms=%d jitter_max_ms=%d unix_ms=%d",
                 current.seq,current.path.samePhysicalInterfaceIPv4(actual),current.path==actual,
                 c.rotationInterval.Milliseconds(),armedRotationDelay.Milliseconds(),c.rotationJitter.Milliseconds(),time.Now().UnixMilli())
             if candidate==nil&&retiring==nil{
-                if err=launch();err!=nil{scheduleRetry("timer_cold_open")}
+                if err=launch();err!=nil{
+                    if scheduledTurn{scheduledTurn=false;timerDue=false;armRotation()}else{scheduleRetry("timer_cold_open")}
+                }
             }
         case <-retryCh:
             stopTimer()

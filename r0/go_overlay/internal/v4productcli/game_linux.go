@@ -331,7 +331,7 @@ func runGameClient(
                     AuthenticatedPeerControl:proof.AuthenticatedPeerControl,
                 },nil
             },
-            native.PromoteGameAfterAuthenticatedPeerRx,5*time.Second)
+            native.PromoteGameAfterAuthenticatedPeerRx,30*time.Second)
         if err!=nil{
             log.Printf("V4_PUBLIC_GAME_REMOTE_M4_UNPROVEN role=client generation=%d lanes=%d old_tun_route_preserved=1",
                 c.rotationGeneration,n)
@@ -407,16 +407,18 @@ func runGameClient(
         if e=newAssoc.Start(time.Now());e!=nil{
             return lane,0,errors.Join(errOriginalGameLaneColdCandidate,e)
         }
-        establish,cancel:=context.WithTimeout(ctx,20*time.Second)
+        establish,cancel:=context.WithTimeout(ctx,30*time.Second)
         e=waitForOriginalColdSYN(establish,newAssoc)
         cancel()
         if e!=nil{return lane,0,errors.Join(errOriginalGameLaneColdCandidate,e)}
-        // The original server authenticates each cold TLS lane with a
-        // 15s cap. A failed 5%-loss candidate must not hold its healthy
-        // Game4 owner for a pointless 60s before trying another port.
-        dialCtx,dialCancel:=context.WithTimeout(ctx,20*time.Second)
+        // Give a lossy/high-RTT cold candidate its own TLS budget while
+        // the old group continues service. The next periodic turn, not a
+        // tight retry loop, owns another attempt.
+        dialCtx,dialCancel:=context.WithTimeout(ctx,35*time.Second)
         stopColdRTO:=driveOriginalClientColdBootstrapRTO(dialCtx,newAssoc)
-        e=native.ReplaceClientGameLane(dialCtx,newAssoc,cfg,lane)
+        candidateCfg:=cfg
+        candidateCfg.TLS.Timeout=30*time.Second
+        e=native.ReplaceClientGameLane(dialCtx,newAssoc,candidateCfg,lane)
         actual,rtoErr:=stopColdRTO()
         dialCancel()
         if actual>0{
@@ -871,7 +873,7 @@ func runGameMultiServer(
         TLS:realityfront.ServerConfig{
             ServerName:c.serverName,RouteKey:c.routeKey,
             TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},
-            Timeout:15*time.Second,
+            Timeout:30*time.Second,
         },
         ExpectedUsername:c.username,ExpectedPassword:c.password,
         ServerLimit:c.recordLimit,
@@ -1310,7 +1312,7 @@ func runGameMultiServer(
                         defer tlsWG.Done()
                         proofErr:=waitOriginalNativeServerClientM4Ready(runCtx,
                             b.product.OriginalLoopPulse,func()error{return nil},
-                            5*time.Second)
+                            40*time.Second)
                         select{
                         case normalProofReady<-normalProofResult{k,b,proofErr}:
                         case <-runCtx.Done():

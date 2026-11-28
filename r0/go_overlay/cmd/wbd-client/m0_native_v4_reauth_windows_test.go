@@ -563,18 +563,9 @@ func TestM0WindowsNativeRotationBounds(t *testing.T){
  if ch!=nil{t.Fatal("disabled rotation armed a timer")}
 }
 
-func TestM0WindowsNativeGameScheduledProofTimeoutRenewsOnlyAfterExactStop(t *testing.T){
- parent:=context.Background()
- expired,cancel:=context.WithDeadline(parent,time.Now().Add(-time.Second));defer cancel()
- if got:=m0WindowsGameScheduledProofResult(parent,expired,context.DeadlineExceeded);got!=errM0WindowsTimedRotation{
-  t.Fatalf("scheduled selected-lane proof timeout must renew through owned Stop: %v",got)
+func TestM0WindowsNativeLaneCandidateBudgets(t *testing.T){
+ if m0WindowsLaneTLSBudget<30*time.Second||m0WindowsLaneProofBudget<30*time.Second||
+   m0WindowsLaneTurnBudget<20*time.Second+m0WindowsLaneTLSBudget+m0WindowsLaneProofBudget+5*time.Second{
+  t.Fatal("scheduled lane candidate phase budgets overlap")
  }
- stopped,stop:=context.WithCancel(parent);stop()
- if got:=m0WindowsGameScheduledProofResult(stopped,expired,context.DeadlineExceeded);got!=context.DeadlineExceeded{
-  t.Fatalf("user/path cancellation may not authorize new owner: %v",got)
- }
- for _,e:=range []error{context.Canceled,errors.New("native candidate driver failure"),errors.Join(context.DeadlineExceeded,errors.New("candidate cleanup failure"))}{
-  if got:=m0WindowsGameScheduledProofResult(parent,expired,e);got!=e{t.Fatalf("non-exact proof failure masked: %v",got)}
- }
- if got:=m0WindowsGameScheduledProofResult(parent,parent,context.DeadlineExceeded);got!=context.DeadlineExceeded{t.Fatalf("unexpired proof converted: %v",got)}
 }
