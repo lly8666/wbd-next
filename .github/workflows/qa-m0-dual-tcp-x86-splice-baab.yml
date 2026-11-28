@@ -1,0 +1,13 @@
+name: M0 x86 old splice versus frozen C BAAB
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths:
+      - '.github/workflows/qa-m0-dual-tcp-x86-splice-baab.yml'
+      - '.github/workflows/qa-m0-dual-tcp-x86-splice-parity.yml'
+permissions: {contents: read, actions: read}
+jobs:
+  compare:
+    uses: ./.github/workflows/qa-m0-dual-tcp-x86-splice-parity.yml
+    with:
+      order: 'BAAB'

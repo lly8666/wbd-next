@@ -1,0 +1,58 @@
+name: M0 frozen old splice versus C, clean high RTT
+on:
+  workflow_call:
+    inputs:
+      order:
+        required: true
+        type: string
+permissions: {contents: read, actions: read}
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DUAL_TCP_SPLICE_ORDER: ${{ inputs.order }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Consume exact historical native x86 builds
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          for leg in A B;do
+            if test "$leg" = A;then
+              run=45810506381
+              artifact=15112597057
+              name=dual-tcp-build-A
+              source=26b11e2da236e909b73f461964c52d5a86d42dca
+            else
+              run=46111963879
+              artifact=15250585479
+              name=dual-tcp-native-build-x86_64
+              source=12b17ccfd4dc3354fa7dddecd0450bd1552cc540
+            fi
+            test "$(gh run view "$run" -R "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion)" = success
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" --jq ".artifacts[] | select(.name==\"$name\" and .expired==false) | .id")" = "$artifact"
+            mkdir -p "bundles/$leg"
+            gh run download "$run" -R "$GITHUB_REPOSITORY" -n "$name" -D "bundles/$leg"
+            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
+            test "$(jq -r .source_sha "bundles/$leg/manifest.json")" = "$source"
+            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
+          done
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iperf3 openssl
+          python3 -m py_compile tools/m0_dual_tcp_perf.py tools/m0_dual_rust_tcp_app.py
+      - name: Same-host mirrored actual product finite download
+        run: |
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" GITHUB_JOB="$GITHUB_JOB" RUNNER_NAME="$RUNNER_NAME" DUAL_TCP_COMPARE=c-splice DUAL_TCP_SPLICE_ORDER="$DUAL_TCP_SPLICE_ORDER" python3 -u tools/m0_dual_tcp_perf.py
+      - name: Preserve measured product receipts
+        if: always()
+        run: |
+          if test -d dual-tcp-perf-out;then
+            sudo find dual-tcp-perf-out -type f \( -name install -o -name route-key.hex -o -name users.json -o -name key.pem -o -name cert.pem \) -delete
+            sudo chown -R "$(id -u):$(id -g)" dual-tcp-perf-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: dual-x86-splice-parity-evidence, path: dual-tcp-perf-out/, retention-days: 14, if-no-files-found: warn}
