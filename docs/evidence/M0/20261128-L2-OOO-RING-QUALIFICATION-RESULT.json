@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "source_sha": "8d7e8af0af25f5e736fc5a4f8a8d6c31c7c0f5e7",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact source dual ISA functional/core qualification and valid measured weak ABBA. Performance causal benefit not established; no L2 promotion.",
+  "native_run": 46095502348,
+  "native_artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140825783745,
+      "artifact_id": 15243087194,
+      "core_pass": 356,
+      "functional_profiles": 4
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140825783548,
+      "artifact_id": 15243675099,
+      "core_pass": 356,
+      "functional_profiles": 4
+    }
+  ],
+  "previous_failed_source": "295cfc230cdd4877e58e7d92188372a39bc17c79",
+  "previous_failed_artifact_crc_and_source_verified": [
+    15242547984,
+    15242991856
+  ],
+  "previous_failure_assertions_source": "original Actions logs, not native artifact content",
+  "both_previous_failed_tests_now_pass": true,
+  "native_recovery": {
+    "order": [
+      "normal-selected",
+      "pause-selected",
+      "loss-selected"
+    ],
+    "mbps": [
+      339.3166341089481,
+      159.32541383597336,
+      63.50417545160584
+    ],
+    "bytes_sent": [
+      536870912,
+      536870912,
+      101201499
+    ],
+    "bytes_retrans": [
+      0,
+      0,
+      538203
+    ],
+    "all_exact_hash_stop": true
+  },
+  "comparison": {
+    "run_id": 46095502317,
+    "artifacts": [
+      {
+        "role": "server",
+        "job_id": 140827198347,
+        "artifact_id": 15243631953
+      },
+      {
+        "role": "relay",
+        "job_id": 140827198293,
+        "artifact_id": 15243517657
+      },
+      {
+        "role": "client",
+        "job_id": 140827198315,
+        "artifact_id": 15242803266
+      }
+    ],
+    "baseline": "45a68b5a515c7699b9d2ecced0b03e54c8e62421",
+    "manifest_sha256": {
+      "A": "f5892e0b80a081172868e764d18091bca77eec94c559a432aff779193c694ec7",
+      "B": "f195825ad3eee4358982d72906e5a769785e7a2917b8e8ac697b8e8914856900"
+    },
+    "order": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "bare_mbps": [
+      249.39825665321672,
+      278.16282884867354
+    ],
+    "mbps": [
+      76.77365240606125,
+      66.95817225632203,
+      87.72454474904247,
+      45.04353074114599
+    ],
+    "product_cpu_s_per_gib": [
+      41.6,
+      50.04,
+      42.28,
+      63.56
+    ],
+    "endpoint_user_cpu_s_per_gib": [
+      19.4,
+      21.76,
+      19.56,
+      26.16
+    ],
+    "endpoint_system_cpu_s_per_gib": [
+      22.2,
+      28.28,
+      22.72,
+      37.4
+    ],
+    "first_data_from_connect_seconds": [
+      0.8446155869999927,
+      1.846824364000014,
+      0.8446976259999985,
+      0.845569759
+    ],
+    "rust_bulk_bytes_sent": [
+      271351500,
+      271194913,
+      271405956,
+      271155507
+    ],
+    "rust_bulk_bytes_retrans": [
+      2916044,
+      2759457,
+      2970500,
+      2720051
+    ],
+    "rust_bulk_dsack": [
+      716,
+      333,
+      659,
+      225
+    ],
+    "rust_bulk_timeouts": [
+      0,
+      1,
+      0,
+      1
+    ],
+    "relay_netem": {
+      "direction_order": [
+        "server_to_client",
+        "client_to_server"
+      ],
+      "emitted": [
+        [
+          264557,
+          24697
+        ],
+        [
+          263519,
+          26006
+        ],
+        [
+          264117,
+          25625
+        ],
+        [
+          264313,
+          36254
+        ]
+      ],
+      "drops": [
+        [
+          2643,
+          258
+        ],
+        [
+          2589,
+          243
+        ],
+        [
+          2670,
+          284
+        ],
+        [
+          2640,
+          391
+        ]
+      ],
+      "seed_supported": false
+    },
+    "all_exact_app_hash_eof_profile_stop": true,
+    "rust_retired_all": true,
+    "path_sample": {
+      "points": [
+        "server_tx",
+        "relay_rx",
+        "relay_tx",
+        "client_rx"
+      ],
+      "counts": [
+        [
+          4140,
+          4140,
+          4104,
+          4104
+        ],
+        [
+          4111,
+          4111,
+          4069,
+          4069
+        ],
+        [
+          4141,
+          4141,
+          4095,
+          4095
+        ],
+        [
+          4115,
+          4115,
+          4077,
+          4077
+        ]
+      ],
+      "adjacent_missing_multiset": [
+        [
+          0,
+          36,
+          0
+        ],
+        [
+          0,
+          42,
+          0
+        ],
+        [
+          0,
+          46,
+          0
+        ],
+        [
+          0,
+          38,
+          0
+        ]
+      ],
+      "adjacent_extra_multiset": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "capture_kernel_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scope": "Per paired port deterministic sample, not physical loss or exact inner packet attribution."
+    },
+    "means": {
+      "A": {
+        "mbps": 60.90859157360362,
+        "cpu": 52.58,
+        "user_cpu": 22.78,
+        "weighted_retrans": 0.010388981021953878
+      },
+      "B": {
+        "mbps": 77.34135850268225,
+        "cpu": 46.16,
+        "user_cpu": 20.66,
+        "weighted_retrans": 0.010560169228184558
+      }
+    }
+  },
+  "interpretation": "Functional ownership/repaired wrapped read passes. Weak performance averages positive but A2 low and B1 first data +1s; cannot assign causal improvement. Retain in research baseline, no repeated weak tuning. Clean residual retrans attribution diagnostic next.",
+  "physical": "NOT_RUN",
+  "next_source": "c16c38147d8d7b2ecde1ec724a27b7adcb2d0191"
+}
