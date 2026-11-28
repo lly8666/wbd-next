@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2522,
-  "checkpoint_sha": "04badf4bdbca691ef274fde9a7e991b503a6a4e6",
+  "sequence": 2523,
+  "checkpoint_sha": "d393051a9c05d53f4507b4d1d2493ebf66e55274",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收a99be82原生及clean ABBA，重点比较实际rcv_rtt/rcv_space/rwnd、八点路径缺口、内层重传、吞吐CPU和首数据；依据结果保留/否决反馈修正，不添加固定cap或控制器。",
+  "next_action": "验收151106b原生46100809890及clean ABBA46100809807；检查fresh retained progress与DRS回归、八点JSON原子发布、实际rcv_space/rwnd/RTT、重传与吞吐CPU/首数据；如无实质收益记录并转向其他路径，不追加任意窗口cap。",
   "unverified": true,
-  "last_tested_source": "63f4c101debfd1501780076d67199816625f2ff0",
+  "last_tested_source": "a99be828cc4011eb6c9a9d6088503346ce83227d",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-L2-CARRIER-EIGHT-TAP-RESULT.json"
+    "docs/evidence/M0/20261128-L2-LINUX-RECEIVE-RTT-RESULT.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261128-L2-OOO-RING-NATIVE-FAIL.json",
-    "docs/devlog/M0/20261128-M0-L2-OOO-WRAP-REPAIR-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-OOO-RING-QUALIFICATION-RESULT.json",
     "docs/devlog/M0/20261128-M0-L2-CLEAN-INNER-DELIVERY-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-CLEAN-INNER-DELIVERY-RESULT.json",
     "docs/devlog/M0/20261128-M0-L2-CARRIER-EIGHT-TAP-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-CARRIER-EIGHT-TAP-RESULT.json",
-    "docs/devlog/M0/20261128-M0-L2-LINUX-RECEIVE-RTT-HANDOFF.md"
+    "docs/devlog/M0/20261128-M0-L2-LINUX-RECEIVE-RTT-HANDOFF.md",
+    "docs/evidence/M0/20261128-L2-LINUX-RECEIVE-RTT-RESULT.json",
+    "docs/devlog/M0/20261128-M0-L2-FRESH-ARRIVAL-DRS-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "63f4c10双ISA356/8功能/3本地/八点clean6/6，旧303.52/Rust292.56M CPU26.31/26.76，全部缺口跨VXLAN A58/B925，后段12/853，B重传2.55/3.15%。旧接收RTT~441ms，Rust晚期632/1020ms，窗口64MiB；a99be82匹配Linux独立echo/满MSS/空队列上涨/立即下降反馈，原生和ABBA待验，L2未过。"
+  "partial_summary": "a99be82原生357/8功能/3本地，clean6/6业务完整但relay JSON发布竞态导致workflow FAIL，最终八点ZIP有效；A299.74/B289.01M CPU27.685/27.165重传3.5045/2.9750%，B RTT445ms但全64MiB。151106b修正DRS以实际新留存供给和时间折算，夹具原子发布；原生及ABBA排队，L2未过。"
 }
