@@ -1,0 +1,16 @@
+name: M0 H2560 weak 1% AD 60s historical
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths: ['.github/workflows/qa-m0-dual-tcp-weak-history-1-d.yml']
+permissions: {contents: read, actions: read, id-token: write}
+concurrency:
+  group: m0-h2559-weak-history-1
+  cancel-in-progress: false
+jobs:
+  paired:
+    uses: ./.github/workflows/qa-m0-dual-tcp-weak-history.yml
+    with:
+      arm: 'D'
+      loss: 1
+    secrets: inherit

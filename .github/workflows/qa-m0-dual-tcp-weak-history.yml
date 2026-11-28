@@ -38,6 +38,7 @@ jobs:
           case "$WBD_M0_WEAK_ARM" in
             B) run=46120199788; source=172fca30ceb2ed9b0840465d5d24ab7b009bc13d; artifact=15253986117;;
             C) run=46128656990; source=a8a8358f65f90d40e7f7e61593e7333a21f1fb92; artifact=15256882872;;
+            D) run=46134184084; source=cdd60c2d554a469db1dcb19351e88ebe4d65239b; artifact=15259306040;;
             *) exit 2;;
           esac
           test "$(gh run view "$run" -R "$GITHUB_REPOSITORY" --json headSha --jq .headSha)" = "$source"
@@ -197,6 +198,7 @@ jobs:
           case "$WBD_M0_WEAK_ARM" in
             B) source=172fca30ceb2ed9b0840465d5d24ab7b009bc13d;;
             C) source=a8a8358f65f90d40e7f7e61593e7333a21f1fb92;;
+            D) source=cdd60c2d554a469db1dcb19351e88ebe4d65239b;;
             *) exit 2;;
           esac
           test "$(jq -r .source_sha bundles/B/manifest.json)" = "$source"
@@ -308,6 +310,7 @@ jobs:
           case "$WBD_M0_WEAK_ARM" in
             B) source=172fca30ceb2ed9b0840465d5d24ab7b009bc13d;;
             C) source=a8a8358f65f90d40e7f7e61593e7333a21f1fb92;;
+            D) source=cdd60c2d554a469db1dcb19351e88ebe4d65239b;;
             *) exit 2;;
           esac
           test "$(jq -r .source_sha bundles/B/manifest.json)" = "$source"
