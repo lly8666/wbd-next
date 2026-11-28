@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2523,
-  "checkpoint_sha": "d393051a9c05d53f4507b4d1d2493ebf66e55274",
+  "sequence": 2524,
+  "checkpoint_sha": "fb0b6b0d6c07cc834ec4e2dc1b9ee85ba0e6a84a",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收151106b原生46100809890及clean ABBA46100809807；检查fresh retained progress与DRS回归、八点JSON原子发布、实际rcv_space/rwnd/RTT、重传与吞吐CPU/首数据；如无实质收益记录并转向其他路径，不追加任意窗口cap。",
+  "next_action": "验收db76055 exact双ISA及ARM同机weak ABBA；核对A/B manifest、真实0.5% qdisc、完整业务/首数据/Stop、窗口增长与吞吐CPU，区分retired和Stop样本；先判定151106b弱网是否退化，再决定保留或撤销DRS候选，不追加任意cap。",
   "unverified": true,
-  "last_tested_source": "a99be828cc4011eb6c9a9d6088503346ce83227d",
+  "last_tested_source": "151106b61e5d0ebbc6865818f05cec9a7a9334f6",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-L2-LINUX-RECEIVE-RTT-RESULT.json"
+    "docs/evidence/M0/20261128-L2-FRESH-ARRIVAL-DRS-RESULT.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261128-L2-OOO-RING-QUALIFICATION-RESULT.json",
-    "docs/devlog/M0/20261128-M0-L2-CLEAN-INNER-DELIVERY-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-CLEAN-INNER-DELIVERY-RESULT.json",
     "docs/devlog/M0/20261128-M0-L2-CARRIER-EIGHT-TAP-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-CARRIER-EIGHT-TAP-RESULT.json",
     "docs/devlog/M0/20261128-M0-L2-LINUX-RECEIVE-RTT-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-LINUX-RECEIVE-RTT-RESULT.json",
-    "docs/devlog/M0/20261128-M0-L2-FRESH-ARRIVAL-DRS-HANDOFF.md"
+    "docs/devlog/M0/20261128-M0-L2-FRESH-ARRIVAL-DRS-HANDOFF.md",
+    "docs/evidence/M0/20261128-L2-FRESH-ARRIVAL-DRS-RESULT.json",
+    "docs/devlog/M0/20261128-M0-L2-DRS-WEAK-LOCAL-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "a99be82原生357/8功能/3本地，clean6/6业务完整但relay JSON发布竞态导致workflow FAIL，最终八点ZIP有效；A299.74/B289.01M CPU27.685/27.165重传3.5045/2.9750%，B RTT445ms但全64MiB。151106b修正DRS以实际新留存供给和时间折算，夹具原子发布；原生及ABBA排队，L2未过。"
+  "partial_summary": "151106b双ISA359/8功能/3本地/clean6/6，八点原子发布成功；A303.58/B305.34M CPU26.015/26.005重传2.54/2.19%，B空间23.8–31.1MB但仍5s达64MiB。不同主机local弱58.71→25.68M严重警讯，db76055无runtime改动，同机0.5% ABBA待验，L2未过。"
 }
