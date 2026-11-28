@@ -1,0 +1,13 @@
+name: M0 weak 1% ADDA 180s three ARM
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths: ['.github/workflows/qa-m0-dual-tcp-weak-1-d.yml']
+permissions: {contents: read, actions: read, id-token: write}
+jobs:
+  paired:
+    uses: ./.github/workflows/qa-m0-dual-tcp-weak-splice.yml
+    with:
+      arm: 'D'
+      loss: 1
+    secrets: inherit

@@ -1,0 +1,39 @@
+name: M0 single frozen old Linux splice ARM64 build H2555
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths:
+      - '.github/workflows/qa-m0-dual-tcp-weak-splice-build.yml'
+permissions: {contents: read}
+jobs:
+  baseline:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+      PRODUCT_SOURCE: '26b11e2da236e909b73f461964c52d5a86d42dca'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.PRODUCT_SOURCE }}
+          persist-credentials: false
+      - name: Exact old native build once
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$PRODUCT_SOURCE"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iputils-ping autoconf automake libtool make gcc g++ nasm openssl
+          GITHUB_SHA="$PRODUCT_SOURCE" bash tools/m0_plan029_linux_dual_native_build.sh >build.log 2>&1 || { tail -n 180 build.log; exit 2; }
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          test "$(jq -r .source_sha linux-plan029-public-bundle/manifest.json)" = "$PRODUCT_SOURCE"
+          tar -C linux-plan029-public-bundle -cf bundle.tar .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frozen-arm-splice-A
+          path: |
+            bundle.tar
+            build.log
+          if-no-files-found: error

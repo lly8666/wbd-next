@@ -1,0 +1,376 @@
+name: M0 frozen splice versus grouped Rust weak Internet paired
+on:
+  workflow_call:
+    inputs:
+      arm: {required: true, type: string}
+      loss: {required: true, type: number}
+permissions:
+  contents: read
+  actions: read
+env:
+  WBD_DUAL_TCP_ARM: '1'
+  WBD_M0_WEAK_ARM: ${{ inputs.arm }}
+  WBD_M0_WEAK_LOSS: ${{ inputs.loss }}
+  WBD_H2442_ARM_SERVER: '1'
+  WBD_H2418_DIAG: '1'
+  WBD_H2228_MODE: normal
+  WBD_H2228_LOSS_MODEL: iid
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    outputs:
+      candidate_run: ${{ steps.qualified.outputs.run }}
+      baseline_run: ${{ steps.qualified.outputs.baseline_run }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Preflight duration fixture
+        run: |
+          python3 -m py_compile tools/m0_dual_tcp_arm_weak_splice.py tools/m0_dual_tcp_weak_relay.py tools/m0_dual_tcp_long_app.py
+          bash -n tools/m0_dual_tcp_weak_relay_start.sh
+      - name: Reuse exact qualified Rust and one shared frozen ARM splice build
+        id: qualified
+        run: |
+          set -euo pipefail
+          run=46144352190
+          test "$(gh run view "$run" -R "$GITHUB_REPOSITORY" --json headSha --jq .headSha)" = "c9f200da4d50574426ce65c59a47ffc69ee2e211"
+          test "$(gh run view "$run" -R "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" --jq '.artifacts[] | select(.name=="dual-tcp-native-build-aarch64" and .expired==false) | .id')" = 15263705152
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          old=""
+          for i in $(seq 1 180);do
+            old=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/qa-m0-dual-tcp-weak-splice-build.yml/runs?head_sha=$GITHUB_SHA" --jq '.workflow_runs[0].id // empty')
+            if test -n "$old";then
+              gh run view "$old" -R "$GITHUB_REPOSITORY" --json headSha,status,conclusion > old-run.json
+              test "$(jq -r .headSha old-run.json)" = "$GITHUB_SHA"
+              if test "$(jq -r .status old-run.json)" = completed;then break;fi
+            fi
+            sleep 10
+          done
+          test -n "$old"
+          test "$(jq -r .status old-run.json)" = completed
+          test "$(jq -r .conclusion old-run.json)" = success
+          test -n "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$old/artifacts" --jq '.artifacts[] | select(.name=="frozen-arm-splice-A" and .expired==false) | .id')"
+          echo "baseline_run=$old" >> "$GITHUB_OUTPUT"
+  relay-arm64:
+    name: 'Real ARM64 middle L3 kernel router: ONLY netem egress per direction'
+    needs: prepare
+    permissions: {contents: read, actions: read, id-token: write}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_H2228_ROLE: relay
+      WBD_H2228_MODE: normal
+      WBD_H2228_LOSS_MODEL: iid
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Require authorized OIDC tailnet credentials (no real-test fallback)
+        shell: bash
+        env:
+          TS_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          TS_AUD: ${{ secrets.TS_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          test -n "$TS_ID" && test -n "$TS_AUD" || { echo H2228_REAL_ARM_RELAY_BLOCKED_NO_TAILNET_OIDC;exit 2; }
+          test "$(uname -m)" = aarch64
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h228-arm-relay-${{ github.run_id }}
+      - name: Relay source and run bound ephemeral identity
+        shell: bash
+        run: |
+          mkdir -p h2228-meta
+          python3 tools/m0_h2228_three_runner_relay.py meta relay h2228-meta/relay.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-relay-peer
+          path: h2228-meta/relay.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Wait BOTH distinct ARM64 endpoint VMs, same run/commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p h2228-peer
+          for role in client server;do
+            found=0
+            for i in $(seq 1 150);do
+              if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
+                  -n "h2228-$role-peer" -D h2228-peer >/dev/null 2>&1;then found=1;break;fi
+              sleep 5
+            done
+            test "$found" = 1 && test -s "h2228-peer/$role.json" ||
+                { echo "H2228_MISSING_DISTINCT_$role";exit 2; }
+          done
+          cp h2228-meta/relay.json h2228-peer/relay.json
+      - name: Install real Linux bridge/route/qdisc utilities in ARM relay
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump
+      - name: Create TWO actual VXLAN L2 segments and kernel L3 forwarding (no app proxy)
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_dual_tcp_weak_relay_start.sh relay-start
+      - name: Start header-only eight-tap deterministic path sample (relay)
+        run: |
+          sudo -n nohup python3 -u tools/m0_dual_tcp_path_sample.py start relay >h2228-out/path-sample-worker.log 2>&1 </dev/null &
+          for i in $(seq 1 100); do
+            test ! -s h2228-out/path-sample-ready.json || break
+            sleep .2
+          done
+          test -s h2228-out/path-sample-ready.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-relay-ready
+          path: h2228-out/relay-ready.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Record both actual peer paths once per second during measurement
+        run: |
+          nohup python3 -u tools/m0_dual_tcp_arm_weak_splice.py watch relay >h2228-out/relay-watch.log 2>&1 </dev/null &
+          echo $! >"$RUNNER_TEMP/dual-watch.pid"
+      - name: Keep ARM forwarding and netem alive through ARM client measurements
+        shell: bash
+        timeout-minutes: 50
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2228_three_runner_case.sh relay-wait
+      - name: Finish and qualify header-only path sample
+        if: always()
+        run: sudo -n python3 -u tools/m0_dual_tcp_path_sample.py stop
+      - name: Cleanup ONLY owned middle namespace and VXLAN (never Tailscale)
+        if: always()
+        shell: bash
+        run: |
+          test ! -s "$RUNNER_TEMP/dual-watch.pid" || kill "$(cat "$RUNNER_TEMP/dual-watch.pid")" || true
+          bash tools/m0_h2228_three_runner_case.sh cleanup || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2228-arm-relay-evidence
+          path: h2228-out/
+          if-no-files-found: warn
+          retention-days: 14
+  server-arm64:
+    needs: prepare
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_H2228_ROLE: server
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: dual-arm-server-${{ github.run_id }}
+      - name: Publish actual ARM endpoint identity
+        run: |
+          mkdir -p h2228-meta h2228-peer h2228-out
+          python3 -m py_compile tools/m0_dual_tcp_arm_weak_splice.py tools/m0_h2228_three_runner_relay.py
+          python3 tools/m0_h2228_three_runner_relay.py meta server h2228-meta/server.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2228-server-peer, path: h2228-meta/server.json, retention-days: 3}
+      - name: Consume exact instrumented ARM bundle (no rebuild)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
+          mkdir -p bundles/A bundles/B
+          gh run download "${{ needs.prepare.outputs.baseline_run }}" -R "$GITHUB_REPOSITORY" -n frozen-arm-splice-A -D bundles/A
+          gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
+          for leg in A B; do
+            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
+            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
+          done
+          test "$(jq -r .source_sha bundles/A/manifest.json)" = "26b11e2da236e909b73f461964c52d5a86d42dca"
+          test "$(jq -r .source_sha bundles/B/manifest.json)" = "c9f200da4d50574426ce65c59a47ffc69ee2e211"
+          test "$(jq -r .architecture bundles/A/manifest.json)" = aarch64
+          test "$(jq -r .architecture bundles/B/manifest.json)" = aarch64
+          cat >/tmp/m0-long-tcp-info-layout.c <<'EOF'
+          #include <stddef.h>
+          #include <linux/tcp.h>
+          _Static_assert(offsetof(struct tcp_info, tcpi_snd_mss)==16, "snd_mss");
+          _Static_assert(offsetof(struct tcp_info, tcpi_pmtu)==60, "pmtu");
+          _Static_assert(offsetof(struct tcp_info, tcpi_unacked)==24, "unacked");
+          _Static_assert(offsetof(struct tcp_info, tcpi_total_retrans)==100, "total_retrans");
+          _Static_assert(offsetof(struct tcp_info, tcpi_bytes_acked)==120, "bytes_acked");
+          _Static_assert(offsetof(struct tcp_info, tcpi_bytes_sent)==200, "bytes_sent");
+          _Static_assert(offsetof(struct tcp_info, tcpi_bytes_retrans)==208, "bytes_retrans");
+          int main(void){return 0;}
+          EOF
+          cc -fsyntax-only /tmp/m0-long-tcp-info-layout.c
+      - name: Join the existing two-segment ARM routed topology
+        run: |
+          set -euo pipefail
+          cp h2228-meta/server.json h2228-peer/server.json
+          for role in client server relay;do
+            if test "$role" = server;then continue;fi
+            for i in $(seq 1 120);do
+              gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n "h2228-$role-peer" -D h2228-peer >/dev/null 2>&1 && break
+              sleep 4
+            done
+            test -s "h2228-peer/$role.json"
+          done
+          for i in $(seq 1 150);do
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-relay-ready -D h2228-relay-ready >/dev/null 2>&1 && break
+            sleep 4
+          done
+          test -s h2228-relay-ready/relay-ready.json
+          python3 tools/m0_h2228_three_runner_relay.py node-net server h2228-peer/relay.json h2228-out/server-topology.json
+          tailscale ping --c=5 "$(jq -r .tail_ip h2228-peer/relay.json)" >h2228-out/relay-ping.txt 2>&1 || true
+          nohup python3 -u tools/m0_dual_tcp_arm_weak_splice.py watch server >h2228-out/watch.log 2>&1 </dev/null &
+          echo $! >"$RUNNER_TEMP/dual-watch.pid"
+      - name: Start header-only eight-tap deterministic path sample (server)
+        run: |
+          sudo -n nohup python3 -u tools/m0_dual_tcp_path_sample.py start server >h2228-out/path-sample-worker.log 2>&1 </dev/null &
+          for i in $(seq 1 100); do
+            test ! -s h2228-out/path-sample-ready.json || break
+            sleep .2
+          done
+          test -s h2228-out/path-sample-ready.json
+      - name: Start preset server and real origin control
+        run: |
+          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG,WBD_H2228_MODE,WBD_M0_WEAK_ARM,WBD_M0_WEAK_LOSS nohup python3 -u tools/m0_dual_tcp_arm_weak_splice.py server >h2228-out/server-control.log 2>&1 </dev/null &
+          for i in $(seq 1 200);do
+            test ! -s h2228-out/server-ready.json || break
+            sleep 1
+          done
+          test -s h2228-out/server-ready.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
+      - name: Keep the same ARM server through four 180s frozen splice versus candidate legs
+        run: bash tools/m0_h2228_three_runner_case.sh server-wait
+      - name: Finish and qualify header-only path sample
+        if: always()
+        run: sudo -n python3 -u tools/m0_dual_tcp_path_sample.py stop
+      - name: Preserve native resource and path receipts
+        if: always()
+        run: |
+          test ! -s "$RUNNER_TEMP/dual-watch.pid" || kill "$(cat "$RUNNER_TEMP/dual-watch.pid")" || true
+          sudo chown -R "$(id -u):$(id -g)" h2228-out
+          bash tools/m0_h2228_three_runner_case.sh cleanup || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: dual-arm-server-evidence, path: h2228-out/, retention-days: 14}
+  client-arm64:
+    needs: prepare
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_H2228_ROLE: client
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: dual-arm-client-${{ github.run_id }}
+      - name: Publish actual ARM endpoint identity
+        run: |
+          mkdir -p h2228-meta h2228-peer h2228-out
+          python3 -m py_compile tools/m0_dual_tcp_arm_weak_splice.py tools/m0_h2228_three_runner_relay.py
+          python3 tools/m0_h2228_three_runner_relay.py meta client h2228-meta/client.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2228-client-peer, path: h2228-meta/client.json, retention-days: 3}
+      - name: Consume exact instrumented ARM bundle (no rebuild)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
+          mkdir -p bundles/A bundles/B
+          gh run download "${{ needs.prepare.outputs.baseline_run }}" -R "$GITHUB_REPOSITORY" -n frozen-arm-splice-A -D bundles/A
+          gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
+          for leg in A B; do
+            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
+            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
+          done
+          test "$(jq -r .source_sha bundles/A/manifest.json)" = "26b11e2da236e909b73f461964c52d5a86d42dca"
+          test "$(jq -r .source_sha bundles/B/manifest.json)" = "c9f200da4d50574426ce65c59a47ffc69ee2e211"
+          test "$(jq -r .architecture bundles/A/manifest.json)" = aarch64
+          test "$(jq -r .architecture bundles/B/manifest.json)" = aarch64
+          cat >/tmp/m0-long-tcp-info-layout.c <<'EOF'
+          #include <stddef.h>
+          #include <linux/tcp.h>
+          _Static_assert(offsetof(struct tcp_info, tcpi_snd_mss)==16, "snd_mss");
+          _Static_assert(offsetof(struct tcp_info, tcpi_pmtu)==60, "pmtu");
+          _Static_assert(offsetof(struct tcp_info, tcpi_unacked)==24, "unacked");
+          _Static_assert(offsetof(struct tcp_info, tcpi_total_retrans)==100, "total_retrans");
+          _Static_assert(offsetof(struct tcp_info, tcpi_bytes_acked)==120, "bytes_acked");
+          _Static_assert(offsetof(struct tcp_info, tcpi_bytes_sent)==200, "bytes_sent");
+          _Static_assert(offsetof(struct tcp_info, tcpi_bytes_retrans)==208, "bytes_retrans");
+          int main(void){return 0;}
+          EOF
+          cc -fsyntax-only /tmp/m0-long-tcp-info-layout.c
+      - name: Join the existing two-segment ARM routed topology
+        run: |
+          set -euo pipefail
+          cp h2228-meta/client.json h2228-peer/client.json
+          for role in client server relay;do
+            if test "$role" = client;then continue;fi
+            for i in $(seq 1 120);do
+              gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n "h2228-$role-peer" -D h2228-peer >/dev/null 2>&1 && break
+              sleep 4
+            done
+            test -s "h2228-peer/$role.json"
+          done
+          for i in $(seq 1 150);do
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-relay-ready -D h2228-relay-ready >/dev/null 2>&1 && break
+            sleep 4
+          done
+          test -s h2228-relay-ready/relay-ready.json
+          python3 tools/m0_h2228_three_runner_relay.py node-net client h2228-peer/relay.json h2228-out/client-topology.json
+          tailscale ping --c=5 "$(jq -r .tail_ip h2228-peer/relay.json)" >h2228-out/relay-ping.txt 2>&1 || true
+          nohup python3 -u tools/m0_dual_tcp_arm_weak_splice.py watch client >h2228-out/watch.log 2>&1 </dev/null &
+          echo $! >"$RUNNER_TEMP/dual-watch.pid"
+      - name: Start header-only eight-tap deterministic path sample (client)
+        run: |
+          sudo -n nohup python3 -u tools/m0_dual_tcp_path_sample.py start client >h2228-out/path-sample-worker.log 2>&1 </dev/null &
+          for i in $(seq 1 100); do
+            test ! -s h2228-out/path-sample-ready.json || break
+            sleep .2
+          done
+          test -s h2228-out/path-sample-ready.json
+      - name: Run four 180s frozen splice versus candidate legs
+        run: |
+          for i in $(seq 1 150);do
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-server-ready -D h2228-server-ready >/dev/null 2>&1 && break
+            sleep 4
+          done
+          test -s h2228-server-ready/server-ready.json
+          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG,WBD_H2228_MODE,WBD_M0_WEAK_ARM,WBD_M0_WEAK_LOSS python3 -u tools/m0_dual_tcp_arm_weak_splice.py client
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2228-client-result, path: h2228-out/summary.json, retention-days: 5, if-no-files-found: warn}
+      - name: Finish and qualify header-only path sample
+        if: always()
+        run: sudo -n python3 -u tools/m0_dual_tcp_path_sample.py stop
+      - name: Preserve native resource and path receipts
+        if: always()
+        run: |
+          test ! -s "$RUNNER_TEMP/dual-watch.pid" || kill "$(cat "$RUNNER_TEMP/dual-watch.pid")" || true
+          sudo chown -R "$(id -u):$(id -g)" h2228-out
+          bash tools/m0_h2228_three_runner_case.sh cleanup || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: dual-arm-client-evidence, path: h2228-out/, retention-days: 14}
