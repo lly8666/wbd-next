@@ -1,0 +1,376 @@
+{
+  "schema_version": 1,
+  "source_sha": "151106b61e5d0ebbc6865818f05cec9a7a9334f6",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact source native functionality and valid clean ABBA measurements; not product performance promotion. Local weak throughput warning remains.",
+  "native_run": 46100809890,
+  "native_artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140842578214,
+      "artifact_id": 15245566538,
+      "core_pass": 359,
+      "functional_profiles": 4
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140842578660,
+      "artifact_id": 15245124338,
+      "core_pass": 359,
+      "functional_profiles": 4
+    }
+  ],
+  "native_recovery": {
+    "order": [
+      "normal-selected",
+      "pause-selected",
+      "loss-selected"
+    ],
+    "mbps": [
+      339.28256244210104,
+      159.28334067659523,
+      25.68239117050979
+    ],
+    "bytes_sent": [
+      536870912,
+      536870912,
+      101168315
+    ],
+    "bytes_retrans": [
+      0,
+      0,
+      505019
+    ],
+    "all_exact_hash_stop": true,
+    "weak_warning": {
+      "prior_source": "a99be828cc4011eb6c9a9d6088503346ce83227d",
+      "prior_artifact": 15244373533,
+      "prior_mbps": 58.70943165707905,
+      "current_mbps": 25.68239117050979,
+      "prior_cpu": 27.2,
+      "current_cpu": 50.66666666666667,
+      "prior_rcv_window_sample": 42114426,
+      "current_rcv_window_sample": 8810618,
+      "prior_server_rwnd_limited_seconds": 0.556910929,
+      "current_server_rwnd_limited_seconds": 3.139491185,
+      "prior_recoveries": 13,
+      "current_recoveries": 36,
+      "prior_netem_drops": [
+        479,
+        61
+      ],
+      "current_netem_drops": [
+        499,
+        108
+      ],
+      "seed_supported": false,
+      "scope": "Different host and independent actual random loss; live/Stop samples not final retired. Warning, not causal performance result."
+    }
+  },
+  "comparison": {
+    "run_id": 46100809807,
+    "artifacts": [
+      {
+        "role": "server",
+        "job_id": 140844073870,
+        "artifact_id": 15245710926
+      },
+      {
+        "role": "relay",
+        "job_id": 140844073806,
+        "artifact_id": 15245980455
+      },
+      {
+        "role": "client",
+        "job_id": 140844073824,
+        "artifact_id": 15246035859
+      }
+    ],
+    "baseline": "a99be828cc4011eb6c9a9d6088503346ce83227d",
+    "manifest_sha256": {
+      "A": "a6266ddb3eaf96b3c54886fc748b25ad244be8776e367a8563cd0337321ee347",
+      "B": "7e4848139843e0bf8df4d07032cbaf2583b757271eeff6fd8741b1af4ab52218"
+    },
+    "order": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "bare_mbps": [
+      342.89722490881775,
+      234.1739392673166
+    ],
+    "mbps": [
+      315.9626426258753,
+      295.01140727422774,
+      315.67329649298927,
+      291.1954969975185
+    ],
+    "product_cpu_s_per_gib": [
+      26.21,
+      26.02,
+      25.99,
+      25.82
+    ],
+    "first_data_from_connect_seconds": [
+      0.8233028750000102,
+      0.8227583809999999,
+      0.8224574200000063,
+      0.8224108800000067
+    ],
+    "rust_bulk_bytes_sent": [
+      1102910560,
+      1094256795,
+      1101273137,
+      1100536867
+    ],
+    "rust_bulk_bytes_retrans": [
+      29168736,
+      20514971,
+      27531313,
+      26795043
+    ],
+    "rust_bulk_dsack": [
+      2514,
+      2293,
+      2601,
+      3326
+    ],
+    "rust_bulk_timeouts": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "client_ingress_full": [
+      425,
+      0,
+      772,
+      0
+    ],
+    "relay_netem": {
+      "emitted": [
+        [
+          1069522,
+          122809
+        ],
+        [
+          1062112,
+          118837
+        ],
+        [
+          1071295,
+          118974
+        ],
+        [
+          1069687,
+          122801
+        ]
+      ],
+      "drops": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    "all_exact_app_hash_eof_stop": true,
+    "rust_retired_all": true,
+    "path_sample": {
+      "points": [
+        "server_tx",
+        "server_vx_tx",
+        "relay_server_vx_rx",
+        "relay_rx",
+        "relay_tx",
+        "relay_client_vx_tx",
+        "client_vx_rx",
+        "client_rx"
+      ],
+      "counts": [
+        [
+          16735,
+          16735,
+          16686,
+          16686,
+          16686,
+          16686,
+          16289,
+          16289
+        ],
+        [
+          16614,
+          16614,
+          16586,
+          16586,
+          16586,
+          16586,
+          16328,
+          16328
+        ],
+        [
+          16717,
+          16717,
+          16708,
+          16708,
+          16708,
+          16708,
+          16338,
+          16338
+        ],
+        [
+          16719,
+          16719,
+          16705,
+          16705,
+          16705,
+          16705,
+          16324,
+          16324
+        ]
+      ],
+      "adjacent_missing_multiset": [
+        [
+          0,
+          49,
+          0,
+          0,
+          0,
+          397,
+          0
+        ],
+        [
+          0,
+          28,
+          0,
+          0,
+          0,
+          258,
+          0
+        ],
+        [
+          0,
+          9,
+          0,
+          0,
+          0,
+          370,
+          0
+        ],
+        [
+          0,
+          14,
+          0,
+          0,
+          0,
+          381,
+          0
+        ]
+      ],
+      "adjacent_extra_multiset": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "capture_kernel_drops": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "nonstandard": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "receive_feedback": {
+      "space_max": [
+        67110902,
+        31083661,
+        23835790,
+        67108792
+      ],
+      "space_at_5s": [
+        17688519,
+        17538393,
+        17448956,
+        17776254
+      ],
+      "all_buffer_max": 67108864,
+      "all_reached_max_seconds_approx": 5,
+      "scope": "Fresh arrival corrects late sample, but window already reached max before divergence. Earlier growth mechanism still unresolved."
+    },
+    "means": {
+      "A": {
+        "mbps": 303.5790698116969,
+        "cpu": 26.015,
+        "weighted_retrans": 0.025398281944123736
+      },
+      "B": {
+        "mbps": 305.3423518836085,
+        "cpu": 26.005,
+        "weighted_retrans": 0.021883684344140383
+      }
+    }
+  },
+  "interpretation": "Retain candidate as unpromoted research baseline while isolating local weak warning. No further runtime change before same-host exact A/B weak measurement. No causal proof clean performance due path drift, and advertised window still saturates. Do not add arbitrary cap.",
+  "physical": "NOT_RUN",
+  "next_source": "db760553eaf5b20e01d1c9c6452ab45281cc3812"
+}

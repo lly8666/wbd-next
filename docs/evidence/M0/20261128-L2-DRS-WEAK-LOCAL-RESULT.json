@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "source_sha": "db760553eaf5b20e01d1c9c6452ab45281cc3812",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native dual ISA functional qualification and local same-host weak diagnostic, not L2 promotion or three-host zero-loss resolution.",
+  "native_run": 46102235913,
+  "native_artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140847031937,
+      "artifact_id": 15245668966,
+      "functional_profiles": 4,
+      "manifest_sha256": "82e3e121d36127e8c6088d3dc8857bd1a00013ef9d61b49e422e80f98386de7b"
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140847032116,
+      "artifact_id": 15245852310,
+      "core_pass": 359,
+      "functional_profiles": 4,
+      "manifest_sha256": "5b6d8808a6657d6cfc296afb1340d21ef68df5b28073c009ff4f3fede6a59677"
+    }
+  ],
+  "normal_pause": {
+    "mbps": [
+      340.13801740262153,
+      95.04580758326283
+    ],
+    "cpu_s_per_gib": [
+      31.12,
+      34.52
+    ],
+    "bytes_retrans": [
+      0,
+      0
+    ],
+    "pause_seconds": 15,
+    "all_exact_bytes_hash_eof_stop": true
+  },
+  "weak": {
+    "baseline": "a99be828cc4011eb6c9a9d6088503346ce83227d",
+    "order": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "target_bytes": 100663296,
+    "offered_bps": 120000000,
+    "added_rtt_ms": 400,
+    "injected_loss_pct": 0.5,
+    "seed_supported": false,
+    "mbps": [
+      65.73920713833895,
+      62.83334735366254,
+      64.59525702326572,
+      65.08456218960828
+    ],
+    "cpu_s_per_gib": [
+      26.773333333333333,
+      26.986666666666665,
+      26.56,
+      27.30666666666667
+    ],
+    "bytes_sent": [
+      101223276,
+      101182833,
+      101169388,
+      101241942
+    ],
+    "bytes_retrans": [
+      559980,
+      519537,
+      506092,
+      578646
+    ],
+    "timeouts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "forward_netem_drops": [
+      502,
+      491,
+      489,
+      515
+    ],
+    "reverse_netem_drops": [
+      42,
+      44,
+      38,
+      33
+    ],
+    "all_exact_bytes_hash_eof_stop": true,
+    "all_stop_not_retired": true
+  },
+  "interpretation": "Previous cross-host weak collapse not reproduced; B throughput about -2.6%, CPU -1.0%, weighted Stop-sample retrans 0.562% to 0.507%. Keep fresh-arrival input as unpromoted research baseline. Three-host clean early growth unresolved; no causal promotion.",
+  "physical": "NOT_RUN"
+}

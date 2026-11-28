@@ -1,0 +1,396 @@
+{
+  "schema_version": 1,
+  "source_sha": "63f4c101debfd1501780076d67199816625f2ff0",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA qualification and valid clean eight-tap diagnostic. No overall L2 parity promotion.",
+  "native_run": 46097767068,
+  "native_artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140832969115,
+      "artifact_id": 15244400874,
+      "core_pass": 356,
+      "functional_profiles": 4
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140832968918,
+      "artifact_id": 15244381046,
+      "core_pass": 356,
+      "functional_profiles": 4
+    }
+  ],
+  "native_recovery": {
+    "order": [
+      "normal-selected",
+      "pause-selected",
+      "loss-selected"
+    ],
+    "mbps": [
+      340.2146474311433,
+      159.26816198893513,
+      63.325201839369264
+    ],
+    "bytes_sent": [
+      536870912,
+      536870912,
+      101197351
+    ],
+    "bytes_retrans": [
+      0,
+      0,
+      534055
+    ],
+    "all_exact_hash_stop": true
+  },
+  "comparison": {
+    "run_id": 46097767134,
+    "artifacts": [
+      {
+        "role": "server",
+        "job_id": 140834575210,
+        "artifact_id": 15243859574
+      },
+      {
+        "role": "relay",
+        "job_id": 140834575197,
+        "artifact_id": 15243864450
+      },
+      {
+        "role": "client",
+        "job_id": 140834575203,
+        "artifact_id": 15244761753
+      }
+    ],
+    "baseline": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "manifest_sha256": {
+      "A": "d63d1dabacde9f05b27835f68d55c45640032fa8c815ced62860dc96b3ed2ae6",
+      "B": "8db98949f3586d7d24505fa74b0a77199e763aa9e78c3e648f7589645ac3b42c"
+    },
+    "order": [
+      "B",
+      "A",
+      "A",
+      "B"
+    ],
+    "bare_mbps": [
+      334.8491252906156,
+      358.1517979112039
+    ],
+    "mbps": [
+      290.508459017668,
+      312.3946570828794,
+      294.6468189869005,
+      294.6106538687223
+    ],
+    "product_cpu_s_per_gib": [
+      26.66,
+      26.47,
+      26.15,
+      26.86
+    ],
+    "endpoint_user_cpu_s_per_gib": [
+      13.16,
+      9.42,
+      9.37,
+      13.31
+    ],
+    "endpoint_system_cpu_s_per_gib": [
+      13.5,
+      17.05,
+      16.78,
+      13.55
+    ],
+    "first_data_from_connect_seconds": [
+      0.8834363960000076,
+      0.8835819029999925,
+      0.883713317999991,
+      0.8846065260000273
+    ],
+    "rust_bulk_bytes_sent": [
+      1101839339,
+      null,
+      null,
+      1108700131
+    ],
+    "rust_bulk_bytes_retrans": [
+      28097515,
+      null,
+      null,
+      34958307
+    ],
+    "rust_bulk_dsack": [
+      1803,
+      null,
+      null,
+      1680
+    ],
+    "rust_bulk_timeouts": [
+      0,
+      null,
+      null,
+      1
+    ],
+    "rust_server_m4_copied": [
+      1062537,
+      null,
+      null,
+      1069154
+    ],
+    "rust_client_ingress_full": [
+      0,
+      null,
+      null,
+      1299
+    ],
+    "relay_netem": {
+      "emitted": [
+        [
+          1068764,
+          160467
+        ],
+        [
+          1038362,
+          201031
+        ],
+        [
+          1038635,
+          189798
+        ],
+        [
+          1073325,
+          165337
+        ]
+      ],
+      "drops": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    "all_exact_app_hash_eof_stop": true,
+    "rust_retired_all": true,
+    "old_splice_accept_bbr_both": true,
+    "path_sample": {
+      "points": [
+        "server_tx",
+        "server_vx_tx",
+        "relay_server_vx_rx",
+        "relay_rx",
+        "relay_tx",
+        "relay_client_vx_tx",
+        "client_vx_rx",
+        "client_rx"
+      ],
+      "counts": [
+        [
+          16690,
+          16690,
+          16672,
+          16672,
+          16672,
+          16672,
+          16265,
+          16265
+        ],
+        [
+          16234,
+          16234,
+          16192,
+          16192,
+          16192,
+          16192,
+          16187,
+          16187
+        ],
+        [
+          16200,
+          16200,
+          16196,
+          16196,
+          16196,
+          16196,
+          16189,
+          16189
+        ],
+        [
+          16795,
+          16795,
+          16741,
+          16741,
+          16741,
+          16741,
+          16295,
+          16295
+        ]
+      ],
+      "adjacent_missing_multiset": [
+        [
+          0,
+          18,
+          0,
+          0,
+          0,
+          407,
+          0
+        ],
+        [
+          0,
+          42,
+          0,
+          0,
+          0,
+          5,
+          0
+        ],
+        [
+          0,
+          4,
+          0,
+          0,
+          0,
+          7,
+          0
+        ],
+        [
+          0,
+          54,
+          0,
+          0,
+          0,
+          446,
+          0
+        ]
+      ],
+      "adjacent_extra_multiset": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "capture_kernel_drops": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "nonstandard": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "second_link_missing_100ms_bins": [
+        41,
+        2,
+        2,
+        38
+      ],
+      "relay_vx_tx_sample_spacing_us": {
+        "median": [
+          804,
+          921,
+          923,
+          813
+        ],
+        "p10": [
+          223,
+          333,
+          339,
+          233
+        ]
+      },
+      "scope": "Paired port deterministic identity sample, local timestamp spacing, not full burst count or physical loss."
+    },
+    "receive_feedback": {
+      "kernel_release": "7.0.0-1020-azure",
+      "old_client_middle_live_15s_rcv_rtt_ms": [
+        440.86,
+        443.612
+      ],
+      "old_client_middle_live_15s_rcv_space": [
+        30830980,
+        31014867
+      ],
+      "old_client_middle_live_15s_rcv_ssthresh": [
+        30146560,
+        30146560
+      ],
+      "old_server_middle_live_15s_rwnd_limited_pct": [
+        33,
+        42.5
+      ],
+      "rust_client_middle_late_rcv_rtt_seconds": [
+        1.019999032,
+        0.631616556
+      ],
+      "rust_client_middle_late_rcv_space": [
+        67132197,
+        67122104
+      ],
+      "rust_client_middle_median_rcv_wnd": [
+        67108864,
+        67108864
+      ],
+      "reference": "https://github.com/torvalds/linux/blob/master/net/ipv4/tcp_input.c",
+      "scope": "Old live 15s vs Rust late samples, not equivalent full kernel skb memory accounting or matched instantaneous RTT. Candidate corrects actual code semantic difference, causal effect unmeasured."
+    }
+  },
+  "interpretation": "All observed sampled deficits occur between VXLAN interfaces on separate runners, mostly relay-to-client for Rust. Clean throughput/CPU/first within engineering band, still retrans 2.55/3.15%. Old kernel receive RTT much lower than Rust late samples, with substantially smaller advertised-space behavior. Existing Linux parity receive timestamp estimator differs from upstream distinct echo/full MSS/immediate downward/upward only empty prior queue. Correct this feedback, no extra controller or fixed cap.",
+  "physical": "NOT_RUN",
+  "next_source": "a99be828cc4011eb6c9a9d6088503346ce83227d"
+}
