@@ -4,29 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2524,
-  "checkpoint_sha": "fb0b6b0d6c07cc834ec4e2dc1b9ee85ba0e6a84a",
+  "sequence": 2525,
+  "checkpoint_sha": "5107a125ddc269d321e9bca8e8f0baf645299733",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收db76055 exact双ISA及ARM同机weak ABBA；核对A/B manifest、真实0.5% qdisc、完整业务/首数据/Stop、窗口增长与吞吐CPU，区分retired和Stop样本；先判定151106b弱网是否退化，再决定保留或撤销DRS候选，不追加任意cap。",
+  "next_action": "在PR80原分支隔离高RTT接收窗口增长的外推项，保留实测消费/到达与原OFO余量；以db76055精确构件为A做三ARM零注入损ABBA与同机弱网回归，验吞吐、CPU、首到、内层重传、实际窗口与路径缺失。无新控制器/固定限速/外层变更。",
   "unverified": true,
-  "last_tested_source": "151106b61e5d0ebbc6865818f05cec9a7a9334f6",
+  "last_tested_source": "db760553eaf5b20e01d1c9c6452ab45281cc3812",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-L2-FRESH-ARRIVAL-DRS-RESULT.json"
+    "docs/evidence/M0/20261128-L2-DRS-WEAK-LOCAL-RESULT.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261128-L2-CLEAN-INNER-DELIVERY-RESULT.json",
-    "docs/devlog/M0/20261128-M0-L2-CARRIER-EIGHT-TAP-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-CARRIER-EIGHT-TAP-RESULT.json",
     "docs/devlog/M0/20261128-M0-L2-LINUX-RECEIVE-RTT-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-LINUX-RECEIVE-RTT-RESULT.json",
     "docs/devlog/M0/20261128-M0-L2-FRESH-ARRIVAL-DRS-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-FRESH-ARRIVAL-DRS-RESULT.json",
-    "docs/devlog/M0/20261128-M0-L2-DRS-WEAK-LOCAL-HANDOFF.md"
+    "docs/devlog/M0/20261128-M0-L2-DRS-WEAK-LOCAL-HANDOFF.md",
+    "docs/devlog/M0/20261128-M0-L2-DRS-WEAK-ACCEPTANCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "151106b双ISA359/8功能/3本地/clean6/6，八点原子发布成功；A303.58/B305.34M CPU26.015/26.005重传2.54/2.19%，B空间23.8–31.1MB但仍5s达64MiB。不同主机local弱58.71→25.68M严重警讯，db76055无runtime改动，同机0.5% ABBA待验，L2未过。"
+  "partial_summary": "db76055双ISA八功能与ARM六本地通过，弱ABBA吞吐-2.6% CPU-1.0%，严重退化未复现；三机原始日志四次约5s窗口达64MiB、6s出现重传。保留fresh-arrival候选，L2未过。"
 }
