@@ -28,6 +28,8 @@ struct Paths{
 }
 pub(super) struct NormalRotation{
     transport:NativeColdPort,
+    fixed:bool,
+    auto_policy:Option<bool>,
     phase:AtomicU32,
     paths:Mutex<Paths>,
     root:Arc<Counters>,
@@ -39,10 +41,10 @@ pub(super) struct NormalRotation{
     early:Mutex<VecDeque<(u32,Vec<u8>)>>,
 }
 impl NormalRotation{
-    pub(super) fn new(initial:NormalPath)->Self{
+    pub(super) fn new(initial:NormalPath,fixed:bool,auto_policy:Option<bool>)->Self{
         let id=initial.cfg.owner;
         Self{transport:NativeColdPort::new(initial.cfg.rx_capture,[initial.cfg.local_port,0,0,0]),
-            phase:AtomicU32::new(IDLE),root:Arc::clone(&initial.counters),
+            fixed,auto_policy,phase:AtomicU32::new(IDLE),root:Arc::clone(&initial.counters),
             paths:Mutex::new(Paths{current:initial,candidate:None,retiring:None,
                 grace:Duration::ZERO,deadline:None}),current_id:AtomicU64::new(id),
             candidate_id:AtomicU64::new(0),retiring_id:AtomicU64::new(0),
@@ -69,12 +71,15 @@ impl NormalRotation{
             owner==p.current.cfg.owner||tx_seq==0||rx_seq==0{return Err(INVALID)}
         let mut cfg=p.current.cfg;
         let old=p.current.lane.lock().map_err(|_|BAD_STAGE)?;
-        let e=entry.lock().map_err(|_|BAD_STAGE)?;
-        if e.role_server||e.feature7||e.game_group.is_some()||
+        let mut e=entry.lock().map_err(|_|BAD_STAGE)?;
+        if e.role_server||e.feature7!=self.fixed||e.game_group.is_some()||
             !v3_ready(&e,cfg.epoch,cfg.luid,cfg.ifindex)||
             e.path_mtu!=old.path_mtu||e.path_mtu_is_outer!=old.path_mtu_is_outer||
             e.record_wire_limit!=old.record_wire_limit||e.peer_mss<old.peer_mss||
             e.m2.is_none(){return Err(INVALID)}
+        #[cfg(feature="fec2_product_record")]
+        if self.fixed&&e.fec2_tx.is_none(){return Err(BAD_STAGE)}
+        configure_native_auto(&mut e,self.auto_policy)?;
         cfg.owner=owner;
         cfg.local_port=port;cfg.initial_tx_seq=tx_seq;cfg.initial_rx_seq=rx_seq;
         // RX is live, but do not send B Health while A still owns fresh TX.
@@ -95,7 +100,7 @@ impl NormalRotation{
         let e=p.lane.lock().map_err(|_|BAD_STAGE)?;
         let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
         // No old lane or TCP ACK can authorize this distinct incarnation.
-        Ok(!m.health.peer_retired()&&m.health.last_authenticated_age_ns(m2_clock().0).is_some())
+        Ok(!m.health.peer_retired()&&(m.verified_peer_health||p.counters.rx_delivered.load(Ordering::Acquire)>0))
     }
     fn request_promote(&self,port:u16,grace_ms:u32)->Result<u64,i32>{
         if !(10000..=20000).contains(&grace_ms)||!self.candidate_ready(port)?{return Err(BAD_STAGE)}
@@ -232,14 +237,14 @@ impl RxPath{
         let ack=PresentationAck::new(path.cfg.initial_rx_seq);Self{path,ack}
     }
     fn receive(&mut self,packet:&[u8],tun:&mut WintunTx,plain:&mut [u8;MAX_IPV4],
-        wake:&WakeEvent,dns:Option<&Arc<Mutex<TunnelDnsMap>>>)->Result<(),i32>{
+        wake:&WakeEvent,fixed:bool,dns:Option<&Arc<Mutex<TunnelDnsMap>>>)->Result<(),i32>{
         let cfg=&self.path.cfg;
         let trusted=TrustedRx{tuple:Ipv4Tuple{src_ip:&cfg.peer_ip,dst_ip:&cfg.local_ip,
             src_port:cfg.peer_port,dst_port:cfg.local_port},
             persona:PacketPersona::Legacy,mtu:cfg.path_mtu as usize,authenticated_options:None};
         let Ok(data)=parse_data_packet_fast(packet,trusted)else{return Ok(())};
         if open_and_deliver(cfg,&self.path.lane,tun,&self.path.counters,&mut self.ack,
-            data.seq32,data.ciphertext,plain,false,dns)?{
+            data.seq32,data.ciphertext,plain,fixed,dns)?{
             flush_tx_wake(wake,&self.path.counters);
         }
         Ok(())
@@ -262,12 +267,12 @@ impl RotationRx{
                     let row=r.early.lock().map_err(|_|BAD_STAGE)?.pop_front();
                     let Some((seq,wire))=row else{break};
                     if open_and_deliver(&p.path.cfg,&p.path.lane,tun,&p.path.counters,&mut p.ack,
-                        seq,&wire,plain,false,dns)?{flush_tx_wake(wake,&p.path.counters);}
+                        seq,&wire,plain,r.fixed,dns)?{flush_tx_wake(wake,&p.path.counters);}
                 }
                 for _ in 0..32{
                     let frame=r.transport.rx.lock().map_err(|_|BAD_STAGE)?.pop_front();
                     let Some(frame)=frame else{break};
-                    if let Some(ipv4)=io::ethernet_ipv4(&frame){p.receive(ipv4,tun,plain,wake,dns)?;}
+                    if let Some(ipv4)=io::ethernet_ipv4(&frame){p.receive(ipv4,tun,plain,wake,r.fixed,dns)?;}
                 }
             }
         }
@@ -293,7 +298,7 @@ impl RotationRx{
         if port==active{return Ok(false)}
         for path in self.candidate.iter_mut().chain(self.retiring.iter_mut()){
             if path.path.cfg.local_port==port{
-                path.receive(packet,tun,plain,wake,dns)?;return Ok(true)
+                path.receive(packet,tun,plain,wake,r.fixed,dns)?;return Ok(true)
             }
         }
         // During TLS (or one genuine RX batch racing Stage) only the

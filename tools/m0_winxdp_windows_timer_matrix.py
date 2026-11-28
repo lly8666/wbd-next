@@ -33,7 +33,7 @@ def main():
         rc=run(["tools/m0_winxdp_game_download.py"],env,E/(task+"-driver.log"),300)
         print("WINXDP_BBR_PRECONNECT_RETEST_RC "+str(rc),flush=True)
         return rc
-    assert task in ("normal","game4-fec")
+    assert task in ("normal","fixed","auto","game4-fec")
     codes=[]
     for mode in (task,):
         case=E/mode;case.mkdir()

@@ -58,7 +58,7 @@ jobs:
       fail-fast: false
       matrix:
         replica: [A,B,C,D,E,F,G,H]
-        task: [normal]
+        task: [normal, fixed, auto]
     runs-on: windows-2025
     timeout-minutes: 30
     env:
@@ -71,7 +71,7 @@ jobs:
       WBD_XDP_GAME_DOWNLOAD_MODES: 'game4-fec'
       WBD_XDP_LAB_POLICY: ''
       WBD_WL_OUTER_REPAIR: 'on'
-      WBD_WL_PUBLIC_MODE: normal
+      WBD_WL_PUBLIC_MODE: ${{ matrix.task }}
       WBD_WL_NATIVE_OUTER_MTU_REQUEST: default1460
       WBD_WL_TUN_MTU: '1460'
       WBD_PLAN029_NATIVE_V3_TRIAL: '0'
@@ -324,13 +324,15 @@ jobs:
         shell: python
         run: |
           import json,pathlib,sys
-          passes=[]
-          functional=[]
+          passes={m:[] for m in ('normal','fixed','auto')}
+          functional={m:[] for m in passes}
           for root in pathlib.Path("evidence").glob("winxdp-windows-timer-*"):
               gates=list(root.rglob("cpu-gate.json"))
               if len(gates)!=1:continue
               gate=json.loads(gates[0].read_text(encoding="utf-8-sig"))
               eligible=gate.get("eligible",False)
+              mode=root.name.removeprefix('winxdp-windows-timer-').rsplit('-',1)[0]
+              if mode not in passes:continue
               for f in root.rglob("timer-measurement.json"):
                   x=json.loads(f.read_text())
                   r=x.get("windows_timed_rotation") or {}
@@ -342,8 +344,8 @@ jobs:
                       and a.get("continuity")=="PASS_ZERO_MISSING_SAME_SOCKET" and a.get("ready")==3
                       and a.get("os_applies")==a.get("rx_stops")==1 and a.get("missing")==0
                       and (r.get("kernel_netem") or {}).get("rtt_ms")==400 and (r.get("kernel_netem") or {}).get("loss_pct")==0):
-                      functional.append(root.name)
-                      if eligible:passes.append(root.name)
+                      functional[mode].append(root.name)
+                      if eligible:passes[mode].append(root.name)
           print("WINXDP_NORMAL_MBB_FUNCTIONAL_PASSES "+json.dumps(functional))
           print("WINXDP_NORMAL_MBB_REAL_9V45_PASSES "+json.dumps(passes))
-          sys.exit(0 if len(set(passes))>=2 else 2)
+          sys.exit(0 if all(len(set(rows))>=2 for rows in passes.values()) else 2)

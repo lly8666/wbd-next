@@ -138,7 +138,7 @@ func m0WindowsArmRotation(o m0NativeV4Options)(<-chan time.Time,func()){
  if o.RotateMin==0{return nil,func(){}}
  delay:=m0WindowsRotationDelay(o.RotateMin,o.RotateMax)
  scope:="full_generation"
- if o.Mode==m0WinModeNormal{scope="normal_mbb"}
+ if o.Mode==m0WinModeNormal||o.Mode==m0WinModeFixed||o.Mode==m0WinModeAuto{scope="normal_mbb"}
  fmt.Printf("WBD_WINDOWS_TIMER_ROTATION_ARMED min_ms=%d max_ms=%d actual_delay_ms=%d scope=%s unix_ms=%d\n",
   o.RotateMin.Milliseconds(),o.RotateMax.Milliseconds(),delay.Milliseconds(),scope,time.Now().UnixMilli())
  timer:=time.NewTimer(delay)
@@ -817,7 +817,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,selected.ifindex,configure,planForGame,pathChanged,applied)
  }
  // The Windows product uses the XDP carrier exclusively.
- normalMBB:=o.Mode==m0WinModeNormal&&o.RotateMin>0
+ normalMBB:=o.RotateMin>0
  openEndpoint:=faketcp.OpenXdpEndpoint
  if normalMBB{openEndpoint=faketcp.OpenXdpRotatableEndpoint}
  endpoint,available,err:=openEndpoint(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),underlay.InterfaceIndex,ncfg)
@@ -1513,6 +1513,12 @@ func(p *m0WinRustNativePeer) rotateNormal(ctx context.Context,o m0NativeV4Option
  if e=next.ArmBoundOriginalM2(turn);e!=nil{return 0,false,e}
  if _,e=next.SetBoundOriginalOuterRepair(turn,!p.disableOuterRepair);e!=nil{return 0,false,e}
  if _,e=next.SetBoundNativeHealthPolicy(turn,p.effectiveHealth.IntervalSeconds,p.effectiveHealth.DeadSeconds,p.effectiveHealth.DormantSeconds);e!=nil{return 0,false,e}
+ if p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
+  // Same original FEC2 cold installation as the first lane. A new
+  // incarnation owns new PN/RS blocks and new path quality observations.
+  initial:=p.initialProfile
+  if e=next.SelectBoundOriginalFEC2Initial(turn,initial);e!=nil{return 0,false,e}
+ }
  effective,e:=next.ReadBoundOriginalM2Effective(turn)
  if e!=nil||effective.PathMTU!=p.effective.PathMTU||effective.BusinessIPv4MTU!=p.effective.BusinessIPv4MTU{
   return 0,false,errors.Join(e,windowsclient.ErrN4NativeGuard)
@@ -1543,6 +1549,7 @@ func(p *m0WinRustNativePeer) rotateNormal(ctx context.Context,o m0NativeV4Option
  p.rotationRetiring=p.rotationCurrent;p.rotationCurrent=next
  p.rotationSession=session;p.rotationStaged=nil;p.rotationGeneration=gen
  p.effective=effective
+ p.lowRateHavePrev=false;p.lowRateLastGood=time.Time{}
  fmt.Printf("WBD_WINDOWS_NORMAL_MBB_GENERATION_READY generation=%d local_port=%d grace_ms=%d unix_ms=%d original_tls=1 authenticated_candidate_rx=1 same_wintun=1\n",gen,port,grace.Milliseconds(),time.Now().UnixMilli())
  return grace,false,nil
 }

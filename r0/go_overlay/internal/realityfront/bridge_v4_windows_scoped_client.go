@@ -761,11 +761,17 @@ func(s *V4WindowsAuthenticatedClientOwner) PrepareOriginalNormalSuccessor(
  previous *V4ClientSession,padding uint8,
 )(*V4WindowsAuthenticatedClientOwner,*V4ClientSession,error){
  if s==nil||s.bridge==nil||s.device==nil||ctx==nil||previous==nil||
-    base.Policy.Transport!=TransportNormal||base.Policy.FECMode!=FECOff||
+    base.Policy.Transport!=TransportNormal||base.Policy.FECMode!=previous.verifiedPolicy.FECMode||
     base.Policy.DesiredLanes!=1||base.DesiredLanes!=1{return nil,nil,ErrAdmissionParams}
  prior,err:=previous.ColdSnapshot();if err!=nil{return nil,nil,err}
  priorLease,err:=previous.AuthenticatedLeaseIPv4();if err!=nil{return nil,nil,err}
- next,session,err:=V4WindowsEstablishOriginalClientOwner(ctx,s.bridge.dll.Name,assoc,base,padding)
+ var next *V4WindowsAuthenticatedClientOwner
+ var session *V4ClientSession
+ if base.Policy.FECMode==FECOff{
+  next,session,err=V4WindowsEstablishOriginalClientOwner(ctx,s.bridge.dll.Name,assoc,base,padding)
+ }else{
+  next,session,err=V4WindowsEstablishOriginalFEC2ClientOwner(ctx,s.bridge.dll.Name,assoc,base,previous.verifiedNormalFec,padding)
+ }
  if err!=nil{return nil,nil,err}
  fail:=func(cause error)(*V4WindowsAuthenticatedClientOwner,*V4ClientSession,error){
   stop,cancel:=context.WithTimeout(context.Background(),15*time.Second);defer cancel()
@@ -775,6 +781,7 @@ func(s *V4WindowsAuthenticatedClientOwner) PrepareOriginalNormalSuccessor(
  actualLease,le:=session.AuthenticatedLeaseIPv4()
  if e!=nil||le!=nil||actualLease!=priorLease||session.Epoch!=previous.Epoch||
     fresh.epoch!=prior.epoch||prior.server!=fresh.server||fresh.server||
+    session.verifiedNormalFec!=previous.verifiedNormalFec||
     fresh.laneID!=1||prior.principal!=fresh.principal||prior.tunnelID!=fresh.tunnelID||
     prior.features!=fresh.features||prior.cipher!=fresh.cipher||
     prior.clientLimit!=fresh.clientLimit||prior.serverLimit!=fresh.serverLimit||

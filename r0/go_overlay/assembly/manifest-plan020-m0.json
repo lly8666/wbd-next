@@ -1448,7 +1448,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "ac6d2319a604d2982bb2eb679843aadaee318f66"
+      "result_blob": "1597024dab600097a895838711b93b52ea0e3c3b"
     },
     {
       "kind": "create",
@@ -1628,7 +1628,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
-      "result_blob": "48c412012f864c1242b72643deb09b35b8cbbe7c"
+      "result_blob": "382ab1f48cfb57f7f47320e15b4a7688db375cfb"
     },
     {
       "kind": "create",

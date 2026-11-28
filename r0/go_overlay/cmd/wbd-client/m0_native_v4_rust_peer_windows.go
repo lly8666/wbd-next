@@ -236,7 +236,7 @@ func(p *m0WinRustNativePeer) RefreshEffective(ctx context.Context)error{
  if p.mode==m0WinModeFixed&&(!p.fixedInstalledReported||!p.fixedMatureReported){
   // One existing 1Hz native readback. Fixed installed configuration is
   // independent of optional mature Quality; no extra network round.
-  m,mErr:=p.owner.ReadBoundOriginalFixedMature(ctx)
+  m,mErr:=effectiveOwner.ReadBoundOriginalFixedMature(ctx)
   if mErr!=nil{return fmt.Errorf("original Rust Fixed owner readback: %w",mErr)}
   if !p.fixedInstalledReported {
    if !m0WindowsFixedInstalledVerified(m,p.initialProfile){
@@ -308,7 +308,9 @@ func(p *m0WinRustNativePeer) Stats()m0NativeV4PacketStats{
   EffectiveM2:p.effective}
  if p.mode==m0WinModeAuto&&p.active{
   ctx,cancel:=context.WithTimeout(context.Background(),2*time.Second)
-  state,err:=p.owner.ReadBoundRustAutoState(ctx)
+  effectiveOwner:=p.owner
+  if p.rotationCurrent!=nil{effectiveOwner=p.rotationCurrent}
+  state,err:=effectiveOwner.ReadBoundRustAutoState(ctx)
   cancel()
   if err==nil{
    result.AutoRequestedRevision=state.RequestedRevision
@@ -319,7 +321,7 @@ func(p *m0WinRustNativePeer) Stats()m0NativeV4PacketStats{
   // Rust native Auto owns policy decisions on TX; this is only an
   // already-produced bounded Quality readback at the Go GUI 2s cadence.
   ctxQuality,cancelQuality:=context.WithTimeout(context.Background(),2*time.Second)
-  q,qErr:=p.owner.ReadBoundOriginalAutoQuality(ctxQuality)
+  q,qErr:=effectiveOwner.ReadBoundOriginalAutoQuality(ctxQuality)
   cancelQuality()
   if qErr==nil{
    if p.lowRateHavePrev{
@@ -352,16 +354,19 @@ func(p *m0WinRustNativePeer) RequestAutoStartProfile(
  }
  ctx,cancel:=context.WithTimeout(context.Background(),8*time.Second)
  defer cancel()
- current,err:=p.owner.ReadBoundRustAutoState(ctx)
+ effectiveOwner:=p.owner
+ if p.rotationCurrent!=nil{effectiveOwner=p.rotationCurrent}
+ current,err:=effectiveOwner.ReadBoundRustAutoState(ctx)
  if err!=nil||current.RequestedRevision==^uint64(0){
   return result,windowsclient.ErrN4NativeGuard
  }
  next:=current.RequestedRevision+1
- if err=p.owner.RequestBoundOriginalFEC2Revision(ctx,profile,next);err!=nil{
+ if err=effectiveOwner.RequestBoundOriginalFEC2Revision(ctx,profile,next);err!=nil{
   return result,err
  }
  // A config write is only requested. The Rust native M2 and actual
  // copied firstsend/parity give Applied separately on later readback.
+ p.initialProfile=profile // same operator-selected start on the next TLS incarnation
  result.Initialized=true
  result.Mode=realityfront.FecV2Auto
  result.Desired=profile

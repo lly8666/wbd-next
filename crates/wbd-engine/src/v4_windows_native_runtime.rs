@@ -1962,6 +1962,18 @@ fn stage_sources(
      if cfg.is_null(){return INVALID}
      start_native(unsafe{*cfg},false,None,false,None)
  }
+ fn configure_native_auto(e:&mut Entry,auto_policy:Option<bool>)->Result<(),i32>{
+     #[cfg(feature="fec2_product_record")]
+     if let Some(aggressive)=auto_policy{
+         if e.auto_actor.is_some(){return Err(BAD_STAGE)}
+         let stream=e.fec2_tx.as_ref().ok_or(BAD_STAGE)?;
+         e.auto_actor=Some(auto_native::NativeAutoActor::new(stream.profile_index(),stream.revision().0,aggressive,m2_clock().0));
+         e.m2.as_mut().ok_or(BAD_STAGE)?.auto_low_rate_mode=true;
+     }
+     #[cfg(not(feature="fec2_product_record"))]
+     if auto_policy.is_some(){return Err(BAD_STAGE)}
+     Ok(())
+ }
  fn start_native(config:WbdWinNativeAttachV1,fixed:bool,
      auto_policy:Option<bool>,sack_negotiated:bool,
      mut split:Option<NativeSplitWorker>
@@ -1985,19 +1997,7 @@ fn stage_sources(
          }
          #[cfg(not(feature="fec2_product_record"))]
          if fixed{return BAD_STAGE}
-         #[cfg(feature="fec2_product_record")]
-         if let Some(aggressive)=auto_policy{
-             if e.auto_actor.is_some(){return BAD_STAGE}
-             let Some(stream)=e.fec2_tx.as_ref()else{return BAD_STAGE};
-             let profile=stream.profile_index();
-             let rev=stream.revision().0;
-             e.auto_actor=Some(auto_native::NativeAutoActor::new(
-                 profile,rev,aggressive,m2_clock().0));
-              if let Some(m)=e.m2.as_mut(){m.auto_low_rate_mode=true;}
-              else{return BAD_STAGE}
-         }
-         #[cfg(not(feature="fec2_product_record"))]
-         if auto_policy.is_some(){return BAD_STAGE}
+         if let Err(code)=configure_native_auto(&mut e,auto_policy){return code}
      }
      let (wtx,wrx)=match unsafe{io::split_borrowed_wintun(
          config.wintun_session,config.wintun_read_event,config.wintun)}{
@@ -2034,9 +2034,9 @@ fn stage_sources(
      let notify=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
      let counters=Arc::new(Counters::new(config.initial_rx_seq,config.initial_tx_seq));
      #[cfg(feature="winxdp_native_trial")]
-     let rotation=if !fixed&&unsafe{wbd_platform::windows_xdp_rx::is_rotatable(config.rx_capture)}{
+     let rotation=if unsafe{wbd_platform::windows_xdp_rx::is_rotatable(config.rx_capture)}{
          Some(Arc::new(rotation::NormalRotation::new(rotation::NormalPath{cfg:config,lane:Arc::clone(&lane),
-             counters:Arc::clone(&counters),sack:sack_negotiated})))
+             counters:Arc::clone(&counters),sack:sack_negotiated},fixed,auto_policy)))
      }else{None};
      #[cfg(feature="winxdp_native_trial")]
      let tx_rotation=rotation.clone();

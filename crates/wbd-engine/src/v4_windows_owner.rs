@@ -117,6 +117,7 @@ struct WindowsOriginalM2 {
     quality_slow_due:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
     // Per-lane state, no thread/timer; TX Health deadline not yet activated.
     health:crate::v4_native_health::HealthClock,
+    verified_peer_health:bool, // exact original Health hint, not generic authenticated activity
     retire_notice_due:bool,retire_notice_inflight:bool,
     retire_notice_sent:bool,retire_notice_attempts:u8,
     // Same W168 mature source-only denominator as Linux Fixed; never a
@@ -261,6 +262,7 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v9_native_health_config(
     if m.shadow.outstanding()>0||m.in_flight.is_some()||
         m.feedback_pending.is_some(){return BAD_STAGE}
     m.health=crate::v4_native_health::HealthClock::new(policy,m2_clock().0);
+    m.verified_peer_health=false;
     OK
 }
 #[no_mangle]
@@ -389,6 +391,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         quality_slow_due:VecDeque::with_capacity(16),
         health:crate::v4_native_health::HealthClock::new(
             crate::v4_native_health::HealthPolicy::default_connected(),now.0),
+        verified_peer_health:false,
         retire_notice_due:false,retire_notice_inflight:false,
         retire_notice_sent:false,retire_notice_attempts:0,
         #[cfg(feature="fec2_product_record")]
@@ -871,6 +874,7 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
         m.health.on_authenticated_peer_retire(now.0);
     }else if let Some(idle)=control.peer_idle_ns{
         m.health.on_peer_idle_hint(now.0,idle);
+        m.verified_peer_health=true;
     }else{m.health.on_authenticated_control(now.0)}
     #[cfg(feature="fec2_product_record")]
     if let Some(summary)=control.low_rate_quality{
