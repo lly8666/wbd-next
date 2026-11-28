@@ -129,6 +129,7 @@ pub struct Bbr {
     pacing_gain: f64,
     cwnd_gain: f64,
     pacing_rate: u64,
+    initial_pacing_rate: Option<u64>,
     /// The pacing rate was set from a measured round trip.
     has_seen_rtt: bool,
 
@@ -241,6 +242,7 @@ impl Bbr {
             pacing_gain: STARTUP_PACING_GAIN,
             cwnd_gain: DEFAULT_CWND_GAIN,
             pacing_rate: 0,
+            initial_pacing_rate: None,
             has_seen_rtt: false,
             bw_hi: [0; 2],
             max_bw: 0,
@@ -332,8 +334,15 @@ impl Bbr {
     }
 
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
-        eprintln!("WBD_M0_BBR wall_ns={} leg={} id={} phase={:?} loss_thresh={} bw={} max_bw={} bw_shortterm={} bw_hi={:?} bw_latest={} inflight_longterm={} inflight_shortterm={} inflight_latest={} min_rtt={:?} round={} full_bw_reached={} full_bw={} full_bw_count={} pacing_gain={} cwnd_gain={} recovery={} conservation={} loss_events={} ack_phase={:?}",
-            wall_ns,leg,id,self.state,self.loss_thresh,self.bw,self.max_bw,self.bw_shortterm,self.bw_hi,self.bw_latest,self.inflight_longterm,self.inflight_shortterm,self.inflight_latest,self.min_rtt,self.round_count,self.full_bw_reached,self.full_bw,self.full_bw_count,self.pacing_gain,self.cwnd_gain,self.in_recovery,self.packet_conservation,self.loss_events_in_round,self.ack_phase);
+        eprintln!("WBD_M0_BBR wall_ns={} leg={} id={} phase={:?} loss_thresh={} bw={} max_bw={} bw_shortterm={} bw_hi={:?} bw_latest={} inflight_longterm={} inflight_shortterm={} inflight_latest={} min_rtt={:?} round={} full_bw_reached={} full_bw={} full_bw_count={} pacing_gain={} cwnd_gain={} recovery={} conservation={} loss_events={} ack_phase={:?} initial_pacing_rate={}",
+            wall_ns,leg,id,self.state,self.loss_thresh,self.bw,self.max_bw,self.bw_shortterm,self.bw_hi,self.bw_latest,self.inflight_longterm,self.inflight_shortterm,self.inflight_latest,self.min_rtt,self.round_count,self.full_bw_reached,self.full_bw,self.full_bw_count,self.pacing_gain,self.cwnd_gain,self.in_recovery,self.packet_conservation,self.loss_events_in_round,self.ack_phase,self.initial_pacing_rate.unwrap_or(0));
+    }
+
+    // Diagnostic seed, not a measured bandwidth, cwnd, or cap.
+    pub(crate) fn with_initial_pacing_rate(mut self, rate: Option<u64>) -> Self {
+        self.initial_pacing_rate = rate;
+        if let Some(rate) = rate { self.pacing_rate = rate; }
+        self
     }
 
     /// InitPacingRate (§5.6.2): the initial window over the first round
@@ -1049,7 +1058,7 @@ impl CongestionController for Bbr {
         let rtt = a.newest_rtt.or(a.rtt).filter(|r| !r.is_zero());
         if !self.has_seen_rtt && rtt.is_some() {
             self.has_seen_rtt = true;
-            self.init_pacing_rate(rtt);
+            if self.initial_pacing_rate.is_none() { self.init_pacing_rate(rtt); }
         }
         let rs = a.rs.unwrap_or_default();
         let (rate, delivered) = (rs.delivery_rate, rs.delivered);
@@ -1357,6 +1366,22 @@ mod tests {
     /// Startup doubles the rate each round, and ends once three rounds in
     /// a row fail to grow the bandwidth by a quarter (§5.3.1.2); rounds
     /// limited by the application do not count.
+    #[test]
+    fn initial_600m_is_pacing_seed_not_capacity_or_fixed_cap() {
+        let mut f = Feed::new();
+        let original = f.b.cwnd;
+        f.b = f.b.with_initial_pacing_rate(Some(75_000_000));
+        assert_eq!(f.b.cwnd, original);
+        assert_eq!(f.b.bw, 0);
+        assert_eq!(f.b.pacing_rate(), Some(75_000_000));
+        f.round(1_000_000, 0, false);
+        assert_eq!(f.b.pacing_rate(), Some(75_000_000));
+        assert!(f.b.bw > 0 && f.b.bw < 75_000_000);
+        f.b.full_bw_reached = true;
+        f.b.set_pacing_rate_with_gain(1.0);
+        assert!(f.b.pacing_rate().unwrap() < 75_000_000);
+    }
+
     #[test]
     fn startup_exits_on_a_bandwidth_plateau() {
         let mut f = Feed::new();

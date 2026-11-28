@@ -1,4 +1,4 @@
-name: M0 three ARM 180s four congestion diagnostic
+name: M0 three ARM 180s Rust BBR1 versus BBRv3 seeded diagnostic
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -242,7 +242,7 @@ jobs:
           test -s h2228-out/server-ready.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
-      - name: Keep the same ARM server through four 180s diagnostic legs
+      - name: Keep the same ARM server through two 180s diagnostic legs
         run: bash tools/m0_h2228_three_runner_case.sh server-wait
       - name: Finish and qualify header-only path sample
         if: always()
@@ -332,7 +332,7 @@ jobs:
             sleep .2
           done
           test -s h2228-out/path-sample-ready.json
-      - name: Run four single-occurrence 180s diagnostic legs
+      - name: Run two single-occurrence 180s diagnostic legs
         run: |
           for i in $(seq 1 150);do
             gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-server-ready -D h2228-server-ready >/dev/null 2>&1 && break

@@ -50,7 +50,7 @@ impl Endpoint {
             native_owner_turn: parity,
             rack_keep_reo_window:middle&&parity&&std::env::var_os("WBD_M0_RACK_KEEP_WINDOW").as_deref()==Some(std::ffi::OsStr::new("1")),
             native_pace_quantum_mss:quantum_mss,
-            native_feedback_mode:if middle&&parity&&matches!(cc,CongestionKind::Bbr1){
+            native_feedback_mode:if middle&&parity&&matches!(cc,CongestionKind::Bbr1|CongestionKind::Bbr){
                 match std::env::var_os("WBD_M0_NATIVE_FEEDBACK").as_deref().and_then(|s|s.to_str()){
                     Some("service")=>2,
                     _=>0,
@@ -67,7 +67,7 @@ impl Endpoint {
                 }
             }else{None},
             gentle_bbr1_startup:middle&&parity&&std::env::var_os("WBD_M0_BBR1_STARTUP15").as_deref()==Some(std::ffi::OsStr::new("1")),
-            bbr1_initial_pacing_rate:if middle&&matches!(cc,CongestionKind::Bbr1)&&std::env::var_os("WBD_M0_BBR1_INITIAL_600M").as_deref()==Some(std::ffi::OsStr::new("1")){Some(75_000_000)}else{None},
+            bbr_initial_pacing_rate:if middle&&((matches!(cc,CongestionKind::Bbr1)&&std::env::var_os("WBD_M0_BBR1_INITIAL_600M").as_deref()==Some(std::ffi::OsStr::new("1")))||(matches!(cc,CongestionKind::Bbr)&&std::env::var_os("WBD_M0_BBR3_INITIAL_600M").as_deref()==Some(std::ffi::OsStr::new("1")))){Some(75_000_000)}else{None},
             native_bounded_pacing: parity || std::env::var_os("WBD_M0_BOUNDED_PACE").as_deref() == Some(std::ffi::OsStr::new("1")),
             mtu_probing: MtuProbing::Off,
             ..ConnConfig::default()

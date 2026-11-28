@@ -10,24 +10,23 @@ ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
 # One diagnostic, one occurrence of each arm on the same three runners.
-ORDER=("R","S","B")
-CASES=(-1,0,1,2)
-PROFILES={"bare":"linux-native-cubic","R":"dual-rust-cubic","S":"linux-transparent-splice-bbr","B":"dual-rust-bbr1-initial600M"}
+ORDER=("B","V")
+CASES=(0,1)
+PROFILES={"B":"dual-rust-bbr1-initial600M","V":"dual-rust-bbr3-initial600M"}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in ORDER}
 def dual(i):return i>=0 and ORDER[i]!="S"
 def splice(i):return i>=0 and ORDER[i]=="S"
 def loss_for(i):return 0.0
 def cc_for(i):return "cubic" if i<0 or ORDER[i]=="R" else "bbr"
-def rust_cc(i):return ("cubic" if ORDER[i]=="R" else "bbr1") if dual(i) else None
+def rust_cc(i):return ("bbr" if ORDER[i]=="V" else "bbr1") if dual(i) else None
 def ack_for(k):return "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
 def offer(i):return None
 def target_bytes(i):return None
 def profile_env(k,server):
-    if k=="R":return ["WBD_M0_MIDDLE_CC=cubic"]
-    if k=="B":return ["WBD_M0_MIDDLE_CC=bbr1","WBD_M0_BBR1_INITIAL_600M=1"]+(["WBD_M0_NATIVE_FEEDBACK=service"] if server else [])
-    return []
+    cc,seed=("bbr1","WBD_M0_BBR1_INITIAL_600M=1") if k=="B" else ("bbr3","WBD_M0_BBR3_INITIAL_600M=1")
+    return ["WBD_M0_MIDDLE_CC="+cc,seed]+(["WBD_M0_NATIVE_FEEDBACK=service"] if server else [])
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_tcp_long_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2","180"]
@@ -266,12 +265,13 @@ def bulk_tcp_sample(log,leg):
 
 def probe_receipt(log,leg,k,i):
     rows=[x for x in log.splitlines() if "WBD_M0_TCP_INFO " in x and "leg="+leg+" " in x]
-    bbr=[x for x in log.splitlines() if "WBD_M0_BBR1 " in x and "leg="+leg+" " in x]
-    mode=2 if k=="B" and leg=="server-middle" else 0
+    marker="WBD_M0_BBR1 " if k=="B" else "WBD_M0_BBR "
+    bbr=[x for x in log.splitlines() if marker in x and "leg="+leg+" " in x]
+    mode=2 if leg=="server-middle" else 0
     cc=rust_cc(i)
     valid=bool(rows) and all(('congestion: "'+cc+'"') in x and (" native_feedback_mode="+str(mode)+" ") in x and " ack3=false " in x and " native_pace_ceiling_bytes_s=0 " in x for x in rows)
-    if k=="B":valid=valid and bool(bbr) and all(" initial_pacing_rate=75000000" in x for x in bbr)
-    return {"valid":valid,"cc":cc,"native_feedback_mode":mode,"initial_pacing_rate":75000000 if k=="B" else None,"tcp_info_rows":len(rows),"bbr_rows":len(bbr)}
+    valid=valid and bool(bbr) and all(" initial_pacing_rate=75000000" in x for x in bbr)
+    return {"valid":valid,"cc":cc,"native_feedback_mode":mode,"initial_pacing_rate":75000000,"tcp_info_rows":len(rows),"bbr_rows":len(bbr)}
 def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()
@@ -377,6 +377,10 @@ def client_case(i):
     return row
 def client():
     manifests()
+    peers={role:peer(role) for role in ("client","relay","server")}
+    for role in ("relay","server"):h.validate_pair(peers["client"],peers[role],role)
+    distinct=len({m["tail_ip"] for m in peers.values()})==3
+    assert distinct
     fixture.TMP.mkdir(exist_ok=True)
     (fixture.TMP/"route-key.hex").write_text(hashlib.sha256(("H2442-TEST-ONLY/"+os.environ["GITHUB_RUN_ID"]+"/"+os.environ["GITHUB_SHA"]).encode()).hexdigest()+"\n")
     (fixture.TMP/"route-key.hex").chmod(0o600)
@@ -387,10 +391,10 @@ def client():
             rows.append(client_case(i));save(OUT/"rows.json",rows)
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows)
         summary={"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"run_id":os.environ["GITHUB_RUN_ID"],
-            "real_three_runner_l3_relay":True,"architecture":"aarch64","added_rtt_ms":400,
+            "real_three_runner_l3_relay":True,"all_three_distinct_native_machines":distinct,"architecture":"aarch64","added_rtt_ms":400,
             "planned_source_seconds":180,"application_offer":"saturated","outer_mtu":1160,"product_tun_fq_maxrate_mbps":0,
-            "initial_rust_bbr1_pacing_bytes_s":75000000,"linux_bbr_seed":"native unmodified",
-            "edt_product_enabled":False,"order":["bare",*ORDER],"profiles":PROFILES,
+            "initial_rust_bbr_pacing_bytes_s":75000000,"kernel_cc":"bbr","server_native_feedback_mode":2,"client_native_feedback_mode":0,
+            "edt_product_enabled":False,"order":list(ORDER),"profiles":PROFILES,
             "status":"MEASURED_SINGLE_OCCURRENCE_DIAGNOSTIC" if complete else "INCOMPLETE","rows":rows}
         save(OUT/"summary.json",summary)
     finally:

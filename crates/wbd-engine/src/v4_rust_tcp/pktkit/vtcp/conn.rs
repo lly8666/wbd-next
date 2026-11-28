@@ -304,14 +304,14 @@ fn make_cc(
     now: Instant,
     linux_parity: bool,
     gentle_bbr1_startup:bool,
-    bbr1_initial_pacing_rate:Option<u64>,
+    bbr_initial_pacing_rate:Option<u64>,
 ) -> Box<dyn CongestionController> {
     let mut cc: Box<dyn CongestionController> = match kind {
         CongestionKind::Cubic => Box::new(Cubic::new(mss).with_linux_parity(linux_parity)),
         CongestionKind::NewReno => Box::new(NewReno::new(mss)),
         CongestionKind::HighSpeed => Box::new(HighSpeed::new(mss)),
-        CongestionKind::Bbr => Box::new(Bbr::new(mss, now)),
-        CongestionKind::Bbr1 => Box::new(Bbr1::new(mss, now).with_gentle_startup(gentle_bbr1_startup).with_initial_pacing_rate(bbr1_initial_pacing_rate)),
+        CongestionKind::Bbr => Box::new(Bbr::new(mss, now).with_initial_pacing_rate(bbr_initial_pacing_rate)),
+        CongestionKind::Bbr1 => Box::new(Bbr1::new(mss, now).with_gentle_startup(gentle_bbr1_startup).with_initial_pacing_rate(bbr_initial_pacing_rate)),
     };
     cc.set_paced(paced || cc.model_based());
     cc
@@ -448,7 +448,7 @@ pub struct ConnConfig {
     /// Never limits the already outstanding TCP window or retransmits.
     pub(crate) relay_pending_limit: Option<usize>,
     pub(crate) gentle_bbr1_startup:bool,
-    pub(crate) bbr1_initial_pacing_rate:Option<u64>,
+    pub(crate) bbr_initial_pacing_rate:Option<u64>,
     /// Product owner reserves no more than one native batch per flow event.
     pub(crate) native_owner_turn: bool,
     /// Lab comparison: keep the RFC 8985 reordering window instead of its zero shortcut.
@@ -559,7 +559,7 @@ impl Default for ConnConfig {
             native_pace_ceiling: None,
             relay_pending_limit: None,
             gentle_bbr1_startup:false,
-            bbr1_initial_pacing_rate:None,
+            bbr_initial_pacing_rate:None,
             native_owner_turn: false,
             rack_keep_reo_window: false,
             linux_parity: false,
@@ -935,7 +935,7 @@ impl Conn {
         let now = wall_clock();
         let rcv_shift = cfg.rcv_wscale();
         let mss = cfg.mss.max(1);
-        let cc = make_cc(cfg.congestion, mss as u32, cfg.pacing, now, cfg.linux_parity,cfg.gentle_bbr1_startup,cfg.bbr1_initial_pacing_rate);
+        let cc = make_cc(cfg.congestion, mss as u32, cfg.pacing, now, cfg.linux_parity,cfg.gentle_bbr1_startup,cfg.bbr_initial_pacing_rate);
         let ts_offset = super::secret::keyed_hash((
             "tsval",
             cfg.local_addr.map(|a| a.ip()),
@@ -1978,7 +1978,7 @@ impl Conn {
             self.now,
             self.cfg.linux_parity,
             self.cfg.gentle_bbr1_startup,
-            self.cfg.bbr1_initial_pacing_rate,
+            self.cfg.bbr_initial_pacing_rate,
         );
     }
 
@@ -7151,7 +7151,7 @@ mod tests {
             client.now,
             client.cfg.linux_parity,
             client.cfg.gentle_bbr1_startup,
-            client.cfg.bbr1_initial_pacing_rate,
+            client.cfg.bbr_initial_pacing_rate,
         );
 
         let (_, segs) = client.write(&[4; 10_000]);
