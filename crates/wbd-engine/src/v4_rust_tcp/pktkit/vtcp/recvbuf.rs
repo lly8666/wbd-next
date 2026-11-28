@@ -441,14 +441,15 @@ impl RecvBuf {
 
     /// Copy contiguous bytes into `p`, returning the count moved.
     pub fn read(&mut self, p: &mut [u8]) -> usize {
-        // VecDeque's Read copies from its two halves and frees the front.
-        let n = std::io::Read::read(&mut self.buf, p).unwrap_or(0);
-        // Emptied, a large ring goes: an idle connection would otherwise
-        // pin its peak (up to the whole window) for as long as it lives.
-        // A small one stays for the next segments to reuse.
-        if self.buf.is_empty() && self.buf.capacity() > KEEP_IDLE_CAPACITY {
-            self.buf = VecDeque::new();
-        }
+        // VecDeque's Read may return only the first contiguous slice.
+        // The readable stream includes both halves of the ring.
+        let (a, b) = self.buf.as_slices();
+        let first = p.len().min(a.len());
+        p[..first].copy_from_slice(&a[..first]);
+        let second = (p.len() - first).min(b.len());
+        p[first..first + second].copy_from_slice(&b[..second]);
+        let n = first + second;
+        self.consume(n);
         n
     }
 
