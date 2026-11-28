@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Paired Linux native TCP; dual ISA Normal passed; matched Rust BBR1/BBRv3 180s seed diagnostic pending; L2 open.",
+  "summary": "Paired Linux native TCP; BBR1/BBRv3 seeded 180s diagnostic accepted; L2 open.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -79,7 +79,8 @@
     "docs/devlog/M0/20261128-M0-L2-STOP-MICROTUNING-AND-SPLICE-PARITY.md",
     "docs/devlog/M0/20261128-M0-L2-RAW-EDT-FQ-FUSION.md",
     "docs/devlog/M0/20261128-M0-L2-180S-CONGESTION-DIAGNOSTIC.md",
-    "docs/devlog/M0/20261128-M0-L2-BBR1-BBR3-180S-SEED.md"
+    "docs/devlog/M0/20261128-M0-L2-BBR1-BBR3-180S-SEED.md",
+    "docs/devlog/M0/20261128-M0-L2-BBR1-BBR3-180S-ACCEPTANCE.md"
   ],
   "verification": [
     {
@@ -140,7 +141,8 @@
     "H2535 H stall_epochs zero in all clean/weak candidate legs; clean pair_grows zero, one weak G-associated growth; G/H removed. H2536 frozen historical C 12b17cc / artifact15250710622, 600/360M application offer AJJA/JAAJ diagnostic only, not product cap.",
     "H2536–39 frozen C load-dependent retrans, K rejected, x86 clean/jitter/finite queue failed high-retrans reproduction; linked records retained.",
     "H2544 native EDT/FQ 65536/65536; live caller immediate. Current C old splice x86 throughput parity but CPU gap. H2545 dual ISA Normal passed, one three ARM 180s CUBIC/splice/BBR1 seeded diagnostic pending; L2 open.",
-    "H2545 four-arm Action 46128657043 client measured four hash/EOF-complete arms; server/relay final waiter failed missing all_three_distinct_native_machines summary field. 180s receive window Mbps bare166.25/Rust CUBIC291.69/splice BBR215.99/Rust BBR1 311.30; Rust retired retrans ratios 0.01050% and 0.80398%. User requests one BBR1/BBRv3 180s comparison on same three ARM, both seed600M, same server service epoch; not performance qualification."
+    "H2545 four-arm Action 46128657043 client measured four hash/EOF-complete arms; server/relay final waiter failed missing all_three_distinct_native_machines summary field. 180s receive window Mbps bare166.25/Rust CUBIC291.69/splice BBR215.99/Rust BBR1 311.30; Rust retired retrans ratios 0.01050% and 0.80398%. User requests one BBR1/BBRv3 180s comparison on same three ARM, both seed600M, same server service epoch; not performance qualification.",
+    "H2546 exact cdd60c2 both ISA362/7 native PASS and two 180s ARM arms measured. B/V399.21/385.34M, retired retrans0.4107/0.2740%, RTO2/0, endpoint CPU29.95/31.50, client full1950/0; forward path gaps551/349; single order, not L2 performance qualification. See docs/evidence/M0/20261128-L2-BBR1-BBR3-180S-SEED-RESULT.json"
   ],
   "promotion": null
 }

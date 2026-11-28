@@ -1,0 +1,191 @@
+{
+  "source_sha": "cdd60c2d554a469db1dcb19351e88ebe4d65239b",
+  "run_id": 46134184014,
+  "action": "SUCCESS",
+  "native_run": 46134184084,
+  "native_action": "SUCCESS",
+  "scope": "same three ARM64 hosted runners, B then V, one 180s saturated download each, 400ms added RTT, zero injected loss, Normal repair ON, MTU1160, ACK2, 600M initial pacing only, server C service epoch, client mode0, no cap or live EDT; diagnostic not L2 promotion",
+  "manifest_sha256": "8ad439aef80b967fafc6fc16b236519c16aaccfad1833285f7230185d9a0df69",
+  "artifact_ids": {
+    "summary": 15259063455,
+    "server": 15259213299,
+    "client": 15258784558,
+    "relay": 15259003645,
+    "native_arm": 15259520534,
+    "native_x86": 15259166776,
+    "arm_build": 15259306040
+  },
+  "crc_verified_evidence_zips": 6,
+  "native": {
+    "core_pass_each_isa": 362,
+    "functional_profiles_each_isa": 7,
+    "arm_recovery_rows_measured": 3,
+    "both_seed_tests_pass": true
+  },
+  "rows": [
+    {
+      "mode": "bbr1",
+      "bytes": 9038725120,
+      "first180_mbps": 399.2080522222222,
+      "full_mbps": 399.65570056204587,
+      "retired_sent": 9075998421,
+      "retired_retrans": 37273301,
+      "retired_retrans_ratio": 0.004106798973626661,
+      "dsack": 5836,
+      "reordered": 98685,
+      "recoveries": 86,
+      "rto": 2,
+      "product_cpu_per_gib": [
+        14.01644547563805,
+        15.931396751740142
+      ],
+      "host_cpu_per_gib": [
+        39.146023201856146,
+        46.61932250580046
+      ],
+      "hwm_kib": [
+        185780,
+        162848
+      ],
+      "ingress_full_client_server": [
+        1950,
+        0
+      ],
+      "server_publish_peak": 32,
+      "first_data_from_connect_s": 0.8062308290000146,
+      "mean30_mbps": [
+        333.97,
+        423.7,
+        424.11,
+        415.3,
+        398.96,
+        399.21
+      ],
+      "second_p10": 105.55,
+      "second_median": 430.44,
+      "second_p90": 695.31,
+      "second_cv": 0.536,
+      "seconds_under_50": 10,
+      "forward_sample_sent": 136992,
+      "forward_sample_missing_by_cross_host": [
+        88,
+        463
+      ],
+      "forward_sample_other_adjacent_missing": 0,
+      "forward_sample_extra": 0
+    },
+    {
+      "mode": "bbr3",
+      "bytes": 8673099776,
+      "first180_mbps": 385.34398608888887,
+      "full_mbps": 383.65923026299174,
+      "retired_sent": 8696927335,
+      "retired_retrans": 23827559,
+      "retired_retrans_ratio": 0.0027397675158337977,
+      "dsack": 5386,
+      "reordered": 94899,
+      "recoveries": 68,
+      "rto": 0,
+      "product_cpu_per_gib": [
+        15.036917055183203,
+        16.463109089397847
+      ],
+      "host_cpu_per_gib": [
+        42.16304002538896,
+        48.45462675965876
+      ],
+      "hwm_kib": [
+        153560,
+        147340
+      ],
+      "ingress_full_client_server": [
+        0,
+        0
+      ],
+      "server_publish_peak": 64,
+      "first_data_from_connect_s": 0.8064540949999355,
+      "mean30_mbps": [
+        349.32,
+        385.5,
+        394.67,
+        393.78,
+        393.62,
+        395.17
+      ],
+      "second_p10": 128.75,
+      "second_median": 413.7,
+      "second_p90": 601.54,
+      "second_cv": 0.417,
+      "seconds_under_50": 4,
+      "forward_sample_sent": 131255,
+      "forward_sample_missing_by_cross_host": [
+        4,
+        345
+      ],
+      "forward_sample_other_adjacent_missing": 0,
+      "forward_sample_extra": 0
+    }
+  ],
+  "all_hash_eof_joined_stop_retired_and_actual_profile_valid": true,
+  "all_netem_drops_zero": true,
+  "all_eight_tap_capture_kernel_drops_zero": true,
+  "path_scope": "forward only deterministic sequence stratum; multiset identity counts grouped by outer destination port; missing not proof physical loss location; no reverse samples or per-segment causal attribution",
+  "historical": {
+    "source": "a8a8358f65f90d40e7f7e61593e7333a21f1fb92",
+    "run": 46128657043,
+    "action": "FAIL server/relay final waiter missing field; client four measured",
+    "artifacts": [
+      15257213889,
+      15257039244,
+      15257089036,
+      15257640454
+    ],
+    "first180_mbps": [
+      166.25189795555556,
+      291.6904512,
+      215.99095075555556,
+      311.3020999111111
+    ],
+    "order": [
+      "bare cubic",
+      "rust cubic",
+      "splice bbr",
+      "rust bbr1"
+    ],
+    "rust_cubic": {
+      "retired_retrans_ratio": 0.00010503575909713068,
+      "product_cpu_per_gib": 43.36190715783169,
+      "forward_sample_sent": 98923,
+      "missing": 11
+    },
+    "splice": {
+      "product_cpu_per_gib": 26.537162048698573,
+      "forward_sample_sent": 76694,
+      "missing": 1193
+    },
+    "bbr1": {
+      "retired_retrans_ratio": 0.008039845063171291,
+      "product_cpu_per_gib": 33.25802143538522,
+      "forward_sample_sent": 106689,
+      "missing": 679,
+      "mean30_mbps": [
+        322.16,
+        391.91,
+        172.27,
+        389.52,
+        397.71,
+        194.24
+      ],
+      "ingress_full_client_server": [
+        8704,
+        3685
+      ]
+    }
+  },
+  "probe_rtt": {
+    "historical_bbr1_sample_59_60": "4,196B -> 5,233B, later bandwidth 25.7Mbps, no RTO at collapse",
+    "current_bbr1": "8 observed exits, no repeated sustained 5KiB post-exit collapse; sample 169 22.7MB then 55.3MB",
+    "current_bbr3": "8 observed ProbeRTT samples with cwnd about12.2–12.9MB, exits 12.8–22.0MB; model reductions still observed"
+  },
+  "decision": "accept diagnostic and scoped native function; BBRv3 stronger stability candidate, BBR1 better mean and CPU in this pair; no default promotion, no L2 parity/physical/weak or HOL qualification; old CUBIC low retrans but higher CPU on different runners. EDT/feedback remain common mechanism priority. Main H2546 governance failure unbounded context_refs corrected by bounding cursor, not runtime."
+}
