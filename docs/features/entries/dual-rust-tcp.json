@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Paired Linux native TCP: H2554 P reference; H2557 retries weak 1/3/5% four candidates vs frozen splice after relay bootstrap failure; L2 open.",
+  "summary": "Paired Linux native TCP: H2557 weak rejection; H2559 60s historical AB regression localization pending; L2 open.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -38,7 +38,8 @@
     "docs/devlog/M0/20261128-M0-L2-EDT-ACK4-ACK8-USER-DIAGNOSTIC.md",
     "docs/devlog/M0/20261128-M0-L2-LINUX-INSPIRED-WBD-GROUPED-EDT.md",
     "docs/devlog/M0/20261128-M0-L2-ACK-GSO-GROUPED-EDT-ACCEPTANCE.md",
-    "docs/devlog/M0/20261128-M0-L2-WEAK-INTERNET-SPLICE-CANDIDATE-MATRIX.md"
+    "docs/devlog/M0/20261128-M0-L2-WEAK-INTERNET-SPLICE-CANDIDATE-MATRIX.md",
+    "docs/devlog/M0/20261128-M0-L2-WEAK-HISTORY-60S.md"
   ],
   "verification": [
     {
@@ -84,7 +85,8 @@
     "H2554 H2552 per-record ACK8 wins; H2553 L/P350.94/366.15M, CPU30.676/31.277, retrans0.4327/0.1965%, both GSO>99%; P reference, L CPU control, no default promotion or weak/mixed/active Stop/old splice parity. See docs/evidence/M0/20261128-L2-ACK-GSO-GROUPED-EDT-ACCEPTANCE-RESULT.json",
     "H2555 frozen old ARM splice vs four exact c9f200d candidates, GE+correlated paretonormal jitter FIFO, 12 independent three ARM ABBA 180s. Product defaults unchanged; pending.",
     "H2556 3% dedicated GE fixture fixes historical helper's restricted loss set; original 3% runs retained, only four affected wrappers re-triggered, shared build46147401831.",
-    "H2557 all H2555/H2556 weak scenario runs cancelled; relay bootstrap WEAK_PROFILE mismatch corrected, exact ARM artifacts reused; no measured qualification yet."
+    "H2557 all H2555/H2556 weak scenario runs cancelled; relay bootstrap WEAK_PROFILE mismatch corrected, exact ARM artifacts reused; no measured qualification yet.",
+    "H2559 exact historical H2537 service-epoch reference and H2545 seeded BBR1 vs frozen ARM splice; 1/3/5% 60s AB, no default change or measured result yet."
   ],
   "promotion": null
 }
