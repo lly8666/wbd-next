@@ -1,0 +1,59 @@
+name: M0 Linux all-mode scheduled candidate failure keeps old lane
+on:
+  push:
+    branches: ['experiment/m0-winxdp']
+    paths: ['.github/workflows/qa-m0-linux-candidate-failure.yml']
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  scene:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        scene: [normal,fixed,auto]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: plan028-h1231-native-arm64-build-77723251388ff9544c367483dfff87cdb3f264eb
+          path: fixed-build
+          run-id: 46116426256
+          github-token: ${{ github.token }}
+      - name: Reuse exact already tested Linux product; only fixture files changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code '77723251388ff9544c367483dfff87cdb3f264eb' HEAD -- crates r0 Cargo.toml Cargo.lock
+          chmod +x fixed-build/wbd-v4-client fixed-build/wbd-v4-server
+          python3 - <<'PY'
+          import json,hashlib,pathlib
+          root=pathlib.Path("fixed-build")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]=="77723251388ff9544c367483dfff87cdb3f264eb"
+          for name,sha in m["sha256"].items():
+              assert hashlib.sha256((root/name).read_bytes()).hexdigest()==sha
+          PY
+      - name: Real scheduled SYN fault then next timer, three live clients
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          mkdir -p fixed-kernel-result
+          python3 tools/m0_game_candidate_failure_linux_fixture.py "$RUNNER_TEMP/candidate.sh" "${{ matrix.scene }}"
+          bash -n "$RUNNER_TEMP/candidate.sh"
+          bash "$RUNNER_TEMP/candidate.sh" fixed-build >candidate.log 2>&1 || { tail -140 candidate.log; exit 1; }
+          grep -Fq 'LINUX_CANDIDATE_FAILURE_PASS ' candidate.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: linux-candidate-failure-${{ matrix.scene }}
+          path: |
+            candidate.log
+            fixed-kernel-result/candidate-*.json
+            fixed-kernel-result/candidate-*.log
+          if-no-files-found: warn
+          retention-days: 14
