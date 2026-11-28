@@ -439,7 +439,7 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Native paired Middle TCP experiment: existing quantum cap in MSS.
     pub(crate) native_pace_quantum_mss: u32,
-    /// Lab-only comparison: 0 baseline, 2 native service epoch, 5 paired receive measurement, 6 no-read epoch observation.
+    /// Lab-only comparison: 0 baseline, 2 actual native service epoch.
     pub(crate) native_feedback_mode: u8,
     /// Lab-only ceiling on the existing TCP pacing rate (payload bytes/s).
     pub(crate) native_pace_ceiling: Option<u64>,
@@ -1288,8 +1288,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} relay_pending_limit={} relay_pending_bytes={} relay_available={} native_feedback_mode={} native_reserved_bytes={} drs_pair_hits={} drs_pair_grows={} drs_stall_epochs={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.cfg.relay_pending_limit.unwrap_or(0),self.send_buf.as_ref().map_or(0,|s|s.pending()),self.relay_send_available(),self.cfg.native_feedback_mode,self.score.native_pending(),self.rcv_space.pair_hits(),self.rcv_space.pair_grows(),self.rcv_space.stall_epochs(),self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} relay_pending_limit={} relay_pending_bytes={} relay_available={} native_feedback_mode={} native_reserved_bytes={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.cfg.relay_pending_limit.unwrap_or(0),self.send_buf.as_ref().map_or(0,|s|s.pending()),self.relay_send_available(),self.cfg.native_feedback_mode,self.score.native_pending(),self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?} rate_epoch_preserved={} native_source_dry={}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline),self.score.rate().epoch_preserved(),self.native_source_dry);
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -3156,12 +3156,6 @@ impl Conn {
         if n > 0 && self.cfg.autotune && !(self.cfg.linux_parity && self.ts_ok) {
             self.rcv_rtt_measure(seg);
         }
-        if n==0 && self.cfg.native_feedback_mode==6 && self.cfg.autotune {
-            let rb=self.recv_buf.as_ref().unwrap();
-            if rb.has_ooo() && rb.readable()==0 && rb.limit()<self.cfg.recv_max(){
-                self.rcv_space.observe_stall(self.now,rb.retained_progress());
-            }
-        }
 
         let mut fin_ready = false;
         if self.fin_pending && self.pending_fin_seq == self.recv_buf.as_ref().unwrap().nxt() {
@@ -3209,19 +3203,11 @@ impl Conn {
     fn rcv_space_adjust(&mut self) {
         let srtt = Some(self.rto.srtt()).filter(|d| !d.is_zero());
         let mss = self.cfg.mss.max(1) as usize;
-        let pair=matches!(self.cfg.native_feedback_mode,5|6);
-        let hits=self.rcv_space.pair_hits();
         let want = if self.cfg.linux_parity {
             let rb = self.recv_buf.as_ref().unwrap();
-            self.rcv_space.adjust_linux(self.now, rb.readable(), rb.ooo_span(), rb.retained_progress(),pair)
+            self.rcv_space.adjust_linux(self.now, rb.readable(), rb.ooo_span(), rb.retained_progress())
         } else { self.rcv_space.adjust(self.now, srtt, mss) };
-        if let Some(want) = want {
-            if pair && self.rcv_space.pair_hits()!=hits {
-                let before=self.recv_buf.as_ref().unwrap().limit();
-                self.grow_recv(want);
-                if self.recv_buf.as_ref().unwrap().limit()>before{self.rcv_space.note_pair_growth();}
-            }else{self.grow_recv(want);}
-        }
+        if let Some(want) = want { self.grow_recv(want); }
     }
 
     /// Grow the receive buffer towards `want` bytes, as far as the

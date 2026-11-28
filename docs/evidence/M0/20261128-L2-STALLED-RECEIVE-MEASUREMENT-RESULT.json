@@ -1,0 +1,285 @@
+{
+  "schema_version": 1,
+  "source_sha": "349aee9bf1d382142f9f7a454f66b39a110c4990",
+  "result": "H_NOT_SELECTED_NO_INTERVENTION",
+  "scope": "H2535 native qualification and both paired runs measured; H intervention zero, G clean growth not established; no L2 promotion.",
+  "artifact_verified": true,
+  "native": {
+    "run": 46117647641,
+    "artifacts": {
+      "arm": 15252960046,
+      "x86": 15252801320
+    },
+    "build_artifacts": {
+      "arm": 15252836262,
+      "x86": 15252656624
+    },
+    "manifest_sha256": {
+      "arm": "3897a2051c2da5b3bd419a4a91107035809a1ab965536b314e6f3bb4b96d3eee",
+      "x86": "69f69d681eb6e8eff8afa59aedba4ce228cd74519c63553c848a40fbb979d533"
+    },
+    "functional_profiles_per_isa": 7
+  },
+  "three": {
+    "AHHA": {
+      "run": 46117647620,
+      "summary_sha256": "521e5327d61387d343bcd9134f49d10376212a78e618c65f78aff66fca9791d7",
+      "artifacts": {
+        "summary": 15252607276,
+        "client": 15253040036,
+        "server": 15251988751,
+        "relay": 15252592436
+      },
+      "order": [
+        "A",
+        "H",
+        "H",
+        "A"
+      ],
+      "mbps": [
+        297.36605707823963,
+        314.334,
+        304.235,
+        304.73
+      ],
+      "means_mbps": {
+        "A": 301.04789283016123,
+        "H": 309.2844132276712
+      },
+      "cpu": {
+        "A": 31.595,
+        "H": 29.95
+      },
+      "retired_sent": {
+        "A": 2176242769,
+        "H": 2173380432
+      },
+      "retired_retrans": {
+        "A": 28759121,
+        "H": 25896784
+      },
+      "pair_hits": [
+        2,
+        2,
+        0,
+        1
+      ],
+      "pair_grows": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stall_epochs": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "first_hop_missing": [
+        5,
+        8,
+        2,
+        5
+      ],
+      "second_hop_missing": [
+        192,
+        207,
+        164,
+        170
+      ],
+      "bare_mbps": [
+        334.622,
+        353.182
+      ]
+    },
+    "HAAH": {
+      "run": 46117647619,
+      "artifacts": {
+        "summary": 15252980635,
+        "client": 15252941258,
+        "server": 15252253341,
+        "relay": 15252053763
+      },
+      "order": [
+        "H",
+        "A",
+        "A",
+        "H"
+      ],
+      "mbps": [
+        302.336,
+        287.069,
+        294.769,
+        243.491
+      ],
+      "means_mbps": {
+        "A": 290.9189937805711,
+        "H": 272.9132996982762
+      },
+      "cpu": {
+        "A": 30.97,
+        "H": 32.92
+      },
+      "retired_sent": {
+        "A": 2191372599,
+        "H": 2177652676
+      },
+      "retired_retrans": {
+        "A": 43888951,
+        "H": 30169028
+      },
+      "pair_hits": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "pair_grows": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stall_epochs": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "first_hop_missing": [
+        27,
+        61,
+        21,
+        54
+      ],
+      "second_hop_missing": [
+        226,
+        307,
+        226,
+        91
+      ],
+      "bare_mbps": [
+        224.097,
+        240.4
+      ]
+    },
+    "common": {
+      "rtt_ms": 400,
+      "offer_bps": 600000000,
+      "target_bytes": 1073741824,
+      "loss_injection_pct": 0,
+      "all_product_measured": true,
+      "all_retired_timeouts_zero": true,
+      "all_other_adjacent_missing_and_extra_zero": true,
+      "path_scope": "product tuple sampled outer identities, not physical loss rate"
+    }
+  },
+  "weak": {
+    "AHHA": {
+      "artifact": 15251764139,
+      "summary_sha256": "d1157914a13e85e7bf1d1e8680485ff629e31207203f2b33ee3f9add22b215b9",
+      "order": [
+        "A",
+        "H",
+        "H",
+        "A"
+      ],
+      "mbps": [
+        64.9,
+        65.864,
+        61.311,
+        63.848
+      ],
+      "mean_mbps": {
+        "A": 64.37404516505036,
+        "H": 63.587641724583506
+      },
+      "mean_cpu": {
+        "A": 27.78666666666667,
+        "H": 27.46666666666667
+      },
+      "stop_sample_retrans_ratio": [
+        0.005042862014262628,
+        0.005358900575972801,
+        0.005644535843478757,
+        0.005063257659403049
+      ],
+      "pair_hits": [
+        0,
+        0,
+        2,
+        1
+      ],
+      "pair_grows": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "stall_epochs": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "HAAH": {
+      "artifact": 15251938558,
+      "summary_sha256": "b91298f37f46b6e65bd505a72ca71a1d6272eed834a188784f023f7d00ee3750",
+      "order": [
+        "H",
+        "A",
+        "A",
+        "H"
+      ],
+      "mbps": [
+        66.495,
+        61.984,
+        63.094,
+        58.035
+      ],
+      "mean_mbps": {
+        "A": 62.538863195440825,
+        "H": 62.2649753328054
+      },
+      "mean_cpu": {
+        "A": 28,
+        "H": 30.4
+      },
+      "stop_sample_retrans_ratio": [
+        0.0056034377374376216,
+        0.004951071262218765,
+        0.005717274306520137,
+        0.004553115547841177
+      ],
+      "pair_hits": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "pair_grows": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stall_epochs": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "common": {
+      "rtt_ms": 400,
+      "offer_bps": 120000000,
+      "loss_injection_pct": 0.5,
+      "target_bytes": 100663296,
+      "all_measured": true,
+      "scope": "Stop/live samples, not necessarily retired"
+    }
+  },
+  "decision": "Remove H and G experimental receive logic. H no stall epoch in either clean or weak, all clean actual pair-associated growth zero, one weak pair growth inherited G. No clean causal gain demonstrated for G. Restore C and prior DRS, no default change. Fix C historical binary 12b17cc qualified build artifact15250710622 run46111963879 manifest18426f6c58084dae3a52faf98ed56b8e06ff99e3853ee57fa3d04206f7870522, historical ACCA C315.79Mbps/0.710% retired. Next J is a test-only load intervention at application offer360M vs A600M, same binary both arms, independently AJJA/ JAAJ, 1GiB/400ms, bare600M brackets. This is not a product cap or runtime candidate. Near observed capacity rather than prior 120M diagnostic, distinguish load effect from fixed-source path variance; do not infer physical cause. New rollback native qualification independent. No L2 promotion."
+}

@@ -13,18 +13,20 @@ N=h.NODE;ORIGIN=fixture.ORIGIN
 ARM=os.environ["WBD_M0_FEEDBACK_ARM"]
 ORDER=(ARM,"A","A",ARM) if os.environ["WBD_M0_FEEDBACK_ORDER"]=="reverse" else ("A",ARM,ARM,"A")
 CASES=(-1,*range(len(ORDER)),-2)
-PROFILES={"A":"service-epoch-with-paired-receive-measurement",ARM:{"H":"paired-receive-with-stall-observation"}[ARM]}
-SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
+PROFILES={"A":"frozen-C-offer600M",ARM:{"J":"frozen-C-offer360M"}[ARM]}
+FROZEN_SOURCE="12b17ccfd4dc3354fa7dddecd0450bd1552cc540"
+FROZEN_MANIFEST="18426f6c58084dae3a52faf98ed56b8e06ff99e3853ee57fa3d04206f7870522"
+SOURCES={k:FROZEN_SOURCE for k in PROFILES}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
 def rust_cc(i):return "bbr1"
 def ack_for(k):return "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
-def offer(i):return 600_000_000
+def offer(i):return 360_000_000 if i>=0 and ORDER[i]=="J" else 600_000_000
 def target_bytes(i):return 1024*1024*1024
 def profile_env(k,server):
-    return ["WBD_M0_NATIVE_FEEDBACK=service"] if server else ["WBD_M0_NATIVE_FEEDBACK="+("receive-stall" if k=="H" else "receive-pair")]
+    return ["WBD_M0_NATIVE_FEEDBACK=service"] if server else []
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
@@ -52,7 +54,7 @@ def manifests():
         for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
             assert hashlib.sha256((b/name).read_bytes()).hexdigest()==m["sha256"][name]
         rows[k]={"manifest":m,"manifest_sha256":hashlib.sha256((b/"manifest.json").read_bytes()).hexdigest()}
-    assert len({v["manifest_sha256"] for v in rows.values()})==1
+    assert {v["manifest_sha256"] for v in rows.values()}=={FROZEN_MANIFEST}
     save(OUT/"builds.json",rows)
     return rows
 def spawn(key,ns,log,*args):
@@ -300,16 +302,13 @@ def probe_receipt(log,leg,k,i):
         vals=dict(w.split("=",1) for w in receipt.split() if "=" in w)
         gso_ok=int(vals.get("groups",0))>0
     expected='congestion: "'+rust_cc(i)+'"'
-    feedback_mode=2 if leg=="server-middle" else ((6 if k=="H" else 5) if leg=="client-middle" else 0)
+    feedback_mode=2 if leg=="server-middle" else 0
     ack3_expected="false"
     feedback_ok=bool(rows) and all(f" native_feedback_mode={feedback_mode} " in s for s in rows)
     reserved=[int(m.group(1)) for s in rows if (m:=re.search(r"\bnative_reserved_bytes=(\d+)",s))]
-    pair_hits=[int(m.group(1)) for s in rows if (m:=re.search(r"\bdrs_pair_hits=(\d+)",s))]
-    pair_grows=[int(m.group(1)) for s in rows if (m:=re.search(r"\bdrs_pair_grows=(\d+)",s))]
-    stall_epochs=[int(m.group(1)) for s in rows if (m:=re.search(r"\bdrs_stall_epochs=(\d+)",s))]
     return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and f"ack3={ack3_expected}" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows),
             "ingress_first_expected":expected_first,"ingress_first_service_turns":actual_first_turns,"rx_drain":dv,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,"pacing_ceiling_bytes_s":ceiling,"actual_pacing_max_bytes_s":max(rates,default=0),"startup_pacing_gain":gain,"startup_gain_verified":gain_ok,"rate_epoch_preserved_max":max(epochs,default=None),"delivery_rate_app_limited_samples":app_limited_samples,"native_source_dry_samples":sum(x=="true" for x in dry) if dry else None,"native_source_observed_samples":len(dry),"bbr_phases":bbr_phases,"relay_pending_limit":limit,"relay_credit_samples":len(credit),"relay_pending_max_sample":max((p for _,p,_ in credit),default=None),"relay_credit_full_samples":sum(p==limit and a==0 for _,p,a in credit) if limit else 0,
-            "native_feedback_mode":feedback_mode,"drs_pair_hits":max(pair_hits,default=None),"drs_pair_grows":max(pair_grows,default=None),"drs_stall_epochs":max(stall_epochs,default=None),"ack3_expected":ack3_expected,"native_reserved_max_sample":max(reserved,default=None),"valid":feedback_ok and mode_ok and gso_ok and len(rows)>=10 and all(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and f"ack3={ack3_expected}" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows)}
+            "native_feedback_mode":feedback_mode,"ack3_expected":ack3_expected,"native_reserved_max_sample":max(reserved,default=None),"valid":feedback_ok and mode_ok and gso_ok and len(rows)>=10 and all(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and f"ack3={ack3_expected}" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows)}
 def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()
@@ -437,7 +436,7 @@ def client():
                     sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                     recovery[key]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"retired server-middle bulk flow on identical frozen Rust build","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"identical qualified candidate binary, independent forward/reverse matched order, 1GiB/600M/400ms, zero injected loss, bare brackets and eight taps; separate matched comparison","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"retired server-middle bulk flow on identical frozen Rust build","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"exact frozen H2531 C binary, independent forward/reverse matched order, application offer 600M vs 360M, 1GiB/400ms, zero injected loss, bare 600M brackets and eight taps; load diagnostic only","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
