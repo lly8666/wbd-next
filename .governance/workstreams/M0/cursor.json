@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2542,
-  "checkpoint_sha": "37d4e69b881acd621f659814db141b9998f53b7c",
+  "sequence": 2543,
+  "checkpoint_sha": "fca1618d25f05275c22bd579bac98484c77216dd",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收37d4e69双ISA原生、同构件各ISA独立RAW immediate/EDT-FQ ABBA/BAAB，真实recv软件时间戳/身份/批内gap/span/误差/CPU/队列与SIOCOUTQ释放；同时核修正后旧splice/C独立ABBA/BAAB。若原生定时证明有效，再将既有每流pacing时间与真实提交/计时/资源信用及Stop融合到owner；未接生产EDT，不宣称TSQ/性能通过。L2 OPEN。",
+  "next_action": "验收修正夹具fca1618的两独立RAW EDT/FQ ABBA/BAAB，各ISA复用37d4e69 core46127070836精确测试artifact15255808454/15256585348；实际recv时间/身份/间隔/CPU/outq/FQ。核37d4e69原生产品资格与旧splice/C修正独立配对46127070904/46127070901。原EDT YAML失败未测。若原生定时有效，再融合既有每流pacing和真实资源/计时/Stop，尚未生产启用。L2 OPEN。",
   "unverified": true,
   "last_tested_source": "58bdbd406063708634086948733745dd6a83ce58",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261128-M0-L2-RAW-EDT-FQ-FUSION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2541两真实产品对照夹具误匹配FLOW_FINAL末尾token，未完成；H2542修正并归档。现有服务器wan0早已fq；RAW scatter新增可选SCM_TXTIME，现有产品传None，真实隔离veth双ISA时间与释放证据待验，避免错误发送时钟/Stop。"
+  "partial_summary": "H2542两个架构native timing测试二进制已编译上传，首次EDT workflow YAML失败（无测量）；H2543仅修夹具引用固定原构件，旧splice配对与原生产品构建继续，无重复。真实生产caller仍None。"
 }
