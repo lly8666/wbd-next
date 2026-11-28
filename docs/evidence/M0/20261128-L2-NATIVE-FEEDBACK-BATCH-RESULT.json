@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "source_sha": "efa37de566c67595c998f8290e37bff8147951db",
+  "result": "MEASURED_PARTIAL_REQUIRES_REVIEW",
+  "artifact_verified": true,
+  "scope": "Native qualification PASS; B not selected, C promising but unpromoted. No L2 promotion.",
+  "native": {
+    "run": 46110225118,
+    "artifacts": {
+      "arm": 15249103088,
+      "x86": 15249562003
+    },
+    "manifest_sha256": {
+      "arm": "23d3eef19728cf05f01986352dfa0158729be1e8a4f9fea1fd343e969038b044",
+      "x86": "6243832d2bd1780ba9a43c0347050ff2d485c45eb04617241b0eeeb35dcfe1fe"
+    },
+    "functional_profiles_per_isa": 6,
+    "clean_pause_mbps": [
+      339.2404068597006,
+      159.3633887887681
+    ],
+    "clean_pause_retrans": [
+      0,
+      0
+    ]
+  },
+  "weak": {
+    "order": [
+      "A",
+      "B",
+      "C",
+      "C",
+      "B",
+      "A"
+    ],
+    "loss_pct": 0.5,
+    "rtt_ms": 400,
+    "target_bytes": 100663296,
+    "offer_bps": 120000000,
+    "mbps": [
+      63.54541054327199,
+      59.15635785632505,
+      63.030626101729595,
+      62.425627372587066,
+      65.98517736232584,
+      64.99788008059669
+    ],
+    "means_mbps": {
+      "A": 64.27164531193434,
+      "B": 62.57076760932544,
+      "C": 62.728126737158334
+    },
+    "means_cpu_s_per_gib": {
+      "A": 26.186666666666667,
+      "B": 26.186666666666667,
+      "C": 26.506666666666668
+    },
+    "weighted_retrans_ratio": {
+      "A": 0.005425141265440458,
+      "B": 0.005307940194976581,
+      "C": 0.005348708917508797
+    },
+    "all_bytes_hash_eof_stop": true,
+    "all_timeouts_zero": true,
+    "sample_scope": "Stop/live, not retired"
+  },
+  "three": {
+    "run": 46110225128,
+    "status": "INCOMPLETE",
+    "artifacts": {
+      "summary": 15248958995,
+      "client": 15249272840,
+      "server": 15249698178,
+      "relay": 15249767599
+    },
+    "summary_sha256": "d8754b2b6be9835c0c0c7f75118363d14835ee3db81bb0af40e3bc604298b624",
+    "order": [
+      "A",
+      "B",
+      "C",
+      "C",
+      "B",
+      "A"
+    ],
+    "rtt_ms": 400,
+    "offer_bps": 600000000,
+    "target_bytes": 1073741824,
+    "injected_loss_pct": 0,
+    "mbps": [
+      297.4621751268399,
+      211.99539981997967,
+      315.45507963840663,
+      298.2748903993514,
+      null,
+      283.7978369537381
+    ],
+    "B2_app_mbps_unqualified": 286.2555895775492,
+    "B2_failure": "Application rc0/1GiB/hash/EOF and Stop/retired pass, but post-app control /sample connection reset; client-after exists, server-after and relay-after absent. No complete B performance receipt; not demonstrated product TCP reset.",
+    "means_mbps": {
+      "A": 290.630006040289,
+      "C": 306.864985018879
+    },
+    "endpoint_cpu_s_per_gib": {
+      "A": [
+        14.4,
+        15.55
+      ],
+      "C": [
+        16.775,
+        16.595
+      ]
+    },
+    "retired_retrans": [
+      42300255,
+      44908310,
+      14544962,
+      19196944,
+      39072496,
+      40934538
+    ],
+    "retired_sent": [
+      1116042079,
+      1118650134,
+      1088286786,
+      1092938768,
+      1112814320,
+      1114676362
+    ],
+    "weighted_retrans_ratio": {
+      "A": 0.03731299812211487,
+      "C": 0.015469242022276437
+    },
+    "timeouts": [
+      0,
+      2,
+      0,
+      0,
+      1,
+      0
+    ],
+    "bare_mbps": [
+      229.92794322935666,
+      297.0659346421394
+    ],
+    "all_product_hash_eof_stop_retired": true,
+    "product_path_sample": {
+      "ports": [
+        44100,
+        44102,
+        44104,
+        44106,
+        44108,
+        44110
+      ],
+      "first_hop_missing": [
+        57,
+        57,
+        8,
+        13,
+        29,
+        34
+      ],
+      "second_hop_missing": [
+        512,
+        593,
+        184,
+        218,
+        509,
+        557
+      ],
+      "first_hop_tx": [
+        16925,
+        16976,
+        16451,
+        16533,
+        16880,
+        16896
+      ],
+      "second_hop_tx": [
+        16868,
+        16919,
+        16443,
+        16520,
+        16851,
+        16862
+      ],
+      "other_adjacent_missing_all_zero": true,
+      "extra_all_zero": true,
+      "capture_kernel_drops_all_zero": true,
+      "scope": "Product tuples only, sampled header identities; not physical loss estimate."
+    },
+    "server_periodic_pace_deadline_and_reservation_overlap_counts": [
+      1,
+      4,
+      9,
+      11,
+      1,
+      2
+    ]
+  },
+  "interpretation": "C has same-run evidence of +5.59% throughput, -58.54% retired retrans, -63.53% sampled cross-runner gaps (1160→423), but +11.42% endpoint CPU/GiB. Weak C -2.4% throughput and +1.2% CPU, similar retrans. Retain C for isolated confirmation, not promotion. B no selection due poor completed leg, similar/higher retrans and incomplete control receipt; remove B experimental implementation, retain history. B2 did complete actual application, do not ascribe control connection reset to business TCP. D tests synchronizing existing pacing deadline with C epoch, based on observed overlap, not established cause of CPU overhead.",
+  "next": "Separate ACCA and ADDA Actions in parallel, common reusable topology and same qualified SOURCE/binary, matched four legs within each run and independent same-host weak pair. D=C plus existing pace_wait recalculation only when pace_deadline exists at final native admission. No product promotion; compare each to own A, not absolute cross-runner rates."
+}
