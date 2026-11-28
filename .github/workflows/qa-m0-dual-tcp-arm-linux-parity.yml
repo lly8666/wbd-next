@@ -1,4 +1,4 @@
-name: M0 ARM L2 weak receive ring ownership ABBA
+name: M0 ARM clean inner delivery attribution diagnostic
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -191,7 +191,7 @@ jobs:
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
           mkdir -p bundles/A bundles/B
-          gh run download 46093666791 -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/A
+          gh run download 46095502348 -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
           for leg in A B;do
             tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
@@ -236,7 +236,7 @@ jobs:
           test -s h2228-out/server-ready.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
-      - name: Keep the same ARM server through all four paired legs
+      - name: Keep the same ARM server through diagnostic pair and brackets
         run: bash tools/m0_h2228_three_runner_case.sh server-wait
       - name: Finish and qualify header-only path sample
         if: always()
@@ -280,7 +280,7 @@ jobs:
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
           mkdir -p bundles/A bundles/B
-          gh run download 46093666791 -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/A
+          gh run download 46095502348 -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
           for leg in A B;do
             tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
