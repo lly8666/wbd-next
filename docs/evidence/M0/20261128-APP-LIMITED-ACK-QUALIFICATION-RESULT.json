@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "source_sha": "e0c01aab726e4cb96ff60b5a8e7a2e1d285474c1",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native qualification and three ARM source comparison measured; no performance parity or causal promotion.",
+  "native_run": 46036447942,
+  "native_artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140632953869,
+      "artifact_id": 15218520328,
+      "core_pass": 354,
+      "functional_profiles": 4
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140632953527,
+      "artifact_id": 15218925623,
+      "core_pass": 354,
+      "functional_profiles": 4
+    }
+  ],
+  "native_recovery": {
+    "order": [
+      "normal-selected",
+      "pause-selected",
+      "loss-selected"
+    ],
+    "mbps": [
+      341.20944529113785,
+      159.25966136779965,
+      58.85536751878974
+    ],
+    "bytes_sent": [
+      536870912,
+      536870912,
+      101189055
+    ],
+    "bytes_retrans": [
+      0,
+      0,
+      525759
+    ],
+    "all_exact_hash_eof_profile_stop": true
+  },
+  "comparison": {
+    "run_id": 46036447932,
+    "artifacts": [
+      {
+        "role": "server",
+        "job_id": 140635926479,
+        "artifact_id": 15218726401
+      },
+      {
+        "role": "relay",
+        "job_id": 140635926336,
+        "artifact_id": 15218871285
+      },
+      {
+        "role": "client",
+        "job_id": 140635926342,
+        "artifact_id": 15217837670
+      }
+    ],
+    "baseline": "933d29bef2130fa891ea3729fd163a4f5daa11e8",
+    "order": [
+      "A1",
+      "B1",
+      "B2",
+      "A2"
+    ],
+    "bare_mbps": [
+      276.9462138957485,
+      239.7293234591322
+    ],
+    "mbps": [
+      300.6325137268879,
+      286.17143967965364,
+      239.8353640349242,
+      240.32637650152293
+    ],
+    "product_cpu_s_per_gib": [
+      28.43,
+      27.66,
+      30.59,
+      28.52
+    ],
+    "bytes_sent": [
+      1124135876,
+      1116521945,
+      1112489329,
+      1124784001
+    ],
+    "bytes_retrans": [
+      50394052,
+      42780121,
+      38747505,
+      51042177
+    ],
+    "dsack": [
+      3168,
+      2457,
+      2173,
+      2125
+    ],
+    "timeouts": [
+      1,
+      0,
+      2,
+      1
+    ],
+    "server_app_limited_snapshot_counts": [
+      23,
+      25,
+      24,
+      31
+    ],
+    "server_snapshot_counts": [
+      29,
+      31,
+      37,
+      37
+    ],
+    "server_bbr_phases": [
+      [
+        "Startup",
+        "ProbeRtt"
+      ],
+      [
+        "Startup",
+        "ProbeRtt"
+      ],
+      [
+        "Startup",
+        "ProbeRtt",
+        "ProbeBw"
+      ],
+      [
+        "Startup",
+        "ProbeRtt"
+      ]
+    ],
+    "server_epoch_preserved_max": [
+      1,
+      0,
+      1,
+      1
+    ],
+    "server_ingress_full": [
+      0,
+      267,
+      0,
+      0
+    ],
+    "client_ingress_full": [
+      1801,
+      840,
+      250,
+      5117
+    ],
+    "all_exact_source_hash_profile_retired_stop": true,
+    "path_sample": {
+      "points": [
+        "server_tx",
+        "relay_rx",
+        "relay_tx",
+        "client_rx"
+      ],
+      "counts": [
+        [
+          17073,
+          16977,
+          16977,
+          16378
+        ],
+        [
+          16973,
+          16871,
+          16871,
+          16366
+        ],
+        [
+          16893,
+          16774,
+          16774,
+          16342
+        ],
+        [
+          17083,
+          16976,
+          16976,
+          16403
+        ]
+      ],
+      "adjacent_missing_multiset": [
+        [
+          96,
+          0,
+          599
+        ],
+        [
+          102,
+          0,
+          505
+        ],
+        [
+          119,
+          0,
+          432
+        ],
+        [
+          107,
+          0,
+          573
+        ]
+      ],
+      "adjacent_extra_multiset": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "capture_kernel_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scope": "Deterministic sampled virtual observation points, not physical loss or inner TCP sequence attribution."
+    }
+  },
+  "interpretation": "Mixed throughput, unit CPU, retrans and observed Startup change, varying bare capacity; retain ACK semantics in research baseline without causal performance claim. Next candidate native producer empty observation vs pre-write inferred starvation.",
+  "physical": "NOT_RUN",
+  "next_source": "5325208bf9d483866b886f7c478449a8a1b9eedc"
+}
