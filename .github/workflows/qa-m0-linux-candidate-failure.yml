@@ -36,6 +36,15 @@ jobs:
           for name,sha in m["sha256"].items():
               assert hashlib.sha256((root/name).read_bytes()).hexdigest()==sha
           PY
+      - name: Preflight all generated Linux fixtures before launching any product
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0_game_candidate_failure_linux_fixture.py
+          for scene in normal fixed auto;do
+            python3 tools/m0_game_candidate_failure_linux_fixture.py "$RUNNER_TEMP/preflight-$scene.sh" "$scene"
+            bash -n "$RUNNER_TEMP/preflight-$scene.sh"
+          done
       - name: Real scheduled SYN fault then next timer, three live clients (corrected fixture)
         shell: bash
         run: |
