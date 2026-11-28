@@ -50,7 +50,8 @@
     "docs/devlog/M0/20261128-DELIVERY-EPOCH-COMPILE-CORRECTION.md",
     "docs/devlog/M0/20261128-APP-LIMITED-ACK-RENEWAL.md",
     "docs/devlog/M0/20261128-NATIVE-PRODUCER-APP-LIMITED.md",
-    "docs/devlog/M0/20261128-NATIVE-PRODUCER-REQUALIFICATION.md"
+    "docs/devlog/M0/20261128-NATIVE-PRODUCER-REQUALIFICATION.md",
+    "docs/devlog/M0/20261128-L2-FROZEN-SPLICE-PARITY.md"
   ],
   "verification": [
     {
@@ -111,7 +112,8 @@
     "117d0f8 native46032634286 both ISA build FAIL: Rate accessor inserted in struct, not impl; performance46032634335 prepare FAIL and all measurement skipped. Correct accessor location only, unchanged runtime algorithm and tests, exact new SOURCE qualification pending.",
     "933d29b dual ISA353/8 functional/3 local and 6/6 three ARM PASS measurements. B epoch preserved just once per server bulk flow; throughput A242.69/B275.29M, weighted retrans5.50/4.12%, not causal; all remained Startup/ProbeRtt. New candidate removes pre-ACK app-limited renewal only under existing Linux parity, retains real write/timer marks, compares exact sources; not yet qualified.",
     "e0c01aa dual ISA354/8 native/3 local/6 cross-host measured. ACK renewal correction A270.48/B263.00M, retrans4.51/3.66%, client full6918/1090, CPU28.48/29.13; mixed and path variable, no throughput promotion. Server B2 reached ProbeBW, B1 still Startup. Next candidate marks app-limited from actual producer empty observations, not successful refill or native timer alone; exact ABBA pending.",
-    "5325208 exact dual ISA355/8 native/3 local/6 cross-host measured. Clean ABBA A230.12/B284.36M (+23.57%), CPU30.125/27.665, weighted retrans4.494/3.430%, server app-limited52/77→13/62, ProbeBw1/2→2/2, B actual dry3/62, RTO3→0. Bare247.43→196.42M; variable path, not parity proof. Reverse clean and independent true IID1% comparison pending, unchanged runtime candidate."
+    "5325208 exact dual ISA355/8 native/3 local/6 cross-host measured. Clean ABBA A230.12/B284.36M (+23.57%), CPU30.125/27.665, weighted retrans4.494/3.430%, server app-limited52/77→13/62, ProbeBw1/2→2/2, B actual dry3/62, RTO3→0. Bare247.43→196.42M; variable path, not parity proof. Reverse clean and independent true IID1% comparison pending, unchanged runtime candidate.",
+    "9d89d38 exact dual ISA355/8 native/3 local and three ARM10/10. Reverse clean A257.71/B300.28M (+16.52%), CPU28.945/28.40, weighted retrans5.674/2.883%, server app-limited56/69→17/59; actual IID1% A79.80/B79.74M, CPU43.64/42.24, retrans1.138/1.151%. Select native producer feedback on research branch. L2 frozen splice A26b11e2 vs current B exact source clean/loss parity pending; not physical or merge."
   ],
   "promotion": null
 }
