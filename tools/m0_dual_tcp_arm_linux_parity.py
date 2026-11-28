@@ -9,11 +9,11 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# Clean path diagnosis only: selected runtime A and same runtime with sampled receipts B.
-ORDER=("A","B")
-CASES=(-1,0,1,-2)
-PROFILES={"A":"selected-rust-untraced","B":"selected-rust-inner-sample"}
-SOURCES={"A":"8d7e8af0af25f5e736fc5a4f8a8d6c31c7c0f5e7","B":os.environ["GITHUB_SHA"]}
+# Clean L2 carrier boundary diagnostic: frozen splice and selected Rust.
+ORDER=("B","A","A","B")
+CASES=(-1,0,1,2,3,-2)
+PROFILES={"A":"frozen-linux-kernel-splice","B":"selected-dual-rust-tcp"}
+SOURCES={"A":"26b11e2da236e909b73f461964c52d5a86d42dca","B":os.environ["GITHUB_SHA"]}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
 def rust_cc(i):return "bbr1"
@@ -23,7 +23,7 @@ def compress(k):return "1"
 def offer(i):return 600_000_000
 def target_bytes(i):return 1024*1024*1024
 def profile_env(k,server):
-    return ["WBD_M0_INNER_SAMPLE=1"] if k=="B" else []
+    return []
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
@@ -143,7 +143,7 @@ def server_start(i):
         where=N;port=5202
     else:
         k=ORDER[i];b=bundle(k)
-        flags=["--dual-rust-tcp"]
+        flags=["--tcp-proxy-cc",cc_for(i),"--tcp-proxy-port","46180"] if k=="A" else ["--dual-rust-tcp"]
         p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1",*profile_env(k,True),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
                 "--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443",
                 "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--users-file",fixture.TMP/"users.json",
@@ -184,7 +184,7 @@ def server_close():
     except Exception as e:result["origin_app_error"]=repr(e)
     if i>=0:
         log=(d/"server.log").read_text(errors="replace")
-        result["joined_stop"]=rc.get("server")==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in log and "WBD_DUAL_RUST_TCP_OWNER_STOP" in log
+        result["joined_stop"]=rc.get("server")==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in log and ("WBD_TCP_SPLICE_STOP error=<nil>" in log if ORDER[i]=="A" else "WBD_DUAL_RUST_TCP_OWNER_STOP" in log)
         result["wire"]=[s for s in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in s]
         result["probe"]=probe_receipt(log,"server-middle",ORDER[i],i)
         result["bulk_tcp_sample"]=bulk_tcp_sample(log,"server-middle")
@@ -192,7 +192,6 @@ def server_close():
         result["bulk_retired"]=bool(bulk and any("WBD_M0_TCP_FLOW_FINAL " in s and (" id="+str(bulk["flow_id"])+" ") in s and "leg=server-middle" in s for s in log.splitlines()))
         result["bulk_stop_sample"]=bool(bulk and any("WBD_M0_TCP_FLOW_STOP " in s and (" id="+str(bulk["flow_id"])+" ") in s and "leg=server-middle" in s for s in log.splitlines()))
         result["experiment"]=profile(i,ORDER[i])
-        result["inner_sample_tx_count"]=log.count("WBD_M0_INNER_SAMPLE_TX key=")
         result["native_counters"]=[s for s in log.splitlines() if "V4_PUBLIC_RX_CHAIN role=" in s or "V4_PUBLIC_TX_CHAIN role=" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s or "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s]
     save(d/"result.json",result);CURRENT=fixture.current=None
     return result
@@ -254,6 +253,10 @@ def bulk_tcp_sample(log,leg):
     return sample
 
 def probe_receipt(log,leg,k,i):
+    if k=="A":
+        accepted=[s for s in log.splitlines() if "WBD_TCP_SPLICE_ACCEPT target=192.0.2.2:5400 " in s]
+        valid=leg!="server-middle" or any("cc="+cc_for(i) in s for s in accepted)
+        return {"kernel_cc":cc_for(i),"accepts":accepted,"valid":valid}
     rows=[s for s in log.splitlines() if "WBD_M0_TCP_INFO " in s and "leg="+leg+" " in s]
     expected_first="true" if leg=="server-middle" else "false"
     pub=next((s for s in log.splitlines() if "WBD_M0_TCP_PUBLISH " in s),"")
@@ -306,14 +309,14 @@ def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()
     started=False;pre=post=before=after=None
-    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if i>=0 else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if i>=0 else None,"server_ingress_first":i>=0,"client_local_gso":i>=0,"inbox_slots":1024 if i>=0 else None,"server_middle_pace_quantum_mss":32 if i>=0 else None,"offered_bps":offer(i),"target_bytes":target_bytes(i),"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if i>=0 else None,"added_rtt_ms":400,"status":"INCOMPLETE"}
+    row={"case":i,"leg":k,"source_sha":SOURCES.get(k),"loss_pct":loss_for(i),"ack_ratio":int(ack_for(k)) if k=="B" else None,"kernel_cc":cc_for(i),"rust_middle_cc":rust_cc(i) if k=="B" else None,"server_ingress_first":k=="B","client_local_gso":k=="B","inbox_slots":1024 if k=="B" else None,"server_middle_pace_quantum_mss":32 if k=="B" else None,"offered_bps":offer(i),"target_bytes":target_bytes(i),"experiment":profile(i,k) if i>=0 else "bare","sack_compress":compress(k) if k=="B" else None,"added_rtt_ms":400,"status":"INCOMPLETE"}
     try:
         shape(0,0)
         set_cc(N,i)
         started=True
         control("/start",{"case":i})
         if i>=0:
-            b=bundle(k);flags=["--dual-rust-tcp"]
+            b=bundle(k);flags=[] if k=="A" else ["--dual-rust-tcp"]
             p=spawn("client",N,d/"client.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1",*profile_env(k,False),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-client",
                     "--raw-interface","wan0","--local-ip","10.248.81.2","--local-port",str(44100+2*i),
                     "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
@@ -385,10 +388,9 @@ def client_case(i):
         rc=stop("client")
         if i>=0 and (d/"client.log").exists():
             log=(d/"client.log").read_text(errors="replace")
-            row["client_stop"]=rc==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and log.count("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client")==1 and "WBD_DUAL_RUST_TCP_OWNER_STOP" in log
+            row["client_stop"]=rc==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and log.count("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client")==1 and (k=="A" or "WBD_DUAL_RUST_TCP_OWNER_STOP" in log)
             row["wire"]=[s for s in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in s]
             row["probe"]=probe_receipt(log,"client-middle",k,i)
-            row["inner_sample_rx_count"]=log.count("WBD_M0_INNER_SAMPLE_RX key=")
             row["native_counters"]=[s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s or "WBD_M0_LOCAL_TUN_GSO" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s]
         if started:
             try:row["server_receipt"]=control("/stop")
@@ -401,7 +403,7 @@ def client_case(i):
         if row["status"]=="MEASURED" and i>=0 and (not row.get("client_stop") or not row.get("server_receipt",{}).get("joined_stop")):row["status"]="INCOMPLETE_STOP"
         if row["status"]=="MEASURED" and i>=0 and not (row.get("probe",{}).get("valid") and row.get("server_receipt",{}).get("probe",{}).get("valid")):row["status"]="INCOMPLETE_PROBE"
         if row["status"]=="MEASURED" and (not row.get("endpoint_direct_snapshots") or row.get("server_receipt",{}).get("final_sample_error")):row["status"]="INCOMPLETE_PATH_OR_SAMPLE"
-        if row["status"]=="MEASURED" and i>=0 and not row.get("server_receipt",{}).get("bulk_retired"):row["status"]="INCOMPLETE_RECOVERY_SAMPLE"
+        if row["status"]=="MEASURED" and k=="B" and not row.get("server_receipt",{}).get("bulk_retired"):row["status"]="INCOMPLETE_RECOVERY_SAMPLE"
         save(d/"result.json",row)
         print("ARM_DUAL_RESULT "+json.dumps({k:v for k,v in row.items() if k not in ("server_receipt","wire")}),flush=True)
     return row
@@ -421,24 +423,25 @@ def client():
             for k in PROFILES:
                 key=("clean" if not loss else "loss1")+"-"+k
                 v=[x for x in rows if x["leg"]==k and x["loss_pct"]==loss and x["status"]=="MEASURED"]
-                if len(v)!=1:continue
+                if len(v)!=2:continue
                 means[key]={"n":len(v),"profile":PROFILES[k],"mbps":statistics.mean(x["mbps"] for x in v),
                     "client_product_cpu_s_per_gib":statistics.mean(x["client"]["product"]["cpu_s_per_gib"] for x in v),
                     "server_product_cpu_s_per_gib":statistics.mean(x["server"]["product"]["cpu_s_per_gib"] for x in v)}
+                if k=="A":
+                    recovery[key]={"scope":"kernel splice; live ss and namespace TCP counters retained, no Rust bulk sample"}
+                    continue
                 samples=[x.get("server_receipt",{}).get("bulk_tcp_sample") for x in v]
                 if all(s and s["bytes_sent"]>0 for s in samples):
                     sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                     recovery[key]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        traced=next((x for x in rows if x["leg"]=="B"),{})
-        trace_complete=complete and traced.get("inner_sample_rx_count",0)>0 and traced.get("server_receipt",{}).get("inner_sample_tx_count",0)>0
-        summary={"recovery_snapshot_scope":"retired server-middle bulk flow on both exact Rust variants","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"selected Rust untraced A vs same runtime sampled B, zero injected loss, 1GiB/600M, 400ms, uncapped, bare clean brackets; diagnostic only, inner TCP identity at M4 attempts and authenticated RX admission with independent outer stratum","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"DIAGNOSTIC_ONLY" if trace_complete else "DIAGNOSTIC_INCOMPLETE","application_complete":complete,"trace_complete":trace_complete,"rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"Rust B final bulk flow; old kernel splice A live ss/namespace counters, not equivalent inner retrans populations","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"frozen Linux kernel BBR splice A vs selected Rust BBR1-style B, clean B/A/A/B 1GiB/600M; eight header-only taps including both VXLAN interfaces of each link, local capture timestamps; uncapped, bare brackets, same outer MTU1160/Normal/repair; diagnostic path attribution, not physical or equivalent inner retrans population","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"DIAGNOSTIC_ONLY_REQUIRES_PATH_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
         (fixture.TMP/"route-key.hex").unlink(missing_ok=True)
         for p in fixture.TMP.glob("install-*"):p.unlink(missing_ok=True)
-    if not trace_complete:raise SystemExit(2)
+    if not complete:raise SystemExit(2)
 if __name__=="__main__":
     assert os.uname().machine=="aarch64"
     if sys.argv[1]=="server":server()

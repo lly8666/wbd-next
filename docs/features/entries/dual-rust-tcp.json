@@ -55,7 +55,8 @@
     "docs/devlog/M0/20261128-L2-WEAK-CPU-AND-CONNECT-CLOCK.md",
     "docs/devlog/M0/20261128-L2-OOO-RING-OWNERSHIP.md",
     "docs/devlog/M0/20261128-L2-OOO-RING-WRAPPED-READ.md",
-    "docs/devlog/M0/20261128-L2-CLEAN-INNER-DELIVERY-ATTRIBUTION.md"
+    "docs/devlog/M0/20261128-L2-CLEAN-INNER-DELIVERY-ATTRIBUTION.md",
+    "docs/devlog/M0/20261128-L2-CLEAN-CARRIER-EIGHT-TAP.md"
   ],
   "verification": [
     {
@@ -121,7 +122,8 @@
     "e4d15c3 exact dual ISA355, 8 profiles/3 ARM local and ARM L2 10/10. Clean A270.23/B256.99M, CPU26.675/26.745; true 1% A67.97/B75.28M, CPU31.74/40.06, mostly userspace excess. Post-request first data A~456/B~913ms excludes connect, not end-to-end proof. Weak CPU and complete connect timing diagnostic pending; no retirement.",
     "45a68b5 exact native355/ISA, 8 profiles/3 ARM local; diagnostic46093666801 4/4 and valid samples. Complete connect-to-first data A875.789/B875.928ms, prior post-request gap explained; one pair not full latency qualification. Client OOO peak25.59MB cost, 25/29 nonempty; RecvBuf::insert 6/453 samples, BTree search5/453; server detect_loss11/510. Old server only80 samples, insufficient comparative attribution. Candidate transfers existing large OOO ring ownership on gap repair if it already fits smaller unread prefix, same SACK/window/ordering. Real1% ABBA pending.",
     "295cfc2 both ISA354 passed/2 failed: reused OOO ring exposed wrapped read; VecDeque Read returned first slice (3/8 and64/8256) despite correct allocation identity and stream state. Three ARM46094656243 prepare blocked, no measured rows. Correct existing read contract across both slices using existing consume; same failing tests unchanged. Exact new source native and weak ABBA pending.",
-    "8d7e8af exact native356/ISA, 8 profiles/3 local, weak ABBA6/6; A60.91/B77.34M, CPU52.58/46.16, weighted retrans1.039/1.056%; A2 low and B1 first data +1s; retain OFO ownership as research baseline, no causal L2 promotion. All paired outer sample deficits at netem. Next clean sampled inner DATA actual M4 attempt/PN/outer seq vs authenticated RX queue result; diagnostic only."
+    "8d7e8af exact native356/ISA, 8 profiles/3 local, weak ABBA6/6; A60.91/B77.34M, CPU52.58/46.16, weighted retrans1.039/1.056%; A2 low and B1 first data +1s; retain OFO ownership as research baseline, no causal L2 promotion. All paired outer sample deficits at netem. Next clean sampled inner DATA actual M4 attempt/PN/outer seq vs authenticated RX queue result; diagnostic only.",
+    "c16c381 exact native356/ISA, clean diagnostic4/4. Inner sample TX16718 all copied; RX16260 (14 refused); 535 same-seq/len repeated ranges, first absent455, accepted66, refused14. No identity collisions/extras. 248 unique intersection with outer stratum:238 all taps+RX,6 gap before relay,4 after relay; no capture kernel drops. Not proof of physical loss or timing of accepted original. Remove product trace; clean frozen splice vs selected Rust BAAB with eight owned WAN/VXLAN taps to locate local vs carrier gaps; no throughput promotion based on diagnostic."
   ],
   "promotion": null
 }

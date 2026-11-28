@@ -6483,20 +6483,6 @@ impl NativeM4Clock{
         }
     }
 }
-// Lab-only numeric identity at the existing authenticated DATA boundaries.
-// A deterministic inner sequence stratum, independent of the outer capture.
-#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-fn native_inner_sample(ip:&[u8],len:usize)->Option<(u16,u16,u32,u32,usize,u16)>{
-    if ip.len()<40||ip[0]!=0x45||ip[9]!=6||ip[33]&0x07!=0{return None}
-    let seq=u32::from_be_bytes(ip[24..28].try_into().unwrap());
-    if seq&0xfc00!=0{return None}
-    let payload=len.checked_sub(20+usize::from(ip[32]>>4)*4)?;
-    if payload==0{return None}
-    Some((u16::from_be_bytes(ip[20..22].try_into().unwrap()),
-          u16::from_be_bytes(ip[22..24].try_into().unwrap()),seq,
-          u32::from_be_bytes(ip[28..32].try_into().unwrap()),payload,
-          u16::from_be_bytes(ip[36..38].try_into().unwrap())))
-}
 #[cfg(all(test,any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
 fn native_m4_clock_only_counts_actual_copied_prefix(){
@@ -6870,7 +6856,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     events:&wbd_platform::linux_route_events::RouteEvents,
     jumbo_read:&mut [u8],jumbo_queue:&mut VecDeque<Vec<u8>>,
     active_jumbo:&mut Option<PendingOriginalJumbo>,
-    native_m4_clock:bool,native_inner_trace:bool,native_clock_receipts:&mut Vec<NativeM4Clock>,
+    native_m4_clock:bool,native_clock_receipts:&mut Vec<NativeM4Clock>,
     #[cfg(feature="fec2_product_record")]
     ingress:&LoopCounts,
     #[cfg(feature="fec2_product_record")]
@@ -7424,17 +7410,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     };
     if let Some(at)=m4_submit_at{
         let copied=report.as_ref().map_or(0,|r|r.outcome.accepted_prefix.min(admitted));
-        for receipt in native_clock_receipts.iter_mut(){
-            receipt.settle(actual_firstsend,copied,at);
-            if native_inner_trace{
-                if let Some(key)=native_inner_sample(&receipt.header,receipt.len){
-                    let outer=receipt.pn.and_then(|pn|ready_records.iter().find(|r|r.metadata().pn==pn))
-                        .map(|r|r.metadata().seq.0);
-                    eprintln!("WBD_M0_INNER_SAMPLE_TX key={:?} pn={:?} outer_seq={:?} copied={}",
-                        key,receipt.pn.map(|p|p.0),outer,receipt.copied);
-                }
-            }
-        }
+        for receipt in native_clock_receipts.iter_mut(){receipt.settle(actual_firstsend,copied,at);}
     }
     // Hold only immutable Arc frozen records until the actual synchronous
     // M4 syscall returns. No reserve/ACK is inferred from queue acceptance.
@@ -8315,24 +8291,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut rx_drain_empty=0u64;
             let mut rx_drain_packets=0u64;
             let mut rx_drain_full=0u64;
-            let native_inner_trace=!rx_server_side&&std::env::var_os("WBD_M0_INNER_SAMPLE").as_deref()==Some(std::ffi::OsStr::new("1"));
             let mut middle_offered=0u64;
             let mut middle_full=0u64;
             let mut middle_closed=0u64;
             let mut native_tcp_input=|bytes:&[u8]|->bool{
                 let Some((sender,wake))=&native_tcp_rx else{return false};
                 middle_offered+=1;
-                let accepted=match sender.try_send(OriginalTunIngress::MiddleTcp(bytes.to_vec())){
+                match sender.try_send(OriginalTunIngress::MiddleTcp(bytes.to_vec())){
                     Ok(())=>{wake.signal();true},
                     Err(TrySendError::Full(_))=>{middle_full+=1;false},
                     Err(TrySendError::Disconnected(_))=>{middle_closed+=1;false},
-                };
-                if native_inner_trace{
-                    if let Some(key)=native_inner_sample(bytes,bytes.len()){
-                        eprintln!("WBD_M0_INNER_SAMPLE_RX key={:?} accepted={}",key,accepted);
-                    }
                 }
-                accepted
             };
             #[cfg(feature="fec2_product_record")]
             let mut rx_presentation_ack=OriginalPresentationAck::new(rx_anchor);
@@ -8583,7 +8552,6 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 std::env::var_os("WBD_M0_CLIENT_INGRESS_FIRST").as_deref()==Some(std::ffi::OsStr::new("1"))
             };
             let native_m4_clock=native_round_robin&&std::env::var_os("WBD_M0_NATIVE_M4_CLOCK").as_deref()!=Some(std::ffi::OsStr::new("0"));
-            let native_inner_trace=tx_server_side&&native_m4_clock&&std::env::var_os("WBD_M0_INNER_SAMPLE").as_deref()==Some(std::ffi::OsStr::new("1"));
             // Selected server policy; client use is a separate lab comparison.
             // Finish already-generated output, then give authenticated ingress
             // its existing bounded turn before servicing due TCP/origin work.
@@ -8967,7 +8935,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     split_ingress,&mut tx_pending,&mut tx_prefetched,
                     &mut tx_records,&mut tx_presentations,
                     &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo,
-                    native_m4_clock,native_inner_trace,&mut native_clock_receipts,
+                    native_m4_clock,&mut native_clock_receipts,
                     #[cfg(feature="fec2_product_record")]
                     &stats,
                     #[cfg(feature="fec2_product_record")]
