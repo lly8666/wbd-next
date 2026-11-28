@@ -1,0 +1,379 @@
+{
+  "schema_version": 1,
+  "source_sha": "60ea6d84899defe899410e6e42f1121b5999314b",
+  "result": "MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW",
+  "scope": "C third positive clean comparison, E not selected for reverse CPU cost, weak measurements valid but bifurcated. No L2 promotion.",
+  "artifact_verified": true,
+  "native": {
+    "run": 46113334065,
+    "artifacts": {
+      "arm": 15250637039,
+      "x86": 15251006780
+    },
+    "build_artifacts": {
+      "arm": 15250207711,
+      "x86": 15251130669
+    },
+    "manifest_sha256": {
+      "arm": "193ac4d8ad9b9cace40bfa9990a34242b5212d6d42a9453b0b874e4d718abb67",
+      "x86": "1671a95c7d48a15be24fb189ae18b8d517935f5104ba11c2b1235ff56d7d593b"
+    },
+    "functional_profiles_per_isa": 6
+  },
+  "three_runner": {
+    "ACCA": {
+      "run": 46113334037,
+      "artifacts": {
+        "summary": 15250718677,
+        "server": 15250213140,
+        "client": 15250459181,
+        "relay": 15251007677
+      },
+      "summary_sha256": "b9324207144f376eaa11f77dd2c713721b3beef9e731fbb263945643849ea712",
+      "order": [
+        "A",
+        "C",
+        "C",
+        "A"
+      ],
+      "mbps": [
+        243.4253181405365,
+        281.9363672700185,
+        266.5377520172963,
+        263.15624383120723
+      ],
+      "mean_mbps": {
+        "A": 253.29078098587186,
+        "C": 274.2370596436574
+      },
+      "mean_endpoint_cpu": {
+        "A": [
+          11.885,
+          15.175
+        ],
+        "C": [
+          13.27,
+          15.355
+        ]
+      },
+      "retired_sent": [
+        1116855549,
+        1093821255,
+        1099095437,
+        1122331074
+      ],
+      "retired_retrans": [
+        43113725,
+        20079431,
+        25353613,
+        48589250
+      ],
+      "weighted_retrans_ratio": {
+        "A": 0.040953699016448616,
+        "C": 0.020718089367345652
+      },
+      "timeouts": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "bare_mbps": [
+        292.49628685199,
+        285.2960553276416
+      ],
+      "path_first_missing": [
+        30,
+        31,
+        5,
+        10
+      ],
+      "path_second_missing": [
+        586,
+        257,
+        356,
+        636
+      ],
+      "path_first_tx": [
+        16962,
+        16553,
+        16639,
+        17033
+      ],
+      "path_second_tx": [
+        16932,
+        16522,
+        16634,
+        17023
+      ],
+      "server_raw_rx_packets": [
+        114003,
+        208164,
+        177684,
+        144273
+      ],
+      "server_publish_calls": [
+        183933,
+        291194,
+        259863,
+        213415
+      ],
+      "client_cumulative_ack_last_sample": [
+        56777,
+        172551,
+        136862,
+        87972
+      ]
+    },
+    "AEEA": {
+      "run": 46113334198,
+      "artifacts": {
+        "summary": 15250467662,
+        "server": 15250777356,
+        "client": 15250337974,
+        "relay": 15250253096
+      },
+      "summary_sha256": "79dbe6fc1bbef24a396557a1e65c06dcd1d14dabd7a37c0bf10681b352341302",
+      "order": [
+        "A",
+        "E",
+        "E",
+        "A"
+      ],
+      "reference": "C service epoch ACK2",
+      "mbps": [
+        316.15178777877577,
+        322.25920157294064,
+        304.91664083353754,
+        295.0166115687933
+      ],
+      "mean_mbps": {
+        "A": 305.5841996737845,
+        "E": 313.5879212032391
+      },
+      "mean_endpoint_cpu": {
+        "A": [
+          12.91,
+          15.65
+        ],
+        "E": [
+          13.43,
+          15.595
+        ]
+      },
+      "retired_sent": [
+        1098045993,
+        1086425371,
+        1095909773,
+        1095774022
+      ],
+      "retired_retrans": [
+        24304169,
+        12683547,
+        22167949,
+        22032198
+      ],
+      "weighted_retrans_ratio": {
+        "A": 0.02112131655431177,
+        "E": 0.015969818428585046
+      },
+      "timeouts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bare_mbps": [
+        345.68045579353225,
+        263.3554842934613
+      ],
+      "path_first_missing": [
+        41,
+        3,
+        13,
+        44
+      ],
+      "path_second_missing": [
+        262,
+        178,
+        300,
+        271
+      ],
+      "path_first_tx": [
+        16645,
+        16420,
+        16579,
+        16598
+      ],
+      "path_second_tx": [
+        16604,
+        16417,
+        16566,
+        16554
+      ],
+      "server_raw_rx_packets": [
+        148829,
+        199655,
+        175231,
+        216916
+      ],
+      "server_publish_calls": [
+        218971,
+        271331,
+        245971,
+        293902
+      ],
+      "client_cumulative_ack_last_sample": [
+        105234,
+        161455,
+        129743,
+        178271
+      ]
+    },
+    "common": {
+      "exact_same_arm_manifest": true,
+      "added_rtt_ms": 400,
+      "offer_bps": 600000000,
+      "target_bytes": 1073741824,
+      "injected_loss_pct": 0,
+      "all_application_hash_eof_stop_retired": true,
+      "all_product_tap_local_adjacent_missing_and_extra_zero": true,
+      "path_scope": "Product tuple-only sampled outer identities, not all packet or physical loss rate."
+    }
+  },
+  "weak": {
+    "scope": "0.5% iid injection, actual loss varies; 96MiB,120M offer,400ms, all measured with matching bytes/hash/EOF/Stop and verified profile, live/Stop not retired",
+    "ACCA": {
+      "artifact": 15250996481,
+      "summary_sha256": "f67c1b687f078764cfc64f17cfc71cb3728131fad6d5c3db07e8cbb9b5de95a4",
+      "mbps": [
+        62.55680905981629,
+        62.9950526027075,
+        65.20056801592541,
+        28.092347321453143
+      ],
+      "cpu": [
+        27.52,
+        27.093333333333334,
+        27.62666666666667,
+        52.586666666666666
+      ],
+      "retrans": [
+        528870,
+        521611,
+        492575,
+        530944
+      ],
+      "sent": [
+        101192166,
+        101184907,
+        101155871,
+        101194240
+      ],
+      "forward_netem_drops": [
+        460,
+        486,
+        467,
+        526
+      ],
+      "reverse_netem_drops": [
+        42,
+        37,
+        41,
+        112
+      ],
+      "sender_max_peer_window": [
+        27738112,
+        35258368,
+        31817728,
+        10733568
+      ],
+      "end_rwnd_limited_s": [
+        0.646158728,
+        0.231231113,
+        0.075389254,
+        2.56988916
+      ],
+      "full_bw_reached": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "full_bw_at_exit_bytes_s": [
+        null,
+        null,
+        null,
+        2613617
+      ]
+    },
+    "AEEA": {
+      "artifact": 15250703553,
+      "summary_sha256": "d08ee24f8e6c00209e9ad56c2e63475ec204b53a80b963be832977ad0e8c657c",
+      "mbps": [
+        63.73495187392966,
+        29.11378345327695,
+        61.11810417593494,
+        36.42995433902234
+      ],
+      "cpu": [
+        26.666666666666668,
+        52.266666666666666,
+        26.133333333333333,
+        39.25333333333333
+      ],
+      "retrans": [
+        541314,
+        475983,
+        528870,
+        508130
+      ],
+      "sent": [
+        101204610,
+        101139279,
+        101192166,
+        101171426
+      ],
+      "forward_netem_drops": [
+        489,
+        474,
+        487,
+        496
+      ],
+      "reverse_netem_drops": [
+        53,
+        110,
+        42,
+        82
+      ],
+      "sender_max_peer_window": [
+        29827072,
+        8706048,
+        32886784,
+        11448320
+      ],
+      "end_rwnd_limited_s": [
+        0.267771716,
+        1.598929124,
+        1.189518336,
+        3.244935625
+      ],
+      "full_bw_reached": [
+        false,
+        true,
+        false,
+        true
+      ],
+      "full_bw_at_exit_bytes_s": [
+        null,
+        3004386,
+        null,
+        6669762
+      ]
+    },
+    "all_timeouts_zero": true,
+    "all_lt_bw_zero_in_periodic_samples": true
+  },
+  "interpretation": "C clean +8.27% goodput/-49.41% retired retrans/+5.78% CPU; product tuple gaps A1262→C649. E relative to C +2.62% goodput/-24.39% retrans/+1.63% CPU; server RX and cumulative ACK counts did not drop in this sample; fails planned CPU-cost goal, not a categorical ACK3 failure. Restore parity ACK2. Weak slow cases show actual receiver credit stalls (1.60–3.24s total), lower attained peer windows and full-bandwidth detection at 2.61/3.00/6.67 MB/s, subsequent ProbeBW. Faster cases remain Startup in periodic observations; all lt_bw zero, retrans close to 0.5%, no RTO. Actual random reverse loss varies, no causal claim from sampled association. Linux BBR Startup check assumes 3 non-app-limited rounds allow receive-window growth. F tests excluding actual receiver-credit blocked rounds from plateau evidence, not from rate estimate, no change to cwnd or pacing gains. C retained as experimental reference, no defaults/main product merge.",
+  "next": "F=C plus real sender RwndLimited observation feeds BBR1 Startup round; growth still updates max bandwidth, blocked plateau resets consecutive no-growth count, unconstrained 3 rounds still exit. Existing owner chrono condition, no added timer, queue, controller, fixed rate or outer change. Unit and dual ISA native; independent AFFA where A=C, F=C+receiver-limited Startup; same ARM local weak and 3-runner clean high load, existing path/retired/first/CPU receipts and actual skip counter. C repeated 3 times, do not repeat ACCA or unselected E without new evidence."
+}
