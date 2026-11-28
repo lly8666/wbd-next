@@ -411,13 +411,27 @@ impl RecvBuf {
             if *entry.key() > self.nxt_off {
                 break;
             }
-            let e = entry.remove();
+            let mut e = entry.remove();
             self.ooo_mem -= e.cost();
-            if seq_after(e.end(), self.nxt) {
+            let end = e.end();
+            if seq_after(end, self.nxt) {
                 let offset = self.nxt.wrapping_sub(e.seq) as usize;
-                extend_from_deque(&mut self.buf, &e.data, offset);
-                self.nxt_off += u64::from(e.end().wrapping_sub(self.nxt));
-                self.nxt = e.end();
+                // A repaired hole often releases a much larger contiguous
+                // OFO ring. If that allocation already has room for the
+                // smaller unread prefix, transfer ownership instead of
+                // copying the large suffix or growing another allocation.
+                if offset == 0 && self.buf.len() < e.data.len()
+                    && e.data.capacity() - e.data.len() >= self.buf.len()
+                {
+                    for &byte in self.buf.iter().rev() {
+                        e.data.push_front(byte);
+                    }
+                    self.buf = e.data;
+                } else {
+                    extend_from_deque(&mut self.buf, &e.data, offset);
+                }
+                self.nxt_off += u64::from(end.wrapping_sub(self.nxt));
+                self.nxt = end;
             }
             // else: entirely before nxt, discard
         }
@@ -589,6 +603,36 @@ mod tests {
         let mut buf = [0u8; 16];
         let read = r.read(&mut buf);
         assert_eq!(&buf[..read], b"helloworld");
+    }
+
+    #[test]
+    fn repaired_hole_reuses_large_ooo_ring_with_unread_prefix() {
+        let base = u32::MAX - 63;
+        let mut r = RecvBuf::new(base, 1 << 20);
+        let suffix: Vec<u8> = (0..8192).map(|i| (i % 251) as u8).collect();
+        r.insert(base, &[7; 32]);
+        r.insert(base.wrapping_add(64), &suffix);
+        let original = {
+            let (_, e) = r.ooo.first_key_value().unwrap();
+            assert_eq!(e.data.len(), suffix.len());
+            e.seq
+        };
+        let mut e = r.ooo.remove(&64).unwrap();
+        e.data.reserve(64);
+        let payload = e.data.front().unwrap() as *const u8;
+        r.ooo.insert(64, e);
+        assert_eq!(r.insert(base.wrapping_add(32), &[9; 32]), 32);
+        assert_eq!(r.nxt(), original.wrapping_add(suffix.len() as u32));
+        assert_eq!(r.ooo_mem, 0);
+        assert!(!r.has_ooo());
+        assert!(r.sack_blocks().is_empty());
+        assert_eq!(r.buf.get(64).unwrap() as *const u8, payload,
+            "the received suffix must stay in its original allocation");
+        let mut out = vec![0; 64 + suffix.len()];
+        assert_eq!(r.read(&mut out), out.len());
+        assert_eq!(&out[..32], &[7; 32]);
+        assert_eq!(&out[32..64], &[9; 32]);
+        assert_eq!(&out[64..], &suffix[..]);
     }
 
     #[test]

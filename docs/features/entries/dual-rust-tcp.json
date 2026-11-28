@@ -52,7 +52,8 @@
     "docs/devlog/M0/20261128-NATIVE-PRODUCER-APP-LIMITED.md",
     "docs/devlog/M0/20261128-NATIVE-PRODUCER-REQUALIFICATION.md",
     "docs/devlog/M0/20261128-L2-FROZEN-SPLICE-PARITY.md",
-    "docs/devlog/M0/20261128-L2-WEAK-CPU-AND-CONNECT-CLOCK.md"
+    "docs/devlog/M0/20261128-L2-WEAK-CPU-AND-CONNECT-CLOCK.md",
+    "docs/devlog/M0/20261128-L2-OOO-RING-OWNERSHIP.md"
   ],
   "verification": [
     {
@@ -115,7 +116,8 @@
     "e0c01aa dual ISA354/8 native/3 local/6 cross-host measured. ACK renewal correction A270.48/B263.00M, retrans4.51/3.66%, client full6918/1090, CPU28.48/29.13; mixed and path variable, no throughput promotion. Server B2 reached ProbeBW, B1 still Startup. Next candidate marks app-limited from actual producer empty observations, not successful refill or native timer alone; exact ABBA pending.",
     "5325208 exact dual ISA355/8 native/3 local/6 cross-host measured. Clean ABBA A230.12/B284.36M (+23.57%), CPU30.125/27.665, weighted retrans4.494/3.430%, server app-limited52/77→13/62, ProbeBw1/2→2/2, B actual dry3/62, RTO3→0. Bare247.43→196.42M; variable path, not parity proof. Reverse clean and independent true IID1% comparison pending, unchanged runtime candidate.",
     "9d89d38 exact dual ISA355/8 native/3 local and three ARM10/10. Reverse clean A257.71/B300.28M (+16.52%), CPU28.945/28.40, weighted retrans5.674/2.883%, server app-limited56/69→17/59; actual IID1% A79.80/B79.74M, CPU43.64/42.24, retrans1.138/1.151%. Select native producer feedback on research branch. L2 frozen splice A26b11e2 vs current B exact source clean/loss parity pending; not physical or merge.",
-    "e4d15c3 exact dual ISA355, 8 profiles/3 ARM local and ARM L2 10/10. Clean A270.23/B256.99M, CPU26.675/26.745; true 1% A67.97/B75.28M, CPU31.74/40.06, mostly userspace excess. Post-request first data A~456/B~913ms excludes connect, not end-to-end proof. Weak CPU and complete connect timing diagnostic pending; no retirement."
+    "e4d15c3 exact dual ISA355, 8 profiles/3 ARM local and ARM L2 10/10. Clean A270.23/B256.99M, CPU26.675/26.745; true 1% A67.97/B75.28M, CPU31.74/40.06, mostly userspace excess. Post-request first data A~456/B~913ms excludes connect, not end-to-end proof. Weak CPU and complete connect timing diagnostic pending; no retirement.",
+    "45a68b5 exact native355/ISA, 8 profiles/3 ARM local; diagnostic46093666801 4/4 and valid samples. Complete connect-to-first data A875.789/B875.928ms, prior post-request gap explained; one pair not full latency qualification. Client OOO peak25.59MB cost, 25/29 nonempty; RecvBuf::insert 6/453 samples, BTree search5/453; server detect_loss11/510. Old server only80 samples, insufficient comparative attribution. Candidate transfers existing large OOO ring ownership on gap repair if it already fits smaller unread prefix, same SACK/window/ordering. Real1% ABBA pending."
   ],
   "promotion": null
 }
