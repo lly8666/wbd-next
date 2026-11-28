@@ -1448,7 +1448,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "3122966cbf894526689a589491af727993c956fc"
+      "result_blob": "f7332fe97217727817225e831386a39385348fed"
     },
     {
       "kind": "create",
@@ -1867,7 +1867,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "0c89c43cb02727bc883cfccfd7ae9d1ee1397155"
+      "result_blob": "05e3f9b69aa19d2f645b2c6a2310d9518fee48de"
     },
     {
       "kind": "create",

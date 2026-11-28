@@ -1550,6 +1550,7 @@ func(p *m0WinRustNativePeer) rotateNormal(ctx context.Context,o m0NativeV4Option
  p.rotationSession=session;p.rotationStaged=nil;p.rotationGeneration=gen
  p.effective=effective
  p.lowRateHavePrev=false;p.lowRateLastGood=time.Time{}
+ p.fixedInstalledReported=false;p.fixedMatureReported=false
  fmt.Printf("WBD_WINDOWS_NORMAL_MBB_GENERATION_READY generation=%d local_port=%d grace_ms=%d unix_ms=%d original_tls=1 authenticated_candidate_rx=1 same_wintun=1\n",gen,port,grace.Milliseconds(),time.Now().UnixMilli())
  return grace,false,nil
 }

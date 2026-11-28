@@ -131,7 +131,7 @@ func startOriginalClientGeneration(
             seq:seq,localPort:c.localPort,path:path,cancel:cancel,
             ready:make(chan struct{},1),done:make(chan error,1),
         }
-        if c.gameLanes==4&&c.rotationInterval>0{
+        if c.rotationInterval>0{
             a.laneRotate=make(chan originalGameLaneTurn)
         }
         log.Printf("V4_PUBLIC_PATH_CANDIDATE role=client generation=%d mode=game%d ifindex=%d physical_mtu=%d outer_intent=%d mss=%d record_cap=%d shared_tun_single_reader=1 old_owner_may_overlap=%t",
@@ -488,9 +488,9 @@ func runOriginalLinuxClientPaths(
                 armRotation() // no spinning and no speculative network probe
                 continue
             }
-            // One protected lane at a time in the CURRENT Game4 group.
+            // One protected lane at a time in the CURRENT Game2/4 group.
             // A true NIC/IP/MTU change still uses full-group original A+B.
-            if c.gameLanes==4&&current.laneRotate!=nil&&
+            if c.gameLanes!=0&&current.laneRotate!=nil&&
                 actual==current.path&&candidate==nil&&retiring==nil{
                 intent:=originalGameLaneTurn{
                     done:make(chan originalGameLaneTurnResult,1),

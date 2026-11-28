@@ -104,7 +104,7 @@ func (g *v4NativeGameJoined) replaceAuthenticatedOriginalLane(
     lane uint8,next *v4EmbeddedNativeBridge,
 )(*v4EmbeddedNativeBridge,error){
     if g==nil||g.handle==0||g.stopped||g.verified==nil||
-        len(g.laneOwners)!=4||lane<1||lane>4||next==nil||
+        !matchesOriginalGameLaneCount(len(g.laneOwners))||lane<1||int(lane)>len(g.laneOwners)||next==nil||
         next.handle==0||!next.committed||next.stopped||
         next.protectedLane!=lane{return nil,ErrAdmissionUnsupported}
     slot:=int(lane)-1

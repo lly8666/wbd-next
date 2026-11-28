@@ -3748,19 +3748,20 @@ print(json.dumps(result),flush=True)
   # PLAN027 legacy Fixed installation is a true native owner readback,
   # never an extra startup Quality window or retired M2 Receipt.
   linux_log=(out/"server.log").read_text(errors="replace")
-  if plan028_owned_switch:
+  if plan028_owned_switch or timed_rotation:
+   expected_generations=3 if timed_rotation else 2
    # The shared server prints protected per-device actual M4 capability,
    # then its native effective owner counters at exact generational Stop.
-   installed=(linux_log.count("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=fixed profile=6")==2 and
-              linux_log.count("V4_PUBLIC_MULTI_NATIVE_FEC_EFFECTIVE role=server mode=fixed profile=6 requested=1 applied=1 pending=false")==2)
+   installed=(linux_log.count("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=fixed profile=6")==expected_generations and
+              linux_log.count("V4_PUBLIC_MULTI_NATIVE_FEC_EFFECTIVE role=server mode=fixed profile=6 requested=1 applied=1 pending=false")==expected_generations)
    win_installed=(out/"client.log").read_text(errors="replace").count(
-     "WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6 revision=1 applied=1")==2
+     "WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=6 revision=1 applied=1")==expected_generations
   else:
    installed="V4_PUBLIC_FEC2_READBACK role=server mode=fixed requested=1 applied=1 profile=6 pending=false" in linux_log
    win_installed="NOT_INSTRUMENTED_THIS_REAL_ABI"
   report["fixed_linux_native_installed"]=installed
   report["fixed_windows_native_installed"]=win_installed
-  if plan028_owned_switch and not win_installed:raise RuntimeError("signed Windows actual Rust Fixed6 applied both generations missing")
+  if (plan028_owned_switch or timed_rotation) and not win_installed:raise RuntimeError("signed Windows actual Rust Fixed6 applied generation missing")
   report["fixed_quality_maturity"]="NOT_MEASURED_SHORT_BURST"
   if not installed:raise RuntimeError("genuine Linux native FixedStream profile6 installed readback missing")
  if plan028_owned_switch and mode=="game4":

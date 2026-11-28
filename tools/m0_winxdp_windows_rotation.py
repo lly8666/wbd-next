@@ -149,7 +149,8 @@ def audit_normal_mbb(out,client,server):
     assert [x[0] for x in ready]==[2,3] and [x[0] for x in retired]==[1,2],result
     assert [x[1] for x in retired]==[True,False],result
     assert len(arms)>=3 and len(dues)==2 and all(lo==30000 and hi==35000 and lo<=d<=hi for lo,hi,d,_ in arms),result
-    assert all(0<=due-(arm[3]+arm[2])<=2000 for due,arm in zip(dues,arms)),result
+    # Unix millisecond truncation and sub-ms timer rounding can differ by 1ms.
+    assert all(-1<=due-(arm[3]+arm[2])<=2000 for due,arm in zip(dues,arms)),result
     assert len(ports)==3 and len({p for _,p in ports})==3,result
     assert changes==[(ports[1][1],1),(ports[0][1],0),(ports[2][1],1),(ports[1][1],0)],result
     assert native[0][1]==native[1][0] and all(native_retired[i]==(native[i][0],ports[i][1]) for i in range(2)),result

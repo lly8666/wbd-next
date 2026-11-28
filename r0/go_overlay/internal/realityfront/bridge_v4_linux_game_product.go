@@ -260,7 +260,7 @@ func sameOriginalGameLaneHotIdentity(old,next V4ColdSessionSnapshot,lane uint8)b
 // GameAdapter, kernel socket, or the selected old lane's owner. It is
 // correct to keep all four live and try another cold association later.
 // NEVER tag native-M4-commit/old-Stop uncertainty with this sentinel.
-var ErrV4GameLaneUncommittedCold=errors.New("Game4 new TLS lane failed before native M4 commit")
+var ErrV4GameLaneUncommittedCold=errors.New("Game new TLS lane failed before native M4 commit")
 
 // Fresh original TLS for lane N occurs on a new genuine FakeTCP association.
 // Its authenticated epoch MUST equal the one still owned by the other three
@@ -273,9 +273,10 @@ func (p *V4LinuxGameProduct) ReplaceClientGameLane(
         return ErrAdmissionParams
     }
     p.mu.Lock();defer p.mu.Unlock()
+    n:=len(p.bridges)
     if p.stopped||!p.connected||p.native==nil||
-        len(p.clientSessions)!=4||len(p.bridges)!=4||
-        !validGameGroupPolicy(base.Policy,4)||base.DesiredLanes!=4{
+        !matchesOriginalGameLaneCount(n)||len(p.clientSessions)!=n||int(lane)>n||
+        !validGameGroupPolicy(base.Policy,n)||int(base.DesiredLanes)!=n{
         return ErrAdmissionUnsupported
     }
     i:=int(lane)-1
@@ -666,8 +667,9 @@ func (p *V4LinuxGameProduct) ReplaceServerGameLane(
     if p==nil||!p.server||member==nil||member.transferred||
         lane<1||lane>4{return ErrAdmissionParams}
     p.mu.Lock();defer p.mu.Unlock()
+    n:=len(p.bridges)
     if p.stopped||!p.connected||p.native==nil||
-        len(p.serverSessions)!=4||len(p.bridges)!=4{
+        !matchesOriginalGameLaneCount(n)||len(p.serverSessions)!=n||int(lane)>n{
         return ErrAdmissionUnsupported
     }
     idx:=int(lane)-1
@@ -678,7 +680,7 @@ func (p *V4LinuxGameProduct) ReplaceServerGameLane(
     if e!=nil||!sameOriginalGameLaneHotIdentity(old,cold,lane)||
         member.session.verifiedGameFec!=oldSession.verifiedGameFec||
         member.session.verifiedStartupPadding!=oldSession.verifiedStartupPadding||
-        !validGameGroupPolicy(member.session.verifiedPolicy,4){
+        !validGameGroupPolicy(member.session.verifiedPolicy,n){
         return errors.Join(ErrAdmissionParams,e)
     }
     oldLease,e:=oldSession.AuthenticatedLeaseIPv4()

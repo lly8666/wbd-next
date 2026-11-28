@@ -367,16 +367,15 @@ func runGameClient(
     laneRound:=uint64(1)
     nextLane:=0
     rotateOne:=func()(uint8,uint16,error){
-        if n!=4{return 0,0,realityfront.ErrAdmissionUnsupported}
         slot:=nextLane
         lane:=uint8(slot+1)
         laneRound++
-        first,e:=originalGenerationGamePort(c.localPort,laneRound,4)
+        first,e:=originalGenerationGamePort(c.localPort,laneRound,uint8(n))
         if e!=nil{return lane,0,e}
         local,e:=gamePort(first,slot)
         if e!=nil{return lane,0,e}
         oldFlow:=flows[slot]
-        if local==oldFlow.LocalPort{return lane,0,fmt.Errorf("Game4 hot lane source port reused")}
+        if local==oldFlow.LocalPort{return lane,0,fmt.Errorf("Game hot lane source port reused")}
         newRaw,e:=faketcp.OpenRawIPv4EndpointWithOptions(
             c.rawInterface,c.localIP.As4(),faketcp.PacketPersonaLegacy,
             faketcp.RawIPv4EndpointOptions{ReceivePort:local},
@@ -467,9 +466,9 @@ func runGameClient(
                 return lane,0,fmt.Errorf("hot one-lane port collides with untouched sibling %d",sibling+1)
             }
         }
-        nextLane=(nextLane+1)%4
-        log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=client generation=%d lane=%d cycle=%d old_client_port=%d new_client_port=%d unchanged_siblings=3 original_TLS_Rust_M4=1",
-            c.rotationGeneration,lane,laneRound-1,oldFlow.LocalPort,local)
+        nextLane=(nextLane+1)%n
+        log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=client generation=%d lane=%d cycle=%d old_client_port=%d new_client_port=%d unchanged_siblings=%d original_TLS_Rust_M4=1",
+            c.rotationGeneration,lane,laneRound-1,oldFlow.LocalPort,local,n-1)
         return lane,local,nil
     }
     draining:=false
@@ -1332,34 +1331,26 @@ func runGameMultiServer(
             // Never stage it as a fresh four-lane cohort or replace siblings.
             coldKey,laneID,e:=lane.Cohort()
             if e!=nil{rejectLane(lane);continue}
-            // The selected-slot hot-rekey branch applies ONLY to Game4.
-            // Game2 has no per-slot hot swap: a real same-epoch replacement
-            // is ALWAYS a fresh authenticated two-lane complete cohort.
-            // Rejecting active Game2 here prevented physical A→B Gen2
-            // server M4 admission despite client Gen2 READY/old exact Stop,
-            // leaving genuine post-READY UDP with no recipient.
-            // Game4 single-lane reauth explicitly offers an existing
-            // protected Epoch; a fresh full-group first lane offers ZERO.
-            // Server-returned epochs are equal for both and cannot tell
-            // them apart. Once a full group has begun, its remaining
-            // explicit-epoch lanes must JOIN pending, not hot-swap A.
-            // Physical IP/MTU changes remain an independent full-group hint.
+            // Game2 and Game4 share the same protected selected-slot turn.
+            // Explicit epoch plus the current server-local attempt identifies
+            // a hot lane; zero epoch or a different/pending attempt starts a
+            // complete cohort (initial connect or actual physical path change).
             freshGroup,e:=lane.ProtectedFreshGroupRequested()
             if e!=nil{rejectLane(lane);continue}
             attempt,e:=lane.GameColdAttempt()
             if e!=nil{rejectLane(lane);continue}
             fullGroupPending:=pending[originalGameColdAttemptKey{cohort:coldKey,attempt:attempt}]!=nil
-            if freshGroup&&coldKey.Lanes==4{
+            if freshGroup{
                 log.Printf("V4_PUBLIC_GAME_FULL_GROUP_PROTECTED_EPOCH_ZERO role=server lane=%d client_port=%d old_group_preserved=1",
                     laneID,lane.Association().Flow().ClientPort)
             }
-            if fullGroupPending&&coldKey.Lanes==4{
+            if fullGroupPending{
                 log.Printf("V4_PUBLIC_GAME_FULL_GROUP_PENDING_JOIN role=server lane=%d client_port=%d old_group_preserved=1",
                     laneID,lane.Association().Flow().ClientPort)
             }
-            if group:=active[coldKey];group!=nil&&coldKey.Lanes==4&&
+            if group:=active[coldKey];group!=nil&&
                 group.attempt==attempt&&!freshGroup&&!fullGroupPending{
-                if laneID<1||laneID>4{
+                if laneID<1||laneID>coldKey.Lanes{
                     rejectLane(lane)
                     continue
                 }

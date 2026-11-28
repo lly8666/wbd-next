@@ -3480,7 +3480,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_lane_replace(
     let cell={
         let Ok(r)=registry().lock()else{return BAD_STAGE};
         let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
-        if g.stopped||g.stopping||g.handles.len()!=4||
+        if g.stopped||g.stopping||!matches!(g.handles.len(),2|4)||slot>=g.handles.len()||
            g.handles[slot]!=expected_old||g.drivers.is_none(){
             return BAD_STAGE
         }
@@ -3504,7 +3504,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_lane_replace(
     };
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
-    if g.stopped||g.stopping||g.handles.len()!=4||
+    if g.stopped||g.stopping||!matches!(g.handles.len(),2|4)||slot>=g.handles.len()||
        g.handles[slot]!=expected_old||g.drivers.is_none(){
         return BAD_STAGE
     }
