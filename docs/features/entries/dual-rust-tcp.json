@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Paired Linux native TCP; user-requested Linux-inspired vs WBD grouped EDT+ACK+GSO diagnostic; L2 open.",
+  "summary": "Paired Linux native TCP: H2551–2553 accepted; train8+ACK4+ready GSO selected scoped research reference, ACK8 discriminator pending; L2 open.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -36,7 +36,8 @@
     "docs/devlog/M0/20261128-M0-L2-EDT-EARNED-TRAIN-ACCEPTANCE.md",
     "docs/devlog/M0/20261128-M0-L2-REJECT-EDT-READY-TUN-GROUP.md",
     "docs/devlog/M0/20261128-M0-L2-EDT-ACK4-ACK8-USER-DIAGNOSTIC.md",
-    "docs/devlog/M0/20261128-M0-L2-LINUX-INSPIRED-WBD-GROUPED-EDT.md"
+    "docs/devlog/M0/20261128-M0-L2-LINUX-INSPIRED-WBD-GROUPED-EDT.md",
+    "docs/devlog/M0/20261128-M0-L2-ACK-GSO-GROUPED-EDT-ACCEPTANCE.md"
   ],
   "verification": [
     {
@@ -78,7 +79,8 @@
   "limitations": [
     "Earlier full feature card and all evidence links archived in docs/devlog/M0/20261128-DUAL-RUST-TCP-FEATURE-CARD-H2552.md; original H2550 per-record EDT ACK2 performance rejection remains.",
     "H2551 ready-only GSO exact native46142829814 PASS; sustained isolated performance not yet measured. H2552 ACK4/8 native46143387442 PASS, longflow46143387501 still in progress at refresh; no re-dispatch.",
-    "H2553 high-RTT Linux-inspired group sizing vs train8 ACK4; grouped eligibility is not actual outer GSO or exact Linux TSQ. Default off; no weak/mixed, active Stop or physical qualification."
+    "H2553 high-RTT Linux-inspired group sizing vs train8 ACK4; grouped eligibility is not actual outer GSO or exact Linux TSQ. Default off; no weak/mixed, active Stop or physical qualification.",
+    "H2554 H2552 per-record ACK8 wins; H2553 L/P350.94/366.15M, CPU30.676/31.277, retrans0.4327/0.1965%, both GSO>99%; P reference, L CPU control, no default promotion or weak/mixed/active Stop/old splice parity. See docs/evidence/M0/20261128-L2-ACK-GSO-GROUPED-EDT-ACCEPTANCE-RESULT.json"
   ],
   "promotion": null
 }
