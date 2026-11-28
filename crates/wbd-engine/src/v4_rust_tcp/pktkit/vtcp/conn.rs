@@ -439,7 +439,7 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Native paired Middle TCP experiment: existing quantum cap in MSS.
     pub(crate) native_pace_quantum_mss: u32,
-    /// Lab-only independent feedback comparison: 0 baseline, 1 admitted pipe, 2 actual service pacing epoch.
+    /// Lab-only feedback comparison: 0 baseline, 2 service epoch, 3 epoch and existing deadline.
     pub(crate) native_feedback_mode: u8,
     /// Lab-only ceiling on the existing TCP pacing rate (payload bytes/s).
     pub(crate) native_pace_ceiling: Option<u64>,
@@ -3779,9 +3779,7 @@ impl Conn {
             rs,
             newly_acked: delivered,
             newly_lost,
-            // The native reservation still consumes generation/cwnd seats.
-            // BBR model feedback can instead observe the actually admitted pipe.
-            inflight: if self.cfg.native_feedback_mode==1 {self.score.admitted_pipe().saturating_sub(self.reno_sacked)} else {self.in_flight()},
+            inflight: self.in_flight(),
             delivered: self.score.rate().delivered(),
             newest_rtt: self.score.ack_rtt(),
             cwnd_limited: std::mem::take(&mut self.cwnd_blocked),
@@ -4570,7 +4568,13 @@ impl Conn {
             // A local pending interval is not an independent pacing grant.
             // Keep unspent credit/debt, but anchor its next accrual at the
             // actual end of this native submission, not at generation.
-            if self.cfg.native_feedback_mode==2 {self.pace_stamp=self.pace_stamp.max(now);}
+            if self.cfg.native_feedback_mode!=0 {
+                self.pace_stamp=self.pace_stamp.max(now);
+                // The old deadline may refer to credit that can no longer
+                // accrue during the native pending interval. Reuse the
+                // existing pacing wait calculation, not a second timer.
+                if self.cfg.native_feedback_mode==3 && self.pace_deadline.is_some(){self.pace_wait();}
+            }
             if self.native_source_dry { self.check_app_limited(); }
             self.schedule_loss_probe();
         }
@@ -10722,32 +10726,6 @@ mod tests {
     }
 
     #[test]
-    fn native_feedback_admitted_pipe_preserves_reservation_for_generation() {
-        let mut cfg=big(40690,80);
-        cfg.congestion=CongestionKind::Bbr1;
-        let mut c=Conn::new(cfg);
-        let mut r=Conn::new(big(80,40690));
-        drive_handshake(&mut c,&mut r);
-        c.cfg.native_owner_turn=true;
-        c.cfg.native_feedback_mode=1;
-        c.begin_native_turn();
-        let (_, packets)=c.write(&[7;500]);
-        let p=parse(&packets[0]);
-        let reserved=c.score.native_pending();
-        assert_eq!(reserved,500);
-        let una=c.send_buf.as_ref().unwrap().una();
-        let before=c.in_flight();
-        let a=c.ack_info(0,0,None,una,None,0,0);
-        assert_eq!(a.inflight,c.score.admitted_pipe());
-        assert_eq!(before-a.inflight,reserved);
-        assert_eq!(c.in_flight(),before);
-        assert!(c.native_admit(p.seq,p.payload.len() as u32,test_now()));
-        assert_eq!(c.score.native_pending(),0);
-        let a=c.ack_info(0,0,None,una,None,0,0);
-        assert_eq!(a.inflight,c.in_flight());
-    }
-
-    #[test]
     fn native_feedback_service_epoch_preserves_existing_credit_and_rate() {
         let mut cfg=big(40691,80);
         cfg.congestion=CongestionKind::Bbr1;
@@ -10770,6 +10748,34 @@ mod tests {
         assert_eq!(c.pace_stamp,now);
         assert_eq!(c.pace_credit,credit);
         assert_eq!(c.pace_rate(),rate);
+    }
+
+    #[test]
+    fn native_service_epoch_reschedules_existing_pace_deadline() {
+        let mut cfg=big(40690,80);
+        cfg.congestion=CongestionKind::Bbr1;
+        let mut c=Conn::new(cfg);
+        let mut r=Conn::new(big(80,40690));
+        drive_handshake(&mut c,&mut r);
+        c.cfg.native_owner_turn=true;
+        c.cfg.native_feedback_mode=3;
+        c.begin_native_turn();
+        let (_, packets)=c.write(&[7;500]);
+        let p=parse(&packets[0]);
+        assert_eq!(c.score.native_pending(),500);
+        c.pace_wait();
+        let old=c.pace_deadline.unwrap();
+        let credit=c.pace_credit;
+        let rate=c.pace_rate().unwrap();
+        advance(Duration::from_millis(2));
+        let now=test_now();
+        assert!(c.native_admit(p.seq,p.payload.len() as u32,now));
+        assert_eq!(c.pace_stamp,now);
+        assert_eq!(c.pace_credit,credit);
+        assert_eq!(c.pace_rate(),Some(rate));
+        let expected=c.now+Duration::from_secs_f64((c.pace_quantum(rate)-credit).max(0.0)/rate as f64);
+        assert_eq!(c.pace_deadline,Some(expected));
+        assert!(expected>old);
     }
 
     #[test]

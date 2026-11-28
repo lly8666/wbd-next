@@ -1,24 +1,15 @@
-name: M0 ARM native feedback candidate batch
+name: M0 ARM paired feedback comparison
 on:
-  push:
-    branches: [experiment/m0-dual-rust-tcp]
-    # Include the actual relay candidate implementation so a core-only
-    # correction cannot silently omit its exact-source performance gate.
-    paths:
-      - '.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml'
-      - 'tools/m0_dual_tcp_arm_linux_parity.py'
-      - 'tools/m0_dual_tcp_path_sample.py'
-      - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs'
-      - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/autotune.rs'
-      - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/rate.rs'
-      - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/scoreboard.rs'
-      - 'crates/wbd-engine/src/v4_rust_tcp/flow.rs'
-      - 'crates/wbd-engine/src/v4_rust_tcp/mod.rs'
-      - 'crates/wbd-engine/src/v4_embedded_go.rs'
+  workflow_call:
+    inputs:
+      arm:
+        required: true
+        type: string
 permissions:
   contents: read
   actions: read
 env:
+  WBD_M0_FEEDBACK_ARM: ${{ inputs.arm }}
   WBD_DUAL_TCP_ARM: '1'
   WBD_H2442_ARM_SERVER: '1'
   WBD_H2418_DIAG: '1'
@@ -53,6 +44,38 @@ jobs:
             sleep 10
           done
           exit 2
+  weak-arm64:
+    needs: prepare
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Reuse the qualified exact native ARM artifact
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iputils-ping openssl
+          mkdir -p linux-plan029-public-bundle
+          gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D native-artifact
+          tar -C linux-plan029-public-bundle -xf native-artifact/bundle.tar
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          test "$(jq -r .source_sha linux-plan029-public-bundle/manifest.json)" = "$GITHUB_SHA"
+      - name: Matched local weak comparison
+        run: |
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 WBD_M0_FEEDBACK_ARM="$WBD_M0_FEEDBACK_ARM" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+      - name: Preserve local evidence
+        if: always()
+        run: |
+          if test -d dual-tcp-out;then
+            sudo find dual-tcp-out -type f \( -name install -o -name route-key.hex -o -name users.json -o -name key.pem -o -name cert.pem \) -delete
+            sudo chown -R "$(id -u):$(id -g)" dual-tcp-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: dual-arm-local-weak-evidence, path: dual-tcp-out/, retention-days: 14, if-no-files-found: warn}
   relay-arm64:
     name: 'Real ARM64 middle L3 kernel router: ONLY netem egress per direction'
     needs: prepare
@@ -225,7 +248,7 @@ jobs:
           test -s h2228-out/path-sample-ready.json
       - name: Start preset server and real origin control
         run: |
-          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py server >h2228-out/server-control.log 2>&1 </dev/null &
+          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG,WBD_M0_FEEDBACK_ARM nohup python3 -u tools/m0_dual_tcp_arm_linux_parity.py server >h2228-out/server-control.log 2>&1 </dev/null &
           for i in $(seq 1 200);do
             test ! -s h2228-out/server-ready.json || break
             sleep 1
@@ -233,7 +256,7 @@ jobs:
           test -s h2228-out/server-ready.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
-      - name: Keep the same ARM server through six clean paired legs and brackets
+      - name: Keep the same ARM server through four clean paired legs and brackets
         run: bash tools/m0_h2228_three_runner_case.sh server-wait
       - name: Finish and qualify header-only path sample
         if: always()
@@ -316,7 +339,7 @@ jobs:
             sleep 4
           done
           test -s h2228-server-ready/server-ready.json
-          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG python3 -u tools/m0_dual_tcp_arm_linux_parity.py client
+          sudo --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,RUNNER_TEMP,WBD_DUAL_TCP_ARM,WBD_H2442_ARM_SERVER,WBD_H2418_DIAG,WBD_M0_FEEDBACK_ARM python3 -u tools/m0_dual_tcp_arm_linux_parity.py client
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with: {name: h2228-client-result, path: h2228-out/summary.json, retention-days: 5, if-no-files-found: warn}

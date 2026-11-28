@@ -52,8 +52,8 @@ impl Endpoint {
             native_pace_quantum_mss:quantum_mss,
             native_feedback_mode:if middle&&parity&&matches!(cc,CongestionKind::Bbr1){
                 match std::env::var_os("WBD_M0_NATIVE_FEEDBACK").as_deref().and_then(|s|s.to_str()){
-                    Some("admitted")=>1,
                     Some("service")=>2,
+                    Some("service-deadline")=>3,
                     _=>0,
                 }
             }else{0},

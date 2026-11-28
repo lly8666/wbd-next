@@ -127,8 +127,8 @@ def functional():
                 assert samples and all(l==pending_limit and (not l or p<=l) for l,p in samples),role
                 credit.append({"role":role,"samples":len(samples),"max_pending":max(p for l,p in samples)})
             row["relay_credit_receipts"]=credit
-        if os.environ.get("WBD_M0_NATIVE_FEEDBACK") in ("admitted","service"):
-            expected_mode={"admitted":1,"service":2}[os.environ["WBD_M0_NATIVE_FEEDBACK"]]
+        if os.environ.get("WBD_M0_NATIVE_FEEDBACK") in ("service","service-deadline"):
+            expected_mode={"service":2,"service-deadline":3}[os.environ["WBD_M0_NATIVE_FEEDBACK"]]
             for role,log in (("server",sl),("client",cl)):
                 middle=[x for x in log.splitlines() if "WBD_M0_TCP_INFO " in x and f"leg={role}-middle " in x]
                 assert middle and all(f" native_feedback_mode={expected_mode} " in x for x in middle),role
@@ -191,10 +191,11 @@ def controlled_recovery():
             builds[leg]={"manifest":manifest,"manifest_sha256":hashlib.sha256((bundle/"manifest.json").read_bytes()).hexdigest()}
         save(O/"builds.json",builds)
         cases.extend((f"loss-{i}-{leg}",True,120_000_000,{},0,0.5,96,leg) for i,leg in enumerate(("A","B","B","A")))
-    elif os.environ.get("DUAL_TCP_FEEDBACK_BATCH")=="1":
+    elif os.environ.get("WBD_M0_FEEDBACK_ARM"):
         bundles={"B":current}
-        for i,arm in enumerate(("A","B","C","C","B","A")):
-            profile={"WBD_M0_NATIVE_FEEDBACK":{"A":"baseline","B":"admitted","C":"service"}[arm]}
+        candidate=os.environ["WBD_M0_FEEDBACK_ARM"]
+        for i,arm in enumerate(("A",candidate,candidate,"A")):
+            profile={"WBD_M0_NATIVE_FEEDBACK":{"A":"baseline","C":"service","D":"service-deadline"}[arm]}
             cases.append((f"loss-{i}-{arm}",True,120_000_000,profile,0,0.5,96,"B"))
     else:
         bundles={"B":current}
@@ -361,8 +362,8 @@ def controlled_recovery():
                 # Actual intervention mandatory for sustained normal candidate.
                 if drain_expected and label=="normal-C":drain_ok=drain_ok and row["client_rx_drain"]["packets"]>0
                 row["profile_valid"]=drain_ok and first_ok and credit_ok and gain_ok and bool(info and origin_info and rates) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x and " native_pace_ceiling_bytes_s="+str(ceiling)+" " in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true")) and (not ceiling or row["actual_pacing_max_bytes_s"]<=ceiling)
-                if os.environ.get("DUAL_TCP_FEEDBACK_BATCH")=="1":
-                    feedback={"baseline":0,"admitted":1,"service":2}[profile.get("WBD_M0_NATIVE_FEEDBACK","baseline")]
+                if os.environ.get("WBD_M0_FEEDBACK_ARM"):
+                    feedback={"baseline":0,"service":2,"service-deadline":3}[profile.get("WBD_M0_NATIVE_FEEDBACK","baseline")]
                     row["native_feedback_mode"]=feedback
                     reserved=[int(m.group(1)) for x in info if (m:=re.search(r"\bnative_reserved_bytes=(\d+)",x))]
                     row["native_reserved_max_sample"]=max(reserved,default=None)
@@ -382,7 +383,7 @@ def controlled_recovery():
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
     ROOT=current
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, selected clean/pause controls and mirrored A/B/C/C/B/A weak feedback arms on one exact artifact when selected; exact application, selected profile, qdisc and Stop; live/Stop sample not necessarily retired","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, selected clean/pause controls and independent mirrored A/arm/arm/A weak feedback arms on one exact artifact when selected; exact application, selected profile, qdisc and Stop; live/Stop sample not necessarily retired","rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)

@@ -10,9 +10,10 @@ ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
 # One native binary, independently selected feedback candidates, mirrored order.
-ORDER=("A","B","C","C","B","A")
+ARM=os.environ["WBD_M0_FEEDBACK_ARM"]
+ORDER=("A",ARM,ARM,"A")
 CASES=(-1,*range(len(ORDER)),-2)
-PROFILES={"A":"selected-baseline","B":"admitted-pipe-feedback","C":"native-service-pacing-epoch"}
+PROFILES={"A":"selected-baseline",ARM:{"C":"native-service-pacing-epoch","D":"native-service-pacing-epoch-and-deadline"}[ARM]}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
@@ -23,7 +24,7 @@ def compress(k):return "1"
 def offer(i):return 600_000_000
 def target_bytes(i):return 1024*1024*1024
 def profile_env(k,server):
-    return ["WBD_M0_NATIVE_FEEDBACK="+{"A":"baseline","B":"admitted","C":"service"}[k]] if server else []
+    return ["WBD_M0_NATIVE_FEEDBACK="+{"A":"baseline","C":"service","D":"service-deadline"}[k]] if server else []
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
@@ -299,7 +300,7 @@ def probe_receipt(log,leg,k,i):
         vals=dict(w.split("=",1) for w in receipt.split() if "=" in w)
         gso_ok=int(vals.get("groups",0))>0
     expected='congestion: "'+rust_cc(i)+'"'
-    feedback_mode={"A":0,"B":1,"C":2}[k] if leg=="server-middle" else 0
+    feedback_mode={"A":0,"C":2,"D":3}[k] if leg=="server-middle" else 0
     feedback_ok=bool(rows) and all(f" native_feedback_mode={feedback_mode} " in s for s in rows)
     reserved=[int(m.group(1)) for s in rows if (m:=re.search(r"\bnative_reserved_bytes=(\d+)",s))]
     return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows),
@@ -432,7 +433,7 @@ def client():
                     sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                     recovery[key]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"retired server-middle bulk flow on identical frozen Rust build","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"identical qualified candidate binary, independent admitted-pipe and native-service pacing epoch, mirrored A/B/C/C/B/A, 1GiB/600M/400ms, zero injected loss, bare brackets and eight taps; screening only","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"retired server-middle bulk flow on identical frozen Rust build","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"identical qualified candidate binary, independent A/arm/arm/A, 1GiB/600M/400ms, zero injected loss, bare brackets and eight taps; separate matched comparison","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
