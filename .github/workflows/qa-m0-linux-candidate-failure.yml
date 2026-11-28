@@ -1,4 +1,4 @@
-name: M0 Linux all-mode scheduled candidate failure keeps old lane
+name: M0 Linux candidate failure acceptance then matched complete release
 on:
   push:
     branches: ['experiment/m0-winxdp']
@@ -36,7 +36,7 @@ jobs:
           for name,sha in m["sha256"].items():
               assert hashlib.sha256((root/name).read_bytes()).hexdigest()==sha
           PY
-      - name: Real scheduled SYN fault then next timer, three live clients
+      - name: Real scheduled SYN fault then next timer, three live clients (corrected fixture)
         shell: bash
         run: |
           set -euo pipefail
@@ -57,3 +57,165 @@ jobs:
             fixed-kernel-result/candidate-*.log
           if-no-files-found: warn
           retention-days: 14
+  package_windows:
+    needs: scene
+    runs-on: windows-2025
+    timeout-minutes: 40
+    env:
+      PYTHONUTF8: '1'
+      WBD_XDP_PRESSURE_LAB: '0'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {ref: 'f6add11125f1058ddcee8b3cd3b3d05bd3194e74', persist-credentials: false, fetch-depth: 0}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: winxdp-timer-go
+          path: tested-core
+          run-id: 46118537141
+          github-token: ${{ github.token }}
+      - name: Assemble same-source GUI and reuse tested Go client bytes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $source='f6add11125f1058ddcee8b3cd3b3d05bd3194e74'
+          if((git rev-parse HEAD).Trim() -ne $source){throw 'source mismatch'}
+          $m=Get-Content tested-core/timer-go-manifest.json -Raw | ConvertFrom-Json
+          if($m.source_sha -ne $source -or (Get-FileHash tested-core/wbd-client-embedded.exe).Hash.ToLowerInvariant() -ne $m.exe){throw 'tested Go identity mismatch'}
+          $event=$env:GITHUB_SHA
+          try{
+            $env:GITHUB_SHA=$source
+            python tools/prepare_windows_wiring.py
+            if($LASTEXITCODE -ne 0){throw 'original Windows assembly failed'}
+          }finally{$env:GITHUB_SHA=$event}
+          New-Item -ItemType Directory -Force xdp-build | Out-Null
+          Copy-Item tested-core/wbd-client-embedded.exe xdp-build/
+          Copy-Item tested-core/timer-go-manifest.json xdp-build/
+      - name: H1394 pin official ISA-L Win64 static prerequisite
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          choco install nasm -y --no-progress
+          if($LASTEXITCODE -ne 0){throw 'native ISA-L NASM prerequisite failed'}
+          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin') |
+            Where-Object {Test-Path (Join-Path $_ 'nasm.exe')} | Select-Object -First 1
+          if(-not $nasm){throw 'ISA-L NASM missing after install'}
+          Add-Content -Path $env:GITHUB_PATH -Value $nasm
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          if($LASTEXITCODE -ne 0){throw 'official ISA-L clone failed'}
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if((git -C isa-l rev-parse HEAD).Trim() -ne 'c387163fcbca62701d646149564c550c78a4f985'){throw 'official pinned ISA-L source mismatch'}
+      - name: H1394 build official static ISA-L for real MSVC release DLL
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          # The actual Windows native runner can have a different VS edition/year.
+          # Require the installed x64 MSVC tools, not a hard-coded Enterprise path.
+          $vswhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if(-not (Test-Path -LiteralPath $vswhere)){throw 'VS installer vswhere missing: cannot build pinned native ISA-L'}
+          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath |
+            Select-Object -First 1
+          if([string]::IsNullOrWhiteSpace($vsroot)){throw 'No installed native MSVC x64 toolchain'}
+          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          if(-not (Test-Path -LiteralPath $vcvars)){throw 'Installed MSVC lacks vcvars64.bat'}
+          $nativeBuild='call "'+$vcvars+'" && where nmake && cd isa-l && nmake /f Makefile.nmake'
+          & cmd.exe /d /s /c $nativeBuild
+          if($LASTEXITCODE -ne 0){throw 'Native ISA-L MSVC static build failed'}
+          Write-Output 'H1396_WIN_NATIVE_ISAL_VSWHERE_MSVC_BUILD_PASS'
+      - name: Build current release WinXDP DLL with native ISA-L
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust toolchain'}
+          nuget install Microsoft.XDP-for-Windows.Sdk -Version 1.4.0 -OutputDirectory xdp-packages -NonInteractive
+          if($LASTEXITCODE -ne 0){throw 'official XDP SDK unavailable'}
+          $env:WBD_XDP_SDK_INCLUDE=(Get-ChildItem xdp-packages -Recurse -Filter xdpapi.h | Where-Object {$_.Directory.Name -eq 'include'} | Select-Object -First 1).Directory.FullName
+          $archive=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File | Select-Object -First 1
+          if(-not $archive){throw 'ISA-L archive missing'}
+          $env:WBD_ISAL_PREFIX=$archive.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration,winxdp_native_trial'
+          $vs=& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          New-Item -ItemType Directory -Force xdp-build | Out-Null
+          $env:WBD_XDP_PRESSURE_LAB='0'
+          $cmd='call "'+$vs+'\VC\Auxiliary\Build\vcvars64.bat" && cargo +1.85.1 build --locked -p wbd-engine --release --features '+$features+' && copy /Y target\release\wbd_engine.dll xdp-build\wbd_engine.dll'
+          cmd.exe /d /s /c $cmd
+          if($LASTEXITCODE -ne 0){throw 'native ISA-L A/B build failed'}
+          [ordered]@{source_sha=(git rev-parse HEAD).Trim();lab=$false;features=$features;dll=(Get-FileHash xdp-build/wbd_engine.dll).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content xdp-build/current-dll-manifest.json
+      - name: Assemble complete portable package with ISA-L release DLL
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $source='f6add11125f1058ddcee8b3cd3b3d05bd3194e74'
+          $dll=Get-Content xdp-build/current-dll-manifest.json -Raw | ConvertFrom-Json
+          $go=Get-Content xdp-build/timer-go-manifest.json -Raw | ConvertFrom-Json
+          if($dll.source_sha -ne $source -or $go.source_sha -ne $source -or $dll.lab -ne $false -or $dll.features -notmatch 'native_fec_acceleration'){throw 'release identity mismatch'}
+          [ordered]@{source_sha=$source;go_source_sha=$source;features=$dll.features;native_fec_acceleration=$true;lab=$false;dll=$dll.dll;exe=$go.exe;candidate_qa=46118537141;linux_candidate_qa=[long]$env:GITHUB_RUN_ID} | ConvertTo-Json | Set-Content xdp-build/manifest.json
+          & ./tools/m0_winxdp_release_package.ps1 -SourceSHA $source
+          if($LASTEXITCODE -ne 0){throw 'portable assembly failed'}
+          $dir=Join-Path $PWD 'package-test'
+          Expand-Archive xdp-build/WBD-Windows-amd64-WinXDP.zip $dir -Force
+          $m=Get-Content "$dir/package-manifest.json" -Raw | ConvertFrom-Json -AsHashtable
+          if($m.source_sha -ne $source){throw 'package source mismatch'}
+          foreach($k in $m.files.Keys){
+            if((Get-FileHash (Join-Path $dir $k)).Hash.ToLowerInvariant() -ne $m.files[$k]){throw "package bytes mismatch: $k"}
+          }
+          if($m.files['wbd-client.exe'] -ne $go.exe -or $m.files['wbd_engine.dll'] -ne $dll.dll){throw 'core identity mismatch'}
+          foreach($key in @('WBD.exe','wbd-client.exe','wbd_engine.dll','wintun.dll','drivers/winxdp/xdp.inf','drivers/winxdp/xdp.cat','drivers/winxdp/xdp.sys','drivers/winxdp/xdpapi.dll','licenses/WinXDP-MIT.txt','licenses/Wintun.txt')){
+            if(-not (Test-Path (Join-Path $dir $key))){throw "package missing $key"}
+          }
+          if(Get-ChildItem $dir -Recurse -File | Where-Object {$_.Name -match '^(npcap|wpcap|packet)\.(dll|sys|exe)$'}){throw 'unexpected Npcap dependency'}
+          New-Item -ItemType Directory -Force delivery | Out-Null
+          Copy-Item xdp-build/WBD-Windows-amd64-WinXDP.zip delivery/
+          Copy-Item xdp-build/manifest.json delivery/core-manifest.json
+          Copy-Item "$dir/package-manifest.json" delivery/
+          [ordered]@{source_sha=$source;go_exact_tested=$true;native_fec_backend='ISA-L release, same source but different DLL from candidate fixture';zip_sha256=(Get-FileHash delivery/WBD-Windows-amd64-WinXDP.zip).Hash.ToLowerInvariant();windows_candidate_run=46118537141;linux_candidate_run=[long]$env:GITHUB_RUN_ID} | ConvertTo-Json | Set-Content delivery/delivery.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: WBD-Windows-amd64-WinXDP-complete
+          path: delivery/
+          if-no-files-found: error
+          retention-days: 30
+  server_arm64:
+    needs: scene
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {ref: 'f6add11125f1058ddcee8b3cd3b3d05bd3194e74', persist-credentials: false, fetch-depth: 0}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Build matched ARM64 glibc 2.31 native Go Rust ISA-L pair
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GITHUB_SHA='f6add11125f1058ddcee8b3cd3b3d05bd3194e74'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = aarch64
+          bash tools/m0_plan029_linux_dual_native_build.sh > compatible-build.log 2>&1 || { tail -100 compatible-build.log; exit 1; }
+          python3 tools/m0_linux_glibc_abi.py linux-plan029-public-bundle 2.31
+          mkdir -p delivery
+          tar -czf delivery/wbd-linux-aarch64-glibc231.tar.gz -C linux-plan029-public-bundle .
+          (cd delivery && sha256sum *.tar.gz > SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: WBD-Linux-aarch64-glibc231-complete
+          path: |
+            delivery/
+            linux-plan029-public-bundle/manifest.json
+            linux-plan029-public-bundle/glibc-abi.json
+            compatible-build.log
+          if-no-files-found: error
+          retention-days: 30
