@@ -9,24 +9,25 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# One diagnostic, one occurrence of each arm on the same three runners.
-ORDER=("B","V")
-CASES=(0,1)
-PROFILES={"B":"dual-rust-bbr1-initial600M","V":"dual-rust-bbr3-initial600M"}
-SOURCES={k:os.environ["GITHUB_SHA"] for k in ORDER}
+# Same exact accepted product artifact, two occurrences per arm.
+ORDER=("A","E","E","A")
+CASES=tuple(range(len(ORDER)))
+PROFILES={"A":"dual-rust-bbr3-immediate","E":"dual-rust-bbr3-earned-edt"}
+PRODUCT_SOURCE="9677716be3e3f46e7918e3225ad46cbb54e37563"
+SOURCES={k:PRODUCT_SOURCE for k in ORDER}
 def dual(i):return i>=0 and ORDER[i]!="S"
 def splice(i):return i>=0 and ORDER[i]=="S"
 def loss_for(i):return 0.0
 def cc_for(i):return "cubic" if i<0 or ORDER[i]=="R" else "bbr"
-def rust_cc(i):return ("bbr" if ORDER[i]=="V" else "bbr1") if dual(i) else None
+def rust_cc(i):return "bbr" if dual(i) else None
 def ack_for(k):return "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
 def offer(i):return None
 def target_bytes(i):return None
 def profile_env(k,server):
-    cc,seed=("bbr1","WBD_M0_BBR1_INITIAL_600M=1") if k=="B" else ("bbr3","WBD_M0_BBR3_INITIAL_600M=1")
-    return ["WBD_M0_MIDDLE_CC="+cc,seed]+(["WBD_M0_NATIVE_FEEDBACK=service"] if server else [])
+    return ["WBD_M0_MIDDLE_CC=bbr3","WBD_M0_BBR3_INITIAL_600M=1",
+            "WBD_M0_NATIVE_EDT="+("1" if k=="E" else "0")]+(["WBD_M0_NATIVE_FEEDBACK=service"] if server else [])
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_tcp_long_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2","180"]
@@ -132,6 +133,21 @@ def snapshot(role):
             "bbr_module":h.cmd("modinfo","tcp_bbr",allow_fail=True).stdout,
             "qdisc":h.ns(N,"tc","-s","-j","qdisc","show").stdout,
             "offload":h.ns(N,"ethtool","-k","wan0").stdout}
+def fq_reset():
+    h.ns(N,"tc","qdisc","replace","dev","wan0","root","fq")
+    return fq_state()
+def fq_state():
+    rows=json.loads(h.ns(N,"tc","-s","-j","qdisc","show","dev","wan0").stdout)
+    return next(x for x in rows if x["kind"]=="fq" and x.get("root"))
+def edt_receipt(log,k,role):
+    rows=[x for x in log.splitlines() if "WBD_M0_TCP_EDT " in x]
+    if k=="A":return {"valid":not rows,"enabled":False}
+    values=[dict(re.findall(r"(\w+)=(\d+)",x)) for x in rows]
+    if not values:return {"valid":False,"enabled":True}
+    timed=sum(int(x["timed_copied"]) for x in values)
+    maximum=max(int(x["max_delay_ns"]) for x in values)
+    return {"valid":maximum<=1_000_000 and (role!="server" or timed>0),
+            "enabled":True,"timed_copied":timed,"max_delay_ns":maximum}
 def common():
     return ["--server-name","wbd-h2228.example.test","--route-key-hex-file",fixture.TMP/"route-key.hex",
             "--mode","normal","--outer-repair","on","--outer-mtu","1160","--tun-fq-maxrate-mbps","0"]
@@ -141,6 +157,7 @@ def server_start(i):
     CURRENT=fixture.current=i
     FOLDER=OUT/("case-"+str(i));FOLDER.mkdir()
     set_cc(N,i);set_cc(ORIGIN,i)
+    save(FOLDER/"fq-initial.json",fq_reset())
     if i<0:
         source=spawn("origin",N,FOLDER/"origin.log",*app_args(i,"origin"))
         where=N;port=5202
@@ -203,6 +220,9 @@ def server_close():
         result["bulk_retired"]=bool(bulk and any("WBD_M0_TCP_FLOW_FINAL " in s and (" id="+str(bulk["flow_id"])+" ") in s and "leg=server-middle" in s for s in log.splitlines()))
         result["bulk_stop_sample"]=bool(bulk and any("WBD_M0_TCP_FLOW_STOP " in s and (" id="+str(bulk["flow_id"])+" ") in s and "leg=server-middle" in s for s in log.splitlines()))
         result["experiment"]=profile(i,ORDER[i])
+        result["edt"]=edt_receipt(log,ORDER[i],"server")
+        result["fq_initial"]=load(d/"fq-initial.json")
+        result["fq_after_stop"]=fq_state()
         result["native_counters"]=[s for s in log.splitlines() if "V4_PUBLIC_RX_CHAIN role=" in s or "V4_PUBLIC_TX_CHAIN role=" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s or "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s]
     save(d/"result.json",result);CURRENT=fixture.current=None
     return result
@@ -265,7 +285,7 @@ def bulk_tcp_sample(log,leg):
 
 def probe_receipt(log,leg,k,i):
     rows=[x for x in log.splitlines() if "WBD_M0_TCP_INFO " in x and "leg="+leg+" " in x]
-    marker="WBD_M0_BBR1 " if k=="B" else "WBD_M0_BBR "
+    marker="WBD_M0_BBR "
     bbr=[x for x in log.splitlines() if marker in x and "leg="+leg+" " in x]
     mode=2 if leg=="server-middle" else 0
     cc=rust_cc(i)
@@ -280,6 +300,7 @@ def client_case(i):
     try:
         shape(0,0)
         set_cc(N,i)
+        row["fq_initial"]=fq_reset()
         started=True
         control("/start",{"case":i})
         if i>=0:
@@ -357,6 +378,8 @@ def client_case(i):
             log=(d/"client.log").read_text(errors="replace")
             row["client_stop"]=rc==0 and "V4_PUBLIC_SHARED_TUN_STOP" in log and "reader_joined=1" in log and log.count("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client")==1 and (not dual(i) or "WBD_DUAL_RUST_TCP_OWNER_STOP" in log)
             row["wire"]=[s for s in log.splitlines() if "WBD_DUAL_TCP_WIRE role=" in s]
+            row["edt"]=edt_receipt(log,k,"client")
+            row["fq_after_stop"]=fq_state()
             row["probe"]=probe_receipt(log,"client-middle",k,i) if dual(i) else {"valid":True}
             row["native_counters"]=[s for s in log.splitlines() if "M0_PLAN029_NATIVE_INBOX_BOUND" in s or "WBD_M0_TCP_INGRESS" in s or "WBD_M0_TCP_PUBLISH" in s or "WBD_M0_RAW_RX_PACKET_STATS" in s or "WBD_M0_TCP_M4_CLOCK" in s or "WBD_M0_LOCAL_TUN_GSO" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s]
         if started:
@@ -371,6 +394,11 @@ def client_case(i):
         if row["status"]=="MEASURED" and i>=0 and not (row.get("probe",{}).get("valid") and row.get("server_receipt",{}).get("probe",{}).get("valid")):row["status"]="INCOMPLETE_PROBE"
         if row["status"]=="MEASURED" and (not row.get("endpoint_direct_snapshots") or row.get("server_receipt",{}).get("final_sample_error")):row["status"]="INCOMPLETE_PATH_OR_SAMPLE"
         if row["status"]=="MEASURED" and dual(i) and not row.get("server_receipt",{}).get("bulk_retired"):row["status"]="INCOMPLETE_RECOVERY_SAMPLE"
+        if row["status"]=="MEASURED":
+            sr=row["server_receipt"]
+            if not (row["edt"]["valid"] and sr["edt"]["valid"]):row["status"]="INCOMPLETE_EDT_RECEIPT"
+            elif not all(x.get("qlen")==0 and x.get("backlog")==0 for x in (row["fq_after_stop"],sr["fq_after_stop"])):row["status"]="INCOMPLETE_FQ_DRAIN"
+            elif not all(x["fq_initial"]["options"]==x["fq_after_stop"]["options"] for x in (row,sr)):row["status"]="INCOMPLETE_FQ_CHANGE"
         if row["status"]=="MEASURED" and i<0 and not row.get("server_receipt",{}).get("origin_app",{}).get("kernel_final_valid"):row["status"]="INCOMPLETE_KERNEL_FINAL"
         save(d/"result.json",row)
         print("ARM_LONGFLOW_RESULT "+json.dumps({k:v for k,v in row.items() if k not in ("server_receipt","wire")}),flush=True)
@@ -394,8 +422,8 @@ def client():
             "real_three_runner_l3_relay":True,"all_three_distinct_native_machines":distinct,"architecture":"aarch64","added_rtt_ms":400,
             "planned_source_seconds":180,"application_offer":"saturated","outer_mtu":1160,"product_tun_fq_maxrate_mbps":0,
             "initial_rust_bbr_pacing_bytes_s":75000000,"kernel_cc":"bbr","server_native_feedback_mode":2,"client_native_feedback_mode":0,
-            "edt_product_enabled":False,"order":list(ORDER),"profiles":PROFILES,
-            "status":"MEASURED_SINGLE_OCCURRENCE_DIAGNOSTIC" if complete else "INCOMPLETE","rows":rows}
+            "edt_product_enabled_by_arm":{"A":False,"E":True},"endpoint_wan_qdisc":"fq both arms","order":list(ORDER),"profiles":PROFILES,
+            "status":"MEASURED_ABBA_EDT_DIAGNOSTIC" if complete else "INCOMPLETE","rows":rows}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

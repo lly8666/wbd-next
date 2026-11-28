@@ -1,4 +1,4 @@
-name: M0 three ARM 180s Rust BBR1 versus BBRv3 seeded diagnostic
+name: M0 three ARM BBRv3 earned EDT versus immediate 180s ABBA
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -10,6 +10,7 @@ permissions:
   contents: read
   actions: read
 env:
+  PRODUCT_SOURCE: '9677716be3e3f46e7918e3225ad46cbb54e37563'
   WBD_DUAL_TCP_ARM: '1'
   WBD_H2442_ARM_SERVER: '1'
   WBD_H2418_DIAG: '1'
@@ -28,25 +29,17 @@ jobs:
         with: {persist-credentials: false}
       - name: Preflight duration fixture
         run: python3 -m py_compile tools/m0_dual_tcp_arm_longflow.py tools/m0_dual_tcp_long_app.py
-      - name: Wait for exact native product qualification, no duplicate build
+      - name: Reuse exact accepted H2549 native product (no rebuild)
         id: qualified
         run: |
           set -euo pipefail
-          run=""
-          for i in $(seq 1 180);do
-            run=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/qa-m0-dual-rust-tcp-core.yml/runs?head_sha=$GITHUB_SHA" --jq '.workflow_runs[0].id // empty')
-            if test -n "$run";then
-              gh run view "$run" -R "$GITHUB_REPOSITORY" --json headSha,status,conclusion > native-run.json
-              test "$(jq -r .headSha native-run.json)" = "$GITHUB_SHA"
-              if test "$(jq -r .status native-run.json)" = completed;then break;fi
-            fi
-            sleep 10
-          done
-          test -n "$run"
+          run=46140274112
+          gh run view "$run" -R "$GITHUB_REPOSITORY" --json headSha,status,conclusion > native-run.json
+          test "$(jq -r .headSha native-run.json)" = "$PRODUCT_SOURCE"
           test "$(jq -r .status native-run.json)" = completed
           test "$(jq -r .conclusion native-run.json)" = success
           artifact=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" --jq '.artifacts[] | select(.name=="dual-tcp-native-build-aarch64" and .expired==false) | .id')
-          test -n "$artifact"
+          test "$artifact" = 15261776810
           echo "run=$run" >> "$GITHUB_OUTPUT"
   relay-arm64:
     name: 'Real ARM64 middle L3 kernel router: ONLY netem egress per direction'
@@ -189,7 +182,7 @@ jobs:
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/A
           tar -C bundles/A -xf bundles/A/bundle.tar
           (cd bundles/A && sha256sum -c SHA256SUMS)
-          test "$(jq -r .source_sha bundles/A/manifest.json)" = "$GITHUB_SHA"
+          test "$(jq -r .source_sha bundles/A/manifest.json)" = "$PRODUCT_SOURCE"
           cat >/tmp/m0-long-tcp-info-layout.c <<'EOF'
           #include <stddef.h>
           #include <linux/tcp.h>
@@ -242,7 +235,7 @@ jobs:
           test -s h2228-out/server-ready.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
-      - name: Keep the same ARM server through two 180s diagnostic legs
+      - name: Keep the same ARM server through four 180s ABBA legs
         run: bash tools/m0_h2228_three_runner_case.sh server-wait
       - name: Finish and qualify header-only path sample
         if: always()
@@ -289,7 +282,7 @@ jobs:
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/A
           tar -C bundles/A -xf bundles/A/bundle.tar
           (cd bundles/A && sha256sum -c SHA256SUMS)
-          test "$(jq -r .source_sha bundles/A/manifest.json)" = "$GITHUB_SHA"
+          test "$(jq -r .source_sha bundles/A/manifest.json)" = "$PRODUCT_SOURCE"
           cat >/tmp/m0-long-tcp-info-layout.c <<'EOF'
           #include <stddef.h>
           #include <linux/tcp.h>
@@ -332,7 +325,7 @@ jobs:
             sleep .2
           done
           test -s h2228-out/path-sample-ready.json
-      - name: Run two single-occurrence 180s diagnostic legs
+      - name: Run four 180s ABBA legs
         run: |
           for i in $(seq 1 150);do
             gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-server-ready -D h2228-server-ready >/dev/null 2>&1 && break

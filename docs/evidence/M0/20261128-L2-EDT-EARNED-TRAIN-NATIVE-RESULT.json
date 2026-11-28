@@ -1,0 +1,98 @@
+{
+  "source_sha": "9677716be3e3f46e7918e3225ad46cbb54e37563",
+  "run_id": 46140274112,
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "dual ISA owned local Normal real paired EDT functional, not sustained performance or active midtrain Stop",
+  "artifacts": {
+    "x86_64": 15261900574,
+    "aarch64": 15261890755,
+    "arm_build": 15261776810,
+    "x86_build": 15261318947
+  },
+  "crc_verified": 2,
+  "core_tests_each": 363,
+  "product_function_profiles_each": 8,
+  "rows": [
+    {
+      "arch": "x86_64",
+      "server_timed_copied": 8001,
+      "client_timed_copied": 2912,
+      "max_delay_ns": [
+        972574,
+        549122
+      ],
+      "raw_rx_drops": [
+        0,
+        0
+      ],
+      "fq_drops": [
+        0,
+        0
+      ],
+      "fq_backlog_after_stop": [
+        0,
+        0
+      ],
+      "first_response_from_connect_ns": 32048915
+    },
+    {
+      "arch": "aarch64",
+      "server_timed_copied": 8105,
+      "client_timed_copied": 2905,
+      "max_delay_ns": [
+        548781,
+        548533
+      ],
+      "raw_rx_drops": [
+        0,
+        0
+      ],
+      "fq_drops": [
+        0,
+        0
+      ],
+      "fq_backlog_after_stop": [
+        0,
+        0
+      ],
+      "first_response_from_connect_ns": 31407479
+    }
+  ],
+  "each": {
+    "download_bytes": 3145728,
+    "upload_bytes": 2097152,
+    "concurrent_connections": 8,
+    "concurrent_download_bytes": 8388608,
+    "concurrent_upload_bytes": 2097152,
+    "delayed_reader_seconds": 1,
+    "hash_eof_halfclose_udp_joined_stop": true,
+    "download_sha256": "c28e4d075c2da32b38414976bfe8c8a3f9b44c80341b246049afb3ee46eb4ac8",
+    "upload_sha256": "794ef28c10ca06191a3c7682e15668ab8c0dc13d3d11809535018667664f65d8"
+  },
+  "baseline_arm_recovery": {
+    "status": "MEASURED_REQUIRES_RECOVERY_REVIEW",
+    "edt": false,
+    "all_three_measured": true,
+    "mbps": [
+      339.9357042913425,
+      93.74673018887509,
+      45.9124280025732
+    ]
+  },
+  "history": {
+    "failed_source": "1fb54806c0f989f79c61c0e92c9ffa0d41e103cd",
+    "run": 46140237332,
+    "reason": "E0061 old immediate admit test calls, both ISA",
+    "corrected_governance_run": 46140346118,
+    "main_governance_run": 46140355060,
+    "accidental_old_x86_runs": [
+      46140237313,
+      46140237362,
+      46140237298,
+      46140237295
+    ],
+    "accidental_runs_scope": "old frozen queue threshold control, success not EDT evidence"
+  },
+  "decision": "open scoped network performance candidate, not default or L2 promotion"
+}
