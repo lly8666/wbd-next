@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "source_sha": "dbb70afcb8c5738b6744e2f4be21312ba80b07e5",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "scope": "Native functional success, negative performance comparison; reject high-RTT extrapolation removal. Not L2 qualification.",
+  "baseline": "db760553eaf5b20e01d1c9c6452ab45281cc3812",
+  "native": {
+    "run": 46107055174,
+    "conclusion": "success",
+    "core_pass_per_isa": 360,
+    "artifacts": {
+      "aarch64": 15247934551,
+      "x86_64": 15247852740
+    },
+    "functional_profiles_per_isa": 4
+  },
+  "local": {
+    "run": 46107055174,
+    "artifact": 15247934551,
+    "summary_sha256": "0548e9a3e2c3e055641ce3668aa3107d75a9d09bd76c633b746f4c5e6e40ff5a",
+    "order": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "added_rtt_ms": 400,
+    "loss_pct": 0.5,
+    "offer_bps": 120000000,
+    "target_bytes": 100663296,
+    "mbps": [
+      62.92296152789746,
+      20.392111789425822,
+      24.268163430402065,
+      57.56811580257942
+    ],
+    "mean_mbps": {
+      "A": 60.24553866523844,
+      "B": 22.330137609913944
+    },
+    "mean_endpoint_cpu_s_per_gib": {
+      "A": [
+        11.84,
+        13.2266666667
+      ],
+      "B": [
+        24.3733333333,
+        32
+      ]
+    },
+    "weighted_retrans_ratio": {
+      "A": 0.005384378808407195,
+      "B": 0.005297747492142371
+    },
+    "timeouts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "max_client_middle_recv_buf": [
+      27105225,
+      6755580,
+      7553602,
+      36577477
+    ],
+    "all_hash_eof": true,
+    "bulk_sample_scope": "live/Stop, not retired"
+  },
+  "three_runner": {
+    "run": 46107055465,
+    "conclusion": "success",
+    "summary_artifact": 15248227657,
+    "summary_sha256": "f70aec1331a1e8a9cef121d1fbcc2c79a37066a4696cc228eb379fb6d4239421",
+    "artifacts": {
+      "client": 15248352438,
+      "server": 15248322517,
+      "relay": 15248735414
+    },
+    "status": "MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW",
+    "order": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "added_rtt_ms": 400,
+    "offer_bps": 600000000,
+    "target_bytes": 1073741824,
+    "injected_loss_pct": 0,
+    "mbps": [
+      276.49116300083926,
+      127.58907839208796,
+      224.27362948719062,
+      276.17892551812537
+    ],
+    "mean_mbps": {
+      "A": 276.3350442594823,
+      "B": 175.93135393963928
+    },
+    "mean_endpoint_cpu_s_per_gib": {
+      "A": [
+        14.29,
+        15
+      ],
+      "B": [
+        18.105,
+        17.35
+      ]
+    },
+    "weighted_retired_retrans_ratio": {
+      "A": 0.01536157497687547,
+      "B": 0.014053179608886789
+    },
+    "timeouts": [
+      1,
+      2,
+      1,
+      0
+    ],
+    "max_client_middle_recv_buf": [
+      67108864,
+      40448544,
+      47454004,
+      67108864
+    ],
+    "bare_bracket_mbps": [
+      215.43270653672144,
+      283.188097029452
+    ],
+    "all_hash_eof": true,
+    "path_sample": {
+      "points": [
+        "server_tx",
+        "server_vx_tx",
+        "relay_server_vx_rx",
+        "relay_rx",
+        "relay_tx",
+        "relay_client_vx_tx",
+        "client_vx_rx",
+        "client_rx"
+      ],
+      "product_ports": [
+        44100,
+        44102,
+        44104,
+        44106
+      ],
+      "counts": [
+        [
+          16401,
+          16401,
+          16375,
+          16375,
+          16375,
+          16375,
+          16255,
+          16255
+        ],
+        [
+          16402,
+          16402,
+          16400,
+          16400,
+          16400,
+          16400,
+          16242,
+          16242
+        ],
+        [
+          16510,
+          16510,
+          16410,
+          16410,
+          16410,
+          16410,
+          16270,
+          16270
+        ],
+        [
+          16608,
+          16608,
+          16580,
+          16580,
+          16580,
+          16580,
+          16361,
+          16361
+        ]
+      ],
+      "missing_adjacent": [
+        [
+          0,
+          26,
+          0,
+          0,
+          0,
+          120,
+          0
+        ],
+        [
+          0,
+          2,
+          0,
+          0,
+          0,
+          158,
+          0
+        ],
+        [
+          0,
+          100,
+          0,
+          0,
+          0,
+          140,
+          0
+        ],
+        [
+          0,
+          28,
+          0,
+          0,
+          0,
+          219,
+          0
+        ]
+      ],
+      "extra_adjacent_all_zero": true,
+      "capture_kernel_drops_all_zero": true,
+      "scope": "Unique deterministic sampled outer TCP header identities per WBD tuple, not physical packet-loss estimate. Bare TCP port 5202 shows aggregated IP lengths 2348/3496/etc at receive points; exclude it from product identity comparisons. Product paths show no local adjacent identity deficits."
+    }
+  },
+  "interpretation": "Reject the removal of high-RTT growth extrapolation: severe local and cross-host throughput regression despite valid data, and only slightly lower sampled retransmission. grow_recv is monotone while active; these are lower attained maxima, not proof of active buffer shrink. Restore exact db76055 runtime. Separate observed cross-runner carrier deficits from receiver growth and compare source offered load on a frozen binary, without changing product behavior.",
+  "physical": "NOT_RUN"
+}

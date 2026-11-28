@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Pinned pktkit TCP and paired Linux Normal owner integration; three-runner zero-injected-loss measurements still require path/capacity review; performance unqualified.",
+  "summary": "Paired Linux Normal native TCP; measured-growth removal rejected, selected fresh-arrival DRS restored in experiment; L2 performance unqualified.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -45,7 +45,8 @@
     "https://github.com/lly8666/wbd-next/blob/75c47a5df4e58787b2bb9ee15228638932ae4be0/docs/devlog/M0/20261127-LINUX-TCP-NATIVE-OWNER-ADMISSION.md",
     "https://github.com/lly8666/wbd-next/blob/75c47a5df4e58787b2bb9ee15228638932ae4be0/docs/devlog/M0/20261127-NATIVE-ADMISSION-REGRESSION-AND-READY-BATCH.md",
     "https://github.com/lly8666/wbd-next/blob/75c47a5df4e58787b2bb9ee15228638932ae4be0/docs/devlog/M0/20261127-M4-FRESH-DATA-CLOCK-AND-READY-LOANS.md",
-    "docs/devlog/M0/20261128-M0-L2-THREE-RUNNER-BASELINE-RECEIPT.md"
+    "docs/devlog/M0/20261128-M0-L2-THREE-RUNNER-BASELINE-RECEIPT.md",
+    "docs/devlog/M0/20261128-M0-L2-HIGH-RTT-GROWTH-REJECTION-AND-CARRIER-LOAD.md"
   ],
   "verification": [
     {
@@ -202,7 +203,8 @@
     "Native owner follow-up: per-flow credits account for generated unadmitted records, admission wakes blocked producer, ready ingress/output alternate; latest SOURCE requires native and full performance receipts.",
     "586706c native PASS but ARM24/24 performance unqualified; ba5ed73 native parity concurrent reset on both ISA, ABBA blocked. New drain-before-service and ready-only local write batch candidate unverified.",
     "9ede62e native scoped PASS, zero-loss ABBA unqualified; actual M4 clock and ready loan candidate unverified, only Normal small DATA has PN correspondence.",
-    "46105447669 three-runner clean ABBA: A=a99be82, B=7cc6742 (runtime unchanged from db76055); 325.18→301.23Mbps, retired middle retrans 2.572%→2.455%, zero netem drops, all app hashes/EOF pass. Bare brackets 279/296Mbps and eight-tap identity sets differ; status MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW. Not the requested db76055→new-candidate test; use exact db76055 artifact run46102235913 as A next."
+    "46105447669 three-runner clean ABBA: A=a99be82, B=7cc6742 (runtime unchanged from db76055); 325.18→301.23Mbps, retired middle retrans 2.572%→2.455%, zero netem drops, all app hashes/EOF pass. Bare brackets 279/296Mbps and eight-tap identity sets differ; status MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW. Not the requested db76055→new-candidate test; use exact db76055 artifact run46102235913 as A next.",
+    "H2527 db76055→dbb70af: weak 60.25→22.33Mbps, clean three-host 276.34→175.93Mbps; functional PASS but performance FAIL. Reject high-RTT extrapolation removal. Product-only eight-tap gaps occur across runners; separate bare TCP GRO. Next fixed-binary offered-load diagnosis, not L2 promotion."
   ],
   "promotion": null
 }
