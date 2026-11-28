@@ -1,0 +1,285 @@
+{
+  "schema_version": 1,
+  "source_sha": "2735fc1d8232c7710659c4c94693912329ea8a1d",
+  "result": "PASS",
+  "scope": "Restored runtime native qualification and fixed-binary load diagnostic only; no L2 promotion.",
+  "runtime_equivalent": "db760553eaf5b20e01d1c9c6452ab45281cc3812",
+  "artifact_verified": true,
+  "native": {
+    "run": 46108832258,
+    "artifacts": {
+      "aarch64": 15249350620,
+      "x86_64": 15248701396
+    },
+    "manifest_sha256": {
+      "aarch64": "8b8ea6114b58925d42d29acbdfa4241608949300eefa2745500097ce0e9bce00",
+      "x86_64": "c0b5d8b355ce102f3924e80ea424a6b9ff9c2719dab6cddbd8e01b475c604a92"
+    },
+    "functional_profiles_per_isa": 4,
+    "local": {
+      "order": [
+        "normal-selected",
+        "pause-selected",
+        "loss-selected"
+      ],
+      "mbps": [
+        339.20129897140026,
+        159.2968590194064,
+        63.339923731199065
+      ],
+      "bytes_retrans": [
+        0,
+        0,
+        513315
+      ],
+      "sample_scope": "Stop not retired",
+      "all_hash_eof": true
+    }
+  },
+  "three_runner": {
+    "run": 46108832248,
+    "status": "MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW",
+    "artifacts": {
+      "summary": 15248319814,
+      "client": 15249206339,
+      "relay": 15249056109,
+      "server": 15249026246
+    },
+    "summary_sha256": "cbda6eb80dbd9a3eca64231ec7923aa8782e9e0288ee317f4b9a9c97e8c005fa",
+    "product_source": "db760553eaf5b20e01d1c9c6452ab45281cc3812",
+    "manifest_sha256_both": "5b6d8808a6657d6cfc296afb1340d21ef68df5b28073c009ff4f3fede6a59677",
+    "order": [
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "offered_bps": [
+      120000000,
+      600000000,
+      600000000,
+      120000000
+    ],
+    "target_bytes": 1073741824,
+    "added_rtt_ms": 400,
+    "injected_loss_pct": 0,
+    "mbps": [
+      108.2304803196042,
+      316.4186748135173,
+      286.7241763127835,
+      107.20939523015659
+    ],
+    "means_mbps": {
+      "A": 107.71993777488039,
+      "B": 301.57142556315046
+    },
+    "means_cpu_s_per_gib": {
+      "A": 51.1,
+      "B": 26.61
+    },
+    "retired_sent": [
+      1073780193,
+      1103501023,
+      1117760810,
+      1073748046
+    ],
+    "retired_retrans": [
+      38369,
+      29759199,
+      44018986,
+      6222
+    ],
+    "weighted_retrans": {
+      "A": 0.000020763871315035128,
+      "B": 0.03321453774783335
+    },
+    "timeouts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "dsack": [
+      27,
+      2196,
+      2549,
+      1
+    ],
+    "client_ingress_full": [
+      0,
+      0,
+      480,
+      0
+    ],
+    "server_ingress_full": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "client_recv_buf_max": [
+      67108864,
+      67108864,
+      67108864,
+      42058207
+    ],
+    "server_bbr_model_bw_peak_bytes_s": [
+      20245756,
+      80993021,
+      80340097,
+      19988830
+    ],
+    "server_bbr_pacing_target_peak_bytes_s": [
+      57859365,
+      219532200,
+      220187108,
+      57125109
+    ],
+    "server_bbr_cwnd_max": [
+      24548399,
+      92691244,
+      90892902,
+      24236683
+    ],
+    "server_1s_cumulative_acked_rate_peak_MB_s": [
+      17.883,
+      89.894,
+      91.049,
+      21.893
+    ],
+    "first_data_connect_s": [
+      0.83895879,
+      0.838435556,
+      0.837791459,
+      0.83862159
+    ],
+    "all_exact_app_hash_eof_stop_retired": true,
+    "all_netem_drops_zero": true,
+    "bare_mbps": [
+      339.61441949862416,
+      218.43522482899135
+    ],
+    "path": {
+      "points": [
+        "server_tx",
+        "server_vx_tx",
+        "relay_server_vx_rx",
+        "relay_rx",
+        "relay_tx",
+        "relay_client_vx_tx",
+        "client_vx_rx",
+        "client_rx"
+      ],
+      "product_ports": [
+        44100,
+        44102,
+        44104,
+        44106
+      ],
+      "counts": [
+        [
+          16192,
+          16192,
+          16192,
+          16192,
+          16192,
+          16192,
+          16192,
+          16192
+        ],
+        [
+          16708,
+          16708,
+          16665,
+          16665,
+          16665,
+          16665,
+          16265,
+          16265
+        ],
+        [
+          16937,
+          16937,
+          16937,
+          16937,
+          16937,
+          16937,
+          16279,
+          16279
+        ],
+        [
+          16182,
+          16182,
+          16182,
+          16182,
+          16182,
+          16182,
+          16182,
+          16182
+        ]
+      ],
+      "missing_adjacent": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          43,
+          0,
+          0,
+          0,
+          400,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          658,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "extra_all_zero": true,
+      "capture_drops_all_zero": true,
+      "server_vx_tx_spacing_p10_us": [
+        3278,
+        525,
+        522,
+        3320
+      ],
+      "relay_client_vx_tx_spacing_p10_us": [
+        3266,
+        224,
+        213,
+        3297
+      ],
+      "relay_second_link_missing_100ms_bins": [
+        0,
+        36,
+        48,
+        0
+      ],
+      "scope": "Product tuple-only deterministic sampled outer header identity multiset; within-point timestamp spacings, not all-packet gap, physical loss rate, or synchronized cross-host timestamp. Excludes bare GRO."
+    }
+  },
+  "interpretation": "Same runtime and fixed workload size demonstrate strong load dependence: low offer near-zero retired retrans and no sampled missing identities even with 64MiB receive buffer in A1; both high offers have cross-runner deficits, one also local ingress full. Large window is not sufficient cause. BBR max rate is not actual wire rate; peak cumulative ACK rate can exceed modeled peak due to feedback aggregation; no causal estimator error established. Native/local pass, no L2 qualification.",
+  "next": "Use existing logs and mature TCP comparisons to audit producer grant→generation→M4 admission→actual path→ACK and RACK. Prior negative queue, quantum, fixed ceiling, Startup gain, ACK grant, receive growth interventions remain rejected. Only batch distinct source-backed candidates after identifying actual semantic difference; use shared baseline and candidate screen then reversed confirmation, not blind parameter sweep.",
+  "physical": "NOT_RUN"
+}

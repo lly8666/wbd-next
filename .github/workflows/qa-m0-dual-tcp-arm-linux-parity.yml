@@ -1,4 +1,4 @@
-name: M0 ARM frozen db76055 carrier load ABBA
+name: M0 ARM native feedback candidate batch
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -37,18 +37,22 @@ jobs:
         with: {persist-credentials: false}
       - name: Preflight harness syntax before acquiring three runners
         run: python3 -m py_compile tools/m0_dual_tcp_arm_linux_parity.py
-      - name: Verify frozen product qualification and artifact
+      - name: Wait for exact same-commit dual-ISA functional and core qualification
         id: qualified
         run: |
           set -euo pipefail
-          frozen=46102235913
-          core=$(gh run view "$frozen" -R "$GITHUB_REPOSITORY" --json headSha,status,conclusion)
-          test "$(jq -r .headSha <<<"$core")" = db760553eaf5b20e01d1c9c6452ab45281cc3812
-          test "$(jq -r .status <<<"$core")" = completed
-          test "$(jq -r .conclusion <<<"$core")" = success
-          artifact=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$frozen/artifacts" --jq '.artifacts[] | select(.name=="dual-tcp-native-build-aarch64" and .expired==false) | .id')
-          test -n "$artifact"
-          echo "run=$frozen" >> "$GITHUB_OUTPUT"
+          for i in $(seq 1 180);do
+            candidate_run=$(gh run list -R "$GITHUB_REPOSITORY" --workflow qa-m0-dual-rust-tcp-core.yml --commit "$GITHUB_SHA" --json databaseId --jq '.[0].databaseId // empty')
+            if test -z "$candidate_run"; then sleep 10; continue; fi
+            core=$(gh run view "$candidate_run" -R "$GITHUB_REPOSITORY" --json status,conclusion)
+            if test "$(jq -r .status <<<"$core")" = completed;then
+              test "$(jq -r .conclusion <<<"$core")" = success
+              candidate=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$candidate_run/artifacts" --jq '.artifacts[] | select(.name=="dual-tcp-native-build-aarch64" and .expired==false) | .id')
+              if test -n "$candidate";then echo "run=$candidate_run" >> "$GITHUB_OUTPUT"; exit 0;fi
+            fi
+            sleep 10
+          done
+          exit 2
   relay-arm64:
     name: 'Real ARM64 middle L3 kernel router: ONLY netem egress per direction'
     needs: prepare
@@ -186,13 +190,10 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
-          mkdir -p bundles/A bundles/B
+          mkdir -p bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/A
-          cp bundles/A/bundle.tar bundles/B/bundle.tar
-          for leg in A B;do
-            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
-            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
-          done
+          tar -C bundles/A -xf bundles/A/bundle.tar
+          (cd bundles/A && sha256sum -c SHA256SUMS)
       - name: Join the existing two-segment ARM routed topology
         run: |
           set -euo pipefail
@@ -232,7 +233,7 @@ jobs:
           test -s h2228-out/server-ready.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
-      - name: Keep the same ARM server through four clean paired legs and brackets
+      - name: Keep the same ARM server through six clean paired legs and brackets
         run: bash tools/m0_h2228_three_runner_case.sh server-wait
       - name: Finish and qualify header-only path sample
         if: always()
@@ -275,13 +276,10 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 iputils-ping ethtool openssl tcpdump
-          mkdir -p bundles/A bundles/B
+          mkdir -p bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/A
-          cp bundles/A/bundle.tar bundles/B/bundle.tar
-          for leg in A B;do
-            tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
-            (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
-          done
+          tar -C bundles/A -xf bundles/A/bundle.tar
+          (cd bundles/A && sha256sum -c SHA256SUMS)
       - name: Join the existing two-segment ARM routed topology
         run: |
           set -euo pipefail

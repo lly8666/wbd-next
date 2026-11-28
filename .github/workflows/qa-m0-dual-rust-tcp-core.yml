@@ -1,4 +1,4 @@
-name: M0 dual Rust TCP Normal native restored DRS
+name: M0 dual Rust TCP Normal native feedback candidate batch
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -72,13 +72,18 @@ jobs:
       - name: Explicit old relay admission rollback native functionality
         run: |
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/credit-off WBD_M0_RELAY_PENDING_CREDIT=0 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
-      - name: Selected clean pause and local weak recovery regression
+      - name: Independent feedback native functional profiles
+        run: |
+          for profile in admitted service;do
+            sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT="dual-tcp-out/feedback-$profile" WBD_M0_NATIVE_FEEDBACK="$profile" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+          done
+      - name: Selected clean pause and mirrored weak feedback comparison
         if: matrix.arch == 'aarch64'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 DUAL_TCP_FEEDBACK_BATCH=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Retain exact native binary for performance jobs
         run: |
           (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)

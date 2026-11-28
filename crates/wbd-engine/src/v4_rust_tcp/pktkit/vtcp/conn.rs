@@ -439,6 +439,8 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Native paired Middle TCP experiment: existing quantum cap in MSS.
     pub(crate) native_pace_quantum_mss: u32,
+    /// Lab-only independent feedback comparison: 0 baseline, 1 admitted pipe, 2 actual service pacing epoch.
+    pub(crate) native_feedback_mode: u8,
     /// Lab-only ceiling on the existing TCP pacing rate (payload bytes/s).
     pub(crate) native_pace_ceiling: Option<u64>,
     /// Lab-only relay admission bound on fresh, not yet generated data.
@@ -551,6 +553,7 @@ impl Default for ConnConfig {
             middle_sack_compress: false,
             native_bounded_pacing: false,
             native_pace_quantum_mss: 32,
+            native_feedback_mode: 0,
             native_pace_ceiling: None,
             relay_pending_limit: None,
             gentle_bbr1_startup:false,
@@ -1285,8 +1288,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} relay_pending_limit={} relay_pending_bytes={} relay_available={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.cfg.relay_pending_limit.unwrap_or(0),self.send_buf.as_ref().map_or(0,|s|s.pending()),self.relay_send_available(),self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} relay_pending_limit={} relay_pending_bytes={} relay_available={} native_feedback_mode={} native_reserved_bytes={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.cfg.relay_pending_limit.unwrap_or(0),self.send_buf.as_ref().map_or(0,|s|s.pending()),self.relay_send_available(),self.cfg.native_feedback_mode,self.score.native_pending(),self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?} rate_epoch_preserved={} native_source_dry={}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline),self.score.rate().epoch_preserved(),self.native_source_dry);
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -3776,7 +3779,9 @@ impl Conn {
             rs,
             newly_acked: delivered,
             newly_lost,
-            inflight: self.in_flight(),
+            // The native reservation still consumes generation/cwnd seats.
+            // BBR model feedback can instead observe the actually admitted pipe.
+            inflight: if self.cfg.native_feedback_mode==1 {self.score.admitted_pipe().saturating_sub(self.reno_sacked)} else {self.in_flight()},
             delivered: self.score.rate().delivered(),
             newest_rtt: self.score.ack_rtt(),
             cwnd_limited: std::mem::take(&mut self.cwnd_blocked),
@@ -4562,6 +4567,10 @@ impl Conn {
         if resume{self.native_waiting=false;self.native_resume=Some(self.now);}
         let last=self.score.native_pending()==0;
         if last{
+            // A local pending interval is not an independent pacing grant.
+            // Keep unspent credit/debt, but anchor its next accrual at the
+            // actual end of this native submission, not at generation.
+            if self.cfg.native_feedback_mode==2 {self.pace_stamp=self.pace_stamp.max(now);}
             if self.native_source_dry { self.check_app_limited(); }
             self.schedule_loss_probe();
         }
@@ -10710,6 +10719,57 @@ mod tests {
         assert!(conn.pace_deadline.unwrap()>conn.now);
         conn.cfg.native_pace_ceiling=None;
         assert_eq!(conn.pace_rate(),Some(original));
+    }
+
+    #[test]
+    fn native_feedback_admitted_pipe_preserves_reservation_for_generation() {
+        let mut cfg=big(40690,80);
+        cfg.congestion=CongestionKind::Bbr1;
+        let mut c=Conn::new(cfg);
+        let mut r=Conn::new(big(80,40690));
+        drive_handshake(&mut c,&mut r);
+        c.cfg.native_owner_turn=true;
+        c.cfg.native_feedback_mode=1;
+        c.begin_native_turn();
+        let (_, packets)=c.write(&[7;500]);
+        let p=parse(&packets[0]);
+        let reserved=c.score.native_pending();
+        assert_eq!(reserved,500);
+        let una=c.send_buf.as_ref().unwrap().una();
+        let before=c.in_flight();
+        let a=c.ack_info(0,0,None,una,None,0,0);
+        assert_eq!(a.inflight,c.score.admitted_pipe());
+        assert_eq!(before-a.inflight,reserved);
+        assert_eq!(c.in_flight(),before);
+        assert!(c.native_admit(p.seq,p.payload.len() as u32,test_now()));
+        assert_eq!(c.score.native_pending(),0);
+        let a=c.ack_info(0,0,None,una,None,0,0);
+        assert_eq!(a.inflight,c.in_flight());
+    }
+
+    #[test]
+    fn native_feedback_service_epoch_preserves_existing_credit_and_rate() {
+        let mut cfg=big(40691,80);
+        cfg.congestion=CongestionKind::Bbr1;
+        let mut c=Conn::new(cfg);
+        let mut r=Conn::new(big(80,40691));
+        drive_handshake(&mut c,&mut r);
+        c.cfg.native_owner_turn=true;
+        c.cfg.native_feedback_mode=2;
+        c.begin_native_turn();
+        let (_, packets)=c.write(&[7;500]);
+        let p=parse(&packets[0]);
+        assert_eq!(c.score.native_pending(),500);
+        let credit=c.pace_credit;
+        let rate=c.pace_rate();
+        let old_stamp=c.pace_stamp;
+        advance(Duration::from_millis(2));
+        let now=test_now();
+        assert!(now>old_stamp);
+        assert!(c.native_admit(p.seq,p.payload.len() as u32,now));
+        assert_eq!(c.pace_stamp,now);
+        assert_eq!(c.pace_credit,credit);
+        assert_eq!(c.pace_rate(),rate);
     }
 
     #[test]
