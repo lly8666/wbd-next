@@ -78,6 +78,8 @@ jobs:
           export WBD_ISAL_SOURCE_SHA="$(git -C "$RUNNER_TEMP/wbd-isa-l" rev-parse HEAD)"
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration --lib v4_embedded_go::native_m4_clock_only_counts_actual_copied_prefix -- --exact | tee dual-tcp-out/m4-clock-unit.txt
           grep -F 'test result: ok. 1 passed; 0 failed;' dual-tcp-out/m4-clock-unit.txt
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration --lib v4_embedded_go::native_ready_data_key_excludes_control_and_other_flow -- --exact | tee dual-tcp-out/local-ready-unit.txt
+          grep -F 'test result: ok. 1 passed; 0 failed;' dual-tcp-out/local-ready-unit.txt
       - name: Selected paired Normal defaults, no optimization environment overrides
         shell: bash
         run: |
@@ -104,9 +106,9 @@ jobs:
         run: |
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/bbr3-seed600 WBD_M0_MIDDLE_CC=bbr3 WBD_M0_BBR3_INITIAL_600M=1 WBD_M0_NATIVE_FEEDBACK=service WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
           for role in server client;do grep -q 'WBD_M0_BBR .* initial_pacing_rate=75000000' "dual-tcp-out/bbr3-seed600/normal/$role.log";done
-      - name: Original RAW FQ earned-train EDT actual paired product
+      - name: Current ready-turn client TUN grouping actual product
         run: |
-          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/edt WBD_M0_MIDDLE_CC=bbr3 WBD_M0_BBR3_INITIAL_600M=1 WBD_M0_NATIVE_FEEDBACK=service WBD_M0_NATIVE_EDT=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/local-ready WBD_M0_MIDDLE_CC=bbr3 WBD_M0_BBR3_INITIAL_600M=1 WBD_M0_NATIVE_FEEDBACK=service WBD_M0_LOCAL_READY_GROUP=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Selected baseline local clean pause weak regression
         if: matrix.arch == 'aarch64'
         env:

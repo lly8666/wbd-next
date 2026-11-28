@@ -1,0 +1,165 @@
+{
+  "fixture_sha": "e384b62d2601efdcb5aadf977e3ed34ab6eda55a",
+  "product_source": "9677716be3e3f46e7918e3225ad46cbb54e37563",
+  "run_id": 46141391064,
+  "action": "SUCCESS",
+  "decision": "reject per-record earned-train EDT candidate on performance; retain synthetic/native functional evidence; revert live code to pre-EDT source, not outer ABI change",
+  "scope": "same three ARM ABBA 180s, 400ms added RTT, zero injection, matched BBR3 600M seed/server C/client0/Normal repair/1160, both FQ",
+  "artifacts": {
+    "summary": 15262915411,
+    "server": 15262166198,
+    "client": 15262032594,
+    "relay": 15262445823
+  },
+  "crc_verified": 4,
+  "all_hash_eof_retired_joined_stop_direct_snapshots": true,
+  "all_netem_raw_rx_fq_capture_drops_zero": true,
+  "all_fq_backlog_after_stop_zero": true,
+  "order": [
+    "A",
+    "E",
+    "E",
+    "A"
+  ],
+  "rows": [
+    {
+      "mode": "A",
+      "mbps": 305.88437462222225,
+      "bytes": 6908477440,
+      "retrans": 38153304,
+      "sent": 6946630744,
+      "rto": 0,
+      "recoveries": 71,
+      "product_cpu": 34.528951667220035,
+      "host_cpu": 103.72518218469858,
+      "client_full": 591,
+      "middle_ack": 1673394,
+      "middle_data": 6670242,
+      "local_ack": 820998,
+      "local_data": 6662198,
+      "gso_groups": 127028,
+      "gso_segments": 3748763,
+      "p10_mbps": 52.5697264,
+      "cv": 0.6180396798111805,
+      "forward_sample": 104898,
+      "cross_host_missing": [
+        23,
+        536
+      ]
+    },
+    {
+      "mode": "E",
+      "mbps": 280.4399295555556,
+      "bytes": 6312493056,
+      "retrans": 13263230,
+      "sent": 6325756286,
+      "rto": 0,
+      "recoveries": 13,
+      "product_cpu": 43.02626426220658,
+      "host_cpu": 138.87983388876776,
+      "client_full": 0,
+      "middle_ack": 2795134,
+      "middle_data": 6089393,
+      "local_ack": 1375309,
+      "local_data": 6087310,
+      "gso_groups": 24558,
+      "gso_segments": 613824,
+      "p10_mbps": 175.2579776,
+      "cv": 0.32851277879991625,
+      "forward_sample": 95358,
+      "cross_host_missing": [
+        19,
+        168
+      ],
+      "timed_copied": 5894758,
+      "fq_throttled_delta": 4733951
+    },
+    {
+      "mode": "E",
+      "mbps": 272.0762836,
+      "bytes": 6124273664,
+      "retrans": 2962709,
+      "sent": 6127236373,
+      "rto": 0,
+      "recoveries": 15,
+      "product_cpu": 44.066330939870944,
+      "host_cpu": 144.17022333037272,
+      "client_full": 0,
+      "middle_ack": 2669220,
+      "middle_data": 5906556,
+      "local_ack": 1364311,
+      "local_data": 5905792,
+      "gso_groups": 25726,
+      "gso_segments": 686349,
+      "p10_mbps": 159.772664,
+      "cv": 0.3489931321811765,
+      "forward_sample": 92337,
+      "cross_host_missing": [
+        0,
+        44
+      ],
+      "timed_copied": 5704459,
+      "fq_throttled_delta": 4697698
+    },
+    {
+      "mode": "A",
+      "mbps": 298.6365392,
+      "bytes": 6722093056,
+      "retrans": 33302218,
+      "sent": 6755395274,
+      "rto": 0,
+      "recoveries": 56,
+      "product_cpu": 35.0518661220033,
+      "host_cpu": 104.53104132747073,
+      "client_full": 477,
+      "middle_ack": 1798901,
+      "middle_data": 6489221,
+      "local_ack": 892053,
+      "local_data": 6482518,
+      "gso_groups": 111564,
+      "gso_segments": 3229698,
+      "p10_mbps": 43.827768,
+      "cv": 0.6458290239010541,
+      "forward_sample": 102047,
+      "cross_host_missing": [
+        12,
+        470
+      ]
+    }
+  ],
+  "mean_A_E": {
+    "mbps": [
+      302.26045691111113,
+      276.25810657777777
+    ],
+    "retrans_ratio": [
+      0.005211034118209912,
+      0.0012901168494984668
+    ],
+    "cpu": [
+      34.790408894611666,
+      43.54629760103876
+    ],
+    "host": [
+      104.12811175608465,
+      141.52502860957026
+    ],
+    "middle_ack_per_data": [
+      0.2640441307980369,
+      0.4554624332686036
+    ],
+    "gso_segment_fraction": [
+      0.5304541051273686,
+      0.10852645431908783
+    ],
+    "second_p10": [
+      48.1987472,
+      167.5153208
+    ],
+    "second_cv": [
+      0.6319343518561172,
+      0.3387529554905464
+    ]
+  },
+  "limitations": "forward deterministic sample counts only, cross-host count differences not physical loss attribution; ACK/GSO amplification direct observed association, not isolated CPU causality. Single ABBA run; no active Stop or weak mixed-load claim."
+}

@@ -2909,7 +2909,7 @@ fn stop(handle:u64)->i32{
             drained &= raw.stop_until(Instant::now())==StopResult::Drained;
         }
         if let Some(ref raw)=e.raw_tx{
-            drained &= raw.stop_until(Instant::now()+Duration::from_millis(20))==StopResult::Drained;
+            drained &= raw.stop_until(Instant::now())==StopResult::Drained;
         }
         if let Some(ref tun)=e.tun_sink{
             drained &= tun.stop_until(Instant::now())==StopResult::Drained;
@@ -6469,19 +6469,18 @@ struct TxTurnCompletion{
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct NativeM4Clock{
-    header:[u8;40],len:usize,pn:Option<wbd_types::RecordPn>,at:Instant,copied:bool,edt:Option<Instant>,
+    header:[u8;40],len:usize,pn:Option<wbd_types::RecordPn>,at:Instant,copied:bool,
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl NativeM4Clock{
     fn from_inner(ip:&[u8],at:Instant)->Option<Self>{
         if ip.len()<40||ip[0]!=0x45||ip[9]!=6||ip[33]&0x07!=0||20+usize::from(ip[32]>>4)*4>=ip.len(){return None}
-        Some(Self{header:ip[..40].try_into().unwrap(),len:ip.len(),pn:None,at,copied:false,edt:None})
+        Some(Self{header:ip[..40].try_into().unwrap(),len:ip.len(),pn:None,at,copied:false})
     }
     fn settle(&mut self,ready:&[(wbd_types::RecordPn,u64)],copied:usize,at:Instant){
         if let Some(pn)=self.pn{
             if let Some(i)=ready.iter().position(|(p,_)|*p==pn){self.at=at;self.copied=i<copied;}
         }
-        if !self.copied{self.edt=None;}
     }
 }
 #[cfg(all(test,any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -6491,45 +6490,29 @@ fn native_m4_clock_only_counts_actual_copied_prefix(){
     let mut a=NativeM4Clock::from_inner(&ip,now).unwrap();let mut b=NativeM4Clock::from_inner(&ip,now).unwrap();
     a.pn=Some(wbd_types::RecordPn(5));b.pn=Some(wbd_types::RecordPn(6));
     let later=now+Duration::from_millis(2);let ready=[(wbd_types::RecordPn(5),99),(wbd_types::RecordPn(6),99)];
-    a.edt=Some(later+Duration::from_micros(100));b.edt=Some(later+Duration::from_micros(200));
     a.settle(&ready,1,later);b.settle(&ready,1,later);
     assert!(a.copied);assert!(!b.copied);assert_eq!(a.at,later);assert_eq!(b.at,later);
-    assert!(a.edt.is_some());assert_eq!(b.edt,None);
     let mut missing=NativeM4Clock::from_inner(&ip,now).unwrap();missing.pn=Some(wbd_types::RecordPn(4));missing.settle(&ready,1,later);assert!(!missing.copied);assert_eq!(missing.at,now);
 }
+// Same-flow, ordinary TCP DATA only. This is grouping eligibility on
+// existing authenticated/locally generated IPv4, not an admission check.
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-fn plan_native_edt(owner:&NativeTcpOwner,receipts:&mut [NativeM4Clock],
-    ready:&[(wbd_types::RecordPn,u64)],base:Instant,mono:u64)->Option<[u64;32]>{
-    // Same 32 ready records and one pre-existing millisecond pacing quantum.
-    // No future grant, no waiting to fill a batch, no global sequencing.
-    let horizon=base+Duration::from_millis(1);
-    let mut groups=[(0u64,base,base,false);32]; // flow, initial tail, next, exceeds quantum
-    let mut count=0usize;
-    let mut plans=[None;32]; // ready index -> (receipt, group, planned time)
-    for (receipt_index,receipt) in receipts.iter().enumerate(){
-        let Some(pn)=receipt.pn else{continue};
-        let Some(i)=ready.iter().position(|(p,_)|*p==pn)else{continue};
-        let Some((id,len,rate,tail))=owner.edt_info(&receipt.header,receipt.len)else{continue};
-        let g=if let Some(g)=groups[..count].iter().position(|x|x.0==id){g}else{
-            let g=count;count+=1;let start=tail.map_or(base,|t|t.max(base));
-            groups[g]=(id,start,start,false);g
-        };
-        let entry=&mut groups[g];
-        let at=entry.2;
-        if at>horizon{entry.3=true;}
-        plans[i]=Some((receipt_index,g,at));
-        entry.2=at+Duration::from_secs_f64(f64::from(len)/rate as f64);
-    }
-    let mut times=[mono;32];let mut any=false;
-    for (i,plan) in plans.into_iter().enumerate(){
-        let Some((receipt,g,at))=plan else{continue};
-        let due=if groups[g].3{groups[g].1}else{at};
-        if due>base{
-            receipts[receipt].edt=Some(due);
-            times[i]=mono+due.duration_since(base).as_nanos() as u64;any=true;
-        }
-    }
-    any.then_some(times)
+fn native_ready_data_key(ip:&[u8])->Option<[u8;12]>{
+    if ip.len()<40||ip[0]!=0x45||ip[9]!=6||!matches!(ip[33],0x10|0x18)||
+        20+usize::from(ip[32]>>4)*4>=ip.len(){return None}
+    Some(ip[12..24].try_into().unwrap())
+}
+#[cfg(all(test,any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn native_ready_data_key_excludes_control_and_other_flow(){
+    let mut a=[0u8;41];a[0]=0x45;a[9]=6;a[32]=0x50;a[33]=0x18;
+    a[12..24].copy_from_slice(&[1,2,3,4,5,6,7,8,9,10,11,12]);
+    let mut b=a;b[24..28].copy_from_slice(&23u32.to_be_bytes());
+    assert_eq!(native_ready_data_key(&a),native_ready_data_key(&b));
+    b[23]^=1;assert_ne!(native_ready_data_key(&a),native_ready_data_key(&b));
+    b=a;b[33]=0x11;assert_eq!(native_ready_data_key(&b),None);
+    b=a;b[9]=17;assert_eq!(native_ready_data_key(&b),None);
+    assert_eq!(native_ready_data_key(&a[..40]),None);
 }
 // The only completion translation on the original authenticated TX path.
 // Exactly the kernel-copied prefix counts, the untouched suffix is dropped
@@ -6894,7 +6877,6 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     jumbo_read:&mut [u8],jumbo_queue:&mut VecDeque<Vec<u8>>,
     active_jumbo:&mut Option<PendingOriginalJumbo>,
     native_m4_clock:bool,native_clock_receipts:&mut Vec<NativeM4Clock>,
-    native_edt_owner:Option<&NativeTcpOwner>,
     #[cfg(feature="fec2_product_record")]
     ingress:&LoopCounts,
     #[cfg(feature="fec2_product_record")]
@@ -7147,14 +7129,13 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             if must_reopen{
                 let fresh=ScopedRawIpv4Tx::open(ifname,ifindex,e.generation)
                     .map_err(|_|INVALID)?;
-                if native_edt_owner.is_some(){fresh.configure_txtime().map_err(|_|INVALID)?;}
                 let old=e.raw_tx.as_ref().ok_or(BAD_STAGE)?;
                 // One unique active TX loop: no asynchronous kernel data
                 // loan may remain when the old FD is retired. Failure keeps
                 // the owner fail-closed, never drops a live borrowed slab.
                 if old.outstanding()!=0{return Err(BAD_STAGE)}
                 old.begin_stop();
-                if old.stop_until(Instant::now()+Duration::from_millis(20))!=StopResult::Drained{
+                if old.stop_until(Instant::now())!=StopResult::Drained{
                     return Err(BAD_STAGE)
                 }
                 e.raw_tx=Some(Arc::new(fresh));
@@ -7434,10 +7415,6 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }
         (batch,raw,flow,e.server_side,e.generation,ready_records.len(),failed,jumbo_staged)
     };
-    let txtimes=if let Some(owner)=native_edt_owner.filter(|_|!native_clock_receipts.is_empty()&&admitted!=0){
-        let (base,mono)=ScopedRawIpv4Tx::txtime_clock();
-        plan_native_edt(owner,native_clock_receipts,actual_firstsend,base,mono)
-    }else{None};
     let m4_submit_at=if native_m4_clock&&!native_clock_receipts.is_empty(){Some(Instant::now())}else{None};
     let report=if stop.load(Ordering::Acquire)||admitted==0{None}else{
         let tuple=if server_side{Ipv4Tuple{
@@ -7447,8 +7424,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
             src_port:flow.client_port,dst_port:flow.server_port,
         }};
-        Some(raw.send_kernel_multimsg_at(
-            generation,ready_records.as_slice(),tuple,presentations.as_slice(),txtimes.as_ref().map(|t|t.as_slice())
+        Some(raw.send_kernel_multimsg(
+            generation,ready_records.as_slice(),tuple,presentations.as_slice()
         ))
     };
     if let Some(at)=m4_submit_at{
@@ -8122,10 +8099,6 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     if e.raw_tx_lease_mtu==0{return BAD_STAGE}
     // Explicit paired Normal/off research entry, with the existing shared TUN.
     let dual_tcp=std::env::var("WBD_M0_DUAL_RUST_TCP").ok().as_deref()==Some("1");
-    let native_edt=dual_tcp&&std::env::var_os("WBD_M0_NATIVE_EDT").as_deref()==Some(std::ffi::OsStr::new("1"));
-    if native_edt{
-        if e.raw_tx.as_ref().unwrap().configure_txtime().is_err(){return INVALID}
-    }
     let (mut native_tcp_owner,native_tcp_rx)=if dual_tcp{
         #[cfg(feature="fec2_product_record")]
         if e.fixed_pending.is_some()||e.fixed_applied.is_some()||e.auto_low_rate_mode{return BAD_STAGE}
@@ -8585,7 +8558,6 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut tx_actual_firstsend=Vec::<(wbd_types::RecordPn,u64)>::with_capacity(32);
             let mut native_clock_receipts=Vec::<NativeM4Clock>::with_capacity(32);
             let mut native_m4_counts=[0u64;3];
-            let mut edt_copied=0u64;let mut edt_max_delay_ns=0u64;
             // One reusable TUN read slot, not 128 enlarged M1 owner slabs.
             let mut jumbo_read=vec![0u8;M0_TUN_IPV4_MAX];
             let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
@@ -8613,13 +8585,19 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut pending_peak=0usize;
             let mut local_write_failed=0u64;
             let mut local_gso_groups=0u64;let mut local_gso_segments=0u64;
+            let local_ready_group=native_round_robin&&!tx_server_side&&std::env::var_os("WBD_M0_LOCAL_READY_GROUP").as_deref()==Some(std::ffi::OsStr::new("1"));
+            // Only the current already-ready ingress turn, never across a
+            // readiness wait, timer/service event, another flow or M4 send.
+            let mut local_ready=if local_ready_group{Vec::with_capacity(32)}else{Vec::new()};
+            let mut local_ready_joins=0u64;let mut local_ready_flushes=0u64;let mut local_ready_segments=0u64;
             // Actual local TCP replies use the existing generation TUN writer;
             // middle segments use the original M1 slab / M3 / RAW sender.
-            let mut publish_tcp=|owner:&mut NativeTcpOwner,out:NativeTcpOutput,pending:&mut VecDeque<Vec<u8>>|{
+            let mut publish_tcp=|owner:&mut NativeTcpOwner,mut out:NativeTcpOutput,pending:&mut VecDeque<Vec<u8>>,held:&mut Vec<Vec<u8>>,group:Option<[u8;12]>|{
                 publish_calls+=1;
                 local_batch_max=local_batch_max.max(out.local.len());
                 middle_batch_max=middle_batch_max.max(out.tunnel.len());
-                for frames in out.local.chunks(32){
+                let mut write_local=|frames:&[Vec<u8>]|{
+                for frames in frames.chunks(32){
                     if native_round_robin&&frames.len()>1{
                         if let Ok((attempts,failed,groups,segments))=tun.write_native_ipv4_ready(generation,frames){
                             local_gso_groups+=groups as u64;local_gso_segments+=segments as u64;
@@ -8635,6 +8613,20 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         if let Some(attempted)=attempted{if owner.admit(true,frame,attempted).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
                     }
                 }
+                };
+                let merge=group.is_some_and(|key|out.local.len()<=32&&out.local.iter().all(|frame|native_ready_data_key(frame)==Some(key)));
+                if !held.is_empty()&&(!merge||held.len()+out.local.len()>32){
+                    local_ready_flushes+=1;local_ready_segments+=held.len() as u64;
+                    write_local(held);held.clear();
+                }
+                if merge{
+                    if !held.is_empty()&&!out.local.is_empty(){local_ready_joins+=1;}
+                    held.append(&mut out.local);
+                    if held.len()==32{
+                        local_ready_flushes+=1;local_ready_segments+=held.len() as u64;
+                        write_local(held);held.clear();
+                    }
+                }else{write_local(&out.local);}
                 pending.extend(out.tunnel);
                 pending_peak=pending_peak.max(pending.len());
             };
@@ -8676,7 +8668,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if let Some(owner)=native_tcp_owner.as_mut(){
                     if tcp_out.is_empty()&&!native_ingress_first{
                         match owner.service(Duration::ZERO){
-                            Ok(out)=>publish_tcp(owner,out,&mut tcp_out),
+                            Ok(out)=>publish_tcp(owner,out,&mut tcp_out,&mut local_ready,None),
                             Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break}
                         }
                     }
@@ -8729,6 +8721,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             tcp_out.pop_front();tx_pending.push((slab,n));continue
                         }
                         if input_turns==32{
+                            if !local_ready.is_empty(){
+                                let owner=native_tcp_owner.as_mut().expect("native local ready owner");
+                                publish_tcp(owner,NativeTcpOutput::default(),&mut tcp_out,&mut local_ready,None);
+                            }
                             tcp_input_exhausted=native_tcp_owner.is_some();
                             // A continuously ready ACK stream cannot starve
                             // origin readiness or due TCP timers. Service at
@@ -8738,7 +8734,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                 ingress_first_service_turns+=1;
                                 let owner=native_tcp_owner.as_mut().expect("native ingress owner");
                                 match owner.service(Duration::ZERO){
-                                    Ok(out)=>publish_tcp(owner,out,&mut tcp_out),
+                                    Ok(out)=>publish_tcp(owner,out,&mut tcp_out,&mut local_ready,None),
                                     Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break 'native_tx}
                                 }
                                 if !tcp_out.is_empty(){continue}
@@ -8755,17 +8751,24 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             ingress_turn_peak=ingress_turn_peak.max(input_turns);
                             ingress_with_pending+=u64::from(!tcp_out.is_empty());
                         }
+                        let group=if local_ready_group{
+                            match &next{Ok(OriginalTunIngress::MiddleTcp(frame))=>native_ready_data_key(frame),_=>None}
+                        }else{None};
+                        if !local_ready.is_empty()&&group!=native_ready_data_key(&local_ready[0]){
+                            let owner=native_tcp_owner.as_mut().expect("native local ready owner");
+                            publish_tcp(owner,NativeTcpOutput::default(),&mut tcp_out,&mut local_ready,None);
+                        }
                         match next{
                             Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n)),
                             Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),
                             Ok(OriginalTunIngress::MiddleTcp(frame))=>{
                                 let Some(owner)=native_tcp_owner.as_mut()else{continue};
-                                match owner.middle(&frame){Ok(out)=>publish_tcp(owner,out,&mut tcp_out),Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
+                                match owner.middle(&frame){Ok(out)=>publish_tcp(owner,out,&mut tcp_out,&mut local_ready,group),Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}}
                             },
                             Ok(OriginalTunIngress::Shared(buf))=>{
                                 if let Some(owner)=native_tcp_owner.as_mut(){
                                     match owner.local(buf.as_slice()){
-                                        Ok(Some(out))=>{publish_tcp(owner,out,&mut tcp_out);continue},
+                                        Ok(Some(out))=>{publish_tcp(owner,out,&mut tcp_out,&mut local_ready,None);continue},
                                         Ok(None)=>{},
                                         Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);continue}
                                     }
@@ -8802,7 +8805,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                     ingress_first_service_turns+=1;
                                     let owner=native_tcp_owner.as_mut().expect("native ingress owner");
                                     match owner.service(Duration::ZERO){
-                                        Ok(out)=>publish_tcp(owner,out,&mut tcp_out),
+                                        Ok(out)=>publish_tcp(owner,out,&mut tcp_out,&mut local_ready,None),
                                         Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break 'native_tx}
                                     }
                                     // service may have cleared the coalesced
@@ -8815,6 +8818,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                 break
                             },
                         }
+                    }
+                    // Every actual turn exit publishes the ready output.
+                    // No wait for a full GSO group and no cross-flow hold.
+                    if !local_ready.is_empty(){
+                        let owner=native_tcp_owner.as_mut().expect("native local ready owner");
+                        publish_tcp(owner,NativeTcpOutput::default(),&mut tcp_out,&mut local_ready,None);
                     }
                 }
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
@@ -8953,7 +8962,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         }
                         let wait=wait_ns.clamp(1,10_000_000);
                         match owner.service(Duration::from_nanos(wait)){
-                            Ok(out)=>publish_tcp(owner,out,&mut tcp_out),
+                            Ok(out)=>publish_tcp(owner,out,&mut tcp_out,&mut local_ready,None),
                             Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);break}
                         }
                     }else if split_ingress{
@@ -8984,7 +8993,6 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     &mut tx_records,&mut tx_presentations,
                     &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo,
                     native_m4_clock,&mut native_clock_receipts,
-                    if native_edt{native_tcp_owner.as_ref()}else{None},
                     #[cfg(feature="fec2_product_record")]
                     &stats,
                     #[cfg(feature="fec2_product_record")]
@@ -8996,10 +9004,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if let Some(owner)=native_tcp_owner.as_mut(){
                     for receipt in native_clock_receipts.drain(..){
                         native_m4_counts[if receipt.copied{0}else if receipt.pn.is_some(){1}else{2}]+=1;
-                        if let Some(edt)=receipt.edt.filter(|&t|t>receipt.at){
-                            edt_copied+=1;edt_max_delay_ns=edt_max_delay_ns.max(edt.duration_since(receipt.at).as_nanos() as u64);
-                        }
-                        if owner.admit_header_at(false,&receipt.header,receipt.len,receipt.at,receipt.edt).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                        if owner.admit_header(false,&receipt.header,receipt.len,receipt.at).is_err(){stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                     }
                 }
                 match result{
@@ -9097,7 +9102,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             active_jumbo.take();
             jumbo_queue.clear();
             if native_tcp_owner.is_some(){
-                if native_edt{eprintln!("WBD_M0_TCP_EDT timed_copied={} max_delay_ns={}",edt_copied,edt_max_delay_ns);}
+                if local_ready_group{eprintln!("WBD_M0_LOCAL_READY_GROUP joins={} flushes={} segments={}",local_ready_joins,local_ready_flushes,local_ready_segments);}
                 if native_m4_clock{eprintln!("WBD_M0_TCP_M4_CLOCK copied={} not_proven_copied={} no_normal_pn={}",native_m4_counts[0],native_m4_counts[1],native_m4_counts[2]);}
                 if local_gso_groups!=0||std::env::var_os("WBD_M0_LOCAL_TUN_GSO").as_deref()==Some(std::ffi::OsStr::new("1")){eprintln!("WBD_M0_LOCAL_TUN_GSO groups={} segments={}",local_gso_groups,local_gso_segments);}
                 eprintln!("WBD_M0_TCP_PUBLISH calls={} local_batch_max={} middle_batch_max={} pending_peak={} local_write_failed={} ingress_first={} ingress_turn_peak={} ingress_with_pending={} admission_drain_before_service={} ingress_first_service_turns={}",publish_calls,local_batch_max,middle_batch_max,pending_peak,local_write_failed,fair_native_turn,ingress_turn_peak,ingress_with_pending,native_round_robin,ingress_first_service_turns);

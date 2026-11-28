@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Paired Linux native TCP; earned-train EDT scoped dual ISA function passed, matched ARM ABBA pending; L2 open.",
+  "summary": "Paired Linux native TCP; per-record EDT rejected on ABBA CPU/throughput; ready-only client TUN grouping candidate; L2 open.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -83,7 +83,8 @@
     "docs/devlog/M0/20261128-M0-L2-BBR1-BBR3-180S-ACCEPTANCE.md",
     "docs/devlog/M0/20261128-M0-L2-RAW-FQ-OWNER-ELIGIBILITY.md",
     "docs/devlog/M0/20261128-M0-L2-EDT-EARNED-TRAIN-INTEGRATION.md",
-    "docs/devlog/M0/20261128-M0-L2-EDT-EARNED-TRAIN-ACCEPTANCE.md"
+    "docs/devlog/M0/20261128-M0-L2-EDT-EARNED-TRAIN-ACCEPTANCE.md",
+    "docs/devlog/M0/20261128-M0-L2-REJECT-EDT-READY-TUN-GROUP.md"
   ],
   "verification": [
     {
@@ -149,7 +150,8 @@
     "Native RAW FQ earlier eligibility/close lifetime diagnostic pending; production EDT still disabled. No shared-socket HOL or queued Stop qualification yet.",
     "H2548 exact native RAW FQ dual ISA46138025986 passed, 64/64 immediate marker before future, 32/32 close accepted future received after close. H2549 actual paired Normal earned-train EDT opt-in candidate, not production default or performance qualification; see docs/evidence/M0/20261128-L2-RAW-FQ-OWNER-ELIGIBILITY-RESULT.json",
     "EDT initial source 1fb5480 old unit call signature corrected at 9677716; exact candidate native 46140274112 pending; first source and feature gate failure retained.",
-    "H2549 9677716 native46140274112 exact both ISA363 core/8 function PASS, actual 21923 timed copies, FQ/RAW RX drops0 and joined Stop backlog0. No active Stop or sustained performance qualification. H2550 same exact binary matched BBRv3 A/E/E/A each180s pending; see docs/evidence/M0/20261128-L2-EDT-EARNED-TRAIN-NATIVE-RESULT.json"
+    "H2549 9677716 native46140274112 exact both ISA363 core/8 function PASS, actual 21923 timed copies, FQ/RAW RX drops0 and joined Stop backlog0. No active Stop or sustained performance qualification. H2550 same exact binary matched BBRv3 A/E/E/A each180s pending; see docs/evidence/M0/20261128-L2-EDT-EARNED-TRAIN-NATIVE-RESULT.json",
+    "H2550 A/E302.26/276.26M, CPU34.79/43.55, retrans0.5211/0.1290%; live EDT rejected/removed, synthetic evidence retained. H2551 current ready-turn GSO candidate not qualified; docs/evidence/M0/20261128-L2-EDT-EARNED-TRAIN-ABBA-RESULT.json"
   ],
   "promotion": null
 }

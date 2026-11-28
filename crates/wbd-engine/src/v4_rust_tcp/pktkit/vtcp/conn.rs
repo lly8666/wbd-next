@@ -731,8 +731,6 @@ pub struct Conn {
     /// held back by pacing alone.
     pace_deadline: std::option::Option<Instant>,
     native_resume: Option<Instant>,
-    // Latest accepted planned departure, not the connection event clock.
-    native_edt_tail: Option<Instant>,
     native_credit: usize,
     native_waiting: bool,
     // Latest actual upstream empty observation, not an inference from SendBuf.
@@ -1003,7 +1001,6 @@ impl Conn {
             pace_stamp: now,
             pace_deadline: None,
             native_resume: None,
-            native_edt_tail: None,
             native_credit: usize::MAX,
             native_waiting:false,
             native_source_dry:true,
@@ -4323,7 +4320,7 @@ impl Conn {
         } else {
             srtt * 2 + TLP_MIN_SLACK
         };
-        let mut at = self.native_edt_tail.map_or(self.now,|t|t.max(self.now)) + pto;
+        let mut at = self.now + pto;
         if let Some(rto) = self.rto_deadline.filter(|&rto| rto < at)
         {
             at = rto;
@@ -4560,29 +4557,16 @@ impl Conn {
         }
     }
 
-    pub(crate) fn native_edt_rate(&self,seq:u32,len:u32)->Option<(u64,Option<Instant>)>{
-        if !self.cfg.native_owner_turn||!self.score.is_native_pending(seq,len){return None}
-        self.pace_rate().map(|rate|(rate,self.native_edt_tail))
-    }
-
     pub(crate) fn native_admit(&mut self,seq:u32,len:u32,now:Instant)->bool{
-        self.native_admit_at(seq,len,now,None)
-    }
-    pub(crate) fn native_admit_at(&mut self,seq:u32,len:u32,now:Instant,edt:Option<Instant>)->bool{
-        let send_at=edt.map_or(now,|t|t.max(now));
-        if !self.cfg.native_owner_turn||!self.score.admit_native(seq,len,send_at){return false}
+        if !self.cfg.native_owner_turn||!self.score.admit_native(seq,len,now){return false}
         self.now=self.now.max(now);
-        if let Some(t)=edt.filter(|&t|t>now){
-            self.native_edt_tail=Some(self.native_edt_tail.map_or(t,|old|old.max(t)));
-        }
-        let timer_at=edt.map_or(self.now,|t|t.max(self.now));
-        self.last_data_sent=Some(self.native_edt_tail.map_or(timer_at,|t|t.max(timer_at)));
-        self.rto.start_timing(seq,timer_at);
+        self.last_data_sent=Some(self.now);
+        self.rto.start_timing(seq,self.now);
         let first=self.rto_deadline.is_none();
         if first{self.start_rto();}
         let resume=(self.native_waiting&&self.score.native_pending_count()<32)||
             (self.fin_queued&&self.score.native_pending()==0&&self.send_buf.as_ref().is_some_and(|s|s.pending()==0));
-        if resume{self.native_waiting=false;self.native_resume=Some(self.native_edt_tail.map_or(self.now,|t|t.max(self.now)));}
+        if resume{self.native_waiting=false;self.native_resume=Some(self.now);}
         let last=self.score.native_pending()==0;
         if last{
             // A local pending interval is not an independent pacing grant.
@@ -4703,9 +4687,7 @@ impl Conn {
             // like data does. Past the right edge, every later segment from
             // us would carry an out-of-window SEQ and have its ACK ignored.
             let unacked = self.send_buf.as_ref().unwrap().unacked() as u32;
-            if let Some(t)=self.native_edt_tail.filter(|&t|t>self.now){
-                self.pace_deadline=Some(t);
-            }else if self.snd_wnd > unacked {
+            if self.snd_wnd > unacked {
                 self.queue_fin();
                 sent_new = true;
             } else if unacked == 0 && self.persist_deadline.is_none() {
@@ -4832,9 +4814,6 @@ impl Conn {
     /// few milliseconds would otherwise pace a slow flow at a fraction of
     /// its rate. A sender idle for a while may burst two quanta, no more.
     fn pace_ready(&mut self) -> bool {
-        // Only this flow waits for its previously accepted short train.
-        // Credit accrues at the original rate; no second rate decision.
-        if self.native_edt_tail.is_some_and(|t|t>self.now){return false}
         if self.cfg.native_owner_turn && self.native_credit==0 {
             if self.score.native_pending_count()!=0{self.native_waiting=true;}else{self.native_resume=Some(self.now);}
             return false;
@@ -4854,7 +4833,6 @@ impl Conn {
 
     /// Pacing holds data back: send again once a quantum has built up.
     fn pace_wait(&mut self) {
-        if let Some(t)=self.native_edt_tail.filter(|&t|t>self.now){self.pace_deadline=Some(t);return}
         if self.cfg.native_owner_turn && self.native_credit==0{return;}
         let Some(rate) = self.pace_rate() else {
             return;
@@ -4866,10 +4844,7 @@ impl Conn {
     // --- Timers (synchronous, deadline-based) -----------------------------
 
     fn start_rto(&mut self) {
-        let at=if self.native_edt_tail.is_some_and(|t|t>self.now){
-            self.score.head_send_at().map_or(self.now,|t|t.max(self.now))
-        }else{self.now};
-        self.rto_deadline = Some(at + self.rto.rto());
+        self.rto_deadline = Some(self.now + self.rto.rto());
     }
 
     fn stop_rto(&mut self) {
@@ -10772,34 +10747,6 @@ mod tests {
         assert_eq!(c.pace_stamp,now);
         assert_eq!(c.pace_credit,credit);
         assert_eq!(c.pace_rate(),rate);
-    }
-
-    #[test]
-    fn native_edt_admission_keeps_real_clock_and_pacing_credit() {
-        let mut cfg=big(40692,80);
-        cfg.congestion=CongestionKind::Bbr1;
-        let mut c=Conn::new(cfg);
-        let mut peer=Conn::new(big(80,40692));
-        drive_handshake(&mut c,&mut peer);
-        c.cfg.native_owner_turn=true;
-        c.cfg.native_feedback_mode=2;
-        c.begin_native_turn();
-        let (_,packets)=c.write(&[7;500]);
-        let p=parse(&packets[0]);
-        let now=test_now();
-        let edt=now+Duration::from_micros(700);
-        let credit=c.pace_credit;
-        assert!(c.native_edt_rate(p.seq,p.payload.len() as u32).is_some());
-        assert!(c.native_admit_at(p.seq,p.payload.len() as u32,now,Some(edt)));
-        assert_eq!(c.now,now);
-        assert_eq!(c.score.head_send_at(),Some(edt));
-        assert_eq!(c.pace_stamp,now);
-        assert_eq!(c.pace_credit,credit);
-        assert_eq!(c.rto_deadline,Some(edt+c.rto.rto()));
-        assert!(!c.pace_ready());
-        c.pace_wait();
-        assert_eq!(c.pace_deadline,Some(edt));
-        assert!(c.native_edt_rate(p.seq,p.payload.len() as u32).is_none());
     }
 
     #[test]
