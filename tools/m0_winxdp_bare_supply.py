@@ -14,8 +14,9 @@ PORT=5202
 def source(host):
     with socket.socket() as listener:
         listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        # Linux reserves 12 bytes for the negotiated timestamp option.
-        listener.setsockopt(socket.IPPROTO_TCP,socket.TCP_MAXSEG,MSS+12)
+        # B04 run46106349947 measured 1361 for requested 1361 on this path.
+        # Use the observed socket behavior; retain the actual MSS acceptance gate.
+        listener.setsockopt(socket.IPPROTO_TCP,socket.TCP_MAXSEG,MSS)
         listener.bind((host,PORT))
         listener.listen(1)
         listener.settimeout(90)
