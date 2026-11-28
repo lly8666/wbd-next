@@ -21,7 +21,7 @@ relay_start(){
   python3 "$TOOL" relay-net h2228-peer/client.json h2228-peer/server.json "$OUT/relay-topology.json"
   python3 "$TOOL" relay-snapshot cold "$OUT/relay-cold.json"
   python3 - "$OUT" <<'PY'
-import json,pathlib,subprocess,sys
+import json,os,pathlib,subprocess,sys
 from tools.m0_h2228_three_runner_relay import classify_final_tail_ping
 out=pathlib.Path(sys.argv[1])
 for role in ("client","server"):

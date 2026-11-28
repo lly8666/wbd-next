@@ -14,3 +14,9 @@ H2556 fixture correction: the historical h.ge_params helper accepts only 1/5/10/
 ```feature-impact
 {"kind":"updated","ids":["dual-rust-tcp"],"reason":"Correct 3% relay fixture admission using same GE equation, re-trigger only affected four scenarios, retain shared source-pinned builds and original failures."}
 ```
+
+H2557 recovery: all H2555/H2556 scenario runs cancelled; relay job 140987285298 (1% ABBA) and 140987289350 (corrected 3% ABBA) fail during relay-net with H2228_FAIL_CLOSED_WEAK_PROFILE, before capture or app. Shared H2228 relay_net calls impair(0,0,"iid"), but dedicated monkey-patched H2555 helper allowed only internet. Admit the existing clean IID bootstrap tuple and retain the requested model in readback; measured internet 1/3/5% GE/jitter/FIFO unchanged. Fix missing os import in existing tail ping timeout handler. No product code/default or gate changes. Old ARM build46147401831 artifact15264725995 and c9f200d native46144352190 artifact15263705152 both available; reuse exact artifacts. All twelve scenarios re-trigger once using their existing wrappers; do not rerun the four superseded 3% originals or rebuild baseline. Original failures/cancellations retained, no performance claim until receipts. L2 OPEN.
+
+```feature-impact
+{"kind":"updated","ids":["dual-rust-tcp"],"reason":"Correct dedicated weak relay bootstrap contract and retry the same twelve cancelled fixture scenarios; frozen product code and default unchanged."}
+```

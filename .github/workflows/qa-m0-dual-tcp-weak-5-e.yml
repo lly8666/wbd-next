@@ -11,3 +11,5 @@ jobs:
       arm: 'E'
       loss: 5
     secrets: inherit
+
+# H2557: retry cancelled scenario with corrected relay cold IID bootstrap; same frozen products and impairment.
