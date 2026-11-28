@@ -12,8 +12,9 @@ N=h.NODE;ORIGIN=fixture.ORIGIN
 # One same-three-VM AB, independent loss/profile.
 ARM=os.environ["WBD_M0_WEAK_ARM"]
 LOSS=float(os.environ["WBD_M0_WEAK_LOSS"])
-assert ARM in ("B","C","D") and LOSS in (1.,3.,5.)
-ORDER=("A",ARM)
+assert ARM in ("B","C","D","ABC") and LOSS in (1.,3.,5.)
+ORDER=("A","B","C") if ARM=="ABC" else ("A",ARM)
+DURATION=180 if ARM=="ABC" else 60
 CASES=tuple(range(len(ORDER)))
 PROFILES={"A":"frozen-linux-kernel-bbr-splice",
     "B":"H2537-service-epoch-reference-bbr1-unseeded",
@@ -21,9 +22,9 @@ PROFILES={"A":"frozen-linux-kernel-bbr-splice",
     "D":"H2546-service-epoch-bbr3-seed600M"}
 PRODUCT_SOURCE={"B":"172fca30ceb2ed9b0840465d5d24ab7b009bc13d",
     "C":"a8a8358f65f90d40e7f7e61593e7333a21f1fb92",
-    "D":"cdd60c2d554a469db1dcb19351e88ebe4d65239b"}[ARM]
+    "D":"cdd60c2d554a469db1dcb19351e88ebe4d65239b"}
 BASELINE_SOURCE="26b11e2da236e909b73f461964c52d5a86d42dca"
-SOURCES={"A":BASELINE_SOURCE,ARM:PRODUCT_SOURCE}
+SOURCES={"A":BASELINE_SOURCE,**{k:PRODUCT_SOURCE[k] for k in ORDER[1:]}}
 def dual(i):return i>=0 and ORDER[i]!="A"
 def splice(i):return i>=0 and ORDER[i]=="A"
 def loss_for(i):return LOSS
@@ -40,8 +41,8 @@ def profile_env(k,server):
     seed=["WBD_M0_BBR3_INITIAL_600M=1"] if k=="D" else (["WBD_M0_BBR1_INITIAL_600M=1"] if k=="C" else [])
     return ["WBD_M0_MIDDLE_CC="+cc]+seed+(["WBD_M0_NATIVE_FEEDBACK=service"] if server else [])
 def app_args(i,role):
-    return [sys.executable,str(ROOT/"tools/m0_dual_tcp_weak_history_60_app.py"),role,
-            str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2","60"]
+    return [sys.executable,str(ROOT/"tools"/("m0_dual_tcp_long_app.py" if DURATION==180 else "m0_dual_tcp_weak_history_60_app.py")),role,
+            str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",str(DURATION)]
 def set_cc(ns,i):
     cc=cc_for(i)
     h.ns(ns,"sysctl","-qw","net.ipv4.tcp_congestion_control="+cc)
@@ -56,7 +57,7 @@ TICK=os.sysconf("SC_CLK_TCK")
 def load(p):return json.loads(p.read_text())
 def save(p,d):h.save(p,d)
 def peer(role):return load(PEERS/(role+".json"))
-def bundle(k):return ROOT/"bundles"/("A" if k=="A" else "B")
+def bundle(k):return ROOT/"bundles"/(k if ARM=="ABC" else ("A" if k=="A" else "B"))
 def manifests():
     rows={}
     for k,source in SOURCES.items():
@@ -65,7 +66,7 @@ def manifests():
         for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
             assert hashlib.sha256((b/name).read_bytes()).hexdigest()==m["sha256"][name]
         rows[k]={"manifest":m,"manifest_sha256":hashlib.sha256((b/"manifest.json").read_bytes()).hexdigest()}
-    assert len({v["manifest_sha256"] for v in rows.values()})==2
+    assert len({v["manifest_sha256"] for v in rows.values()})==len(ORDER)
     save(OUT/"builds.json",rows)
     return rows
 def spawn(key,ns,log,*args):
@@ -407,7 +408,7 @@ def client_case(i):
         if row.get("application_result"):
             origin=row.get("server_receipt",{}).get("origin_app",{})
             app=row.get("application_result",{})
-            row["hash_match"]=origin.get("sha256")==app.get("sha256") and origin.get("sent_bytes")==app.get("received_bytes") and app.get("received_bytes",0)>0 and origin.get("seconds",0)>=60 and row.get("server_receipt",{}).get("rc",{}).get("origin")==0
+            row["hash_match"]=origin.get("sha256")==app.get("sha256") and origin.get("sent_bytes")==app.get("received_bytes") and app.get("received_bytes",0)>0 and origin.get("seconds",0)>=DURATION and row.get("server_receipt",{}).get("rc",{}).get("origin")==0
             if row["status"]=="MEASURED" and not row["hash_match"]:row["status"]="INCOMPLETE_APP_HASH"
         if row["status"]=="MEASURED" and i>=0 and (not row.get("client_stop") or not row.get("server_receipt",{}).get("joined_stop")):row["status"]="INCOMPLETE_STOP"
         if row["status"]=="MEASURED" and i>=0 and not (row.get("probe",{}).get("valid") and row.get("server_receipt",{}).get("probe",{}).get("valid")):row["status"]="INCOMPLETE_PROBE"
@@ -439,11 +440,11 @@ def client():
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows)
         summary={"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"run_id":os.environ["GITHUB_RUN_ID"],
             "real_three_runner_l3_relay":True,"all_three_distinct_native_machines":distinct,"architecture":"aarch64","added_rtt_ms":400,
-            "planned_source_seconds":60,"application_offer":"saturated","outer_mtu":1160,"product_tun_fq_maxrate_mbps":0,
-            "initial_rust_bbr_pacing_bytes_s":75000000 if ARM in ("C","D") else None,"kernel_cc":"bbr","server_native_feedback_mode":2,"client_native_feedback_mode":0,
+            "planned_source_seconds":DURATION,"application_offer":"saturated","outer_mtu":1160,"product_tun_fq_maxrate_mbps":0,
+            "initial_rust_bbr_pacing_bytes_s":({k:75000000 if k=="C" else None for k in ORDER[1:]} if ARM=="ABC" else (75000000 if ARM in ("C","D") else None)),"kernel_cc":"bbr","server_native_feedback_mode":2,"client_native_feedback_mode":0,
             "loss_target_pct_per_direction":LOSS,"loss_model":"Gilbert-Elliott","jitter_model":"paretonormal 50% correlation; FIFO; 15ms forward/10ms reverse",
-            "edt_product_enabled_by_arm":{k:False for k in ORDER},"endpoint_wan_qdisc":"fq all arms","server_middle_ack_ratio":2,"client_middle_ack_ratio_by_arm":{ARM:int(ack_for(ARM))},"client_ready_group_by_arm":{"A":False,ARM:False},"order":list(ORDER),"profiles":{k:PROFILES[k] for k in SOURCES},
-            "status":"MEASURED_WEAK_HISTORY_AB" if complete else "INCOMPLETE","rows":rows}
+            "edt_product_enabled_by_arm":{k:False for k in ORDER},"endpoint_wan_qdisc":"fq all arms","server_middle_ack_ratio":2,"client_middle_ack_ratio_by_arm":{k:int(ack_for(k)) for k in ORDER[1:]},"client_ready_group_by_arm":{k:False for k in ORDER},"order":list(ORDER),"profiles":{k:PROFILES[k] for k in SOURCES},
+            "status":("MEASURED_WEAK_HISTORY_ABC" if ARM=="ABC" else "MEASURED_WEAK_HISTORY_AB") if complete else "INCOMPLETE","rows":rows}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

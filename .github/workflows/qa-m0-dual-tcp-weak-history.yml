@@ -29,14 +29,14 @@ jobs:
         with: {persist-credentials: false}
       - name: Preflight duration fixture
         run: |
-          python3 -m py_compile tools/m0_dual_tcp_arm_weak_history.py tools/m0_dual_tcp_weak_relay.py tools/m0_dual_tcp_weak_history_60_app.py
+          python3 -m py_compile tools/m0_dual_tcp_arm_weak_history.py tools/m0_dual_tcp_weak_relay.py tools/m0_dual_tcp_weak_history_60_app.py tools/m0_dual_tcp_long_app.py
           bash -n tools/m0_dual_tcp_weak_relay_start.sh
       - name: Reuse exact qualified Rust and one shared frozen ARM splice build
         id: qualified
         run: |
           set -euo pipefail
           case "$WBD_M0_WEAK_ARM" in
-            B) run=46120199788; source=172fca30ceb2ed9b0840465d5d24ab7b009bc13d; artifact=15253986117;;
+            B|ABC) run=46120199788; source=172fca30ceb2ed9b0840465d5d24ab7b009bc13d; artifact=15253986117;;
             C) run=46128656990; source=a8a8358f65f90d40e7f7e61593e7333a21f1fb92; artifact=15256882872;;
             D) run=46134184084; source=cdd60c2d554a469db1dcb19351e88ebe4d65239b; artifact=15259306040;;
             *) exit 2;;
@@ -45,6 +45,11 @@ jobs:
           test "$(gh run view "$run" -R "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion)" = success
           test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" --jq '.artifacts[] | select(.name=="dual-tcp-native-build-aarch64" and .expired==false) | .id')" = "$artifact"
           echo "run=$run" >> "$GITHUB_OUTPUT"
+          if test "$WBD_M0_WEAK_ARM" = ABC; then
+            test "$(gh run view 46128656990 -R "$GITHUB_REPOSITORY" --json headSha --jq .headSha)" = "a8a8358f65f90d40e7f7e61593e7333a21f1fb92"
+            test "$(gh run view 46128656990 -R "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion)" = success
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/46128656990/artifacts" --jq '.artifacts[] | select(.name=="dual-tcp-native-build-aarch64" and .expired==false) | .id')" = 15256882872
+          fi
           old=46147401831
           test "$(gh run view "$old" -R "$GITHUB_REPOSITORY" --json headSha --jq .headSha)" = "40a5ff7aec039b790228a3935d2418e60998079c"
           test "$(gh run view "$old" -R "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion)" = success
@@ -190,13 +195,19 @@ jobs:
           mkdir -p bundles/A bundles/B
           gh run download "${{ needs.prepare.outputs.baseline_run }}" -R "$GITHUB_REPOSITORY" -n frozen-arm-splice-A -D bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
-          for leg in A B; do
+          legs="A B"
+          if test "$WBD_M0_WEAK_ARM" = ABC; then
+            mkdir -p bundles/C
+            gh run download 46128656990 -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/C
+            legs="A B C"
+          fi
+          for leg in $legs; do
             tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
             (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
           done
           test "$(jq -r .source_sha bundles/A/manifest.json)" = "26b11e2da236e909b73f461964c52d5a86d42dca"
           case "$WBD_M0_WEAK_ARM" in
-            B) source=172fca30ceb2ed9b0840465d5d24ab7b009bc13d;;
+            B|ABC) source=172fca30ceb2ed9b0840465d5d24ab7b009bc13d;;
             C) source=a8a8358f65f90d40e7f7e61593e7333a21f1fb92;;
             D) source=cdd60c2d554a469db1dcb19351e88ebe4d65239b;;
             *) exit 2;;
@@ -204,6 +215,10 @@ jobs:
           test "$(jq -r .source_sha bundles/B/manifest.json)" = "$source"
           test "$(jq -r .architecture bundles/A/manifest.json)" = aarch64
           test "$(jq -r .architecture bundles/B/manifest.json)" = aarch64
+          if test "$WBD_M0_WEAK_ARM" = ABC; then
+            test "$(jq -r .source_sha bundles/C/manifest.json)" = "a8a8358f65f90d40e7f7e61593e7333a21f1fb92"
+            test "$(jq -r .architecture bundles/C/manifest.json)" = aarch64
+          fi
           cat >/tmp/m0-long-tcp-info-layout.c <<'EOF'
           #include <stddef.h>
           #include <linux/tcp.h>
@@ -256,7 +271,7 @@ jobs:
           test -s h2228-out/server-ready.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: {name: h2228-server-ready, path: h2228-out/server-ready.json, retention-days: 3}
-      - name: Keep the same ARM server through two 60s frozen splice versus historical candidate legs
+      - name: Keep the same ARM server through historical frozen splice comparison legs
         run: bash tools/m0_h2228_three_runner_case.sh server-wait
       - name: Finish and qualify header-only path sample
         if: always()
@@ -302,13 +317,19 @@ jobs:
           mkdir -p bundles/A bundles/B
           gh run download "${{ needs.prepare.outputs.baseline_run }}" -R "$GITHUB_REPOSITORY" -n frozen-arm-splice-A -D bundles/A
           gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/B
-          for leg in A B; do
+          legs="A B"
+          if test "$WBD_M0_WEAK_ARM" = ABC; then
+            mkdir -p bundles/C
+            gh run download 46128656990 -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D bundles/C
+            legs="A B C"
+          fi
+          for leg in $legs; do
             tar -C "bundles/$leg" -xf "bundles/$leg/bundle.tar"
             (cd "bundles/$leg" && sha256sum -c SHA256SUMS)
           done
           test "$(jq -r .source_sha bundles/A/manifest.json)" = "26b11e2da236e909b73f461964c52d5a86d42dca"
           case "$WBD_M0_WEAK_ARM" in
-            B) source=172fca30ceb2ed9b0840465d5d24ab7b009bc13d;;
+            B|ABC) source=172fca30ceb2ed9b0840465d5d24ab7b009bc13d;;
             C) source=a8a8358f65f90d40e7f7e61593e7333a21f1fb92;;
             D) source=cdd60c2d554a469db1dcb19351e88ebe4d65239b;;
             *) exit 2;;
@@ -316,6 +337,10 @@ jobs:
           test "$(jq -r .source_sha bundles/B/manifest.json)" = "$source"
           test "$(jq -r .architecture bundles/A/manifest.json)" = aarch64
           test "$(jq -r .architecture bundles/B/manifest.json)" = aarch64
+          if test "$WBD_M0_WEAK_ARM" = ABC; then
+            test "$(jq -r .source_sha bundles/C/manifest.json)" = "a8a8358f65f90d40e7f7e61593e7333a21f1fb92"
+            test "$(jq -r .architecture bundles/C/manifest.json)" = aarch64
+          fi
           cat >/tmp/m0-long-tcp-info-layout.c <<'EOF'
           #include <stddef.h>
           #include <linux/tcp.h>
@@ -358,7 +383,7 @@ jobs:
             sleep .2
           done
           test -s h2228-out/path-sample-ready.json
-      - name: Run two 60s frozen splice versus historical candidate legs
+      - name: Run historical frozen splice comparison legs
         run: |
           for i in $(seq 1 150);do
             gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-server-ready -D h2228-server-ready >/dev/null 2>&1 && break

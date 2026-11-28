@@ -1,0 +1,7 @@
+# H2561 — user-requested 180s 1% historical BBR1 comparison
+
+Interpret historical extreme BBR1 and next version as the two immediately preceding H2559 historical B/C candidates: B exact 172fca30ceb2ed9b0840465d5d24ab7b009bc13d selected C service epoch reference, unseeded BBR1; C exact a8a8358f65f90d40e7f7e61593e7333a21f1fb92 seeded BBR1 75MB/s. No separate named extreme version found in commit search. A exact 26b11e2da236e909b73f461964c52d5a86d42dca frozen transparent kernel BBR. One same three ARM64 hosted VMs, sequential A/B/C once each 180s saturated application, 1% per direction GE/jitter/FIFO, 400ms added RTT, Normal repair ON, MTU1160, no cap, ACK2, Rust server service epoch/client0; no EDT/ready-only grouping. Preserve all original H2559 60s modes unchanged. A artifact15264725995 run46147401831, B artifact15253986117 run46120199788, C artifact15256882872 run46128656990, exact native manifests and hashes; no rebuild. Compare actual first180s and 30s bins, elapsed delivery, CPU, retired retrans, BBR windows and actual paths. Fixed order, diagnostic only. H2560 three 60s BBRv3 AD Actions all completed success but artifact acceptance not yet performed. Do not call performance PASS. No production/default/wire changes, L2 OPEN.
+
+```feature-impact
+{"kind":"updated","ids":["dual-rust-tcp"],"reason":"User-authorized historical BBR1 three-arm 180s 1% comparison, fixture-only."}
+```
