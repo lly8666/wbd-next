@@ -4575,8 +4575,9 @@ impl Conn {
         if let Some(t)=edt.filter(|&t|t>now){
             self.native_edt_tail=Some(self.native_edt_tail.map_or(t,|old|old.max(t)));
         }
-        self.last_data_sent=Some(self.last_data_sent.map_or(send_at,|old|old.max(send_at)));
-        self.rto.start_timing(seq,send_at);
+        let timer_at=edt.map_or(self.now,|t|t.max(self.now));
+        self.last_data_sent=Some(self.native_edt_tail.map_or(timer_at,|t|t.max(timer_at)));
+        self.rto.start_timing(seq,timer_at);
         let first=self.rto_deadline.is_none();
         if first{self.start_rto();}
         let resume=(self.native_waiting&&self.score.native_pending_count()<32)||

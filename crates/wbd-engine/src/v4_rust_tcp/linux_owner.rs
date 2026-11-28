@@ -214,7 +214,7 @@ impl Owner{
     }
     pub(crate) fn admit_header_at(&mut self,local:bool,ip:&[u8],packet_len:usize,now:Instant,edt:Option<Instant>)->io::Result<()>{
         let Some((id,seq,len))=self.native_data(local,ip,packet_len)else{return Ok(())};
-        let e=self.flows.get_mut(&id).unwrap();let changed=match &mut e.flow{Flow::Client(f)=>f.admit(local,seq,len,now,edt),Flow::Server(f)=>f.admit(seq,len,now,edt)};
+        let e=self.flows.get_mut(&id).unwrap();let changed=match &mut e.flow{Flow::Client(f)=>f.admit_at(local,seq,len,now,edt),Flow::Server(f)=>f.admit_at(seq,len,now,edt)};
         if changed{self.refresh(id)?;}Ok(())
     }
     // Experiment only: sample during existing owner service turns; no extra wake/deadline.
