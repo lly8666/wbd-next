@@ -4,31 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2546,
-  "checkpoint_sha": "cdd60c2d554a469db1dcb19351e88ebe4d65239b",
-  "progress": "verifying",
+  "sequence": 2547,
+  "checkpoint_sha": "616fdec9ae89629e06e24157ab7b7f77d8b6c988",
+  "progress": "partial",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收cdd60c2d双ISA原生功能和BBR1/BBRv3同三ARM各180s诊断（46134184084、46134184014）；两臂600Mbps初始pacing、400ms零注入、持续供给、server service epoch C一致。核实逐秒业务、hash/EOF/Stop、retired重传、拥塞状态、CPU、路径和本地队列。无跨臂因果性能资格；不重复H2545四臂，L2 OPEN。",
+  "next_action": "保留BBR1/BBRv3竞争候选，按用户授权研究现有每流pacing与RAW EDT/FQ服务反馈、反向ACK及CPU；不重跑已完成长流，不作默认晋级，先查最新实际远端与新授权。",
   "unverified": true,
-  "last_tested_source": "a8a8358f65f90d40e7f7e61593e7333a21f1fb92",
+  "last_tested_source": "cdd60c2d554a469db1dcb19351e88ebe4d65239b",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-L2-RAW-EDT-NATIVE-REGRESSION-RESULT.json",
+    "docs/evidence/M0/20261128-L2-BBR1-BBR3-180S-SEED-RESULT.json",
     "docs/evidence/M0/20261128-L2-RAW-EDT-FQ-AND-SPLICE-PARITY-RESULT.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261128-M0-L2-FROZEN-C-CAPACITY-DIAGNOSTIC.md",
-    "docs/devlog/M0/20261128-M0-L2-ACCUMULATED-CREDIT-COMPARISON.md",
-    "docs/devlog/M0/20261128-M0-L2-X86-CONTROLLED-PATH.md",
-    "docs/devlog/M0/20261128-M0-L2-X86-RETRANS-THRESHOLD.md",
-    "docs/devlog/M0/20261128-M0-L2-THREE-RUNNER-PATH-FINGERPRINT.md",
-    "docs/devlog/M0/20261128-M0-L2-STOP-MICROTUNING-AND-SPLICE-PARITY.md",
-    "docs/devlog/M0/20261128-M0-L2-RAW-EDT-FQ-FUSION.md",
-    "docs/devlog/M0/20261128-M0-L2-180S-CONGESTION-DIAGNOSTIC.md",
-    "docs/devlog/M0/20261128-M0-L2-BBR1-BBR3-180S-SEED.md"
+    "docs/devlog/M0/20261128-M0-L2-BBR1-BBR3-180S-ACCEPTANCE.md",
+    "docs/devlog/M0/20261128-M0-L2-BBR1-BBR3-180S-SEED.md",
+    "docs/devlog/M0/20261128-M0-L2-RAW-EDT-FQ-FUSION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2545双ISA原生PASS；四臂实际完整MEASURED，server/relay收口缺字段FAIL，原ZIP证据保留。H2546按用户授权同三ARM BBR1/BBRv3各180s同600M初始pacing、同服务反馈，修正夹具收口，未改外层和生产默认；新SOURCE Actions在途。"
+  "partial_summary": "H2546 exact cdd60c2 双ISA362 core/7 native PASS；同三ARM BBR1/BBRv3 399.21/385.34M，retired retrans0.4107/0.2740%，CPU29.95/31.50，client ingress full1950/0，RTO2/0。BBR3稳定性候选，单顺序不晋级默认。H2545失败保留；H2546 main治理context_refs超界已缩短。L2 OPEN。"
 }
