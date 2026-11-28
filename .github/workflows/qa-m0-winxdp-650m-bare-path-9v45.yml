@@ -1,5 +1,5 @@
 name: M0 WinXDP versus bare CUBIC 650M path reference
-run-name: "M0 WinXDP versus bare CUBIC 650M 40/400ms | ${{ github.sha }}"
+run-name: "M0 WinXDP matched bare acceptance then complete Windows x64 package | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        replica: [A01,A02,A03,A04,A05,A06,A07,A08,A09,A10,B01,B02,B03,B04,B05,B06,B07,B08,B09,B10]
+        replica: [A01,A02,A03,A04,A05,A06,A07,A08,A09,A10,A11,A12,A13,A14,A15,A16,B01,B02,B03,B04,B05,B06,B07,B08,B09,B10,B11,B12,B13,B14,B15,B16]
     runs-on: windows-2025
     timeout-minutes: 85
     env:
@@ -24,7 +24,7 @@ jobs:
       H2478_REPLICA: ${{ startsWith(matrix.replica, 'B') && 'B' || 'A' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with: {ref: '0961df72e5a3d752ac07f757d58eca8cfa31766a', persist-credentials: false, fetch-depth: 0}
+        with: {ref: 'b6247edbef4068f181edceafbcf83c6a889dff04', persist-credentials: false, fetch-depth: 0}
       - name: Identify actual Windows CPU before expensive setup
         id: cpu_gate
         shell: pwsh
@@ -361,3 +361,87 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with: {name: winxdp-bare-path-summary, path: bare-path-summary.json, if-no-files-found: error, retention-days: 30}
+
+  package:
+    needs: coverage
+    runs-on: windows-2025
+    timeout-minutes: 30
+    env:
+      WBD_XDP_PRESSURE_LAB: '0'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {ref: '569b51abe62c499e1ea7e2f4e232f205756a891f', persist-credentials: false, fetch-depth: 0}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: winxdp-current-ab-build
+          path: xdp-build
+          run-id: 46097895116
+          github-token: ${{ github.token }}
+      - name: Assemble complete portable GUI and drivers using the exact measured release bytes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $source='569b51abe62c499e1ea7e2f4e232f205756a891f'
+          $b=Get-Content xdp-build/current-dll-manifest.json -Raw | ConvertFrom-Json
+          $go=Get-Content xdp-build/timer-go-manifest.json -Raw | ConvertFrom-Json
+          if((git rev-parse HEAD).Trim() -ne $source -or $b.source_sha -ne $source -or $go.source_sha -ne $source -or $b.lab -ne $false -or $b.features -notmatch 'native_fec_acceleration'){throw 'measured release source/feature mismatch'}
+          if($b.dll -ne '2282d5a41538a519a7c6af4c7693359fa7ce0ab0cc2141991dd31b9f054a419d' -or $go.exe -ne 'ad3580ba0297f54e9ae9cf8ad404ee3cfcbf60811e14623f9bf69de451a7655f'){throw 'measured binary identity mismatch'}
+          if((Get-FileHash xdp-build/wbd_engine.dll).Hash.ToLowerInvariant() -ne $b.dll -or (Get-FileHash xdp-build/wbd-client-embedded.exe).Hash.ToLowerInvariant() -ne $go.exe){throw 'measured binary bytes mismatch'}
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'original Windows assembly failed'}
+          [ordered]@{source_sha=$source;go_source_sha=$source;features=$b.features;native_fec_acceleration=$true;lab=$false;dll=$b.dll;exe=$go.exe;binary_run=46097895116} | ConvertTo-Json | Set-Content xdp-build/manifest.json
+          & ./tools/m0_winxdp_release_package.ps1 -SourceSHA $source
+          if($LASTEXITCODE -ne 0){throw 'portable assembly failed'}
+      - name: Verify assembled ZIP and run bundled driver and GUI self-test from extracted copy
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'runner has Npcap, no clean dependency proof'}
+          $dir=Join-Path $PWD 'package-test'
+          Expand-Archive xdp-build/WBD-Windows-amd64-WinXDP.zip $dir -Force
+          $m=Get-Content "$dir/package-manifest.json" -Raw | ConvertFrom-Json -AsHashtable
+          if($m.source_sha -ne '569b51abe62c499e1ea7e2f4e232f205756a891f'){throw 'package source mismatch'}
+          foreach($key in $m.files.Keys){
+            if((Get-FileHash (Join-Path $dir $key)).Hash.ToLowerInvariant() -ne $m.files[$key]){throw "package bytes mismatch: $key"}
+          }
+          foreach($key in @('WBD.exe','wbd-client.exe','wbd_engine.dll','wintun.dll','drivers/winxdp/xdp.inf','drivers/winxdp/xdp.cat','drivers/winxdp/xdp.sys','drivers/winxdp/xdpapi.dll','licenses/WinXDP-MIT.txt','licenses/Wintun.txt')){
+            if(-not (Test-Path (Join-Path $dir $key))){throw "package missing $key"}
+          }
+          if($m.files['wbd-client.exe'] -ne 'ad3580ba0297f54e9ae9cf8ad404ee3cfcbf60811e14623f9bf69de451a7655f' -or $m.files['wbd_engine.dll'] -ne '2282d5a41538a519a7c6af4c7693359fa7ce0ab0cc2141991dd31b9f054a419d'){throw 'packaged executable is not the measured release'}
+          if(Get-ChildItem $dir -Recurse -File | Where-Object {$_.Name -match '^(npcap|wpcap|packet)\.(dll|sys|exe)$'}){throw 'unexpected Npcap dependency'}
+          New-Item -ItemType Directory -Force package-receipts | Out-Null
+          Copy-Item "$dir/package-manifest.json" package-receipts/
+          foreach($pass in @('first','repeat')){
+            $p=Start-Process "$dir/WBD.exe" -ArgumentList '--install-drivers' -WorkingDirectory $dir -Wait -PassThru
+            Get-Content "$dir/driver-install-result.txt"
+            Copy-Item "$dir/driver-install-result.txt" "package-receipts/driver-$pass.txt"
+            if($p.ExitCode -ne 0){throw "bundled driver $pass setup failed"}
+          }
+          $p=Start-Process "$dir/WBD.exe" -ArgumentList '--self-test' -WorkingDirectory $dir -Wait -PassThru
+          $v=Get-Content "$dir/gui-test-result.json" -Raw | ConvertFrom-Json
+          Copy-Item "$dir/gui-test-result.json" package-receipts/
+          if($p.ExitCode -ne 0 -or $v.result -ne 'PASS'){throw 'actual WinForms self-test failed'}
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'unexpected Npcap dependency'}
+          [ordered]@{source_sha=$m.source_sha;binary_run=46097895116;qa_run=[long]$env:GITHUB_RUN_ID;zip_sha256=(Get-FileHash xdp-build/WBD-Windows-amd64-WinXDP.zip).Hash.ToLowerInvariant();gui=$v.result;checks=@($v.checks).Count;scope='experimental Windows amd64 complete portable package; no physical NIC or main promotion claim'} | ConvertTo-Json | Set-Content package-receipts/delivery.json
+          Get-Content package-receipts/delivery.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: WBD-Windows-amd64-WinXDP-complete
+          path: xdp-build/WBD-Windows-amd64-WinXDP.zip
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: winxdp-complete-package-receipts
+          path: package-receipts/
+          if-no-files-found: warn
+          retention-days: 30
