@@ -54,6 +54,7 @@ impl Endpoint {
                 match std::env::var_os("WBD_M0_NATIVE_FEEDBACK").as_deref().and_then(|s|s.to_str()){
                     Some("service")=>2,
                     Some("receive-pair")=>5,
+                    Some("receive-stall")=>6,
                     _=>0,
                 }
             }else{0},
