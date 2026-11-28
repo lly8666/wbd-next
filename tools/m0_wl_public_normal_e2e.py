@@ -1514,7 +1514,21 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
       "expected_mss":expected,"actual_windows_os_inner":windows_inner,"actual_linux_os_inner":inner}
    if not valid:raise RuntimeError("PLAN028_SHARED_FIXED6_AUTHENTIC_TWO_GENERATION_MSS_RECORD_M4_OS_MISSING")
    print("M0_PLAN028_SHARED_WINDOWS_FIXED6_TWO_REAL_TLS_SYN_SYNACK_MSS_RECORD_AND_M4_OS_PASS",flush=True)
-  if mode=="fixed" and not plan028_owned_switch and native_outer in ("default1460","1500"):
+  if mode=="fixed" and timed_rotation and native_outer in ("default1460","1500"):
+   # Shared manual-lease Linux server: use actual SYNACK and M4 READY,
+   # not the unavailable singleton decoded-peer-SYN log.
+   from m0_wl_public_mss_contract import verified_plan028_shared_manual_two_generation_v4_mss
+   linuxlog=(out/"server.log").read_text(errors="replace")
+   winlog=(out/"client.log").read_text(errors="replace")
+   proof=verified_plan028_shared_manual_two_generation_v4_mss(
+       winlog,linuxlog,configured_mtu,expected_sessions=(1,),expected_mode="fec-fixed")[0]
+   if windows_inner!=proof["windows_inner_planned"] or inner!=proof["linux_initial_tun_planned"]:
+    raise RuntimeError("FIXED_TIMER_REAL_SHARED_OS_MTU_MISMATCH")
+   if linuxlog.count("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=fixed profile=6")!=1:
+    raise RuntimeError("FIXED_TIMER_SERVER_AUTHENTIC_FEC6_MISSING")
+   report["fixed_timer_initial_shared_mss"]=proof
+   print("FIXED_TIMER_INITIAL_SHARED_MSS_OS_PASS",flush=True)
+  if mode=="fixed" and not plan028_owned_switch and not timed_rotation and native_outer in ("default1460","1500"):
    linuxlog=(out/"server.log").read_text(errors="replace")
    winlimit=re.findall(r"WBD_WINDOWS_COLD_MSS_BUDGET_V1[^\n]*physical_outer_mtu=(\d+)[^\n]*effective_outer_mtu=(\d+)",winlog)
    linlimit=re.findall(r"V4_PUBLIC_MTU_PREPARE[^\n]*role=server[^\n]*interface=(\d+)[^\n]*advertised_mss=(\d+)",linuxlog)
