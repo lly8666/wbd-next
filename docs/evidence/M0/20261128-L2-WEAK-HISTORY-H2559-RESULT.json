@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "harness_sha": "3112031b76785d31f2290935d0eabea7502f5383",
+  "result": "MEASURED_REGRESSION_LOCALIZATION_OPEN",
+  "scope": "60s saturated source, same three ARM hosted runners per A/candidate pair, 400ms added RTT, bidirectional 1/3/5% GE/jitter/FIFO, Normal repair ON MTU1160, no cap. Diagnostic not L2 qualification.",
+  "sources": {
+    "A": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "B": "172fca30ceb2ed9b0840465d5d24ab7b009bc13d",
+    "C": "a8a8358f65f90d40e7f7e61593e7333a21f1fb92"
+  },
+  "manifest_sha256": {
+    "A": "a15c4ecebe8afff2302c845f355efef1af71a7392cc904822feceb3cb6f4459f",
+    "B": "806561108b7633c18bc8f83577b6553fcb6cf7ab4bdfe5302b9a709a8f3da47f",
+    "C": "6b5c3da533320cb6c6f734cb43247837a685d44f9a39f9092a382a6055635fcd"
+  },
+  "counts": {
+    "zip_crc_clean": 24,
+    "complete_pairs": 5,
+    "incomplete_pairs": 1,
+    "app_rows_measured": 11,
+    "hash_eof": 11,
+    "joined_stop": 12,
+    "rust_retired": 6,
+    "rust_ingress_full": 0,
+    "rust_shared_tun_queue_full": 0,
+    "capture_receipts_valid": 18,
+    "capture_kernel_drops": 0
+  },
+  "review": "Six independent summary ZIPs equal client summaries; client/server builds.json match, source and arch verified; first60s recomputed from receiver_second_bytes. Both product CPU endpoints sum over full delivered GiB. Late server-middle cwnd median from samples after initial15 and before final; candidate 15s bins rounded. Capture sparse forward only, not physical loss proof.",
+  "artifact_order": [
+    "summary",
+    "client",
+    "server",
+    "relay"
+  ],
+  "cases": [
+    {
+      "loss": 1,
+      "arm": "B",
+      "run": 46153109693,
+      "artifacts": [
+        15266965482,
+        15267005433,
+        15266234553,
+        15266352731
+      ],
+      "first60_mbps": [
+        37.4296333333,
+        23.3176993333
+      ],
+      "relative_pct": 62.29742922048599,
+      "product_cpu_s_per_gib": [
+        116.4557953281,
+        130.7470877708
+      ],
+      "mean_rtt_ms": [
+        481.6,
+        480.836
+      ],
+      "rust_retrans_bytes": 33651472,
+      "rust_sent_bytes": 212106000,
+      "rust_retrans_pct": 15.865403147482862,
+      "rust_rto": 3,
+      "rust_late_cwnd_median_bytes": 3873956.5,
+      "rust_15s_mbps": [
+        13.92,
+        31.87,
+        22.83,
+        24.65
+      ],
+      "status": "MEASURED"
+    },
+    {
+      "loss": 1,
+      "arm": "C",
+      "run": 46153109684,
+      "artifacts": [
+        15267005816,
+        15267020819,
+        15267191114,
+        15266691295
+      ],
+      "first60_mbps": [
+        56.3766436,
+        5.2603492
+      ],
+      "relative_pct": 9.330724328540906,
+      "product_cpu_s_per_gib": [
+        104.3298564344,
+        228.8832481203
+      ],
+      "mean_rtt_ms": [
+        431.64,
+        431.402
+      ],
+      "rust_retrans_bytes": 3253378,
+      "rust_sent_bytes": 46834818,
+      "rust_retrans_pct": 6.946494379459316,
+      "rust_rto": 3,
+      "rust_late_cwnd_median_bytes": 669262,
+      "rust_15s_mbps": [
+        2.9,
+        5.06,
+        6.3,
+        6.79
+      ],
+      "status": "MEASURED"
+    },
+    {
+      "loss": 3,
+      "arm": "B",
+      "run": 46153109687,
+      "artifacts": [
+        15267060866,
+        15266841168,
+        15266527664,
+        15266487815
+      ],
+      "first60_mbps": [
+        18.5524868,
+        15.0298893333
+      ],
+      "relative_pct": 81.01280165470862,
+      "product_cpu_s_per_gib": [
+        159.6538821859,
+        173.2624008934
+      ],
+      "mean_rtt_ms": [
+        404.685,
+        412.199
+      ],
+      "rust_retrans_bytes": 18998036,
+      "rust_sent_bytes": 136373012,
+      "rust_retrans_pct": 13.930935249857209,
+      "rust_rto": 1,
+      "rust_late_cwnd_median_bytes": 1956101.5,
+      "rust_15s_mbps": [
+        12.8,
+        15.11,
+        15.8,
+        16.41
+      ],
+      "status": "MEASURED"
+    },
+    {
+      "loss": 3,
+      "arm": "C",
+      "run": 46153109702,
+      "artifacts": [
+        15266681656,
+        15266641771,
+        15266631857,
+        15266264013
+      ],
+      "first60_mbps": [
+        null,
+        18.2728230667
+      ],
+      "relative_pct": null,
+      "product_cpu_s_per_gib": [
+        null,
+        143.6681805746
+      ],
+      "mean_rtt_ms": [
+        469.236,
+        469.729
+      ],
+      "rust_retrans_bytes": 27901522,
+      "rust_sent_bytes": 171621970,
+      "rust_retrans_pct": 16.257546746491723,
+      "rust_rto": 3,
+      "rust_late_cwnd_median_bytes": 2472493,
+      "rust_15s_mbps": [
+        17.39,
+        22.92,
+        17.18,
+        15.6
+      ],
+      "status": "INCOMPLETE_A_RECV_TIMEOUT"
+    },
+    {
+      "loss": 5,
+      "arm": "B",
+      "run": 46153109782,
+      "artifacts": [
+        15267161224,
+        15266752308,
+        15267320735,
+        15267370485
+      ],
+      "first60_mbps": [
+        17.52285,
+        6.870408
+      ],
+      "relative_pct": 39.2082794750854,
+      "product_cpu_s_per_gib": [
+        158.0134518748,
+        189.8122526818
+      ],
+      "mean_rtt_ms": [
+        523.559,
+        520.714
+      ],
+      "rust_retrans_bytes": 5501285,
+      "rust_sent_bytes": 60485989,
+      "rust_retrans_pct": 9.095139371863457,
+      "rust_rto": 3,
+      "rust_late_cwnd_median_bytes": 1244859.5,
+      "rust_15s_mbps": [
+        3.27,
+        7.01,
+        8.3,
+        8.9
+      ],
+      "status": "MEASURED"
+    },
+    {
+      "loss": 5,
+      "arm": "C",
+      "run": 46153109726,
+      "artifacts": [
+        15266836358,
+        15266846422,
+        15266512042,
+        15266313177
+      ],
+      "first60_mbps": [
+        11.0833009333,
+        19.9201401333
+      ],
+      "relative_pct": 179.73111307886208,
+      "product_cpu_s_per_gib": [
+        178.185437788,
+        149.5332325777
+      ],
+      "mean_rtt_ms": [
+        501.297,
+        497.463
+      ],
+      "rust_retrans_bytes": 47374477,
+      "rust_sent_bytes": 203481229,
+      "rust_retrans_pct": 23.281988826595892,
+      "rust_rto": 6,
+      "rust_late_cwnd_median_bytes": 2509208,
+      "rust_15s_mbps": [
+        16.51,
+        27.47,
+        19.54,
+        16.15
+      ],
+      "status": "MEASURED"
+    }
+  ],
+  "decision": "Historical B achieves 39–81% of same-pair splice; C 9.3% and 179.7%, 3% A timed out. No stable seed causality, random path and RTT differ across pairs. Do not extrapolate 60s vs H2557 180s. Continue chronological pre-EDT seeded BBRv3 cdd60c2 D vs frozen A in three 60s AB pairs; no production/default changes. If D materially regresses, matched same-binary seeded BBR1 vs BBRv3 required before causal conclusion. L2 OPEN."
+}
