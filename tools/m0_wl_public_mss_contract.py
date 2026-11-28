@@ -33,18 +33,20 @@ def verified_current_v4_mss(win,linux,outer):
   "generation":generation,"limiting_reason":reason,"proof":"ACTUAL_GO_TCP_OPTIONS_AND_INBOUND_PEER"}
 
 
-def verified_plan028_shared_manual_two_generation_v4_mss(win,linux,outer,expected_sessions=(1,2)):
+def verified_plan028_shared_manual_two_generation_v4_mss(win,linux,outer,expected_sessions=(1,2),expected_mode='normal'):
  """Exact original Windows SYN / Linux SYNACK bytes for two shared sessions.
  The shared server does not log the legacy singleton decoded-peer-SYN marker;
  never synthesize or claim that unavailable observation.
  """
  if outer not in (1280,1400,1460,1500):raise ValueError("invalid outer")
+ if expected_mode not in ("normal","fec-fixed","fec-auto"):raise ValueError("invalid Normal mode")
+ overhead=31 if expected_mode=="normal" else 45
  cold=re.findall(r"^WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=(\d+) mode=(\S+) configured_outer_mtu=(\d+) physical_outer_mtu=(\d+) effective_outer_mtu=(\d+) local_advertised_mss=(\d+) inner_mtu_planned=(\d+) limiting_reason=(\w+) source=RUST_V1_REAL_OS$",win,re.MULTILINE)
  if len(cold)!=len(expected_sessions) or [int(x[0]) for x in cold]!=list(range(1,len(expected_sessions)+1)):
   raise ValueError("expected Windows generations not authenticated")
  prep=one(linux,r"V4_PUBLIC_MTU_PREPARE role=server mtu_budget_version=\d+ outer_config=(\d+) interface=(\d+) advertised_mss=(\d+) record_offer=(\d+) tun_planned=(\d+)","Linux physical budget")
  so,sp,sm,sr,si=map(int,prep)
- if so!=outer or sp<576 or sm!=min(outer,sp)-40 or sr!=sm or si!=sm-31:
+ if so!=outer or sp<576 or sm!=min(outer,sp)-40 or sr!=sm or si!=sm-overhead:
   raise ValueError("original Linux MTU/MSS/record budget inconsistent")
  srv_syn=re.findall(r"V4_PUBLIC_ACTUAL_HANDSHAKE_MSS_V1 side=server generation=\d+ kind=SYNACK local_advertised_mss=(\d+) tcp_option_bytes=([0-9a-fA-F]+)",linux)
  srv_ready=re.findall(r"V4_PUBLIC_MULTI_SESSION_READY role=server one_port=(\d+) active_detached_flows=(\d+) auto_lease=0 original_TLS=1 Rust_M4=1",linux)
@@ -53,7 +55,7 @@ def verified_plan028_shared_manual_two_generation_v4_mss(win,linux,outer,expecte
  proof=[]
  for i,(g,mode,oc,physical,effective,mss,inner,reason) in enumerate(cold):
   g=int(g);oc,physical,effective,mss,inner=map(int,(oc,physical,effective,mss,inner))
-  if mode!="normal" or oc!=outer or physical<576 or effective!=min(outer,physical) or mss!=effective-40 or inner!=mss-31:
+  if mode!=expected_mode or oc!=outer or physical<576 or effective!=min(outer,physical) or mss!=effective-40 or inner!=mss-overhead:
    raise ValueError("Windows generation physical MSS budget mismatch")
   if reason!=("physical_interface_ipv4" if physical<outer else "configured_outer_ipv4"):
    raise ValueError("Windows physical limiting reason incorrect")

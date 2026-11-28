@@ -1418,8 +1418,8 @@ func(p *m0WinRustNativePeer) rotateNormal(ctx context.Context,o m0NativeV4Option
  cfg:=p.cfg;cfg.Flow.LocalPort=port
  gen:=p.rotationGeneration+1
  reason:="configured_outer_ipv4";if physical<o.ConnectionMTU{reason="physical_interface_ipv4"}
- fmt.Printf("WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=%d mode=normal configured_outer_mtu=%d physical_outer_mtu=%d effective_outer_mtu=%d local_advertised_mss=%d inner_mtu_planned=%d limiting_reason=%s source=RUST_V1_REAL_OS\n",
-  gen,o.ConnectionMTU,physical,cold.EffectiveOuterIPMTU,cold.AdvertisedSynMSS,o.TunnelMTU,reason)
+ fmt.Printf("WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=%d mode=%v configured_outer_mtu=%d physical_outer_mtu=%d effective_outer_mtu=%d local_advertised_mss=%d inner_mtu_planned=%d limiting_reason=%s source=RUST_V1_REAL_OS\n",
+  gen,o.Mode,o.ConnectionMTU,physical,cold.EffectiveOuterIPMTU,cold.AdvertisedSynMSS,o.TunnelMTU,reason)
  fmt.Printf("WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=%d configured_port=%d source_port=%d original_peer_port=%d same_ip_reauth_safe_tuple=true lanes=1\n",
   gen,o.SourcePort,port,o.ServerPort)
  transport,e:=p.owner.BeginNativeNormalCandidate(turn,cfg);if e!=nil{return 0,false,e}

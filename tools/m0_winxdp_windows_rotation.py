@@ -159,7 +159,9 @@ def audit_normal_mbb(out,client,server):
     assert len(rss)==1 and rss[0][1]==1 and rss[0][2]==ports[0][1],result
     assert result["os_applies"]==result["initial_ready"]==result["os_stops"]==result["rx_stops"]==result["tx_stops"]==1,result
     assert result["server_promotions"]==2 and result["physical_path_events"]==0,result
-    result["server_authenticated_generations"]=verified_plan028_shared_manual_two_generation_v4_mss(client,server,1460,expected_sessions=(1,2,2))
+    import os
+    mode={"normal":"normal","fixed":"fec-fixed","auto":"fec-auto"}[os.environ["WBD_WL_PUBLIC_MODE"]]
+    result["server_authenticated_generations"]=verified_plan028_shared_manual_two_generation_v4_mss(client,server,1460,expected_sessions=(1,2,2),expected_mode=mode)
     assert business["missing"]==0 and not business["socket_errors"] and business["socket_accepted"]==business["sent"],result
     assert 350<=business["rtt_p50_ms"]<=500 and result["max_gap_ms"]<=100,result
     result["continuity"]="PASS_ZERO_MISSING_SAME_SOCKET"
