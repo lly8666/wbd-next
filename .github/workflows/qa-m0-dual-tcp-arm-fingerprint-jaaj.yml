@@ -1,0 +1,19 @@
+name: M0 three ARM path fingerprint JAAJ
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths:
+      - '.github/workflows/qa-m0-dual-tcp-arm-fingerprint-jaaj.yml'
+      - '.github/workflows/qa-m0-dual-tcp-arm-fingerprint.yml'
+      - 'tools/m0_dual_tcp_path_fingerprint.py'
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+jobs:
+  characterize:
+    uses: ./.github/workflows/qa-m0-dual-tcp-arm-fingerprint.yml
+    with:
+      arm: 'J'
+      order: 'reverse'
+    secrets: inherit

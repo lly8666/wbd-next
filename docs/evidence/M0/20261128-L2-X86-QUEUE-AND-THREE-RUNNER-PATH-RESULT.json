@@ -1,0 +1,286 @@
+{
+  "schema_version": 1,
+  "source_sha": "8c937a62a3ecd86c1c1347cdd23f93c3cbc2d0a5",
+  "result": "QUEUE_THRESHOLD_NOT_REPRODUCED",
+  "native": {
+    "run": 46122971644,
+    "status": "PASS",
+    "artifacts": {
+      "arm": 15254936103,
+      "x86": 15254009088
+    },
+    "manifest_sha256": {
+      "arm": "fbc34b4367f03a0d275ef033cc490d2da3954666f3eafac877149634d21136b9",
+      "x86": "fa0aff769526ca28bbc6163ba86e120d48c3511f256ea8db5ba2051eaab5bbc1"
+    },
+    "functional_profiles_per_isa": 5
+  },
+  "queue": [
+    {
+      "run": 46122971678,
+      "artifact": 15254377365,
+      "summary_sha256": "e3dec07743920d640104579bf4cced61f005d7a6acbfc5cbc40595c413f87c65",
+      "limit": 18500,
+      "order": "ABBA",
+      "mbps": [
+        398.1012401293049,
+        299.63388218625323,
+        312.57216073925434,
+        409.4311505124683
+      ],
+      "retrans_ratio": [
+        0.01841966459749267,
+        0,
+        0,
+        0.01812627589003775
+      ],
+      "forward_qdisc_drops": [
+        18186,
+        0,
+        0,
+        17891
+      ]
+    },
+    {
+      "run": 46122971675,
+      "artifact": 15254995097,
+      "summary_sha256": "5681f2a798cd656e859e39d383652250d208f82804e5f058e6046394ed2404ad",
+      "limit": 18500,
+      "order": "BAAB",
+      "mbps": [
+        336.04667263981366,
+        409.8506416377263,
+        409.9354238894689,
+        348.3081344031185
+      ],
+      "retrans_ratio": [
+        0.0018085294078919424,
+        0.017957124761729205,
+        0.018177009866354232,
+        0.0011277253846817123
+      ],
+      "forward_qdisc_drops": [
+        0,
+        17721,
+        17942,
+        0
+      ]
+    },
+    {
+      "run": 46122971672,
+      "artifact": 15253734330,
+      "summary_sha256": "5cfb47266ee09eb44f9c554805e41acf99b53ceda1bc57eac7c3e16aed7c809e",
+      "limit": 21000,
+      "order": "ABBA",
+      "mbps": [
+        419.660908282306,
+        344.5563218662958,
+        344.5865731385648,
+        427.26616434980696
+      ],
+      "retrans_ratio": [
+        0.011640162828375265,
+        0,
+        0,
+        0.011640162828375265
+      ],
+      "forward_qdisc_drops": [
+        11414,
+        0,
+        0,
+        11414
+      ]
+    },
+    {
+      "run": 46122971700,
+      "artifact": 15254800737,
+      "summary_sha256": "cadc61308294ebc59335e9358993e2a0f727a4379debeeaa2c73da54b1f9c1e1",
+      "limit": 21000,
+      "order": "BAAB",
+      "mbps": [
+        301.2554837079122,
+        424.33186007135544,
+        425.2890151573924,
+        303.88990993551135
+      ],
+      "retrans_ratio": [
+        0,
+        0.011640162828375265,
+        0.011640162828375265,
+        0
+      ],
+      "forward_qdisc_drops": [
+        0,
+        11414,
+        11414,
+        0
+      ]
+    }
+  ],
+  "queue_common": {
+    "all_six_zip_crc_clean": true,
+    "all_four_threshold_false": true,
+    "all_application_hash_eof_measured": true,
+    "bare_final_valid": true,
+    "product_bulk_retired": true,
+    "reverse_qdisc_drops_zero": true,
+    "offered_bps": 600000000,
+    "added_rtt_ms": 400,
+    "netem_rate_bps": 800000000,
+    "injected_random_loss_pct": 0,
+    "interpretation": "Actual finite forward queue overflow mainly bare kernel; not desired discrepancy. Product retrans on two queue12 reverse legs despite zero qdisc drops; cause not located."
+  },
+  "historical_trace": {
+    "source": "2967efccb20549eab72d53f2d898a3bef34231ef",
+    "frozen_product": "12b17ccfd4dc3354fa7dddecd0450bd1552cc540",
+    "method": "Existing unique sampled tuple identities in capture order; subtract each hop/leg P1 of matched cross-host software timestamps, not absolute delay, no sync/drift correction. Missing run counts are successive sampled identities, not all packets. 100ms bins anchored to each sender trace. Forward only.",
+    "groups": [
+      {
+        "order": "AJJA",
+        "run": 46119195642,
+        "artifacts": {
+          "server": 15252554839,
+          "relay": 15253116854,
+          "client": 15253166691
+        },
+        "first_p99_ms": [
+          47.088,
+          2.573,
+          2.33,
+          21.331
+        ],
+        "second_p99_ms": [
+          7.942,
+          3.687,
+          3.403,
+          7.734
+        ],
+        "first_missing": [
+          12,
+          0,
+          0,
+          7
+        ],
+        "second_missing": [
+          370,
+          3,
+          1,
+          214
+        ],
+        "first_max_run": [
+          2,
+          0,
+          0,
+          2
+        ],
+        "second_max_run": [
+          7,
+          2,
+          1,
+          5
+        ],
+        "first_max_100ms": [
+          5,
+          0,
+          0,
+          6
+        ],
+        "second_max_100ms": [
+          39,
+          2,
+          1,
+          16
+        ],
+        "first_p999_ms": [
+          52.981,
+          4.011,
+          3.79,
+          29.478
+        ],
+        "second_p999_ms": [
+          9.595,
+          6.369,
+          6.309,
+          9.565
+        ]
+      },
+      {
+        "order": "JAAJ",
+        "run": 46119195656,
+        "artifacts": {
+          "server": 15252749004,
+          "relay": 15252529756,
+          "client": 15253385228
+        },
+        "first_p99_ms": [
+          1.978,
+          5.877,
+          5.904,
+          2.029
+        ],
+        "second_p99_ms": [
+          2.947,
+          6.953,
+          6.622,
+          3.532
+        ],
+        "first_missing": [
+          0,
+          36,
+          44,
+          3
+        ],
+        "second_missing": [
+          4,
+          172,
+          164,
+          7
+        ],
+        "first_max_run": [
+          0,
+          3,
+          4,
+          2
+        ],
+        "second_max_run": [
+          2,
+          7,
+          5,
+          2
+        ],
+        "first_max_100ms": [
+          0,
+          8,
+          21,
+          3
+        ],
+        "second_max_100ms": [
+          4,
+          23,
+          33,
+          4
+        ],
+        "first_p999_ms": [
+          5.365,
+          7.233,
+          8.028,
+          5.349
+        ],
+        "second_p999_ms": [
+          6.389,
+          8.613,
+          8.561,
+          9.426
+        ]
+      }
+    ],
+    "all_matched_unique_arrival_inversions_zero": true,
+    "local_relay_missing_zero": true,
+    "local_relay_p99_ms": [
+      0.03,
+      0.096
+    ],
+    "limits": "Clock offset/drift and observer timestamps, sequence-stratified sparse forward samples; no reverse ACK, exact packet loss-run length, absolute one-way delay or physical queue attribution."
+  },
+  "next": "Same frozen C, two independent AJJA/JAAJ three ARM groups, original application offer and topology, full bidirectional header capture four VX interfaces, software ns timestamps, no payload, gzip numeric rows, actual capture drops/offload and CPU/softnet receipts. No product changes; compare matching traces and sparse historical baseline for observer effect; only calibrate simulation after verified joint distributions."
+}
