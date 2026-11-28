@@ -4,20 +4,20 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2548,
-  "checkpoint_sha": "911743fa3951d1ae723eab7d93037b80b1958759",
-  "progress": "partial",
+  "sequence": 2549,
+  "checkpoint_sha": "1cb397786a6cca04e330f6ee88e4895fa6547ecf",
+  "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收唯一实验分支当前H2548 native RAW FQ same vs separate socket earlier eligibility/close lifetime；分支证据H2547见616fdec9，主游标不引用未合入main的路径。根据实测选原生EDT owner拓扑、计划发送与逻辑时钟语义，再接入现有每流pacing；不改wire/不引入跨流HOL。",
+  "next_action": "先验收9677716原生双ISA46140274112，真实paired EDT seed600 mixed功能及原回归；原1fb5480保留错误收据、旧冻结queue workflow非EDT意图。若实际候选PASS，验证active Stop、partial/多流独立首到及同机BBR3 immediate vs earned EDT，后续研究ACK/IO/CPU。L2 OPEN，不晋级默认、不改外层、不重复旧长流。",
   "unverified": true,
-  "last_tested_source": "cdd60c2d554a469db1dcb19351e88ebe4d65239b",
+  "last_tested_source": "911743fa3951d1ae723eab7d93037b80b1958759",
   "evidence_refs": [],
   "context_refs": [
     "docs/devlog/M0/20261128-M0-L2-RAW-EDT-FQ-FUSION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2546 cdd60c2双ISA/三ARM诊断PASS；BBR1/3 399.21/385.34M，重传0.4107/0.2740%，L2 OPEN。H2548原生FQ资格诊断新SOURCE在途，产品未改。H2547 main结构失败因引用分支独有文件及不同SOURCE，清理游标引用，历史仍保留在实验分支；未晋级默认。"
+  "partial_summary": "H2548 双ISA FQ原生PASS：64/64即时包先于未来包，32/32 fd close后未来包仍收到；main治理46138037149 PASS。H2549实际Normal候选：已授权短批次按原流pacing rate转EDT<=1ms，单RAW，logical clock与planned分离，实际accepted prefix及SIOCOUTQ冷Stop。9677716 exact native在途；功能卡补录失败；非性能资格。分支doc与证据未合入main。"
 }
