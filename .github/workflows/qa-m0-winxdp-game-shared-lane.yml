@@ -81,7 +81,8 @@ jobs:
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-client" ./cmd/wbd-v4-client)
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fixed-build/wbd-v4-server" ./cmd/wbd-v4-server)
-          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy|TestR0V4ActualProtectedPeerHandshakeAllCiphers)    runs-on: windows-2025
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028SharedNormalPerClientFECProtectedCapability|TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy|TestR0V4ActualProtectedPeerHandshakeAllCiphers)  build:
+    runs-on: windows-2025
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -416,7 +417,7 @@ jobs:
                   print("WINXDP_GAME_SHARED_SLOT_ROW "+json.dumps({"runner":root.name,"cpu":gate.get("names"),"eligible_9v45":eligible,"stop":x.get("stop"),"error":x.get("error"),"rotation":r,"audit":a}))
                   if (x.get("stop")=="PASS_BOTH_OWNED" and x.get("mode_public","").startswith("PASS_ACTUAL_")
                       and x.get("fixture_rc")==0 and r.get("scope")=="WINDOWS_GAME_SHARED_SLOT"
-                      and a.get("continuity")=="PASS_ZERO_MISSING_SAME_SOCKET" and len(a.get("ready",[]))==4
+                      and a.get("continuity")=="PASS_ZERO_MISSING_SAME_SOCKET" and a.get("ready")==5
                       and a.get("os_applies")==a.get("rx_stops")==1 and a.get("missing")==0
                       and (r.get("kernel_netem") or {}).get("rtt_ms")==400 and (r.get("kernel_netem") or {}).get("loss_pct")==0):
                       functional[mode].append(root.name)
@@ -428,7 +429,8 @@ jobs:
             tail -120 fixed-kernel-result/plan028-h1151-protected-policy-unit.log >&2
             exit 1
           }
-          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028OriginalPublicRecordCipherClientScope    runs-on: windows-2025
+          (cd legacy && go test -count=1 -v -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestPLAN028OriginalPublicRecordCipherClientScope  build:
+    runs-on: windows-2025
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -795,7 +797,8 @@ jobs:
           (root/"manifest.json").write_text(json.dumps(m,indent=2)+"\n")
           print("M0_PLAN028_H1151_NATIVE_X86_64_ORIGINAL_GO_RUST_TLS_BUILD_PASS",flush=True)
           PY
-          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028TimedRotation(ReusesNativeSamePathGeneration|DisabledAndBoundedConfig)|TestPLAN028JitteredAutomaticColdRotationBounds)    runs-on: windows-2025
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^(TestPLAN028TimedRotation(ReusesNativeSamePathGeneration|DisabledAndBoundedConfig)|TestPLAN028JitteredAutomaticColdRotationBounds)  build:
+    runs-on: windows-2025
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
