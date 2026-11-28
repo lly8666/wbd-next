@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/qa-m0-game-shared-lane-linux.yml"
       - "tools/m0_game_shared_lane_linux_fixture.py"
+      - "tools/m0_game_lane_blackhole_linux_fixture.py"
       - "r0/go_overlay/internal/v4productcli/game_linux.go"
       - "r0/go_overlay/internal/v4productcli/path_supervisor_linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go"
@@ -34,6 +35,10 @@ jobs:
           for scene in game2-off game2-fixed6 game4-off game4-fixed6;do
             python3 tools/m0_game_shared_lane_linux_fixture.py "$RUNNER_TEMP/preflight-$scene.sh" "$scene"
             bash -n "$RUNNER_TEMP/preflight-$scene.sh"
+          done
+          for scene in game2 game4;do
+            python3 tools/m0_game_lane_blackhole_linux_fixture.py "$RUNNER_TEMP/preflight-blackhole-$scene.sh" "$scene"
+            bash -n "$RUNNER_TEMP/preflight-blackhole-$scene.sh"
           done
           echo "PLAN028_H1226_SEVEN_SCENE_SYNTAX_PREFLIGHT_PASS"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -143,7 +148,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        scene: [game2-off, game2-fixed6, game4-off, game4-fixed6]
+        scene: [game2-off, game2-fixed6, game4-off, game4-fixed6, blackhole-game2, blackhole-game4]
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     steps:
@@ -171,6 +176,7 @@ jobs:
           print("PLAN028_H1222_SHARED_BINARY_SHA_NATIVE_X86_VERIFIED",flush=True)
           PY
       - name: Eight true original TLS and native Rust Game4 single-lane swaps with three live UDP clients
+        if: ${{ !startsWith(matrix.scene, 'blackhole-') }}
         shell: bash
         run: |
           set -euo pipefail
@@ -195,6 +201,23 @@ jobs:
           assert all(x["received"]>=x["sent"]*.995 for x in j["real_no_app_retry_three_client_udp"].values())
           print("H1231_ARM64_NATIVE_TRUE_SINGLE_LANE_PASS",flush=True)
           PY
+      - name: Actual two-way physical tuple blackhole with scheduled rotation disabled
+        if: ${{ startsWith(matrix.scene, 'blackhole-') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          scene="${{ matrix.scene }}"
+          mode="${scene#blackhole-}"
+          python3 tools/m0_game_lane_blackhole_linux_fixture.py "$RUNNER_TEMP/blackhole-$mode.sh" "$mode"
+          bash -n "$RUNNER_TEMP/blackhole-$mode.sh"
+          mkdir -p fixed-kernel-result
+          bash "$RUNNER_TEMP/blackhole-$mode.sh" fixed-build >"hot-$scene.log" 2>&1 || {
+            tail -180 "hot-$scene.log" >&2
+            exit 1
+          }
+          grep -Fq "GAME_REAL_SINGLE_LANE_BLACKHOLE_RECOVERY_PASS $mode" "hot-$scene.log"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -203,5 +226,7 @@ jobs:
             hot-${{ matrix.scene }}.log
             fixed-kernel-result/hot-*.json
             fixed-kernel-result/hot-*.log
+            fixed-kernel-result/blackhole-*.json
+            fixed-kernel-result/blackhole-*.log
           if-no-files-found: warn
           retention-days: 14
