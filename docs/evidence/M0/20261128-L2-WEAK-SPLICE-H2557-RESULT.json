@@ -1,0 +1,534 @@
+{
+  "schema_version": 1,
+  "source_sha": "c9f200da4d50574426ce65c59a47ffc69ee2e211",
+  "harness_sha": "1805e2f8581366084f41146b213fa76c14715292",
+  "baseline_source": "26b11e2da236e909b73f461964c52d5a86d42dca",
+  "result": "PERFORMANCE_REJECTED",
+  "scope": "Normal repair ON ARM64 three-runner synthetic weak GE+jitter FIFO at 400ms added RTT, 180s application. No L2 promotion.",
+  "artifact_verified": true,
+  "review": "45 ZIP CRC clean: 11 each summary/client/server/relay plus partial 3% B client. Eleven standalone summary byte-identical to client, client/server builds.json equal; 33 complete-run capture receipts valid and kernel drops zero; stuck client capture invalid. Recomputed from first_180s_mbps; CPU product combined per whole delivered GiB, not first180s.",
+  "counts": {
+    "complete_groups": 8,
+    "incomplete_groups": 3,
+    "cancelled_groups": 1,
+    "rows": 44,
+    "measured": 41,
+    "exact_hash": 42,
+    "joined_stop": 44,
+    "rust_retired": 20,
+    "rust_ingress_full_sum": 0,
+    "rust_shared_tun_queue_full_sum": 0
+  },
+  "rtt_probe_case_mean_ms_range": [
+    397.508,
+    494.609
+  ],
+  "artifact_order": [
+    "summary",
+    "client",
+    "server",
+    "relay"
+  ],
+  "row_order": "A candidate candidate A",
+  "rust_stats": "Median server-middle CloseWait samples >=15s after first TCP_INFO; full pending fraction among those samples; retrans and RTO last bulk_tcp_sample, not retired for 5D1/5E2.",
+  "cases": [
+    {
+      "loss": 1,
+      "arm": "B",
+      "run": 46149037147,
+      "artifacts": [
+        15264988864,
+        15265083041,
+        15265236376,
+        15264988890
+      ],
+      "first180_mbps": [
+        74.9985,
+        2.938,
+        1.8953,
+        74.4119
+      ],
+      "product_cpu_s_per_gib": [
+        84.82,
+        242.89,
+        288.37,
+        78.03
+      ],
+      "rust_cwnd_median_bytes": [
+        139704,
+        94367
+      ],
+      "rust_snd_wnd_median_bytes": [
+        2664448,
+        1048576
+      ],
+      "rust_pending_full_sample_pct": [
+        83.3,
+        92.5
+      ],
+      "rust_retrans_pct": [
+        3.32,
+        1.82
+      ],
+      "rust_rto": [
+        4,
+        0
+      ],
+      "status": "complete"
+    },
+    {
+      "loss": 1,
+      "arm": "C",
+      "run": 46149037138,
+      "artifacts": [
+        15264894673,
+        15265701335,
+        15265381954,
+        15265067127
+      ],
+      "first180_mbps": [
+        null,
+        1.6696,
+        2.9411,
+        81.0534
+      ],
+      "product_cpu_s_per_gib": [
+        null,
+        326.89,
+        243.76,
+        74.69
+      ],
+      "rust_cwnd_median_bytes": [
+        89182,
+        111245
+      ],
+      "rust_snd_wnd_median_bytes": [
+        1193984,
+        10147840
+      ],
+      "rust_pending_full_sample_pct": [
+        89.7,
+        83.7
+      ],
+      "rust_retrans_pct": [
+        1.52,
+        3.65
+      ],
+      "rust_rto": [
+        1,
+        1
+      ],
+      "status": "incomplete A0 application recv timeout"
+    },
+    {
+      "loss": 1,
+      "arm": "D",
+      "run": 46149037286,
+      "artifacts": [
+        15265433900,
+        15265433906,
+        15265193175,
+        15265638423
+      ],
+      "first180_mbps": [
+        64.4068,
+        3.2945,
+        1.8456,
+        74.5459
+      ],
+      "product_cpu_s_per_gib": [
+        84.73,
+        226.93,
+        328.4,
+        73.91
+      ],
+      "rust_cwnd_median_bytes": [
+        123403,
+        102914
+      ],
+      "rust_snd_wnd_median_bytes": [
+        12396544,
+        1048576
+      ],
+      "rust_pending_full_sample_pct": [
+        89.6,
+        87.4
+      ],
+      "rust_retrans_pct": [
+        5.2,
+        1.94
+      ],
+      "rust_rto": [
+        0,
+        2
+      ],
+      "status": "complete"
+    },
+    {
+      "loss": 1,
+      "arm": "E",
+      "run": 46149037225,
+      "artifacts": [
+        15265736147,
+        15265820960,
+        15264869851,
+        15264919338
+      ],
+      "first180_mbps": [
+        65.655,
+        3.2886,
+        3.9411,
+        73.7735
+      ],
+      "product_cpu_s_per_gib": [
+        91.74,
+        233.42,
+        214.44,
+        68.43
+      ],
+      "rust_cwnd_median_bytes": [
+        126048,
+        129706
+      ],
+      "rust_snd_wnd_median_bytes": [
+        7938048,
+        13424640
+      ],
+      "rust_pending_full_sample_pct": [
+        84.9,
+        78.3
+      ],
+      "rust_retrans_pct": [
+        3.37,
+        7.08
+      ],
+      "rust_rto": [
+        4,
+        3
+      ],
+      "status": "complete"
+    },
+    {
+      "loss": 3,
+      "arm": "C",
+      "run": 46149037115,
+      "artifacts": [
+        15265766173,
+        15265357188,
+        15265870545,
+        15265008970
+      ],
+      "first180_mbps": [
+        60.3145,
+        1.4505,
+        1.3197,
+        45.0679
+      ],
+      "product_cpu_s_per_gib": [
+        94.54,
+        321.05,
+        351.32,
+        113.06
+      ],
+      "rust_cwnd_median_bytes": [
+        36295,
+        44516
+      ],
+      "rust_snd_wnd_median_bytes": [
+        6021120,
+        1654784
+      ],
+      "rust_pending_full_sample_pct": [
+        95.9,
+        94.7
+      ],
+      "rust_retrans_pct": [
+        8.38,
+        4.4
+      ],
+      "rust_rto": [
+        3,
+        3
+      ],
+      "status": "complete"
+    },
+    {
+      "loss": 3,
+      "arm": "D",
+      "run": 46149037260,
+      "artifacts": [
+        15265537494,
+        15265347977,
+        15265553800,
+        15265303050
+      ],
+      "first180_mbps": [
+        53.3933,
+        1.0434,
+        0.6397,
+        34.207
+      ],
+      "product_cpu_s_per_gib": [
+        95.17,
+        296.08,
+        379.98,
+        114.43
+      ],
+      "rust_cwnd_median_bytes": [
+        38784,
+        34221
+      ],
+      "rust_snd_wnd_median_bytes": [
+        3721216,
+        1048576
+      ],
+      "rust_pending_full_sample_pct": [
+        95.2,
+        99
+      ],
+      "rust_retrans_pct": [
+        6.21,
+        2.76
+      ],
+      "rust_rto": [
+        4,
+        6
+      ],
+      "status": "complete"
+    },
+    {
+      "loss": 3,
+      "arm": "E",
+      "run": 46149037121,
+      "artifacts": [
+        15265382128,
+        15265821143,
+        15265955783,
+        15265073263
+      ],
+      "first180_mbps": [
+        49.4793,
+        1.1354,
+        0.9329,
+        43.5054
+      ],
+      "product_cpu_s_per_gib": [
+        101.66,
+        332.95,
+        349.17,
+        105.82
+      ],
+      "rust_cwnd_median_bytes": [
+        45628,
+        31733
+      ],
+      "rust_snd_wnd_median_bytes": [
+        3551232,
+        3213312
+      ],
+      "rust_pending_full_sample_pct": [
+        95.5,
+        96.8
+      ],
+      "rust_retrans_pct": [
+        4.47,
+        3.94
+      ],
+      "rust_rto": [
+        1,
+        3
+      ],
+      "status": "complete"
+    },
+    {
+      "loss": 5,
+      "arm": "B",
+      "run": 46149037165,
+      "artifacts": [
+        15266082661,
+        15266206403,
+        15266221255,
+        15265574016
+      ],
+      "first180_mbps": [
+        28.2345,
+        0.6515,
+        0.717,
+        40.8428
+      ],
+      "product_cpu_s_per_gib": [
+        153.06,
+        442.19,
+        420.02,
+        133.3
+      ],
+      "rust_cwnd_median_bytes": [
+        25078,
+        24337
+      ],
+      "rust_snd_wnd_median_bytes": [
+        2021376,
+        1478656
+      ],
+      "rust_pending_full_sample_pct": [
+        98.1,
+        97.4
+      ],
+      "rust_retrans_pct": [
+        5.84,
+        5.45
+      ],
+      "rust_rto": [
+        5,
+        8
+      ],
+      "status": "complete"
+    },
+    {
+      "loss": 5,
+      "arm": "C",
+      "run": 46149037145,
+      "artifacts": [
+        15266008427,
+        15265254906,
+        15265983182,
+        15266152041
+      ],
+      "first180_mbps": [
+        34.5081,
+        0.6906,
+        0.8198,
+        33.0794
+      ],
+      "product_cpu_s_per_gib": [
+        137.96,
+        424.12,
+        383.13,
+        140.68
+      ],
+      "rust_cwnd_median_bytes": [
+        20687,
+        20105
+      ],
+      "rust_snd_wnd_median_bytes": [
+        2097152,
+        2566144
+      ],
+      "rust_pending_full_sample_pct": [
+        99.6,
+        97.8
+      ],
+      "rust_retrans_pct": [
+        6.3,
+        7.17
+      ],
+      "rust_rto": [
+        9,
+        6
+      ],
+      "status": "complete"
+    },
+    {
+      "loss": 5,
+      "arm": "D",
+      "run": 46149037178,
+      "artifacts": [
+        15265847276,
+        15265138769,
+        15265853445,
+        15265163769
+      ],
+      "first180_mbps": [
+        34.3764,
+        0.6793,
+        0.611,
+        34.7419
+      ],
+      "product_cpu_s_per_gib": [
+        128.65,
+        413.14,
+        429.2,
+        129.05
+      ],
+      "rust_cwnd_median_bytes": [
+        24900,
+        18511
+      ],
+      "rust_snd_wnd_median_bytes": [
+        1427456,
+        2529280
+      ],
+      "rust_pending_full_sample_pct": [
+        97.4,
+        99.6
+      ],
+      "rust_retrans_pct": [
+        5.23,
+        6
+      ],
+      "rust_rto": [
+        7,
+        9
+      ],
+      "status": "incomplete D1 not retired; live sample"
+    },
+    {
+      "loss": 5,
+      "arm": "E",
+      "run": 46149037144,
+      "artifacts": [
+        15265482228,
+        15266035952,
+        15265077429,
+        15265746627
+      ],
+      "first180_mbps": [
+        18.9874,
+        0.6325,
+        null,
+        26.1415
+      ],
+      "product_cpu_s_per_gib": [
+        170.24,
+        471.59,
+        null,
+        144.53
+      ],
+      "rust_cwnd_median_bytes": [
+        21586,
+        20746
+      ],
+      "rust_snd_wnd_median_bytes": [
+        1378304,
+        1740800
+      ],
+      "rust_pending_full_sample_pct": [
+        97.1,
+        98
+      ],
+      "rust_retrans_pct": [
+        5.74,
+        6.36
+      ],
+      "rust_rto": [
+        7,
+        4
+      ],
+      "status": "incomplete E2 app timeout; live sample"
+    }
+  ],
+  "stuck": {
+    "run": 46149037476,
+    "conclusion": "cancelled",
+    "updated": "2026-11-28T13:56:02Z",
+    "server_job": 140991363786,
+    "server_exit": "13:29:58Z",
+    "client_job": 140991363775,
+    "client_start": "13:30:02Z",
+    "client_exit": "13:41:06Z",
+    "relay_job": 140991363826,
+    "partial_client_artifact": 15265097692,
+    "reason": "server timed out before client scheduled; client waited for server-ready; relay waited for client finish; no app measurement"
+  },
+  "decision": "No candidate selected. No repeat of this matrix merely to fill gaps: all eight complete paired cases are 1.92-5.19% of old throughput. Next isolate shared BBRv3 loss/recovery/rate feedback vs BBR1 on exact same weak fixture; inspect source and existing time series before any new candidate. No new controller, fixed cap, protocol change or cross-flow HOL."
+}
