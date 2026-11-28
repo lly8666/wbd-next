@@ -1,0 +1,579 @@
+{
+  "schema": "winxdp-650m-rtt-supply-v1",
+  "run": 46105540960,
+  "product_source": "569b51abe62c499e1ea7e2f4e232f205756a891f",
+  "fixture_source": "008818b68c95448ae1bbca34e838074bdc231230",
+  "result": "PASS_COMPLETE_BELOW_TARGET",
+  "coverage_job": 140859179005,
+  "eligible": 3,
+  "skipped": 17,
+  "case_count": 12,
+  "scope": "same frozen WinXDP product, single flow, CUBIC NAT, FEC off, MTU1460, 650M offered, Generic WSL; A=400ms B=40ms, opposite order both covered",
+  "artifact": {
+    "id": 15247188782,
+    "zip_sha256": "337b312665882f248dd9e89d84f3cc876893d85dcd5ed15c2ace4a2339e85788",
+    "sha256_and_zip_crc_verified": true
+  },
+  "rows": [
+    {
+      "runner": "B06",
+      "job": 140857336638,
+      "pair": {
+        "group": "rtt-supply650",
+        "sequence": "BAAB",
+        "valid": true,
+        "A_rx_mbps": 418.85617504000004,
+        "B_rx_mbps": 604.1852636,
+        "rx_mbps_delta_pct": 44.246473993680844,
+        "A_server_rx_mbps": 0,
+        "B_server_rx_mbps": 0,
+        "server_rx_mbps_delta_pct": null,
+        "A_cpu_s_per_gib": 6.003230730245523,
+        "B_cpu_s_per_gib": 5.003056563977819,
+        "cpu_s_per_gib_delta_pct": -16.66059845457245,
+        "target_mbps": 650,
+        "A_outer_netem_mbps": {
+          "linux_to_windows": 425.88886886667865,
+          "windows_to_linux": 19.915247587022805
+        },
+        "A_outer_netem_pps": {
+          "linux_to_windows": 36202.20421968128,
+          "windows_to_linux": 20209.85286746164
+        },
+        "B_outer_netem_mbps": {
+          "linux_to_windows": 657.5855431441568,
+          "windows_to_linux": 29.14395588830115
+        },
+        "B_outer_netem_pps": {
+          "linux_to_windows": 55856.927323827884,
+          "windows_to_linux": 30306.75960398081
+        },
+        "all_arms_at_target": false,
+        "scope": "COMPLETE_BELOW_TARGET"
+      },
+      "cases": [
+        {
+          "arm": "B",
+          "case": 0,
+          "rx_mbps": 600.96935552,
+          "cpu_s_per_gib": 5.101851418410542,
+          "steady_process_cpu_cores": 0.3569359377586494,
+          "tx": {
+            "published": 1977072,
+            "completed_before_close": 1977072,
+            "pokes": 313294,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 3641541,
+            "batches": 245375,
+            "waits": 166364,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 5358785022
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.06299999999998818
+          ],
+          "steady_peak_working_set_bytes": 93511680
+        },
+        {
+          "arm": "A",
+          "case": 1,
+          "rx_mbps": 464.98883024,
+          "cpu_s_per_gib": 5.883808757385427,
+          "steady_process_cpu_cores": 0.3185013019773781,
+          "tx": {
+            "published": 1477627,
+            "completed_before_close": 1477627,
+            "pokes": 251925,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2621205,
+            "batches": 195942,
+            "waits": 137604,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3855261019
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.5
+          ],
+          "steady_peak_working_set_bytes": 101244928
+        },
+        {
+          "arm": "A",
+          "case": 2,
+          "rx_mbps": 372.72351984,
+          "cpu_s_per_gib": 6.1226527031056195,
+          "steady_process_cpu_cores": 0.265666361229892,
+          "tx": {
+            "published": 1205734,
+            "completed_before_close": 1205734,
+            "pokes": 226554,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2180273,
+            "batches": 180208,
+            "waits": 131508,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3205254032
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.047000000000025466
+          ],
+          "steady_peak_working_set_bytes": 95989760
+        },
+        {
+          "arm": "B",
+          "case": 3,
+          "rx_mbps": 607.40117168,
+          "cpu_s_per_gib": 4.904261709545096,
+          "steady_process_cpu_cores": 0.34678428301157566,
+          "tx": {
+            "published": 1988062,
+            "completed_before_close": 1988062,
+            "pokes": 332885,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 3666319,
+            "batches": 255874,
+            "waits": 176211,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 5395259537
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.06299999999998818
+          ],
+          "steady_peak_working_set_bytes": 93446144
+        }
+      ]
+    },
+    {
+      "runner": "A02",
+      "job": 140857336731,
+      "pair": {
+        "group": "rtt-supply650",
+        "sequence": "ABBA",
+        "valid": true,
+        "A_rx_mbps": 462.46332968,
+        "B_rx_mbps": 611.08167536,
+        "rx_mbps_delta_pct": 32.13624435538185,
+        "A_server_rx_mbps": 0,
+        "B_server_rx_mbps": 0,
+        "server_rx_mbps_delta_pct": null,
+        "A_cpu_s_per_gib": 5.354925333953512,
+        "B_cpu_s_per_gib": 4.923088586914692,
+        "cpu_s_per_gib_delta_pct": -8.064290725039802,
+        "target_mbps": 650,
+        "A_outer_netem_mbps": {
+          "linux_to_windows": 472.3806803261173,
+          "windows_to_linux": 22.35509018057023
+        },
+        "A_outer_netem_pps": {
+          "linux_to_windows": 40144.509954037974,
+          "windows_to_linux": 22578.97661012753
+        },
+        "B_outer_netem_mbps": {
+          "linux_to_windows": 660.542039320097,
+          "windows_to_linux": 29.136989554376406
+        },
+        "B_outer_netem_pps": {
+          "linux_to_windows": 56106.32492991672,
+          "windows_to_linux": 30066.023975535965
+        },
+        "all_arms_at_target": false,
+        "scope": "COMPLETE_BELOW_TARGET"
+      },
+      "cases": [
+        {
+          "arm": "A",
+          "case": 0,
+          "rx_mbps": 437.6397568,
+          "cpu_s_per_gib": 5.271564394804242,
+          "steady_process_cpu_cores": 0.2685755211507981,
+          "tx": {
+            "published": 1395315,
+            "completed_before_close": 1395315,
+            "pokes": 241997,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2529900,
+            "batches": 188170,
+            "waits": 133144,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3720571205
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.4840000000000373
+          ],
+          "steady_peak_working_set_bytes": 98852864
+        },
+        {
+          "arm": "B",
+          "case": 1,
+          "rx_mbps": 615.42286528,
+          "cpu_s_per_gib": 4.643488943271008,
+          "steady_process_cpu_cores": 0.33268114439722185,
+          "tx": {
+            "published": 1966400,
+            "completed_before_close": 1966400,
+            "pokes": 243698,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 3683781,
+            "batches": 209207,
+            "waits": 126743,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 5421318109
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.07800000000008822
+          ],
+          "steady_peak_working_set_bytes": 93347840
+        },
+        {
+          "arm": "B",
+          "case": 2,
+          "rx_mbps": 606.74048544,
+          "cpu_s_per_gib": 5.202688230558376,
+          "steady_process_cpu_cores": 0.3674861023437656,
+          "tx": {
+            "published": 1965253,
+            "completed_before_close": 1965253,
+            "pokes": 331191,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 3653018,
+            "batches": 257488,
+            "waits": 177860,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 5375660657
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.06299999999998818
+          ],
+          "steady_peak_working_set_bytes": 93372416
+        },
+        {
+          "arm": "A",
+          "case": 3,
+          "rx_mbps": 487.28690256,
+          "cpu_s_per_gib": 5.43828627310278,
+          "steady_process_cpu_cores": 0.308501263295163,
+          "tx": {
+            "published": 1602992,
+            "completed_before_close": 1602992,
+            "pokes": 270103,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2792237,
+            "batches": 204079,
+            "waits": 142505,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 4107462011
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.5940000000000509
+          ],
+          "steady_peak_working_set_bytes": 99962880
+        }
+      ]
+    },
+    {
+      "runner": "B03",
+      "job": 140857336760,
+      "pair": {
+        "group": "rtt-supply650",
+        "sequence": "BAAB",
+        "valid": true,
+        "A_rx_mbps": 472.84891288,
+        "B_rx_mbps": 609.10058792,
+        "rx_mbps_delta_pct": 28.815055153690917,
+        "A_server_rx_mbps": 0,
+        "B_server_rx_mbps": 0,
+        "server_rx_mbps_delta_pct": null,
+        "A_cpu_s_per_gib": 5.595943297313928,
+        "B_cpu_s_per_gib": 5.112663764753195,
+        "cpu_s_per_gib_delta_pct": -8.6362478474846,
+        "target_mbps": 650,
+        "A_outer_netem_mbps": {
+          "linux_to_windows": 485.11799008886305,
+          "windows_to_linux": 22.900229736721606
+        },
+        "A_outer_netem_pps": {
+          "linux_to_windows": 41223.95602289917,
+          "windows_to_linux": 23105.15441933772
+        },
+        "B_outer_netem_mbps": {
+          "linux_to_windows": 664.0934215319921,
+          "windows_to_linux": 29.25902690401108
+        },
+        "B_outer_netem_pps": {
+          "linux_to_windows": 56409.01064130911,
+          "windows_to_linux": 30406.99329726356
+        },
+        "all_arms_at_target": false,
+        "scope": "COMPLETE_BELOW_TARGET"
+      },
+      "cases": [
+        {
+          "arm": "B",
+          "case": 0,
+          "rx_mbps": 619.115456,
+          "cpu_s_per_gib": 5.11583407377041,
+          "steady_process_cpu_cores": 0.3687213111439144,
+          "tx": {
+            "published": 2017139,
+            "completed_before_close": 2017139,
+            "pokes": 328258,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 3740090,
+            "batches": 255848,
+            "waits": 174229,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 5504029909
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.046999999999997044
+          ],
+          "steady_peak_working_set_bytes": 93229056
+        },
+        {
+          "arm": "A",
+          "case": 1,
+          "rx_mbps": 497.12063968,
+          "cpu_s_per_gib": 5.390592276175813,
+          "steady_process_cpu_cores": 0.311966831864159,
+          "tx": {
+            "published": 1614485,
+            "completed_before_close": 1614485,
+            "pokes": 271125,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2875846,
+            "batches": 204613,
+            "waits": 141562,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 4230675603
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.75
+          ],
+          "steady_peak_working_set_bytes": 101203968
+        },
+        {
+          "arm": "A",
+          "case": 2,
+          "rx_mbps": 448.57718608,
+          "cpu_s_per_gib": 5.801294318452045,
+          "steady_process_cpu_cores": 0.3029508843311469,
+          "tx": {
+            "published": 1453454,
+            "completed_before_close": 1453454,
+            "pokes": 249672,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2588141,
+            "batches": 193034,
+            "waits": 135537,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3806587172
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.4840000000000373
+          ],
+          "steady_peak_working_set_bytes": 99139584
+        },
+        {
+          "arm": "B",
+          "case": 3,
+          "rx_mbps": 599.08571984,
+          "cpu_s_per_gib": 5.109493455735981,
+          "steady_process_cpu_cores": 0.3563501598485,
+          "tx": {
+            "published": 1958474,
+            "completed_before_close": 1958474,
+            "pokes": 333984,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 3635124,
+            "batches": 256067,
+            "waits": 177080,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 5349279466
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.07899999999995089
+          ],
+          "steady_peak_working_set_bytes": 93347840
+        }
+      ]
+    }
+  ],
+  "snapshot_stats": {
+    "A": {
+      "snapshots": 24,
+      "rtt_ms_min_median_max": [
+        400.768,
+        401.606,
+        543.723
+      ],
+      "cwnd_payload_MB_min_median_max": [
+        17.909,
+        23.91,
+        38.134
+      ],
+      "notsent_MB_min_median_max": [
+        0.162,
+        20.2,
+        26.045
+      ],
+      "cumulative_retrans_pct_min_median_max": [
+        0.107138,
+        0.851758,
+        5.320746
+      ],
+      "mean_goodput_mbps": 451.389473
+    },
+    "B": {
+      "snapshots": 24,
+      "rtt_ms_min_median_max": [
+        41.159,
+        50.004,
+        65.641
+      ],
+      "cwnd_payload_MB_min_median_max": [
+        2.38,
+        3.67,
+        4.616
+      ],
+      "notsent_MB_min_median_max": [
+        11.145,
+        14.864,
+        19.301
+      ],
+      "cumulative_retrans_pct_min_median_max": [
+        0.017463,
+        0.039801,
+        0.17796
+      ],
+      "mean_goodput_mbps": 608.122509
+    },
+    "interpretation": "Cumulative retrans bytes/sent at snapshots, not exact wire loss. All six low-RTT samples 599–619Mbps, no fixed 450Mbps ceiling. Best 619.115Mbps at 0.369 Windows process cores, zero RX drops, credit limited, waits. Only one low-RTT case exceeds 95% of 650M; do not claim target qualification. RTT dependence and larger retrans fraction support path/feedback limits but not source attribution. No isolated carrier causal claim or host-total CPU. Frozen production retained; do not restart ring tuning without specific evidence."
+  },
+  "next": {
+    "run": 46106349947,
+    "fixture_source": "858a7c7d40fc6a4525a124c16a618f80fe6c2f8d",
+    "bare_script": "0961df72e5a3d752ac07f757d58eca8cfa31766a",
+    "status_at_record": "QUEUED",
+    "comparison": "same host bare WSL root CUBIC and frozen WinXDP NAT-origin, both 40/400ms, 650M, same app exchange and buffers, exact MSS1349 gate; order counterbalanced. Different root vs origin fq/topology and offloads, not isolated carrier effect. No physical or loaded rotation qualification."
+  },
+  "decision": "Steady WinXDP Generic hosted efficiency has reached diminishing returns. Freeze product; next acceptance: matched bare path reference, physical Native/Generic and loaded rotation; do not treat full Windows client or all networks as qualified. Governance existing red, no promotion."
+}
