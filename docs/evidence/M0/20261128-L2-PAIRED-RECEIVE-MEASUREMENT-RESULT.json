@@ -1,0 +1,396 @@
+{
+  "schema_version": 1,
+  "source_sha": "105929964cac45f887afe5dfbdaecde0fd857ea2",
+  "result": "MEASURED_REQUIRES_CAUSAL_REVIEW",
+  "scope": "G positive matched outcomes in both orders; no demonstrated clean effective window change; weak no obvious regression but first-data outlier. Not L2 promotion.",
+  "artifact_verified": true,
+  "native": {
+    "run": 46116018731,
+    "artifacts": {
+      "arm": 15251681897,
+      "x86": 15251737650
+    },
+    "build_artifacts": {
+      "arm": 15252330425,
+      "x86": 15251533008
+    },
+    "manifest_sha256": {
+      "arm": "a2689c196c3a2af4b376b4e3b1416395f9a01dd5b38c3e690199a1fd33c9d381",
+      "x86": "0e0b4dab11eb896803081c9beec00d53c6c7d8ea37794688241421600267bcd2"
+    },
+    "functional_profiles_per_isa": 6
+  },
+  "three": {
+    "AGGA": {
+      "run": 46116018596,
+      "summary_sha256": "52fd63e998cdcd9c15f4c19a9f3472e2e6033909e0c7b80c706433d21c5207b9",
+      "artifacts": {
+        "summary": 15251913553,
+        "server": 15252277527,
+        "client": 15252232621,
+        "relay": 15251469783
+      },
+      "order": [
+        "A",
+        "G",
+        "G",
+        "A"
+      ],
+      "mbps": [
+        299.1253201519282,
+        321.4101589188171,
+        289.4608315586928,
+        255.4887741311765
+      ],
+      "means": {
+        "A": 277.30704714155235,
+        "G": 305.4354952387549
+      },
+      "endpoint_cpu": {
+        "A": [
+          14.625,
+          9.81
+        ],
+        "G": [
+          15.13,
+          9.81
+        ]
+      },
+      "retired_sent": {
+        "A": 2201891710,
+        "G": 2186028938
+      },
+      "retired_retrans": {
+        "A": 54408062,
+        "G": 38545290
+      },
+      "weighted_retrans": {
+        "A": 0.02470969019634485,
+        "G": 0.01763256164178006
+      },
+      "timeouts": [
+        0,
+        0,
+        1,
+        2
+      ],
+      "bare_mbps": [
+        313.9548211755785,
+        219.07722036911306
+      ],
+      "pair_hits_max": [
+        0,
+        2,
+        3,
+        0
+      ],
+      "pair_hit_observation": "G1 first changes at sample11,12; G2 at 8,12,14; all preceding and current buffers 67108864",
+      "first_data_connect_s": [
+        0.869354658,
+        0.870446949,
+        0.869436241,
+        0.868553511
+      ],
+      "path_counts": [
+        [
+          16834,
+          16834,
+          16834,
+          16834,
+          16834,
+          16834,
+          16273,
+          16273
+        ],
+        [
+          16454,
+          16454,
+          16450,
+          16450,
+          16450,
+          16450,
+          16256,
+          16256
+        ],
+        [
+          16595,
+          16595,
+          16595,
+          16595,
+          16595,
+          16595,
+          16308,
+          16308
+        ],
+        [
+          16499,
+          16499,
+          16499,
+          16499,
+          16499,
+          16499,
+          16270,
+          16270
+        ]
+      ],
+      "first_hop_missing": [
+        0,
+        4,
+        0,
+        0
+      ],
+      "second_hop_missing": [
+        561,
+        194,
+        287,
+        229
+      ]
+    },
+    "GAAG": {
+      "run": 46116018634,
+      "summary_sha256": "fb315ee3b5666d4ad11f92b5e8b39c6d50a9051cf9564d4d1cde03289cfb47d2",
+      "artifacts": {
+        "summary": 15252470277,
+        "server": 15252106610,
+        "client": 15251609214,
+        "relay": 15251778654
+      },
+      "order": [
+        "G",
+        "A",
+        "A",
+        "G"
+      ],
+      "mbps": [
+        288.71876385283355,
+        253.65423440509124,
+        259.38108696528417,
+        299.3517112021772
+      ],
+      "means": {
+        "A": 256.5176606851877,
+        "G": 294.0352375275054
+      },
+      "endpoint_cpu": {
+        "A": [
+          16.885,
+          15.94
+        ],
+        "G": [
+          18.005,
+          16.29
+        ]
+      },
+      "retired_sent": {
+        "A": 2217025905,
+        "G": 2189362893
+      },
+      "retired_retrans": {
+        "A": 69542257,
+        "G": 41879245
+      },
+      "weighted_retrans": {
+        "A": 0.031367363296551105,
+        "G": 0.019128507719711314
+      },
+      "timeouts": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "bare_mbps": [
+        260.8891605418853,
+        251.03946700249622
+      ],
+      "pair_hits_max": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "pair_hit_observation": "G first leg 0, G last leg sample11 1; prior/current buffer 67108864",
+      "first_data_connect_s": [
+        0.856049917,
+        0.855630221,
+        0.856239511,
+        0.855547567
+      ],
+      "path_counts": [
+        [
+          16555,
+          16555,
+          16334,
+          16334,
+          16334,
+          16334,
+          16227,
+          16227
+        ],
+        [
+          16798,
+          16798,
+          16417,
+          16417,
+          16417,
+          16417,
+          16314,
+          16314
+        ],
+        [
+          16779,
+          16779,
+          16440,
+          16440,
+          16440,
+          16440,
+          16298,
+          16298
+        ],
+        [
+          16535,
+          16535,
+          16321,
+          16321,
+          16321,
+          16321,
+          16240,
+          16240
+        ]
+      ],
+      "first_hop_missing": [
+        221,
+        381,
+        339,
+        214
+      ],
+      "second_hop_missing": [
+        107,
+        103,
+        142,
+        81
+      ]
+    },
+    "common": {
+      "exact_same_arm_manifest": true,
+      "added_rtt_ms": 400,
+      "offered_bps": 600000000,
+      "target_bytes": 1073741824,
+      "injected_loss_pct": 0,
+      "all_measured_hash_eof_joined_stop_retired": true,
+      "all_max_sample_receiver_buffer_bytes": 67108864,
+      "all_other_adjacent_missing_and_extra_zero": true,
+      "all_capture_valid_kernel_drops_zero": true,
+      "path_scope": "Product tuple-only deterministic outer header sample, not all packets or physical loss; bare excluded."
+    }
+  },
+  "weak": {
+    "AGGA": {
+      "artifact": 15251339840,
+      "summary_sha256": "2747be6a686f8903a6501add8f14825e1abc1630aec3b416b9518fd8b36378e1",
+      "order": [
+        "A",
+        "G",
+        "G",
+        "A"
+      ],
+      "mbps": [
+        63.919,
+        64.742,
+        64.11,
+        48.392
+      ],
+      "means_mbps": {
+        "A": 56.15556914192061,
+        "G": 64.42581379957981
+      },
+      "mean_cpu": {
+        "A": 28.32,
+        "G": 25.38666666666667
+      },
+      "pair_hits": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "sent": [
+        101205647,
+        101245053,
+        101226387,
+        101161056
+      ],
+      "retrans": [
+        542351,
+        581757,
+        563091,
+        497760
+      ],
+      "first_data_connect_s": [
+        0.802175359,
+        0.802307718,
+        0.802319254,
+        0.802567039
+      ]
+    },
+    "GAAG": {
+      "artifact": 15252017311,
+      "summary_sha256": "c5e03ffa68d11577b455ad70bc3d5802e91500052e2cec01a3c849b683197604",
+      "order": [
+        "G",
+        "A",
+        "A",
+        "G"
+      ],
+      "mbps": [
+        59.595,
+        61.406,
+        54.014,
+        58.89
+      ],
+      "means_mbps": {
+        "A": 57.70991414487127,
+        "G": 59.242883440519456
+      },
+      "mean_cpu": {
+        "A": 26.133333333333333,
+        "G": 26.026666666666664
+      },
+      "pair_hits": [
+        1,
+        0,
+        0,
+        1
+      ],
+      "sent": [
+        101202536,
+        101171426,
+        101280311,
+        101180759
+      ],
+      "retrans": [
+        539240,
+        508130,
+        617015,
+        517463
+      ],
+      "first_data_connect_s": [
+        1.80230829,
+        0.802440909,
+        0.802256234,
+        0.802380625
+      ]
+    },
+    "common": {
+      "added_rtt_ms": 400,
+      "offered_bps": 120000000,
+      "target_bytes": 100663296,
+      "injected_loss_pct": 0.5,
+      "all_profile_byte_hash_eof_stop": true,
+      "all_timeouts_zero": true,
+      "scope": "live/Stop, not retired; random actual loss; no causal attribution of first-data outlier"
+    }
+  },
+  "interpretation": "G both orders have positive clean matched outcomes, but six observed pair_hits occurred only after sampled receiver buffers already at configured 64MiB cap, and one G clean leg had zero hits. Cannot attribute clean difference to growth intervention; cross-runner sampled path gaps also differ (AGGA A790/G485, GAAG A965/G623). Weak G gains in both orders, three of four G legs have 1 observed hit; sample cap changes near hits are not exclusive causal proof. One weak G first-data outlier +1s. Keep G only as experimental reference, not default. H isolates missing no-read epoch observation: current DRS runs only after consumption; when no new in-order bytes and readable empty but OFO retained, close fresh-only measurement after actual RTT if consumption mark unchanged and retained supply increased. Record preceding epoch for existing G pairing; no growth from arrival alone. Count actual pair-associated funded limit increases separately from estimate hits, and stall epochs. Same-source AHHA/HAAH A=G, H=G+observation, C sender unchanged; no outer change or new timer. Reject if no useful early triggers or regressions. No L2 promotion.",
+  "physical": "NOT_RUN"
+}
