@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "harness_sha": "d3d3dacdb3e5905d6e4ec118b3f122b21189e6f2",
+  "result": "PERFORMANCE_REJECTED_PRE_EDT",
+  "sources": {
+    "A": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "D": "cdd60c2d554a469db1dcb19351e88ebe4d65239b"
+  },
+  "manifest_sha256": {
+    "A": "a15c4ecebe8afff2302c845f355efef1af71a7392cc904822feceb3cb6f4459f",
+    "D": "8ad439aef80b967fafc6fc16b236519c16aaccfad1833285f7230185d9a0df69"
+  },
+  "scope": "One A/D per loss, same three ARM VMs within each pair, 60s saturated source, 400ms added RTT, bidirectional GE/jitter/FIFO, Normal repair ON MTU1160, no cap, ACK2, BBRv3 seed 75MB/s, server service epoch, client0, no EDT or ready-only grouping.",
+  "counts": {
+    "zip_crc_clean": 12,
+    "complete_pairs": 3,
+    "hash_eof": 6,
+    "joined_stop": 6,
+    "rust_retired": 3,
+    "rust_ingress_full": 0,
+    "rust_shared_tun_queue_full": 0,
+    "capture_roles_valid": 9,
+    "capture_taps_valid": 24,
+    "capture_kernel_drops": 0
+  },
+  "review": "Three standalone summary ZIPs byte-identical to client summaries, client/server builds.json byte-identical, exact source and manifests verified. Recomputed first60 from receiver_second_bytes; 15s bins rounded. Late TCP samples state CloseWait >=15s from first active sample including drain. BBR 15/60s nearest samples measured from first server probe, not receiver clock. CPU both products over full delivered GiB. Capture forward sparse, not full wire loss proof.",
+  "artifact_order": [
+    "summary",
+    "client",
+    "server",
+    "relay"
+  ],
+  "cases": [
+    {
+      "loss": 1,
+      "run": 46155271865,
+      "artifacts": [
+        15267098204,
+        15266843584,
+        15267138133,
+        15267860547
+      ],
+      "first60_mbps": [
+        65.01061693333332,
+        10.219154533333333
+      ],
+      "relative_pct": 15.71920866988973,
+      "first15s_bins_mbps": {
+        "A": [
+          44.056,
+          68.138,
+          82.076,
+          65.774
+        ],
+        "D": [
+          16.054,
+          15.432,
+          5.461,
+          3.93
+        ]
+      },
+      "product_cpu_s_per_gib": [
+        87.33883268482492,
+        150.99775577557756
+      ],
+      "mean_rtt_ms": [
+        407.047,
+        399.58
+      ],
+      "relay_loss_ratio_client_server_by_arm": [
+        [
+          0.00962855868,
+          0.0105314035
+        ],
+        [
+          0.00805438016,
+          0.0104911019
+        ]
+      ],
+      "app_bytes": [
+        572653568,
+        79429632
+      ],
+      "receiver_data_seconds": [
+        69.081507234,
+        66.655908464
+      ],
+      "rust_retrans_bytes": 8316525,
+      "rust_sent_bytes": 87746157,
+      "rust_retrans_pct": 9.477936452533186,
+      "rust_rto": 0,
+      "rust_late_cwnd_median_bytes": 247610,
+      "rust_late_peer_window_median_bytes": 24614912,
+      "rust_late_inflight_median_bytes": 251991,
+      "rust_full_relay_pending_samples": 36,
+      "rust_late_samples": 50,
+      "bbr_max_bw_bytes_s_at_15_60s": [
+        4715112,
+        610326
+      ],
+      "bbr_inflight_longterm_bytes_at_15_60s": [
+        2100962,
+        236436
+      ]
+    },
+    {
+      "loss": 3,
+      "run": 46155271876,
+      "artifacts": [
+        15267299274,
+        15267174488,
+        15267368913,
+        15267945360
+      ],
+      "first60_mbps": [
+        32.896609866666665,
+        1.6197044
+      ],
+      "relative_pct": 4.923621025281414,
+      "first15s_bins_mbps": {
+        "A": [
+          13.891,
+          26.559,
+          38.257,
+          52.88
+        ],
+        "D": [
+          2.924,
+          1.934,
+          1.06,
+          0.561
+        ]
+      },
+      "product_cpu_s_per_gib": [
+        128.6170684039088,
+        326.97379310344826
+      ],
+      "mean_rtt_ms": [
+        428.059,
+        434.726
+      ],
+      "relay_loss_ratio_client_server_by_arm": [
+        [
+          0.03098556197,
+          0.02936266182
+        ],
+        [
+          0.02878114738,
+          0.03179687963
+        ]
+      ],
+      "app_bytes": [
+        321912832,
+        15204352
+      ],
+      "receiver_data_seconds": [
+        70.272596918,
+        87.232403277
+      ],
+      "rust_retrans_bytes": 677161,
+      "rust_sent_bytes": 15881513,
+      "rust_retrans_pct": 4.2638317898301,
+      "rust_rto": 4,
+      "rust_late_cwnd_median_bytes": 52887,
+      "rust_late_peer_window_median_bytes": 4423680,
+      "rust_late_inflight_median_bytes": 47702,
+      "rust_full_relay_pending_samples": 68,
+      "rust_late_samples": 71,
+      "bbr_max_bw_bytes_s_at_15_60s": [
+        774382,
+        103892
+      ],
+      "bbr_inflight_longterm_bytes_at_15_60s": [
+        181475,
+        40443
+      ]
+    },
+    {
+      "loss": 5,
+      "run": 46155271859,
+      "artifacts": [
+        15266948610,
+        15266993542,
+        15267795964,
+        15266968532
+      ],
+      "first60_mbps": [
+        16.394864933333334,
+        3.1038330666666667
+      ],
+      "relative_pct": 18.93173917130654,
+      "first15s_bins_mbps": {
+        "A": [
+          7.887,
+          17.067,
+          19.496,
+          21.129
+        ],
+        "D": [
+          5.728,
+          4.882,
+          1.288,
+          0.518
+        ]
+      },
+      "product_cpu_s_per_gib": [
+        181.4529643000401,
+        265.34498714652955
+      ],
+      "mean_rtt_ms": [
+        405.208,
+        410.089
+      ],
+      "relay_loss_ratio_client_server_by_arm": [
+        [
+          0.05144967314,
+          0.04954488518
+        ],
+        [
+          0.04956979964,
+          0.04795434673
+        ]
+      ],
+      "app_bytes": [
+        163381248,
+        25493504
+      ],
+      "receiver_data_seconds": [
+        77.233324086,
+        127.869901842
+      ],
+      "rust_retrans_bytes": 2355819,
+      "rust_sent_bytes": 27849323,
+      "rust_retrans_pct": 8.459160748719098,
+      "rust_rto": 8,
+      "rust_late_cwnd_median_bytes": 20687,
+      "rust_late_peer_window_median_bytes": 2701312,
+      "rust_late_inflight_median_bytes": 19703,
+      "rust_full_relay_pending_samples": 102,
+      "rust_late_samples": 109,
+      "bbr_max_bw_bytes_s_at_15_60s": [
+        1675253,
+        64023
+      ],
+      "bbr_inflight_longterm_bytes_at_15_60s": [
+        531358,
+        13756
+      ]
+    }
+  ],
+  "decision": "Reject D as weak performance candidate. Severe time-dependent degradation already pre-EDT, pre-ready-only-GSO, ACK2. No evidence that those later mechanisms necessary for collapse; no proof BBRv3 algorithm alone. H2559 independent runner pairs, H2557 different duration. Next same-source seeded BBR1 vs BBRv3 under same weak fixture to discriminate controller/feedback interaction; H2561 already running, no new dispatch during this acceptance. L2 OPEN."
+}
