@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "source_sha": "c16c38147d8d7b2ecde1ec724a27b7adcb2d0191",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact source core/functional qualification and measured clean path diagnostic; no L2 parity promotion.",
+  "native_run": 46096665744,
+  "native_artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140829473215,
+      "artifact_id": 15243940938,
+      "core_pass": 356,
+      "functional_profiles": 4
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140829472801,
+      "artifact_id": 15243578820,
+      "core_pass": 356,
+      "functional_profiles": 4
+    }
+  ],
+  "native_recovery": {
+    "order": [
+      "normal-selected",
+      "pause-selected",
+      "loss-selected"
+    ],
+    "mbps": [
+      339.29004453115556,
+      159.32471239167091,
+      57.8086303679327
+    ],
+    "bytes_sent": [
+      536870912,
+      536870912,
+      101198388
+    ],
+    "bytes_retrans": [
+      0,
+      0,
+      535092
+    ],
+    "all_exact_hash_stop": true
+  },
+  "diagnostic": {
+    "run_id": 46096665759,
+    "artifacts": [
+      {
+        "role": "server",
+        "job_id": 140831054776,
+        "artifact_id": 15244141371
+      },
+      {
+        "role": "relay",
+        "job_id": 140831054833,
+        "artifact_id": 15244011626
+      },
+      {
+        "role": "client",
+        "job_id": 140831054811,
+        "artifact_id": 15243614170
+      }
+    ],
+    "baseline": "8d7e8af0af25f5e736fc5a4f8a8d6c31c7c0f5e7",
+    "manifest_sha256": {
+      "A": "f195825ad3eee4358982d72906e5a769785e7a2917b8e8ac697b8e8914856900",
+      "B": "7aef684b797f22b4438c58beec267006915ee227681a6bfe64989635f3110aad"
+    },
+    "order": [
+      "A",
+      "B"
+    ],
+    "bare_mbps": [
+      176.9225892676642,
+      313.01926757663165
+    ],
+    "mbps": [
+      290.49339622782975,
+      283.6915254100819
+    ],
+    "product_cpu_s_per_gib": [
+      27.16,
+      29.13
+    ],
+    "first_data_from_connect_seconds": [
+      0.8232298120000081,
+      0.8227566639999964
+    ],
+    "rust_bulk_bytes_sent": [
+      1116811702,
+      1109990340
+    ],
+    "rust_bulk_bytes_retrans": [
+      43069878,
+      36248516
+    ],
+    "rust_bulk_dsack": [
+      2782,
+      3453
+    ],
+    "rust_bulk_timeouts": [
+      1,
+      0
+    ],
+    "relay_netem": {
+      "emitted": [
+        [
+          1074171,
+          107359
+        ],
+        [
+          1058636,
+          150912
+        ]
+      ],
+      "drops": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    "all_exact_app_hash_eof_profile_stop": true,
+    "rust_retired_all": true,
+    "trace": {
+      "sample_filter": "inner seq & 0xfc00 == 0",
+      "tx": 16718,
+      "tx_copied": 16718,
+      "rx": 16260,
+      "rx_accepted": 16246,
+      "rx_refused": 14,
+      "missing_rx": 458,
+      "tx_key_collisions": 0,
+      "rx_key_collisions": 0,
+      "rx_extra_keys": 0,
+      "range_groups": 16181,
+      "repeated_range_groups": 535,
+      "twice": 533,
+      "thrice": 2,
+      "first_missing": 455,
+      "first_accepted": 66,
+      "first_refused": 14,
+      "first_missing_later_accepted": 455,
+      "first_and_later_accepted": 65,
+      "first_accepted_no_later_accepted": 1,
+      "nonrepeated_missing": 0,
+      "server_total_native_m4_copied": 1070401,
+      "client_total_ingress_full": 868,
+      "client_raw_packet_drops": 0,
+      "server_raw_packet_drops": 0,
+      "outer_intersection": {
+        "unique_sequences": 248,
+        "all_four_taps_and_rx_accepted": 238,
+        "server_only_no_rx": 6,
+        "first_three_taps_no_rx": 4
+      },
+      "scope": "Exact header identity multiset and repeated equal tuple/sequence/payload length. Changed segmentation not covered. RX acceptance is not core/application delivery; accepted original timing relative to retrans trigger unknown. Sample not random or physical path loss."
+    },
+    "path_sample": {
+      "points": [
+        "server_tx",
+        "relay_rx",
+        "relay_tx",
+        "client_rx"
+      ],
+      "counts": [
+        [
+          16958,
+          16780,
+          16780,
+          16448
+        ],
+        [
+          16825,
+          16496,
+          16496,
+          16275
+        ]
+      ],
+      "adjacent_missing_multiset": [
+        [
+          178,
+          0,
+          332
+        ],
+        [
+          329,
+          0,
+          221
+        ]
+      ],
+      "adjacent_extra_multiset": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "capture_kernel_drops": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "interpretation": "455/535 sampled repeated ranges had no first authenticated RX receipt; ten uniquely matched outer sequence deficits independently locate actual missing delivery in the fixture path. RACK blanket delay not justified. Large bare bracket drift, traced run diagnostic only. Next remove runtime trace, localize gaps at owned VXLAN interfaces vs endpoint/relay bridge/veth with frozen splice BAAB. No physical path attribution or claim that all retrans were necessary.",
+  "physical": "NOT_RUN",
+  "next_source": "63f4c101debfd1501780076d67199816625f2ff0"
+}
