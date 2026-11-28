@@ -1,4 +1,4 @@
-name: M0 ARM native producer feedback comparison
+name: M0 ARM native producer reverse and actual loss requalification
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]

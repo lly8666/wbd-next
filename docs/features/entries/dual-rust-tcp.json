@@ -49,7 +49,8 @@
     "docs/devlog/M0/20261128-DELIVERY-EPOCH-ACTUAL-OUTSTANDING.md",
     "docs/devlog/M0/20261128-DELIVERY-EPOCH-COMPILE-CORRECTION.md",
     "docs/devlog/M0/20261128-APP-LIMITED-ACK-RENEWAL.md",
-    "docs/devlog/M0/20261128-NATIVE-PRODUCER-APP-LIMITED.md"
+    "docs/devlog/M0/20261128-NATIVE-PRODUCER-APP-LIMITED.md",
+    "docs/devlog/M0/20261128-NATIVE-PRODUCER-REQUALIFICATION.md"
   ],
   "verification": [
     {
@@ -109,7 +110,8 @@
     "136d66f three-host 46024068630 attempt2 exact app/retirement; uncapped vs cap160 sampled outer identity gaps 659/1/4/865, mainly relay TX to client RX. New delivery epoch correction separates actual unacknowledged transmission from estimated pipe zero; native/source ABBA pending. No fixed cap, controller or protocol change.",
     "117d0f8 native46032634286 both ISA build FAIL: Rate accessor inserted in struct, not impl; performance46032634335 prepare FAIL and all measurement skipped. Correct accessor location only, unchanged runtime algorithm and tests, exact new SOURCE qualification pending.",
     "933d29b dual ISA353/8 functional/3 local and 6/6 three ARM PASS measurements. B epoch preserved just once per server bulk flow; throughput A242.69/B275.29M, weighted retrans5.50/4.12%, not causal; all remained Startup/ProbeRtt. New candidate removes pre-ACK app-limited renewal only under existing Linux parity, retains real write/timer marks, compares exact sources; not yet qualified.",
-    "e0c01aa dual ISA354/8 native/3 local/6 cross-host measured. ACK renewal correction A270.48/B263.00M, retrans4.51/3.66%, client full6918/1090, CPU28.48/29.13; mixed and path variable, no throughput promotion. Server B2 reached ProbeBW, B1 still Startup. Next candidate marks app-limited from actual producer empty observations, not successful refill or native timer alone; exact ABBA pending."
+    "e0c01aa dual ISA354/8 native/3 local/6 cross-host measured. ACK renewal correction A270.48/B263.00M, retrans4.51/3.66%, client full6918/1090, CPU28.48/29.13; mixed and path variable, no throughput promotion. Server B2 reached ProbeBW, B1 still Startup. Next candidate marks app-limited from actual producer empty observations, not successful refill or native timer alone; exact ABBA pending.",
+    "5325208 exact dual ISA355/8 native/3 local/6 cross-host measured. Clean ABBA A230.12/B284.36M (+23.57%), CPU30.125/27.665, weighted retrans4.494/3.430%, server app-limited52/77→13/62, ProbeBw1/2→2/2, B actual dry3/62, RTO3→0. Bare247.43→196.42M; variable path, not parity proof. Reverse clean and independent true IID1% comparison pending, unchanged runtime candidate."
   ],
   "promotion": null
 }

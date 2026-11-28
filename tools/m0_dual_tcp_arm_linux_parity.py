@@ -9,19 +9,20 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# Exact source ABBA: selected relay credit, both uncapped.
-ORDER=("A","B","B","A")
-CASES=(-1,0,1,2,3,-2)
+# Reverse clean block plus independent real IID loss block.
+# Same A/B runtime implementation as the previous comparison.
+ORDER=("B","A","A","B","A","B","B","A")
+CASES=(-1,0,1,2,3,4,5,6,7,-2)
 PROFILES={"A":"ack-no-renewal","B":"native-source-observed-dry"}
 SOURCES={"A":"e0c01aab726e4cb96ff60b5a8e7a2e1d285474c1","B":os.environ["GITHUB_SHA"]}
-def loss_for(i):return 0.0
+def loss_for(i):return 1.0 if i>=4 else 0.0
 def cc_for(i):return "bbr"
 def rust_cc(i):return "bbr1"
 def ack_for(k):return "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
-def offer(i):return 600_000_000
-def target_bytes(i):return 1024*1024*1024
+def offer(i):return 120_000_000 if i>=4 else 600_000_000
+def target_bytes(i):return (256 if i>=4 else 1024)*1024*1024
 def profile_env(k,server):
     return []
 def app_args(i,role):
@@ -327,7 +328,7 @@ def client_case(i):
         else:save(d/"shape.json",shape(0,200));time.sleep(.6)
         readiness=qualify_direct("client");save(d/"direct-before-app.json",readiness)
         if not all(x["direct"] for x in readiness[-1]["paths"].values()):raise RuntimeError("client direct path not ready before measurement")
-        save(d/"relay-before.json",relay("snapshot"))
+        relay_before=relay("snapshot");save(d/"relay-before.json",relay_before)
         before=control("/sample");save(d/"server-before.json",before)
         pre=snapshot("client");save(d/"client-before.json",pre)
         if not all(all(y["direct"] for y in x["paths"].values()) for x in (pre,before)):
@@ -363,7 +364,16 @@ def client_case(i):
         save(d/"application-result.json",r)
         post=snapshot("client");save(d/"client-after.json",post)
         after=control("/sample");save(d/"server-after.json",after)
-        save(d/"relay-after.json",relay("snapshot"))
+        relay_after=relay("snapshot");save(d/"relay-after.json",relay_after)
+        observed={}
+        for role in ("client","server"):
+            old=next(q for q in relay_before[role]["qdisc"] if q["kind"]=="netem")
+            new=next(q for q in relay_after[role]["qdisc"] if q["kind"]=="netem")
+            emitted=new["packets"]-old["packets"];dropped=new["drops"]-old["drops"]
+            assert old["handle"]==new["handle"] and old["options"]==new["options"] and emitted>0 and dropped>=0
+            observed[role]={"emitted":emitted,"drops":dropped,"loss_ratio":dropped/(emitted+dropped)}
+        row["relay_observed_loss"]=observed
+        if loss_for(i):assert all(q["drops"]>0 for q in observed.values()),observed
         row["endpoint_path_samples"]=[x["paths"] for x in (pre,post,before,after)]
         row["endpoint_direct_snapshots"]=all(all(y["direct"] for y in x.values()) for x in row["endpoint_path_samples"])
         row.update(status="MEASURED",mbps=r["mbps"],bytes=r["received_bytes"],seconds=r["seconds"],
@@ -406,19 +416,20 @@ def client():
             for i in CASES[1:]:
                 rows.append(client_case(i));save(OUT/"rows.json",rows)
         means={};recovery={}
-        for k in PROFILES:
-            v=[x for x in rows if x["leg"]==k and x["status"]=="MEASURED"]
-            expected=ORDER.count(k)
-            if len(v)!=expected:continue
-            means[k]={"n":len(v),"profile":PROFILES[k],"mbps":statistics.mean(x["mbps"] for x in v),
-                "client_product_cpu_s_per_gib":statistics.mean(x["client"]["product"]["cpu_s_per_gib"] for x in v),
-                "server_product_cpu_s_per_gib":statistics.mean(x["server"]["product"]["cpu_s_per_gib"] for x in v)}
-            samples=[x.get("server_receipt",{}).get("bulk_tcp_sample") for x in v]
-            if all(s and s["bytes_sent"]>0 for s in samples):
-                sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
-                recovery[k]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
-        complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"selected credit, A/B/B/A exact sources, native app-limited driven by actual producer empty observations; both uncapped; fixed1GiB/600M, bare brackets; four-interface identity sample","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        for loss in (0.0,1.0):
+            for k in PROFILES:
+                key=("clean" if not loss else "loss1")+"-"+k
+                v=[x for x in rows if x["leg"]==k and x["loss_pct"]==loss and x["status"]=="MEASURED"]
+                if len(v)!=2:continue
+                means[key]={"n":len(v),"profile":PROFILES[k],"mbps":statistics.mean(x["mbps"] for x in v),
+                    "client_product_cpu_s_per_gib":statistics.mean(x["client"]["product"]["cpu_s_per_gib"] for x in v),
+                    "server_product_cpu_s_per_gib":statistics.mean(x["server"]["product"]["cpu_s_per_gib"] for x in v)}
+                samples=[x.get("server_receipt",{}).get("bulk_tcp_sample") for x in v]
+                if all(s and s["bytes_sent"]>0 for s in samples):
+                    sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
+                    recovery[key]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
+        complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==2*len(PROFILES)
+        summary={"recovery_snapshot_scope":"latest sampled server-middle bulk flow; not final delivery or exact physical loss","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"selected credit, clean B/A/A/B 1GiB/600M; independent IID1% A/B/B/A 256MiB/120M; same runtime variants, uncapped, bare brackets, actual netem counters and four-interface identities","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
