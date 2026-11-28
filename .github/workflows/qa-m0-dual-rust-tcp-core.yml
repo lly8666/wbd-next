@@ -1,4 +1,4 @@
-name: M0 dual Rust TCP Normal native measured-growth candidate
+name: M0 dual Rust TCP Normal native restored DRS
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -72,17 +72,13 @@ jobs:
       - name: Explicit old relay admission rollback native functionality
         run: |
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/credit-off WBD_M0_RELAY_PENDING_CREDIT=0 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
-      - name: Selected clean pause and same-host exact-source weak measured-growth ABBA
+      - name: Selected clean pause and local weak recovery regression
         if: matrix.arch == 'aarch64'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          mkdir -p drs-baseline
-          gh run download 46102235913 -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D drs-baseline
-          tar -C drs-baseline -xf drs-baseline/bundle.tar
-          (cd drs-baseline && sha256sum -c SHA256SUMS)
-          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 DUAL_TCP_DRS_BASELINE="$PWD/drs-baseline" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Retain exact native binary for performance jobs
         run: |
           (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)

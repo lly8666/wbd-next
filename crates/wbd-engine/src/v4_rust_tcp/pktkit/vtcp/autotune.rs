@@ -206,9 +206,7 @@ impl RcvSpace {
     /// Adapt its growth input to a relay: releasing an old OFO backlog to
     /// the next TCP leg is not a new network arrival. Measure both actual
     /// consumption and distinct retained arrivals over the same elapsed
-    /// interval, expressed per receiver RTT. At high RTT use twice the
-    /// measured supply without extrapolating its previous growth; retain
-    /// the existing low-RTT behavior and OFO span.
+    /// interval, expressed per receiver RTT. Preserve the growth equation.
     pub(crate) fn adjust_linux(&mut self, now: Instant, unread: usize, ooo_span: usize, arrived: u64) -> Option<usize> {
         let rtt = self.rtt?;
         let elapsed = now.saturating_duration_since(self.time);
@@ -227,7 +225,7 @@ impl RcvSpace {
         let growth = if rtt < low_rtt {
             (window as u128 * rtt.as_nanos() / low_rtt.as_nanos()) as usize
         } else {
-            0
+            ((window as u128 * 2 * (copied - self.space) as u128 / self.space as u128).min(usize::MAX as u128)) as usize
         };
         self.space = copied;
         Some(window.saturating_add(growth).saturating_add(ooo_span))
@@ -329,8 +327,8 @@ mod tests {
         r.measure_ts(100 * MS);
         r.on_read(30_000);
         assert_eq!(r.adjust_linux(t + 50 * MS, 10_000, 500, 30_000), None);
-        // copied=20k, window=40k, no high-RTT extrapolation, OOO span=500.
-        assert_eq!(r.adjust_linux(t + 100 * MS, 10_000, 500, 30_000), Some(40_500));
+        // copied=20k, window=40k, growth=80k, OOO span=500.
+        assert_eq!(r.adjust_linux(t + 100 * MS, 10_000, 500, 30_000), Some(120_500));
         let mut low = RcvSpace::new(10_000);
         low.time = t;
         low.measure_ts(Duration::from_micros(500));
@@ -346,7 +344,7 @@ mod tests {
         r.measure_ts(100 * MS);
         // 80k already retained, only 20k consumed during this RTT.
         r.on_read(20_000);
-        assert_eq!(r.adjust_linux(t + 100 * MS, 0, 0, 80_000), Some(40_000));
+        assert_eq!(r.adjust_linux(t + 100 * MS, 0, 0, 80_000), Some(120_000));
         // A repaired hole releases 60k, but only 10k arrived this RTT.
         r.on_read(60_000);
         assert_eq!(r.adjust_linux(t + 200 * MS, 0, 0, 90_000), None);
@@ -357,28 +355,11 @@ mod tests {
         assert_eq!(r.snapshot().1, 20_000);
         // Actual increased supply and consumption still grow the window.
         r.on_read(30_000);
-        assert_eq!(r.adjust_linux(t + 600 * MS, 0, 0, 180_000), Some(60_000));
+        assert_eq!(r.adjust_linux(t + 600 * MS, 0, 0, 180_000), Some(120_000));
         assert_eq!(r.snapshot().1, 30_000);
         r.restart(10_000, t + 600 * MS, 180_000);
         r.on_read(5_000);
         assert_eq!(r.adjust_linux(t + 700 * MS, 0, 0, 185_000), None);
-    }
-
-    #[test]
-    fn relay_high_rtt_growth_uses_measured_supply_not_previous_growth_projection() {
-        let t = Instant::now();
-        let rtt = 400 * MS;
-        let mut r = RcvSpace::new(2_200_000);
-        r.time = t;
-        r.measure_ts(rtt);
-        r.on_read(17_500_000);
-        assert_eq!(r.adjust_linux(t + rtt, 0, 0, 17_500_000), Some(35_000_000));
-        // Stable measured supply does not grow the window again.
-        r.on_read(17_500_000);
-        assert_eq!(r.adjust_linux(t + 2 * rtt, 0, 0, 35_000_000), None);
-        // A real increase in supply still increases the dynamic window.
-        r.on_read(40_000_000);
-        assert_eq!(r.adjust_linux(t + 3 * rtt, 0, 10_000, 75_000_000), Some(80_010_000));
     }
 
     #[test]

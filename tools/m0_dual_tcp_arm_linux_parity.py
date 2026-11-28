@@ -9,18 +9,18 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# Exact runtime clean ABBA: db76055 receive growth vs high-RTT measured-growth candidate.
+# Frozen db76055 carrier load diagnostic: same product binary, only application offered load varies.
 ORDER=("A","B","B","A")
 CASES=(-1,0,1,2,3,-2)
-PROFILES={"A":"selected-rust-fresh-arrival-drs","B":"selected-rust-measured-high-rtt-growth"}
-SOURCES={"A":"db760553eaf5b20e01d1c9c6452ab45281cc3812","B":os.environ["GITHUB_SHA"]}
+PROFILES={"A":"frozen-db76055-offer120M","B":"frozen-db76055-offer600M"}
+SOURCES={"A":"db760553eaf5b20e01d1c9c6452ab45281cc3812","B":"db760553eaf5b20e01d1c9c6452ab45281cc3812"}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
 def rust_cc(i):return "bbr1"
 def ack_for(k):return "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
-def offer(i):return 600_000_000
+def offer(i):return 120_000_000 if i>=0 and ORDER[i]=="A" else 600_000_000
 def target_bytes(i):return 1024*1024*1024
 def profile_env(k,server):
     return []
@@ -51,6 +51,7 @@ def manifests():
         for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
             assert hashlib.sha256((b/name).read_bytes()).hexdigest()==m["sha256"][name]
         rows[k]={"manifest":m,"manifest_sha256":hashlib.sha256((b/"manifest.json").read_bytes()).hexdigest()}
+    assert rows["A"]["manifest_sha256"]==rows["B"]["manifest_sha256"]
     save(OUT/"builds.json",rows)
     return rows
 def spawn(key,ns,log,*args):
@@ -428,7 +429,7 @@ def client():
                     sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                     recovery[key]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"retired server-middle bulk flow on both exact Rust variants","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"exact db76055 measured fresh-arrival A vs high-RTT measured-growth candidate B, clean ABBA 1GiB/600M,400ms, uncapped, bare brackets, same outer MTU1160/Normal/repair and eight taps; no profiler","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"retired server-middle bulk flow on identical frozen Rust build","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"identical frozen db76055 build, offered-load ABBA 120M/600M, 1GiB, 400ms, zero injected loss, uncapped carrier, bare 600M brackets, same outer MTU1160/Normal/repair and eight taps; diagnostic only","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")
