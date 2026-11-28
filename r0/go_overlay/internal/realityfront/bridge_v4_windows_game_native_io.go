@@ -112,6 +112,18 @@ func(g *V4WindowsAuthenticatedGameGroup) startNativeGameIO(
  runtime.KeepAlive(cfg)
  return err
 }
+func(g *V4WindowsAuthenticatedGameGroup) NativeGameStaleLanes(ctx context.Context)(uint32,error){
+ if g==nil||ctx==nil{return 0,errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return 0,err}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||g.joined==0||len(g.members)==0{return 0,errV4WindowsOwner}
+ proc,err:=g.members[0].bridge.fixedProc("wbd_m0_win_game_native_stale_lanes")
+ if err!=nil{return 0,err}
+ var mask uint32
+ err=winOwnerCall(proc,uintptr(g.joined),uintptr(unsafe.Pointer(&mask)))
+ runtime.KeepAlive(&mask)
+ return mask,err
+}
 func(g *V4WindowsAuthenticatedGameGroup) NativeGameIOStats(
  ctx context.Context,
 )(V4WindowsNativeWorkerStatsV1,error){

@@ -14,7 +14,7 @@ use crate::v4_windows_native_split::{NativeSplitWorker,NativeDecision,NativeReve
 use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
 use crate::v4_client_startup_padding::StartupMode;
 use std::thread::{self,JoinHandle};
-use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
+use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue,GameLaneActivity};
 use wbd_platform::windows_native_io::{
     self as io,NpcapRx,NpcapTx,NpcapFns,WintunRx,WintunTx,
     WintunFns,WakeEvent,ReadResult,WaitResult,NativeIoError,
@@ -102,6 +102,7 @@ struct LaneConfig{
     rx_capture:usize,tx_capture:usize,npcap:CaptureFns,
 }
 struct GameCounters{
+    lane_activity:GameLaneActivity,
     stop:AtomicBool,err:AtomicI32,tx:AtomicU64,
     rx:AtomicU64,after:AtomicU64,rejected:AtomicU64,
     ack:[AtomicU32;4],ack_sent:[AtomicU32;4],tx_seq:[AtomicU32;4],
@@ -114,8 +115,8 @@ struct GameCounters{
     download_bp:[AtomicU64;6],
 }
 impl GameCounters{
-    fn new(lanes:&[LaneConfig])->Self{
-        Self{stop:AtomicBool::new(false),err:AtomicI32::new(0),
+    fn new(lanes:&[LaneConfig],clock:Instant)->Self{
+        Self{lane_activity:GameLaneActivity::new(lanes.len(),clock),stop:AtomicBool::new(false),err:AtomicI32::new(0),
             tx:AtomicU64::new(0),rx:AtomicU64::new(0),
             after:AtomicU64::new(0),rejected:AtomicU64::new(0),
             ack:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.rx_seq))),
@@ -601,6 +602,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
     };
     let mut health=game_client_health_clock(
         health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
+    let mut health_slot_cursor=0usize;
     loop{
         if c.stop.load(Ordering::Acquire){return OK}
         #[cfg(feature="winxdp_native_trial")]
@@ -799,7 +801,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
                 return AUTHENTICATED_PEER_DEAD
             },
             ControlDue::Health if health_credit=>{
-                let Some(index)=active.iter().position(|v|*v)else{return BAD_STAGE};
+                let Some(index)=(0..active.len()).map(|i|(health_slot_cursor+i)%active.len()).find(|&i|active[i])else{return BAD_STAGE};
                 let mut wire=[0u8;512];
                 let sealed={
                     let mut g=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
@@ -839,6 +841,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
                     Err(_)=>false,
                 };
                 health.on_health_send_result(now_health,copied);
+                if copied{health_slot_cursor=(index+1)%active.len();}
                 if !active.iter().any(|v|*v){return BAD_STAGE}
                 // A genuine failed control copy waits >=1s; fresh DATA and
                 // parity are independent, never blocked behind Health.
@@ -976,6 +979,7 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
             (frame.into_iter().collect(),pending)
         }
     };
+    c.lane_activity.record_at(lane,now_ms);
     // Normal's outer presentation ACK follows the original valid Game
     // physical ciphertext, NOT the logical first TUN copy. Every Game lane
     // independently authenticates its own original PN/AEAD; a sibling may
@@ -1312,6 +1316,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
                 let Some(mut h)=candidate.switched.lock().ok().and_then(|mut h|h.take())else{return BAD_STAGE};
                 let slot=h.slot;
                 lanes[slot]=h.next;
+                c.lane_activity.reset_at(slot,split_clock.elapsed().as_millis() as u64);
                 contiguous=lanes.iter().enumerate().all(|(i,l)|l.local_port==lanes[0].local_port.wrapping_add(i as u16));
                 next_slot=Some(slot);
                 // The old ledger is no longer a TX authority. The candidate
@@ -1642,7 +1647,8 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
     let stop=match WakeEvent::new(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
     let tx_wake=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
     let rx_wake=match WakeEvent::new_auto(){Ok(v)=>Arc::new(v),Err(_)=>return BAD_STAGE};
-    let counters=Arc::new(GameCounters::new(&lanes));
+    let split_clock=Instant::now();
+    let counters=Arc::new(GameCounters::new(&lanes,split_clock));
     let early=Arc::new(Mutex::new(VecDeque::with_capacity(EARLY_CAP)));
     let tunnel_dns=split.as_ref().map(|s|s.tunnel_map());
     let (tcp_sender,tcp_receiver)=if split.as_ref().is_some_and(|s|s.has_deferred_tcp()){
@@ -1653,7 +1659,6 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
         let (tx,rx)=sync_channel::<Vec<u8>>(256);
         (Some(tx),Some(rx))
     }else{(None,None)};
-    let split_clock=Instant::now();
     let mut sessions=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
     if sessions.contains_key(&cfg.group){return BAD_STAGE}
     // The protected native_game_group lookup above already verified every
@@ -1913,6 +1918,13 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_stats(
     let map=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
     let Some(s)=map.get(&h)else{return UNKNOWN};
     unsafe{out.write(s.counters.snapshot())};OK
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_game_native_stale_lanes(h:u64,out:*mut u32)->i32{
+    if out.is_null(){return INVALID}
+    let map=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+    let Some(s)=map.get(&h)else{return UNKNOWN};
+    unsafe{out.write(s.counters.lane_activity.stale_mask())};OK
 }
 // Exact authenticated native group readback, not a Go CLI echo or another
 // per-packet controller. The bool is frozen from the actual GameOuter.

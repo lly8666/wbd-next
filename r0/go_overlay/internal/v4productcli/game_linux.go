@@ -366,8 +366,7 @@ func runGameClient(
     // ORIGINAL supervisor's next randomized timer; no second controller.
     laneRound:=uint64(1)
     nextLane:=0
-    rotateOne:=func()(uint8,uint16,error){
-        slot:=nextLane
+    rotateOne:=func(slot int)(uint8,uint16,error){
         lane:=uint8(slot+1)
         laneRound++
         first,e:=originalGenerationGamePort(c.localPort,laneRound,uint8(n))
@@ -468,7 +467,7 @@ func runGameClient(
                 return lane,0,fmt.Errorf("hot one-lane port collides with untouched sibling %d",sibling+1)
             }
         }
-        nextLane=(nextLane+1)%n
+        nextLane=(slot+1)%n
         log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=client generation=%d lane=%d cycle=%d old_client_port=%d new_client_port=%d unchanged_siblings=%d original_TLS_Rust_M4=1",
             c.rotationGeneration,lane,laneRound-1,oldFlow.LocalPort,local,n-1)
         return lane,local,nil
@@ -476,6 +475,7 @@ func runGameClient(
     draining:=false
     // Read the existing Rust M4 verdict, as the shared server already
     // does. The cold Go reader is no longer an authority on live lanes.
+    var repairAfter [4]time.Time
     nativeStatus:=time.NewTicker(time.Second)
     defer nativeStatus.Stop()
     for !draining{
@@ -486,10 +486,22 @@ func runGameClient(
             if e!=nil{err=e;draining=true}else if !live{
                 err=fmt.Errorf("Game native M4 stopped")
                 draining=true
+            }else{
+                mask,e:=native.StaleGameLanes()
+                if e!=nil{err=e;draining=true;continue}
+                now:=time.Now()
+                for i:=0;i<n;i++{
+                    if mask&(1<<i)==0||now.Before(repairAfter[i]){continue}
+                    log.Printf("V4_PUBLIC_GAME_LANE_REBUILD_DUE role=client lane=%d authenticated_stale=1",i+1)
+                    _,_,e=rotateOne(i)
+                    repairAfter[i]=time.Now().Add(30*time.Second)
+                    if e!=nil&&!errors.Is(e,errOriginalGameLaneColdCandidate){err=e;draining=true}
+                    break
+                }
             }
         case turn,ok:=<-rotation:
             if !ok{rotation=nil;continue}
-            lane,local,rotateErr:=rotateOne()
+            lane,local,rotateErr:=rotateOne(nextLane)
             turn.done<-originalGameLaneTurnResult{
                 lane:lane,clientPort:local,err:rotateErr,
             }

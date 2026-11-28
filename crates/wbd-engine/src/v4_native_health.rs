@@ -10,6 +10,49 @@ const MIN_RETRY_NS:u64=SECOND_NS;
 const MAX_CONTROL_PADDING:usize=64;
 use std::sync::OnceLock;
 
+// Per-slot authenticated activity. One existing 15s Health sequence visits
+// all slots; three four-slot rounds provide a tolerant cold repair trigger.
+pub(crate) struct GameLaneActivity {
+    start:std::time::Instant,
+    count:usize,
+    last_ms:[std::sync::atomic::AtomicU64;4],
+}
+impl GameLaneActivity {
+    pub(crate) fn new(count:usize,start:std::time::Instant)->Self{
+        Self{start,count,last_ms:std::array::from_fn(|_|std::sync::atomic::AtomicU64::new(0))}
+    }
+    pub(crate) fn record_at(&self,slot:usize,ms:u64){
+        use std::sync::atomic::Ordering::Relaxed;
+        let last=&self.last_ms[slot];
+        if ms.saturating_sub(last.load(Relaxed))>=500{last.store(ms,Relaxed);}
+    }
+    pub(crate) fn reset_at(&self,slot:usize,ms:u64){
+        self.last_ms[slot].store(ms,std::sync::atomic::Ordering::Relaxed);
+    }
+    fn stale_mask_at(&self,ms:u64)->u32{
+        (0..self.count).fold(0,|mask,i|{
+            if ms.saturating_sub(self.last_ms[i].load(std::sync::atomic::Ordering::Relaxed))>=180_000{mask|(1<<i)}else{mask}
+        })
+    }
+    pub(crate) fn stale_mask(&self)->u32{
+        self.stale_mask_at(self.start.elapsed().as_millis().min(u128::from(u64::MAX)) as u64)
+    }
+}
+#[cfg(test)]
+#[test]
+fn game_lane_activity_isolates_stale_slot_and_resets_on_promotion(){
+    let a=GameLaneActivity::new(4,std::time::Instant::now());
+    for i in [0,2,3]{a.record_at(i,179_000);}
+    assert_eq!(a.stale_mask_at(179_999),0);
+    assert_eq!(a.stale_mask_at(180_000),2);
+    a.reset_at(1,180_000);
+    assert_eq!(a.stale_mask_at(180_000),0);
+    let b=GameLaneActivity::new(2,std::time::Instant::now());
+    b.record_at(0,180_000);
+    assert_eq!(b.stale_mask_at(180_000),2);
+}
+
+
 fn control_random_below(n:u64)->Option<u64>{
     if n<=1{return Some(0)}
     let mut bytes=[0u8;8];

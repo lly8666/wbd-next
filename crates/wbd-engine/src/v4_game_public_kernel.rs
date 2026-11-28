@@ -18,7 +18,7 @@ use crate::v4_embedded_go::OriginalTunIngress;
 use std::time::{Instant,Duration};
 use crate::v4_game_lane::{GameAdapter,GameLaneOpener,OriginalGameLaneRekey,Error as GameAdapterError};
 use crate::v4_game_cosmetic_outer::CosmeticOuter;
-use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
+use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue,GameLaneActivity};
 use crate::runtime::game_shared::GameError;
 use crate::v4_protected_handoff::GoFlow;
 use crate::v4_presentation_ack::{NativePresentationAck,presentation_game_ack_due};
@@ -128,6 +128,7 @@ pub(crate) struct GameKernelOwner{
     // Verified kind0 Health hint from this Game cohort's OWN AEAD/PN
     // RX lane. Kept apart from successful inner IPv4 TUN deliveries.
     peer_health_evidence:Arc<crate::v4_native_health::AuthenticatedActivity>,
+    lane_activity:Arc<GameLaneActivity>,
 }
 // Each lane FIFO delivers the first independent AEAD copy of a logical
 // source or parity symbol. Reappearance cannot become outer DATA repair.
@@ -283,6 +284,7 @@ impl GameKernelOwner{
         };
         let mut lane_openers=lane_openers.into_iter();
         let epoch_clock=Instant::now();
+        let lane_activity=Arc::new(GameLaneActivity::new(n,epoch_clock));
         let tx_health_rx=Arc::clone(&health_rx);
         let tx_worker=thread::Builder::new().name("wbd-v4-game-tx".into())
             .spawn(move||{
@@ -293,6 +295,7 @@ impl GameKernelOwner{
                     health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
                 let mut cold_receipt_armed=false;
                 let mut hot_health_slot=0usize;
+                let mut steady_health_slot=0usize;
                 // One full IPv4 TUN read buffer PER Game TX owner, never
                 // 64KiB per arena slab. A 2048B read irreversibly truncated
                 // actual oversized DF0 datagrams into false small packets.
@@ -749,7 +752,7 @@ impl GameKernelOwner{
                             break
                         },
                         ControlDue::Health=>{
-                            let health_slot=if health.cold_receipts_pending(){hot_health_slot}else{0};
+                            let health_slot=if health.cold_receipts_pending(){hot_health_slot}else{steady_health_slot};
                             let copied=if let Some(lane)=lanes.get_mut(health_slot){
                                 let mut wire=[0u8;512];
                                 match game.seal_native_health(lane.key.slot,
@@ -795,6 +798,7 @@ impl GameKernelOwner{
                                 }
                             }else{false};
                             health.on_health_send_result(health_now,copied);
+                            if copied{steady_health_slot=(health_slot+1)%lanes.len();}
                             if !copied{tx_rejected.fetch_add(1,Ordering::Relaxed);}
                         },
                         ControlDue::None=>{},
@@ -984,6 +988,7 @@ impl GameKernelOwner{
             let commit_failed=Arc::clone(&rx_delivery_commit_failed);
             let lock_sample=Arc::clone(&rx_lock_sample);
             let rx_start=epoch_clock;
+            let rx_lane_activity=Arc::clone(&lane_activity);
             let builder=thread::Builder::new().name(format!("wbd-v4-game-rx-{}",i+1));
             let worker=builder.spawn(move||{
                 let mut wire=[0u8;2048];
@@ -999,6 +1004,7 @@ impl GameKernelOwner{
                         let old=std::mem::replace(&mut raw,change.raw);
                         flow=change.flow;
                         lane_opener=change.opener;
+                        rx_lane_activity.reset_at(i,rx_start.elapsed().as_millis() as u64);
                         ack_ledger=NativePresentationAck::new(change.rx_seq);
                         for field in &rx_sack[i]{field.store(0,Ordering::Release)}
                         for field in &rx_peer_sack[i]{field.store(0,Ordering::Release)}
@@ -1064,6 +1070,8 @@ impl GameKernelOwner{
                     // decode are done solely by THIS physical lane worker,
                     // with no shared GameReceiveOwner lock and no extra copy.
                     let opened=lane_opener.open(&mut wire[..len]);
+                    let now_ns=if opened.is_ok(){rx_start.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64}else{0};
+                    if opened.is_ok(){rx_lane_activity.record_at(i,now_ns/1_000_000);}
                     if matches!(&opened,Ok(Some(_))){
                         // The original AEAD/PN accepted a physical lane
                         // ciphertext, even if another lane already delivered
@@ -1073,8 +1081,6 @@ impl GameKernelOwner{
                             rx_future[i].fetch_add(1,Ordering::Release);
                         }
                         let _=ack_ledger.verified(seq32,len);
-                        let now_ns=rx_start.elapsed().as_nanos()
-                            .min(u128::from(u64::MAX)) as u64;
                         let _=ack_ledger.abandon_stalled(now_ns);
                         for (field,positive) in rx_sack[i].iter()
                             .zip(ack_ledger.sacks4()){
@@ -1284,7 +1290,7 @@ impl GameKernelOwner{
             physical_ifname:ifname.to_string(),physical_ifindex:ifindex,
             physical_generation:generation,server,
             diagnostic_adapter:adapter,tx_work_sample,tx_shared_burst_extra,
-            cold_group_committed,peer_health_evidence:health_rx})
+            cold_group_committed,peer_health_evidence:health_rx,lane_activity})
     }
     /// A NEW real original-Go TLS+Rust M1 lane has just committed while
     /// the remaining lanes of this GameAdapter stay LIVE. Reuse the existing
@@ -1371,6 +1377,7 @@ impl GameKernelOwner{
     // Original Game M4 Health90 (or an authenticated RX fatal) sets the
     // existing owner stop flag. The Go single-port supervisor observes this
     // ONE authoritative verdict; it must not invent a second dead timer.
+    pub(crate) fn stale_lanes(&self)->u32{self.lane_activity.stale_mask()}
     pub(crate) fn is_live(&self)->bool{
         !self.stop.load(Ordering::Acquire)
     }

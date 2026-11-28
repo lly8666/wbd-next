@@ -12,6 +12,7 @@ extern int32_t wbd_m0_embedded_go_game_group_server_promote_after_client_health(
 extern int32_t wbd_m0_embedded_go_game_group_peer_authenticated_health(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_m4_live(uint64_t,uint32_t *);
+extern int32_t wbd_m0_embedded_go_game_group_stale_lanes(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_lane_replace(
     uint64_t,uint32_t,uint64_t,uint64_t);
 extern int32_t wbd_fec_network_game_group_fixed_configure(uint64_t,uint32_t);
@@ -134,6 +135,13 @@ func (g *v4NativeGameJoined) originalCryptoState()(lanes uint32,drivers bool,err
     rc:=C.wbd_m0_embedded_go_game_group_state(C.uint64_t(g.handle),&n,&ready)
     if rc!=0{return 0,false,fmt.Errorf("%w: native Game state=%d",errV4Embedded,int(rc))}
     return uint32(n),ready!=0,nil
+}
+func (g *v4NativeGameJoined) originalStaleLanes()(uint32,error){
+    if g==nil||g.handle==0||g.stopped||g.verified==nil{return 0,ErrAdmissionUnsupported}
+    var mask C.uint32_t
+    rc:=C.wbd_m0_embedded_go_game_group_stale_lanes(C.uint64_t(g.handle),&mask)
+    if rc!=0{return 0,fmt.Errorf("%w: native Game stale lanes=%d",errV4Embedded,int(rc))}
+    return uint32(mask),nil
 }
 func (g *v4NativeGameJoined) originalM4Alive()(bool,error){
     if g==nil||g.handle==0||g.stopped||g.verified==nil{

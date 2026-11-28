@@ -902,6 +902,12 @@ func (p *V4LinuxGameProduct) FecCounters()(V4GameFecCounters,error){
 // verdict. Polling this cold readback cannot change the cryptographic
 // owner or authorize any new packet; the caller must still perform exact
 // group Stop and native drain before releasing its authenticated /32.
+func (p *V4LinuxGameProduct) StaleGameLanes()(uint32,error){
+    if p==nil{return 0,ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil{return 0,ErrAdmissionUnsupported}
+    return p.native.originalStaleLanes()
+}
 func (p *V4LinuxGameProduct) NativeM4Alive()(bool,error){
     if p==nil{return false,ErrAdmissionParams}
     p.mu.Lock();defer p.mu.Unlock()

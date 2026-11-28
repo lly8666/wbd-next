@@ -115,8 +115,7 @@ func runM0NativeV4WindowsGame(
   if err!=nil{return err}
   flows=append(flows,flow);cfgs=append(cfgs,cfg)
  }
- openGame:=faketcp.OpenXdpGameEndpoint
- if o.RotateMin>0{openGame=faketcp.OpenXdpRotatableGameEndpoint}
+ openGame:=faketcp.OpenXdpRotatableGameEndpoint
  xdp,available,err:=openGame(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),physicalIfIndex,cfgs)
  if err!=nil{return err}
  if !available{return fmt.Errorf("WinXDP Game entry missing from wbd_engine.dll")}
@@ -390,6 +389,22 @@ func runM0NativeV4WindowsGame(
  slot,cycle:=0,0
  var retiredLane,retiredPort int
  var runtimeErr error
+ var repairAfter [4]time.Time
+ rotateSelected:=func(selected int)error{
+   oldPort:=packet.flows[selected].LocalPort
+   grace,fatal,turnErr:=packet.rotateGameLane(ctx,o,cfg,selected)
+   if turnErr!=nil{
+    if fatal{return turnErr}
+    fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_RETRY lane=%d error=%v\n",selected+1,turnErr)
+    stopRotation();rotation,stopRotation=m0WindowsArmRotation(o);return nil
+   }
+   cycle++;retiredLane=selected+1;retiredPort=int(oldPort)
+   fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_READY lane=%d cycle=%d old_port=%d new_port=%d unchanged_siblings=%d grace_ms=%d same_game_adapter=1 unix_ms=%d\n",selected+1,cycle,oldPort,packet.flows[selected].LocalPort,count-1,grace.Milliseconds(),time.Now().UnixMilli())
+   slot=(selected+1)%count
+   retireTimer=time.NewTimer(grace);retireCh=retireTimer.C;retireUntil=time.Now().Add(grace+5*time.Second)
+   stopRotation();rotation,stopRotation=m0WindowsArmRotation(o)
+   return nil
+ }
 outer:
  for{
   select{
@@ -398,18 +413,7 @@ outer:
    if ctx.Err()!=nil{break outer}
    fmt.Printf("WBD_WINDOWS_TIMER_ROTATION_DUE scope=game_slot unix_ms=%d\n",time.Now().UnixMilli())
    if retireCh!=nil{rotation=nil;continue}
-   oldPort:=packet.flows[slot].LocalPort
-   grace,fatal,turnErr:=packet.rotateGameLane(ctx,o,cfg,slot)
-   if turnErr!=nil{
-    if fatal{runtimeErr=turnErr;break outer}
-    fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_RETRY lane=%d error=%v\n",slot+1,turnErr)
-    stopRotation();rotation,stopRotation=m0WindowsArmRotation(o);continue
-   }
-   cycle++;retiredLane=slot+1;retiredPort=int(oldPort)
-   fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_READY lane=%d cycle=%d old_port=%d new_port=%d unchanged_siblings=%d grace_ms=%d same_game_adapter=1 unix_ms=%d\n",slot+1,cycle,oldPort,packet.flows[slot].LocalPort,count-1,grace.Milliseconds(),time.Now().UnixMilli())
-   slot=(slot+1)%count
-   retireTimer=time.NewTimer(grace);retireCh=retireTimer.C;retireUntil=time.Now().Add(grace+5*time.Second)
-   stopRotation();rotation,stopRotation=m0WindowsArmRotation(o)
+   if e:=rotateSelected(slot);e!=nil{runtimeErr=e;break outer}
   case <-retireCh:
    if ctx.Err()!=nil{break outer}
    done,e:=group.RetireNativeGameLane(ctx)
@@ -435,6 +439,19 @@ outer:
    if drift:=m0WindowsRuntimeMTUDrift(ctx,o.TunnelMTU,currentMTU,mtuErr);drift!=nil{
     runtimeErr=drift
     break outer
+   }
+   if retireCh==nil{
+    mask,e:=group.NativeGameStaleLanes(ctx)
+    if e!=nil{runtimeErr=e;break outer}
+    now:=time.Now()
+    for i:=0;i<count;i++{
+     if mask&(1<<i)==0||now.Before(repairAfter[i]){continue}
+     fmt.Printf("WBD_WINDOWS_GAME_LANE_REBUILD_DUE lane=%d authenticated_stale=1\n",i+1)
+     e=rotateSelected(i)
+     repairAfter[i]=time.Now().Add(30*time.Second)
+     if e!=nil{runtimeErr=e;break outer}
+     break
+    }
    }
    snapshot:=packet.Stats()
    m0WindowsGameQualitySnapshot(fecMode,snapshot)
