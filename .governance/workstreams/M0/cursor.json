@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2514,
-  "checkpoint_sha": "0766f0a81dd3644d0c91efc13737680a954f7ca1",
+  "sequence": 2515,
+  "checkpoint_sha": "fb934612251f197038e9f1c3120d1c29b0e4142e",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "收取5325208精确原生46086945883和三ARM ABBA46086945727，验真实生产者dry回归、样本、BBR phase、业务/退役/Stop、四点身份、CPU/重传/吞吐；不重复派单或强制退出Startup。",
+  "next_action": "验收9d89d38精确原生46089759268、反序clean及实际IID1%三机46089759275；分别核对净吞吐、CPU、重传、生产者dry和BBR阶段、qdisc实际损失/seed、hash/Stop/retired、四点身份。未证实不晋级，不叠加新变量或重复派单。",
   "unverified": true,
-  "last_tested_source": "e0c01aab726e4cb96ff60b5a8e7a2e1d285474c1",
+  "last_tested_source": "5325208bf9d483866b886f7c478449a8a1b9eedc",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-APP-LIMITED-ACK-QUALIFICATION-RESULT.json"
+    "docs/evidence/M0/20261128-NATIVE-PRODUCER-QUALIFICATION-RESULT.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261128-PATH-IDENTITY-ATTRIBUTION-RESULT.json",
-    "docs/devlog/M0/20261128-M0-DELIVERY-EPOCH-HANDOFF.md",
     "docs/evidence/M0/20261128-DELIVERY-EPOCH-COMPILE-FAIL.json",
     "docs/devlog/M0/20261128-M0-DELIVERY-EPOCH-COMPILE-HANDOFF.md",
     "docs/evidence/M0/20261128-DELIVERY-EPOCH-QUALIFICATION-RESULT.json",
     "docs/devlog/M0/20261128-M0-APP-LIMITED-ACK-HANDOFF.md",
     "docs/evidence/M0/20261128-APP-LIMITED-ACK-QUALIFICATION-RESULT.json",
-    "docs/devlog/M0/20261128-M0-NATIVE-PRODUCER-FEEDBACK-HANDOFF.md"
+    "docs/devlog/M0/20261128-M0-NATIVE-PRODUCER-FEEDBACK-HANDOFF.md",
+    "docs/evidence/M0/20261128-NATIVE-PRODUCER-QUALIFICATION-RESULT.json",
+    "docs/devlog/M0/20261128-M0-NATIVE-PRODUCER-REQUALIFICATION-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "e0c01aa双ISA354、8功能、3本地、三机6/6完成；A/B吞吐270.48/263.00M、重传4.51/3.66%，CPU28.48/29.13，B2到ProbeBw，未因果晋级。5325208以实际生产者empty观察替换native暂空推断，精确原生/ABBA在途。H2513 main治理PASS。"
+  "partial_summary": "5325208双ISA355/8功能/3本地/三机6/6。A/B吞吐230.12/284.36M，CPU30.125/27.665，重传4.494/3.430%，server app-limited52/77→13/62，B实际dry3/62、ProbeBw2/2；裸容量波动，待反序及真损失。9d89d38仅验证夹具，原生及三机已排队。H2514 main治理PASS。"
 }
