@@ -69,6 +69,12 @@ def measure_rotation(root,out,unix,win,server):
                             "rtt_ms":round((at-sent_at)*1000,3),"ready_generation":gen})
                         gen_receipts[gen]=gen_receipts.get(gen,0)+1
             rtts=sorted(r["rtt_ms"] for r in receipts)
+            # Retain original full-run gate; attribute the worst gaps by
+            # send generation and actual send spacing, not just promotion.
+            worst_gaps=sorted(({"gap_ms":round(b["elapsed_ms"]-a["elapsed_ms"],3),
+                "before":a,"after":b,
+                "send_delta_ms":round((b["elapsed_ms"]-b["rtt_ms"])-(a["elapsed_ms"]-a["rtt_ms"]),3)}
+                for a,b in zip(receipts,receipts[1:])),key=lambda v:v["gap_ms"],reverse=True)[:8]
             result={"scope":"WINDOWS_GAME_SHARED_SLOT" if game else "WINDOWS_NORMAL_MBB_SAME_WINTUN" if mbb else "WINDOWS_FULL_GENERATION_RENEWAL_NOT_HOT_LANE",
                 "sent":seq,"socket_accepted":len(sent),"received":len(receipts),
                 "missing":seq-len(receipts),"generation_receipts":gen_receipts,
@@ -76,7 +82,7 @@ def measure_rotation(root,out,unix,win,server):
                 "rtt_p50_ms":rtts[len(rtts)//2] if rtts else None,
                 "rtt_p99_ms":rtts[min(len(rtts)-1,int(len(rtts)*.99))] if rtts else None,
                 "max_successful_receive_gap_ms":max((b["elapsed_ms"]-a["elapsed_ms"] for a,b in zip(receipts,receipts[1:])),default=None),
-                "receipts":receipts}
+                "worst_receipt_gaps":worst_gaps,"receipts":receipts}
             (out/"windows-timer-business.json").write_text(json.dumps(result,indent=2))
             if not all(gen_receipts.get(i,0)>0 for i in range(1,target+1)):
                 raise RuntimeError("missing same-socket business in every actual rotation interval: "+str(gen_receipts))

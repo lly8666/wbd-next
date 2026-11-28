@@ -3,7 +3,7 @@ run-name: "M0 Normal same-Wintun MBB 400ms loss0 | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']
-    paths: ['.github/workflows/qa-m0-winxdp-normal-mbb.yml', 'crates/wbd-engine/src/v4_windows_normal_rotation.rs', 'tools/m0_winxdp_windows_rotation.py', 'tools/m0_wl_public_normal_e2e.py', 'tools/m0_wl_public_mss_contract.py']
+    paths: ['.github/workflows/qa-m0-winxdp-normal-mbb.yml', 'crates/wbd-engine/src/v4_windows_normal_rotation.rs', 'tools/m0_winxdp_windows_rotation.py', 'tools/m0_wl_public_normal_e2e.py', 'tools/m0_wl_public_mss_contract.py', 'r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go']
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:
@@ -29,7 +29,7 @@ jobs:
           New-Item -ItemType Directory -Force xdp-build | Out-Null
           Push-Location legacy
           try{
-            go test -tags wbd_v4_embedded_go -run '^TestM0WindowsNativeRotationBounds$' -count=1 ./cmd/wbd-client
+            go test -tags wbd_v4_embedded_go -run '^TestM0WindowsNative(RotationBounds|CanceledTickNeverMasqueradesAsMTUDrift)$' -count=1 ./cmd/wbd-client
             if($LASTEXITCODE -ne 0){throw 'Windows rotation bounds unit failed'}
             go build -trimpath -tags wbd_v4_embedded_go -o ../xdp-build/wbd-client-embedded.exe ./cmd/wbd-client
             if($LASTEXITCODE -ne 0){throw 'original Go client build failed'}

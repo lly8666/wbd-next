@@ -42,10 +42,10 @@ func m0WindowsGameQualitySnapshot(grade uint8,data string){
  }
 }
 
-func m0WindowsGameRuntimeMTUDrift(ctx context.Context,expected,actual uint32,readErr error)error{
+func m0WindowsRuntimeMTUDrift(ctx context.Context,expected,actual uint32,readErr error)error{
  if ctx.Err()!=nil{return nil}
  if readErr==nil&&actual==expected{return nil}
- return fmt.Errorf("Game original M4 OS MTU drift/invalid WAL expected=%d actual=%d: %w",
+ return fmt.Errorf("original M4 OS interface MTU drift/invalid WAL expected=%d actual=%d: %w",
   expected,actual,errors.Join(windowsclient.ErrN4NativeGuard,readErr))
 }
 // Already-detached Game M3 ciphertext is an optional finite cold backlog.
@@ -432,7 +432,7 @@ outer:
    }
    currentMTU,mtuErr:=product.RuntimeMTU(ctx)
    if ctx.Err()!=nil{break outer}
-   if drift:=m0WindowsGameRuntimeMTUDrift(ctx,o.TunnelMTU,currentMTU,mtuErr);drift!=nil{
+   if drift:=m0WindowsRuntimeMTUDrift(ctx,o.TunnelMTU,currentMTU,mtuErr);drift!=nil{
     runtimeErr=drift
     break outer
    }

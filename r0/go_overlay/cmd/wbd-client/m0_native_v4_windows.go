@@ -1281,7 +1281,10 @@ waitNative:
      state.RequestedRevision,state.Desired)
    }
   case <-qualityTicker.C:
-   if e:=transport.RefreshEffective(ctx);e!=nil{
+   if ctx.Err()!=nil{break waitNative}
+   e:=transport.RefreshEffective(ctx)
+   if ctx.Err()!=nil{break waitNative}
+   if e!=nil{
     runtimeErr=fmt.Errorf("native GUI quality owner readback: %w",e)
     break waitNative
    }
@@ -1291,13 +1294,16 @@ waitNative:
    tx,rx:=m0WindowsQualityStatuses(o.Mode,o.FEC2Profile,installed,sample)
    m0WindowsPrintQualityNativeV2(tx,rx,sample)
   case <-metricsTicker.C:
+   if ctx.Err()!=nil{break waitNative}
    actualMTU,mtuErr:=product.RuntimeMTU(ctx)
-   if mtuErr!=nil||actualMTU!=o.TunnelMTU{
-    runtimeErr=fmt.Errorf("original M4 OS interface MTU drift/invalid WAL expected=%d actual=%d: %w",
-     o.TunnelMTU,actualMTU,errors.Join(windowsclient.ErrN4NativeGuard,mtuErr))
+   if ctx.Err()!=nil{break waitNative}
+   if drift:=m0WindowsRuntimeMTUDrift(ctx,o.TunnelMTU,actualMTU,mtuErr);drift!=nil{
+    runtimeErr=drift
     break waitNative
    }
-   if readErr:=transport.RefreshEffective(ctx);readErr!=nil{
+   readErr:=transport.RefreshEffective(ctx)
+   if ctx.Err()!=nil{break waitNative}
+   if readErr!=nil{
     runtimeErr=fmt.Errorf("original Rust M2 effective readback: %w",readErr)
     break waitNative
    }
