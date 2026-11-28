@@ -439,7 +439,7 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Native paired Middle TCP experiment: existing quantum cap in MSS.
     pub(crate) native_pace_quantum_mss: u32,
-    /// Lab-only comparison: 0 baseline, 2 actual native service epoch.
+    /// Lab-only comparison: 0 baseline, 2 native service epoch, 7 service epoch with one-quantum accumulated credit.
     pub(crate) native_feedback_mode: u8,
     /// Lab-only ceiling on the existing TCP pacing rate (payload bytes/s).
     pub(crate) native_pace_ceiling: Option<u64>,
@@ -722,6 +722,7 @@ pub struct Conn {
     // send quanta (see `pace_quantum`).
     /// Bytes that may go now; negative once a segment overdrew it.
     pace_credit: f64,
+    pace_credit_over_quantum: u64,
     /// When the credit was last brought up to date.
     pace_stamp: Instant,
     /// When enough credit will have built up to send again, while data is
@@ -995,6 +996,7 @@ impl Conn {
             max_flight: 0,
             cwnd_usage_seq: 0,
             pace_credit: 0.0,
+            pace_credit_over_quantum: 0,
             pace_stamp: now,
             pace_deadline: None,
             native_resume: None,
@@ -1288,8 +1290,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} relay_pending_limit={} relay_pending_bytes={} relay_available={} native_feedback_mode={} native_reserved_bytes={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.cfg.relay_pending_limit.unwrap_or(0),self.send_buf.as_ref().map_or(0,|s|s.pending()),self.relay_send_available(),self.cfg.native_feedback_mode,self.score.native_pending(),self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} relay_pending_limit={} relay_pending_bytes={} relay_available={} native_feedback_mode={} native_reserved_bytes={} pace_credit_over_quantum={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.cfg.relay_pending_limit.unwrap_or(0),self.send_buf.as_ref().map_or(0,|s|s.pending()),self.relay_send_available(),self.cfg.native_feedback_mode,self.score.native_pending(),self.pace_credit_over_quantum,self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?} rate_epoch_preserved={} native_source_dry={}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline),self.score.rate().epoch_preserved(),self.native_source_dry);
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -4568,7 +4570,7 @@ impl Conn {
             // A local pending interval is not an independent pacing grant.
             // Keep unspent credit/debt, but anchor its next accrual at the
             // actual end of this native submission, not at generation.
-            if self.cfg.native_feedback_mode==2 {self.pace_stamp=self.pace_stamp.max(now);}
+            if matches!(self.cfg.native_feedback_mode,2|7) {self.pace_stamp=self.pace_stamp.max(now);}
             if self.native_source_dry { self.check_app_limited(); }
             self.schedule_loss_probe();
         }
@@ -4820,10 +4822,14 @@ impl Conn {
         let late = self
             .pace_late
             .min(self.pace_srtt.unwrap_or_else(|| self.rto.srtt()));
-        let cap = 2.0 * self.pace_quantum(rate) + if self.cfg.native_bounded_pacing {0.0} else {rate as f64 * late.as_secs_f64()};
+        let quanta = if self.cfg.native_feedback_mode==7 {1.0} else {2.0};
+        let quantum = self.pace_quantum(rate);
+        let cap = quanta * quantum + if self.cfg.native_bounded_pacing {0.0} else {rate as f64 * late.as_secs_f64()};
         let dt = self.now.saturating_duration_since(self.pace_stamp);
         self.pace_stamp = self.now;
-        self.pace_credit = (self.pace_credit + rate as f64 * dt.as_secs_f64()).min(cap);
+        let accrued = self.pace_credit + rate as f64 * dt.as_secs_f64();
+        if matches!(self.cfg.native_feedback_mode,2|7) && accrued>quantum {self.pace_credit_over_quantum+=1;}
+        self.pace_credit = accrued.min(cap);
         self.pace_credit > 0.0
     }
 
@@ -10742,6 +10748,27 @@ mod tests {
         assert_eq!(c.pace_stamp,now);
         assert_eq!(c.pace_credit,credit);
         assert_eq!(c.pace_rate(),rate);
+    }
+
+    #[test]
+    fn native_service_credit_cap_keeps_quantum_rate_and_wait(){
+        let mut cfg=big(40690,80);
+        cfg.congestion=CongestionKind::Bbr1;
+        cfg.pacing=true;
+        cfg.native_bounded_pacing=true;
+        let mut c=Conn::new(cfg);
+        let rate=c.pace_rate().unwrap();
+        let q=c.pace_quantum(rate);
+        c.cfg.native_feedback_mode=7;
+        c.pace_credit=3.0*q;
+        assert!(c.pace_ready());
+        assert_eq!(c.pace_credit,q);
+        assert_eq!(c.pace_credit_over_quantum,1);
+        assert_eq!(c.pace_rate(),Some(rate));
+        assert_eq!(c.pace_quantum(rate),q);
+        c.pace_credit=0.0;
+        c.pace_wait();
+        assert_eq!(c.pace_deadline,Some(c.now+Duration::from_secs_f64(q/rate as f64)));
     }
 
     #[test]

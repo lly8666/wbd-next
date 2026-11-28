@@ -1,0 +1,295 @@
+{
+  "schema_version": 1,
+  "source_sha": "2967efccb20549eab72d53f2d898a3bef34231ef",
+  "result": "MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW",
+  "scope": "Restored C native qualification and frozen-source near-capacity load diagnosis; not L2 promotion or product cap.",
+  "artifact_verified": true,
+  "native": {
+    "run": 46119195520,
+    "artifacts": {
+      "arm": 15252634692,
+      "x86": 15252659282
+    },
+    "build_artifacts": {
+      "arm": 15253555580,
+      "x86": 15252913625
+    },
+    "manifest_sha256": {
+      "arm": "9b13fbe8595bfb4b3b95c70a4eac61df96341cae2ffb0aa695f20dbc97004c86",
+      "x86": "c9d880ef51ab6946b3047fd837c5d4fcde103d5e8960669a1074b38091075fe9"
+    },
+    "functional_profiles_per_isa": 5,
+    "local": {
+      "mbps": [
+        339.0846159020928,
+        88.02616856011454,
+        54.827092990506365
+      ],
+      "order": [
+        "normal-selected",
+        "pause-selected",
+        "loss-selected"
+      ],
+      "sample_retrans_bytes": [
+        0,
+        0,
+        534055
+      ],
+      "all_measured": true,
+      "scope": "baseline local Stop/live, not C performance claim"
+    }
+  },
+  "frozen_product": {
+    "source": "12b17ccfd4dc3354fa7dddecd0450bd1552cc540",
+    "build_run": 46111963879,
+    "artifact": 15250710622,
+    "manifest_sha256": "18426f6c58084dae3a52faf98ed56b8e06ff99e3853ee57fa3d04206f7870522"
+  },
+  "three": {
+    "AJJA": {
+      "run": 46119195642,
+      "artifacts": {
+        "summary": 15253166685,
+        "client": 15253166691,
+        "server": 15252554839,
+        "relay": 15253116854
+      },
+      "summary_sha256": "f8da9921eb38f6da6b4bd80b687e3485e44d4f8a4ba91e748f46ded6fa149167",
+      "order": [
+        "A",
+        "J",
+        "J",
+        "A"
+      ],
+      "mbps": [
+        273.5127345950515,
+        268.38843833788115,
+        268.6967258139642,
+        259.7699932739483
+      ],
+      "means_mbps": {
+        "A": 266.64136393449985,
+        "J": 268.54258207592267
+      },
+      "mean_endpoint_cpu": {
+        "A": [
+          13.705,
+          15.24
+        ],
+        "J": [
+          20.025,
+          15.05
+        ]
+      },
+      "retired_sent": {
+        "A": 2190559547,
+        "J": 2147831043
+      },
+      "retired_retrans": {
+        "A": 43075899,
+        "J": 347395
+      },
+      "bare_mbps": [
+        192.57524564804865,
+        270.4584736006863
+      ],
+      "first_hop_missing": [
+        12,
+        0,
+        0,
+        7
+      ],
+      "second_hop_missing": [
+        370,
+        3,
+        1,
+        214
+      ],
+      "first_hop_tx": [
+        16683,
+        16196,
+        16188,
+        16492
+      ],
+      "second_hop_tx": [
+        16671,
+        16196,
+        16188,
+        16485
+      ],
+      "server_sample_spacing_p10_us": [
+        621,
+        1156,
+        1136,
+        661
+      ],
+      "relay_sample_spacing_p10_us": [
+        519,
+        795,
+        801,
+        537
+      ],
+      "server_publish_calls": [
+        280189,
+        641272,
+        626886,
+        232253
+      ],
+      "server_middle_batch_peak": [
+        64,
+        32,
+        32,
+        64
+      ],
+      "server_rx_packets": [
+        199438,
+        480221,
+        468478,
+        150761
+      ],
+      "server_ingress_full": [
+        115,
+        0,
+        0,
+        0
+      ],
+      "client_ingress_full": [
+        1621,
+        0,
+        0,
+        0
+      ]
+    },
+    "JAAJ": {
+      "run": 46119195656,
+      "artifacts": {
+        "summary": 15253490007,
+        "client": 15253385228,
+        "server": 15252749004,
+        "relay": 15252529756
+      },
+      "summary_sha256": "fb6efd054ae285c68a42d5c9080bd4bbd92b5e4b7544673d3912bca410c96247",
+      "order": [
+        "J",
+        "A",
+        "A",
+        "J"
+      ],
+      "mbps": [
+        275.13734738435573,
+        337.9414427419735,
+        316.83894104293086,
+        285.4343291178802
+      ],
+      "means_mbps": {
+        "A": 327.3901918924522,
+        "J": 280.285838251118
+      },
+      "mean_endpoint_cpu": {
+        "A": [
+          14.885,
+          16.685
+        ],
+        "J": [
+          19.82,
+          18.11
+        ]
+      },
+      "retired_sent": {
+        "A": 2178446382,
+        "J": 2148478131
+      },
+      "retired_retrans": {
+        "A": 30962734,
+        "J": 994483
+      },
+      "bare_mbps": [
+        330.82562712596814,
+        364.34843235482356
+      ],
+      "first_hop_missing": [
+        0,
+        36,
+        44,
+        3
+      ],
+      "second_hop_missing": [
+        4,
+        172,
+        164,
+        7
+      ],
+      "first_hop_tx": [
+        16199,
+        16484,
+        16441,
+        16209
+      ],
+      "second_hop_tx": [
+        16199,
+        16448,
+        16397,
+        16206
+      ],
+      "server_sample_spacing_p10_us": [
+        1033,
+        618,
+        614,
+        1009
+      ],
+      "relay_sample_spacing_p10_us": [
+        761,
+        366,
+        365,
+        742
+      ],
+      "server_publish_calls": [
+        683889,
+        320296,
+        368226,
+        600468
+      ],
+      "server_middle_batch_peak": [
+        32,
+        64,
+        64,
+        32
+      ],
+      "server_rx_packets": [
+        516998,
+        248740,
+        286550,
+        450205
+      ],
+      "server_ingress_full": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "client_ingress_full": [
+        0,
+        1186,
+        368,
+        0
+      ]
+    },
+    "common": {
+      "rtt_ms": 400,
+      "target_bytes": 1073741824,
+      "offered_bps": {
+        "A": 600000000,
+        "J": 360000000
+      },
+      "injected_loss_pct": 0,
+      "all_manifest_identical": true,
+      "all_application_hash_joined_stop_retired_direct": true,
+      "all_timeouts_zero": true,
+      "all_capture_valid_kernel_drops_zero": true,
+      "all_other_adjacent_missing_and_extras_zero": true,
+      "path_scope": "deterministic sampled product tuple identities; spacing between sampled packets, not all-packet interarrival or physical loss rate"
+    }
+  },
+  "interpretation": "Near-capacity application load intervention reduces retired retrans 1.9664%→0.01617% and 1.4213%→0.04629%; throughput +0.71% and -14.39%, endpoint CPU increases ~21.18% and 20.14%. Sampled cross-runner gaps A603/J4 and A416/J14. Local ingress full zero at J, but A can have gaps even when ingress full zero. Server publish peaks64 vs32 and reverse raw RX/publish work rises sharply at J. No proof that peak batch or credit accumulation alone causes loss; sampled spacing also changes with offer. Do not select J or claim physical path cause. Distinguish instantaneous accumulated credit from average rate using existing pacing logic; historical quantum32→8 and fixed rate ceilings rejected. K keeps C and quantum32, same rate and wait, tests credit cap one versus two quanta on same newly qualified binary, actual above-quantum event count, matched forward/reverse 600M and weak controls. Retain exact historical C reference, no outer protocol changes, no default or L2 promotion.",
+  "physical": "NOT_RUN"
+}

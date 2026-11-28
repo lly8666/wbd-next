@@ -1,4 +1,4 @@
-name: M0 ARM JAAJ feedback comparison
+name: M0 ARM KAAK feedback comparison
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -15,7 +15,7 @@ on:
       - 'crates/wbd-engine/src/v4_rust_tcp/flow.rs'
       - 'crates/wbd-engine/src/v4_rust_tcp/mod.rs'
       - 'crates/wbd-engine/src/v4_embedded_go.rs'
-      - '.github/workflows/qa-m0-dual-tcp-arm-jaaj.yml'
+      - '.github/workflows/qa-m0-dual-tcp-arm-kaak.yml'
       - 'tools/m0_dual_rust_tcp_local.py'
       - '.github/workflows/qa-m0-dual-rust-tcp-core.yml'
 permissions:
@@ -26,6 +26,6 @@ jobs:
   compare:
     uses: ./.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml
     with:
-      arm: 'J'
+      arm: 'K'
       order: 'reverse'
     secrets: inherit

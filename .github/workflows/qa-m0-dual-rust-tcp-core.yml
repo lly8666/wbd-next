@@ -1,4 +1,4 @@
-name: M0 dual Rust TCP Normal native restored service epoch qualification
+name: M0 dual Rust TCP Normal native accumulated credit comparison
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -13,8 +13,8 @@ on:
       - 'tools/m0_dual_rust_tcp_*.py'
       - '.github/workflows/qa-m0-dual-rust-tcp-core.yml'
       - '.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml'
-      - '.github/workflows/qa-m0-dual-tcp-arm-ajja.yml'
-      - '.github/workflows/qa-m0-dual-tcp-arm-jaaj.yml'
+      - '.github/workflows/qa-m0-dual-tcp-arm-akka.yml'
+      - '.github/workflows/qa-m0-dual-tcp-arm-kaak.yml'
       - 'tools/m0_dual_tcp_arm_linux_parity.py'
 permissions:
   contents: read
@@ -76,7 +76,7 @@ jobs:
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/credit-off WBD_M0_RELAY_PENDING_CREDIT=0 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Independent feedback native functional profiles
         run: |
-          for profile in service;do
+          for profile in service service-credit;do
             sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT="dual-tcp-out/$profile" WBD_M0_NATIVE_FEEDBACK="$profile" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
           done
       - name: Selected baseline local clean pause weak regression

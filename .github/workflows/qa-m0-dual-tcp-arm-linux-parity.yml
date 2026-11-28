@@ -32,18 +32,54 @@ jobs:
         with: {persist-credentials: false}
       - name: Preflight harness syntax before acquiring three runners
         run: python3 -m py_compile tools/m0_dual_tcp_arm_linux_parity.py
-      - name: Verify previously qualified frozen C artifact
+      - name: Wait for exact same-commit dual-ISA functional and core qualification
         id: qualified
         run: |
           set -euo pipefail
-          run=46111963879
-          gh run view "$run" -R "$GITHUB_REPOSITORY" --json headSha,status,conclusion > frozen-run.json
-          test "$(jq -r .headSha frozen-run.json)" = 12b17ccfd4dc3354fa7dddecd0450bd1552cc540
-          test "$(jq -r .status frozen-run.json)" = completed
-          test "$(jq -r .conclusion frozen-run.json)" = success
-          artifact=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" --jq '.artifacts[] | select(.name=="dual-tcp-native-build-aarch64" and .expired==false) | .id')
-          test "$artifact" = 15250710622
-          echo "run=$run" >> "$GITHUB_OUTPUT"
+          for i in $(seq 1 180);do
+            candidate_run=$(gh run list -R "$GITHUB_REPOSITORY" --workflow qa-m0-dual-rust-tcp-core.yml --commit "$GITHUB_SHA" --json databaseId --jq '.[0].databaseId // empty')
+            if test -z "$candidate_run"; then sleep 10; continue; fi
+            core=$(gh run view "$candidate_run" -R "$GITHUB_REPOSITORY" --json status,conclusion)
+            if test "$(jq -r .status <<<"$core")" = completed;then
+              test "$(jq -r .conclusion <<<"$core")" = success
+              candidate=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$candidate_run/artifacts" --jq '.artifacts[] | select(.name=="dual-tcp-native-build-aarch64" and .expired==false) | .id')
+              if test -n "$candidate";then echo "run=$candidate_run" >> "$GITHUB_OUTPUT"; exit 0;fi
+            fi
+            sleep 10
+          done
+          exit 2
+  weak-arm64:
+    needs: prepare
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Reuse the qualified exact native ARM artifact
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iputils-ping openssl
+          mkdir -p linux-plan029-public-bundle
+          gh run download "${{ needs.prepare.outputs.candidate_run }}" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-aarch64 -D native-artifact
+          tar -C linux-plan029-public-bundle -xf native-artifact/bundle.tar
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          test "$(jq -r .source_sha linux-plan029-public-bundle/manifest.json)" = "$GITHUB_SHA"
+      - name: Matched local weak comparison
+        run: |
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/recovery DUAL_TCP_RECOVERY=1 WBD_M0_FEEDBACK_ARM="$WBD_M0_FEEDBACK_ARM" WBD_M0_FEEDBACK_ORDER="$WBD_M0_FEEDBACK_ORDER" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+      - name: Preserve local evidence
+        if: always()
+        run: |
+          if test -d dual-tcp-out;then
+            sudo find dual-tcp-out -type f \( -name install -o -name route-key.hex -o -name users.json -o -name key.pem -o -name cert.pem \) -delete
+            sudo chown -R "$(id -u):$(id -g)" dual-tcp-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: dual-arm-local-weak-evidence, path: dual-tcp-out/, retention-days: 14, if-no-files-found: warn}
   relay-arm64:
     name: 'Real ARM64 middle L3 kernel router: ONLY netem egress per direction'
     needs: prepare
