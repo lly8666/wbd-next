@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2519,
-  "checkpoint_sha": "c219d22cd011583d80464e46fcd7f742f285a98f",
+  "sequence": 2520,
+  "checkpoint_sha": "1e9ac242971224b006fe7a69cd9678f836b6c774",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收8d7e8af exact native与真实1% ABBA；先确认两条wrapped read测试不再失败，若性能无收益不继续微调；随后优先查零注入丢包跨机剩余重传与实际路径/修复/内层首次交付的关系。",
+  "next_action": "验收c16c381精确native46096665744与clean诊断46096665759；核对实际M4 copied/inner key/outer seq、客户端认证RX admission、首次和重复身份、独立四点缺口，注明采样/碰撞/时钟限制；追实际路径和反馈精度，不用带trace吞吐晋级。",
   "unverified": true,
-  "last_tested_source": "295cfc230cdd4877e58e7d92188372a39bc17c79",
+  "last_tested_source": "8d7e8af0af25f5e736fc5a4f8a8d6c31c7c0f5e7",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-L2-OOO-RING-NATIVE-FAIL.json"
+    "docs/evidence/M0/20261128-L2-OOO-RING-QUALIFICATION-RESULT.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261128-NATIVE-PRODUCER-REQUALIFICATION-RESULT.json",
-    "docs/devlog/M0/20261128-M0-L2-FROZEN-SPLICE-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-FROZEN-SPLICE-RESULT.json",
     "docs/devlog/M0/20261128-M0-L2-WEAK-CPU-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-WEAK-CPU-DIAGNOSTIC-RESULT.json",
     "docs/devlog/M0/20261128-M0-L2-OOO-RING-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-OOO-RING-NATIVE-FAIL.json",
-    "docs/devlog/M0/20261128-M0-L2-OOO-WRAP-REPAIR-HANDOFF.md"
+    "docs/devlog/M0/20261128-M0-L2-OOO-WRAP-REPAIR-HANDOFF.md",
+    "docs/evidence/M0/20261128-L2-OOO-RING-QUALIFICATION-RESULT.json",
+    "docs/devlog/M0/20261128-M0-L2-CLEAN-INNER-DELIVERY-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "295cfc2 双ISA354通过2失败，VecDeque Read仅首连续片导致3/8和64/8256，三机被原生门阻断。8d7e8af修复跨环read，测试不改；新资格在途。零损局部0重传，跨机最新2.63%，旧/新四点缺口46/809非等价内层重传，后续优先定位。"
+  "partial_summary": "8d7e8af双ISA356/8功能/3本地/弱ABBA6/6，两条旧失败通过；A60.91/B77.34M，CPU52.58/46.16，重传1.039/1.056%，A2低/B1首数据+1s，保留研究基线但无因果晋级。c16c381仅采样M4/认证RX内层身份，clean诊断与原生在途；L2未过。"
 }
