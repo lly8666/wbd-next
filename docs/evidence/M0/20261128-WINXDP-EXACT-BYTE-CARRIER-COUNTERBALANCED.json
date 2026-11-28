@@ -1,0 +1,717 @@
+{
+  "schema": "winxdp-current-carrier-exact-byte-counterbalanced-v1",
+  "product_source": "569b51abe62c499e1ea7e2f4e232f205756a891f",
+  "scope": "9V45 hosted Generic WSL NAT CUBIC Normal Off, same-host exact-byte product comparison, not isolated carrier effect or physical qualification",
+  "result": "PASS_OPPOSITE_ORDER_COVERAGE",
+  "original_run": 46097895116,
+  "reverse_run": 46102283254,
+  "coverage_job": 140853127603,
+  "summary_artifact": {
+    "id": 15246910953,
+    "reported_zip_sha256": "40b87a5527a6c2b1680e37305dbb0bb267cb395f7df1287502001f763218dd21"
+  },
+  "case_count": 72,
+  "quartet_count": 18,
+  "reverse_eligible": 5,
+  "reverse_skipped_cpu": 15,
+  "rows": {
+    "clean-down250": [
+      {
+        "runner": "winxdp-carrier-abba-B18",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down250",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 249.98643472000003,
+          "B_rx_mbps": 250.05457776,
+          "rx_mbps_delta_pct": 0.027258695087306606,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 13.763159295204549,
+          "B_cpu_s_per_gib": 7.2077574414784005,
+          "cpu_s_per_gib_delta_pct": -47.63006598354366,
+          "target_mbps": 250,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 260.4030427294902,
+            "windows_to_linux": 13.905376928153327
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 27813.74437536318,
+            "windows_to_linux": 13991.607325342298
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 260.40538178052896,
+            "windows_to_linux": 14.064625981313835
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 27812.712801805847,
+            "windows_to_linux": 14360.045962183936
+          },
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B04",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down250",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 250.01916352,
+          "B_rx_mbps": 250.00263128,
+          "rx_mbps_delta_pct": -0.006612389133398011,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 12.51393654466368,
+          "B_cpu_s_per_gib": 6.772001036233698,
+          "cpu_s_per_gib_delta_pct": -45.88432655013355,
+          "target_mbps": 250,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 260.4843273082928,
+            "windows_to_linux": 13.895866490865924
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 27821.755443322676,
+            "windows_to_linux": 13967.286425031027
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 260.4710650929527,
+            "windows_to_linux": 14.099718452590393
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 27819.059959225084,
+            "windows_to_linux": 14440.419108534656
+          },
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B05",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down250",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 249.99071464000002,
+          "B_rx_mbps": 249.99969407999998,
+          "rx_mbps_delta_pct": 0.003591909408662275,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 14.151159727798948,
+          "B_cpu_s_per_gib": 6.979376460965594,
+          "cpu_s_per_gib_delta_pct": -50.6798269879245,
+          "target_mbps": 250,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 260.42633666593997,
+            "windows_to_linux": 13.90447146198141
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 27816.185781820328,
+            "windows_to_linux": 13990.010548070422
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 260.41855024995175,
+            "windows_to_linux": 14.066683695468246
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 27813.812333184796,
+            "windows_to_linux": 14362.425642510003
+          },
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-A",
+        "sequence": "ABBA",
+        "evidence_run": 46097895116,
+        "pair": {
+          "group": "clean-down250",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 250.18339496000002,
+          "B_rx_mbps": 249.97300752,
+          "rx_mbps_delta_pct": -0.08409328686008744,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 13.829487538165324,
+          "B_cpu_s_per_gib": 7.878172590219732,
+          "cpu_s_per_gib_delta_pct": -43.033517558200984,
+          "target_mbps": 250,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 260.3695629969609,
+            "windows_to_linux": 13.907186211761786
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 27810.085630731694,
+            "windows_to_linux": 13995.35907628257
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 260.3957044915061,
+            "windows_to_linux": 14.092377602508922
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 27811.913433711758,
+            "windows_to_linux": 14422.496940115703
+          },
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B01",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down250",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 249.98131560000002,
+          "B_rx_mbps": 249.99004328,
+          "rx_mbps_delta_pct": 0.003491332933847069,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 14.150699202817043,
+          "B_cpu_s_per_gib": 8.203065997240003,
+          "cpu_s_per_gib_delta_pct": -42.03066661464345,
+          "target_mbps": 250,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 260.3745587187235,
+            "windows_to_linux": 13.909348586591804
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 27810.80353790354,
+            "windows_to_linux": 14000.780650479253
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 260.36858933115917,
+            "windows_to_linux": 14.096104243814885
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 27809.491697999714,
+            "windows_to_linux": 14434.507532954703
+          },
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B03",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down250",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 250.18012208,
+          "B_rx_mbps": 249.81322384,
+          "rx_mbps_delta_pct": -0.1466536337697777,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 12.96025923549486,
+          "B_cpu_s_per_gib": 6.741289577931498,
+          "cpu_s_per_gib_delta_pct": -47.984917157607335,
+          "target_mbps": 250,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 260.44834352852484,
+            "windows_to_linux": 13.89636252884507
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 27818.146843347255,
+            "windows_to_linux": 13971.084795073504
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 260.3042179124482,
+            "windows_to_linux": 14.095178272703652
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 27801.140395538703,
+            "windows_to_linux": 14436.54181281017
+          },
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET"
+        }
+      }
+    ],
+    "clean-down350": [
+      {
+        "runner": "winxdp-carrier-abba-B18",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down350",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 341.12344696,
+          "B_rx_mbps": 350.18070464,
+          "rx_mbps_delta_pct": 2.655126101918759,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 13.714564980923978,
+          "B_cpu_s_per_gib": 7.263579718920782,
+          "cpu_s_per_gib_delta_pct": -47.037476368926576,
+          "target_mbps": 350,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 353.7952424088643,
+            "windows_to_linux": 19.529495359015684
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 37756.70536069329,
+            "windows_to_linux": 19565.964117663243
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 363.14067276300597,
+            "windows_to_linux": 19.764575941680803
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 38752.71370698701,
+            "windows_to_linux": 20367.410634958134
+          },
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B04",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down350",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 344.94820872,
+          "B_rx_mbps": 334.48640584,
+          "rx_mbps_delta_pct": -3.032861924061203,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 12.116247346417012,
+          "B_cpu_s_per_gib": 6.615807759022452,
+          "cpu_s_per_gib_delta_pct": -45.397221021747605,
+          "target_mbps": 350,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 359.6840123048157,
+            "windows_to_linux": 19.417421638349488
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 38384.33342762508,
+            "windows_to_linux": 19540.39960795627
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 348.8218251260289,
+            "windows_to_linux": 19.236204644335494
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 37228.113291205715,
+            "windows_to_linux": 19671.27687181206
+          },
+          "all_arms_at_target": false,
+          "scope": "COMPLETE_BELOW_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B05",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down350",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 346.59497088,
+          "B_rx_mbps": 349.1613284,
+          "rx_mbps_delta_pct": 0.7404485741625333,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 13.684768621982638,
+          "B_cpu_s_per_gib": 6.794497693029527,
+          "cpu_s_per_gib_delta_pct": -50.34992639835261,
+          "target_mbps": 350,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 360.33004046668606,
+            "windows_to_linux": 19.66946939874329
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 38452.468358940736,
+            "windows_to_linux": 19734.342806485394
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 362.42108709077473,
+            "windows_to_linux": 19.707393344713353
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 38675.151627479594,
+            "windows_to_linux": 20272.28741496979
+          },
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-A",
+        "sequence": "ABBA",
+        "evidence_run": 46097895116,
+        "pair": {
+          "group": "clean-down350",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 319.86284232,
+          "B_rx_mbps": 349.63060903999997,
+          "rx_mbps_delta_pct": 9.30641599508435,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 12.859792209423436,
+          "B_cpu_s_per_gib": 6.125681580816989,
+          "cpu_s_per_gib_delta_pct": -52.365625501101064,
+          "target_mbps": 350,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 332.26505372050417,
+            "windows_to_linux": 18.556291237540172
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 35462.221008124856,
+            "windows_to_linux": 18508.720077996964
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 362.91909083118344,
+            "windows_to_linux": 19.94294837795993
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 38729.113698442525,
+            "windows_to_linux": 20369.936234539615
+          },
+          "all_arms_at_target": false,
+          "scope": "COMPLETE_BELOW_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B01",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down350",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 346.877026,
+          "B_rx_mbps": 349.63035728,
+          "rx_mbps_delta_pct": 0.793748525738347,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 14.052120119070448,
+          "B_cpu_s_per_gib": 8.037539218657226,
+          "cpu_s_per_gib_delta_pct": -42.80194625045013,
+          "target_mbps": 350,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 360.5155989340827,
+            "windows_to_linux": 19.568482144927277
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 38472.03148300332,
+            "windows_to_linux": 19674.97560457766
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 362.95546992578954,
+            "windows_to_linux": 19.826294297791623
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 38689.10890956029,
+            "windows_to_linux": 20520.5322302786
+          },
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B03",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down350",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 349.01757344,
+          "B_rx_mbps": 349.1789516,
+          "rx_mbps_delta_pct": 0.046237832212692176,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 11.98505002544875,
+          "B_cpu_s_per_gib": 6.681659086823986,
+          "cpu_s_per_gib_delta_pct": -44.25005258520973,
+          "target_mbps": 350,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 362.43309019732123,
+            "windows_to_linux": 19.389117740626347
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 38677.29981644649,
+            "windows_to_linux": 19538.84712010139
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 362.3244552661455,
+            "windows_to_linux": 19.714522440824993
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 38664.999695035396,
+            "windows_to_linux": 20289.15793356522
+          },
+          "all_arms_at_target": true,
+          "scope": "MATCHED_TARGET"
+        }
+      }
+    ],
+    "clean-down650": [
+      {
+        "runner": "winxdp-carrier-abba-B18",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down650",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 387.30216152,
+          "B_rx_mbps": 422.75860504,
+          "rx_mbps_delta_pct": 9.154723893315797,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 11.10937691800767,
+          "B_cpu_s_per_gib": 5.7320803642013,
+          "cpu_s_per_gib_delta_pct": -48.40322363255204,
+          "target_mbps": 650,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 391.78625678549395,
+            "windows_to_linux": 17.66471002459486
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 33311.40283811541,
+            "windows_to_linux": 17539.104159672424
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 433.24720908903623,
+            "windows_to_linux": 20.576224334439146
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 36825.26276235109,
+            "windows_to_linux": 20645.392572544086
+          },
+          "all_arms_at_target": false,
+          "scope": "COMPLETE_BELOW_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B04",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down650",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 450.85662856,
+          "B_rx_mbps": 485.66813112,
+          "rx_mbps_delta_pct": 7.721191251237713,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 9.548927660001757,
+          "B_cpu_s_per_gib": 5.11279140382587,
+          "cpu_s_per_gib_delta_pct": -46.45690504869812,
+          "target_mbps": 650,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 458.4824360413285,
+            "windows_to_linux": 20.860489182425646
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 38966.746616838995,
+            "windows_to_linux": 20615.42742545822
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 491.69953593342245,
+            "windows_to_linux": 23.219815325205722
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 41781.61272141224,
+            "windows_to_linux": 23421.291349740626
+          },
+          "all_arms_at_target": false,
+          "scope": "COMPLETE_BELOW_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B05",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down650",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 452.19348736,
+          "B_rx_mbps": 450.8279612,
+          "rx_mbps_delta_pct": -0.30197828986264774,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 10.011838676868917,
+          "B_cpu_s_per_gib": 5.3727112391819585,
+          "cpu_s_per_gib_delta_pct": -46.336418188649745,
+          "target_mbps": 650,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 462.8993226632389,
+            "windows_to_linux": 21.07215967637589
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 39341.193147571226,
+            "windows_to_linux": 20800.55029073912
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 459.7501229756383,
+            "windows_to_linux": 21.265767833025755
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 39073.82322317721,
+            "windows_to_linux": 21628.5565295793
+          },
+          "all_arms_at_target": false,
+          "scope": "COMPLETE_BELOW_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-A",
+        "sequence": "ABBA",
+        "evidence_run": 46097895116,
+        "pair": {
+          "group": "clean-down650",
+          "sequence": "ABBA",
+          "valid": true,
+          "A_rx_mbps": 419.76939031999996,
+          "B_rx_mbps": 472.97936416,
+          "rx_mbps_delta_pct": 12.676001411021609,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 10.213289821109614,
+          "B_cpu_s_per_gib": 5.39482897564348,
+          "cpu_s_per_gib_delta_pct": -47.178342432885515,
+          "target_mbps": 650,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 412.9115403299767,
+            "windows_to_linux": 19.084896400871784
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 35095.46462143213,
+            "windows_to_linux": 18764.28602866041
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 484.317566476529,
+            "windows_to_linux": 22.85687892229693
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 41156.55108591101,
+            "windows_to_linux": 23084.15625990458
+          },
+          "all_arms_at_target": false,
+          "scope": "COMPLETE_BELOW_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B01",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down650",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 425.61380112,
+          "B_rx_mbps": 431.48577136,
+          "rx_mbps_delta_pct": 1.3796475171970357,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 11.180189175833547,
+          "B_cpu_s_per_gib": 6.111089047557218,
+          "cpu_s_per_gib_delta_pct": -45.340021072571865,
+          "target_mbps": 650,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 421.18483068681735,
+            "windows_to_linux": 19.70594639168669
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 35802.53002478938,
+            "windows_to_linux": 19296.41822596405
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 431.9778723329243,
+            "windows_to_linux": 20.44205341752091
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 36717.31927599605,
+            "windows_to_linux": 20652.691504458333
+          },
+          "all_arms_at_target": false,
+          "scope": "COMPLETE_BELOW_TARGET"
+        }
+      },
+      {
+        "runner": "winxdp-carrier-abba-B03",
+        "sequence": "BAAB",
+        "evidence_run": 46102283254,
+        "pair": {
+          "group": "clean-down650",
+          "sequence": "BAAB",
+          "valid": true,
+          "A_rx_mbps": 474.625636,
+          "B_rx_mbps": 453.57376448,
+          "rx_mbps_delta_pct": -4.435468698534429,
+          "A_server_rx_mbps": 0,
+          "B_server_rx_mbps": 0,
+          "server_rx_mbps_delta_pct": null,
+          "A_cpu_s_per_gib": 9.34536598238638,
+          "B_cpu_s_per_gib": 5.211429187535169,
+          "cpu_s_per_gib_delta_pct": -44.23515143914772,
+          "target_mbps": 650,
+          "A_outer_netem_mbps": {
+            "linux_to_windows": 471.64837274218576,
+            "windows_to_linux": 21.62517123466391
+          },
+          "A_outer_netem_pps": {
+            "linux_to_windows": 40081.72586101,
+            "windows_to_linux": 21338.55363779825
+          },
+          "B_outer_netem_mbps": {
+            "linux_to_windows": 461.6887641713896,
+            "windows_to_linux": 21.27419735406897
+          },
+          "B_outer_netem_pps": {
+            "linux_to_windows": 39238.57848367169,
+            "windows_to_linux": 21618.941430047897
+          },
+          "all_arms_at_target": false,
+          "scope": "COMPLETE_BELOW_TARGET"
+        }
+      }
+    ]
+  },
+  "physical": "NOT_RUN",
+  "loaded_rotation": "NOT_RUN",
+  "next": {
+    "source": "9b7394c2255dfb9460b6c9d6c782cf28c54dab36",
+    "run": 46104542954,
+    "status_at_record": "QUEUED",
+    "comparison": "identical WinXDP release, 1 vs 4 inner TCP flows, 650M aggregate, 400ms RTT, MTU1460, CUBIC NAT, no Npcap installed, per-socket options unchanged, 15/30/45/55s sender snapshots; matched bare CUBIC not included in this run"
+  }
+}
