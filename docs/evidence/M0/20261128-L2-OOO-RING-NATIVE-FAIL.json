@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "source_sha": "295cfc230cdd4877e58e7d92188372a39bc17c79",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "scope": "Both native core jobs failed wrapped read assertions; original Actions job logs reviewed, artifact ZIP not independently verified. No performance execution.",
+  "native_run": 46094656331,
+  "native_jobs": [
+    {
+      "arch": "aarch64",
+      "job_id": 140823150536,
+      "artifact_id": 15242547984,
+      "passed": 354,
+      "failed": 2
+    },
+    {
+      "arch": "x86_64",
+      "job_id": 140823150720,
+      "artifact_id": 15242991856,
+      "passed": 354,
+      "failed": 2
+    }
+  ],
+  "failures": [
+    {
+      "test": "adjacent_fast_paths_preserve_bridging_and_duplicates",
+      "expected": 8,
+      "observed": 3
+    },
+    {
+      "test": "repaired_hole_reuses_large_ooo_ring_with_unread_prefix",
+      "expected": 8256,
+      "observed": 64
+    }
+  ],
+  "comparison": {
+    "run_id": 46094656243,
+    "prepare_job": 140823150382,
+    "result": "BLOCKED_NATIVE_GATE",
+    "measured_rows": 0
+  },
+  "root_cause": "VecDeque Read returns first contiguous slice. Adoption creates wrapped readable ring; existing RecvBuf read contract expects both slices. Allocation identity/sequence/SACK assertions preceding new read passed.",
+  "next_source": "8d7e8af0af25f5e736fc5a4f8a8d6c31c7c0f5e7",
+  "physical": "NOT_RUN"
+}
