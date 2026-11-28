@@ -15,8 +15,12 @@ sub("bob bob-mixed-protected game4 '--game-fec fixed6 --record-cipher aes-256-gc
 sub("carol carol-mixed-protected fec-auto '--record-cipher aes-128-gcm'","carol carol-mixed-protected "+{"normal":"normal","fixed":"fec-fixed","auto":"fec-auto"}[scene]+" '--record-cipher aes-128-gcm"+extra+"'")
 # Reuse the exact real server, client, TUN, lease and warmup; replace
 # post-warmup baseline assertions with this fault-specific oracle.
-anchor='if [[ "'+'
-s=s[:s.index(anchor)]
+anchor='wait "$PA" "$PB" "$PC"\n'
+assert s.count(anchor)==1
+anchor_end=s.index(anchor)+len(anchor)
+s=s[:anchor_end]
+# The mixed fixture's original later assertions are intentionally replaced.
+anchor=""
 s=s.replace("for i in range(10000):","for i in range(20000):")
 block=r'''
 ART=fixed-kernel-result
