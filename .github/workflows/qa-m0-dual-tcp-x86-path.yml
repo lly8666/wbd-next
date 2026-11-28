@@ -1,0 +1,60 @@
+name: M0 single x86 controlled path reference
+on:
+  workflow_call:
+    inputs:
+      profile:
+        required: true
+        type: string
+      order:
+        required: true
+        type: string
+permissions: {contents: read, actions: read}
+jobs:
+  matched:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DUAL_TCP_PATH_PROFILE: ${{ inputs.profile }}
+      DUAL_TCP_PATH_ORDER: ${{ inputs.order }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Record actual native CPU and prepare fixture
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          lscpu
+          uname -a
+          python3 -m py_compile tools/m0_dual_rust_tcp_local.py tools/m0_dual_rust_tcp_app.py
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iputils-ping openssl
+      - name: Fetch previously qualified frozen C x86 artifact
+        run: |
+          set -euo pipefail
+          run=46111963879
+          gh run view "$run" -R "$GITHUB_REPOSITORY" --json headSha,status,conclusion > frozen-run.json
+          test "$(jq -r .headSha frozen-run.json)" = 12b17ccfd4dc3354fa7dddecd0450bd1552cc540
+          test "$(jq -r .status frozen-run.json)" = completed
+          test "$(jq -r .conclusion frozen-run.json)" = success
+          artifact=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" --jq '.artifacts[] | select(.name=="dual-tcp-native-build-x86_64" and .expired==false) | .id')
+          test "$artifact" = 15250585479
+          mkdir -p linux-plan029-public-bundle
+          gh run download "$run" -R "$GITHUB_REPOSITORY" -n dual-tcp-native-build-x86_64 -D native-artifact
+          tar -C linux-plan029-public-bundle -xf native-artifact/bundle.tar
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          echo '03801dfeffc36d8a7615b2b63b02920a1c12c73c0b1384a446c2d6497bd45241  linux-plan029-public-bundle/manifest.json' | sha256sum -c -
+          test "$(jq -r .architecture linux-plan029-public-bundle/manifest.json)" = x86_64
+      - name: Matched bare and frozen C, one native host
+        run: |
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/path DUAL_TCP_RECOVERY=1 DUAL_TCP_PATH_PROFILE="$DUAL_TCP_PATH_PROFILE" DUAL_TCP_PATH_ORDER="$DUAL_TCP_PATH_ORDER" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+      - name: Preserve real application, host and network receipts
+        if: always()
+        run: |
+          if test -d dual-tcp-out;then
+            sudo find dual-tcp-out -type f \( -name install -o -name route-key.hex -o -name users.json -o -name key.pem -o -name cert.pem \) -delete
+            sudo chown -R "$(id -u):$(id -g)" dual-tcp-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: dual-x86-path-evidence, path: dual-tcp-out/, retention-days: 14, if-no-files-found: warn}

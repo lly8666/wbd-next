@@ -1,0 +1,15 @@
+name: M0 x86 jitter ABBA bare versus C
+on:
+  push:
+    branches: [experiment/m0-dual-rust-tcp]
+    paths:
+      - '.github/workflows/qa-m0-dual-tcp-x86-jitter-abba.yml'
+      - '.github/workflows/qa-m0-dual-tcp-x86-path.yml'
+      - 'tools/m0_dual_rust_tcp_local.py'
+permissions: {contents: read, actions: read}
+jobs:
+  compare:
+    uses: ./.github/workflows/qa-m0-dual-tcp-x86-path.yml
+    with:
+      profile: 'jitter'
+      order: 'ABBA'

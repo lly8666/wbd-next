@@ -127,8 +127,8 @@ def functional():
                 assert samples and all(l==pending_limit and (not l or p<=l) for l,p in samples),role
                 credit.append({"role":role,"samples":len(samples),"max_pending":max(p for l,p in samples)})
             row["relay_credit_receipts"]=credit
-        if os.environ.get("WBD_M0_NATIVE_FEEDBACK") in ("service","service-credit"):
-            expected_mode={"service":2,"service-credit":7}[os.environ["WBD_M0_NATIVE_FEEDBACK"]]
+        if os.environ.get("WBD_M0_NATIVE_FEEDBACK") =="service":
+            expected_mode=2
             for role,log in (("server",sl),("client",cl)):
                 middle=[x for x in log.splitlines() if "WBD_M0_TCP_INFO " in x and f"leg={role}-middle " in x]
                 assert middle and all(f" native_feedback_mode={expected_mode} " in x for x in middle),role
@@ -182,7 +182,18 @@ def controlled_recovery():
         ("normal-selected",True,600_000_000,{},0,0,512,"B"),
         ("pause-selected",True,600_000_000,{},0,0,512,"B"),
     ]
-    if baseline:
+    path_profile=os.environ.get("DUAL_TCP_PATH_PROFILE")
+    if path_profile:
+        assert path_profile in ("clean","jitter")
+        order=os.environ["DUAL_TCP_PATH_ORDER"]
+        assert order in ("ABBA","BAAB")
+        manifest=(current/"manifest.json").read_bytes()
+        assert hashlib.sha256(manifest).hexdigest()=="03801dfeffc36d8a7615b2b63b02920a1c12c73c0b1384a446c2d6497bd45241"
+        assert json.loads(manifest)["source_sha"]=="12b17ccfd4dc3354fa7dddecd0450bd1552cc540"
+        bundles={"A":current,"B":current}
+        cases=[(f"path-{i}-{arm}",arm=="B",600_000_000,{"WBD_M0_NATIVE_FEEDBACK":"service","WBD_M0_ACK_PROBE":"2"} if arm=="B" else {},5 if path_profile=="jitter" else 0,0,1024,arm) for i,arm in enumerate(order)]
+        save(O/"path-config.json",{"profile":path_profile,"order":order,"manifest":json.loads(manifest),"manifest_sha256":hashlib.sha256(manifest).hexdigest(),"cpu":run("lscpu"),"kernel":run("uname","-a"),"nproc":run("nproc"),"memory":pathlib.Path("/proc/meminfo").read_text(),"cgroup_cpu_max":pathlib.Path("/sys/fs/cgroup/cpu.max").read_text() if pathlib.Path("/sys/fs/cgroup/cpu.max").exists() else None,"scope":"single native x86 host; A bare kernel BBR, B frozen C; jitter not calibrated to cross-runner path"})
+    elif baseline:
         previous=pathlib.Path(baseline).resolve()
         sources={"A":"db760553eaf5b20e01d1c9c6452ab45281cc3812","B":os.environ["GITHUB_SHA"]}
         bundles={"A":previous,"B":current}
@@ -193,13 +204,6 @@ def controlled_recovery():
             builds[leg]={"manifest":manifest,"manifest_sha256":hashlib.sha256((bundle/"manifest.json").read_bytes()).hexdigest()}
         save(O/"builds.json",builds)
         cases.extend((f"loss-{i}-{leg}",True,120_000_000,{},0,0.5,96,leg) for i,leg in enumerate(("A","B","B","A")))
-    elif os.environ.get("WBD_M0_FEEDBACK_ARM"):
-        bundles={"B":current}
-        candidate=os.environ["WBD_M0_FEEDBACK_ARM"]
-        order=(candidate,"A","A",candidate) if os.environ["WBD_M0_FEEDBACK_ORDER"]=="reverse" else ("A",candidate,candidate,"A")
-        for i,arm in enumerate(order):
-            profile={"WBD_M0_NATIVE_FEEDBACK":"service-credit" if arm=="K" else "service","WBD_M0_ACK_PROBE":"2"}
-            cases.append((f"loss-{i}-{arm}",True,120_000_000,profile,0,0.5,96,"B"))
     else:
         bundles={"B":current}
         cases.append(("loss-selected",True,120_000_000,{},0,0.5,96,"B"))
@@ -209,6 +213,8 @@ def controlled_recovery():
         d=O/label;d.mkdir()
         server=client=origin=app=None
         row={"case":label,"leg":leg,"product_source_sha":json.loads((ROOT/"manifest.json").read_text())["source_sha"],"paired":paired,"offered_bps":offered,"target_bytes":target_bytes,"added_rtt_ms":400,"injected_loss_pct":loss,"forward_jitter_ms":jitter,"profile":profile,"status":"INCOMPLETE"}
+        if path_profile:
+            row.update(path_profile=path_profile,reverse_jitter_ms=jitter,product_source_sha=row["product_source_sha"] if paired else None)
         try:
             # Establish the product/control connection on the clean
             # 400ms path, then apply the requested data-phase impairment.
@@ -246,7 +252,7 @@ def controlled_recovery():
             seed_receipts={}
             for index,dev in enumerate(("rc0","rs0")):
                 terms=["delay","200ms"]
-                if jitter and dev=="rc0":terms+= [str(jitter)+"ms","distribution","normal"]
+                if jitter and (dev=="rc0" or path_profile):terms+= [str(jitter)+"ms","distribution","normal"]
                 args=["ip","netns","exec",R,"tc","qdisc","replace","dev",dev,"root","netem",*terms,"loss","random",str(loss)+"%","limit","65536"]
                 if loss or jitter:
                     seed=20261126+index
@@ -270,6 +276,8 @@ def controlled_recovery():
                         result[role]=int(stat[11])+int(stat[12])
                 return result
             cpu_before=endpoint_cpu()
+            if path_profile:
+                save(d/"host-before.json",{"stat":pathlib.Path("/proc/stat").read_text(),"softirqs":pathlib.Path("/proc/softirqs").read_text(),"sender_qdisc":ns(S,"tc","-s","qdisc","show","dev","wan0")})
             app=spawn(C,d/"app-client.json",*argv)
             samples=[]
             deadline=time.monotonic()+180
@@ -293,12 +301,14 @@ def controlled_recovery():
             assert received["paused_seconds"]>=pause
             # CPU snapshots bracket actual app completion, not process teardown.
             cpu_after=endpoint_cpu()
+            if path_profile:
+                save(d/"host-after.json",{"stat":pathlib.Path("/proc/stat").read_text(),"softirqs":pathlib.Path("/proc/softirqs").read_text(),"sender_qdisc":ns(S,"tc","-s","qdisc","show","dev","wan0")})
             row["endpoint_product_cpu_s_per_gib"]={role:(cpu_after[role]-cpu_before[role])/os.sysconf("SC_CLK_TCK")/(target_bytes/2**30)
                 for role in ("client","server") if role in cpu_before and role in cpu_after}
             save(d/"application-result.json",row)
             # Preserve both the application completion and later owner state.
             row["qdisc_after_app"]=path_counts()
-            if loss:
+            if loss or path_profile:
                 observed={}
                 for dev in ("rc0","rs0"):
                     before=next(q for q in row["qdisc_before"][dev] if q["kind"]=="netem")
@@ -307,7 +317,7 @@ def controlled_recovery():
                     drops=after["drops"]-before["drops"]
                     observed[dev]={"emitted":emitted,"drops":drops,"ratio":drops/(emitted+drops) if emitted+drops else None}
                 row["actual_netem"]=observed
-                assert all(v["emitted"]>0 and v["drops"]>0 for v in observed.values()),observed
+                assert all(v["emitted"]>0 and (not loss or v["drops"]>0) for v in observed.values()),observed
             save(d/"links-after-app.json",{n:json.loads(ns(n,"ip","-s","-j","link")) for n in N})
             if paired:
                 stop(client);stop(server)
@@ -365,19 +375,9 @@ def controlled_recovery():
                 # Actual intervention mandatory for sustained normal candidate.
                 if drain_expected and label=="normal-C":drain_ok=drain_ok and row["client_rx_drain"]["packets"]>0
                 row["profile_valid"]=drain_ok and first_ok and credit_ok and gain_ok and bool(info and origin_info and rates) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x and " native_pace_ceiling_bytes_s="+str(ceiling)+" " in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true")) and (not ceiling or row["actual_pacing_max_bytes_s"]<=ceiling)
-                if os.environ.get("WBD_M0_FEEDBACK_ARM"):
-                    feedback={"baseline":0,"service":2,"service-credit":7}[profile.get("WBD_M0_NATIVE_FEEDBACK","baseline")]
-                    receiver_mode=0
-                    ack3="true" if profile.get("WBD_M0_ACK_PROBE")=="3" else "false"
-                    row["comparison_leg"]=label.rsplit("-",1)[-1] if label.startswith("loss-") else "control"
-                    row["receiver_ack3"]=ack3=="true"
-                    row["native_feedback_mode"]=feedback
-                    reserved=[int(m.group(1)) for x in info if (m:=re.search(r"\bnative_reserved_bytes=(\d+)",x))]
-                    row["native_reserved_max_sample"]=max(reserved,default=None)
-                    over_quantum=[int(m.group(1)) for x in info if (m:=re.search(r"\bpace_credit_over_quantum=(\d+)",x))]
-                    row["pace_credit_over_quantum_max"]=max(over_quantum,default=None)
+                if path_profile:
                     client_middle=[x for x in cl.splitlines() if "WBD_M0_TCP_INFO " in x and "leg=client-middle " in x]
-                    row["profile_valid"]=row["profile_valid"] and bool(info and client_middle and reserved) and len(over_quantum)==len(info) and all(f" native_feedback_mode={feedback} " in x for x in info) and all(f" native_feedback_mode={receiver_mode} " in x and f" ack3={ack3} " in x for x in client_middle) and all(" ack3=false " in x for x in info)
+                    row["profile_valid"]=row["profile_valid"] and bool(client_middle) and all(" native_feedback_mode=2 " in x and " ack3=false " in x for x in info) and all(" native_feedback_mode=0 " in x and " ack3=false " in x for x in client_middle)
                 row["receipt_present"]=all(any("WBD_M0_RAW_RX_PACKET_STATS " in line and " drops=" in line for line in log.splitlines()) and
                     "WBD_M0_TCP_INGRESS " in log for log in (cl,sl)) and "WBD_M0_TCP_M4_CLOCK " in sl and "WBD_M0_LOCAL_TUN_GSO " in cl and bool(latest)
             row["qdisc_after_stop"]=path_counts()
@@ -392,7 +392,7 @@ def controlled_recovery():
             print("LOCAL_RECOVERY_RESULT "+json.dumps(row),flush=True)
             rows.append(row)
     ROOT=current
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"One native host, selected clean/pause controls and independent mirrored A/arm/arm/A weak feedback arms on one exact artifact when selected; exact application, selected profile, qdisc and Stop; live/Stop sample not necessarily retired","rows":rows,
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":("Frozen C versus bare kernel TCP, one native x86 host, matched path profile/order, actual qdisc/host/app evidence; not physical internet equivalence" if path_profile else "One native host, selected clean/pause and weak controls; live/Stop sample not necessarily retired"),"rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)
