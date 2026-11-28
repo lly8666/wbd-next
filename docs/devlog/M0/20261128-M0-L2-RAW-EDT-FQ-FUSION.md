@@ -9,3 +9,5 @@ Implement narrow native scatter ABI: optional absolute CLOCK_MONOTONIC ns per ex
 ```feature-impact
 {"kind":"updated","ids":["dual-rust-tcp"],"reason":"Correct prior parity fixture; add optional RAW scatter EDT primitive and independent native timing qualification. All live callers remain immediate, no new public capability or protocol."}
 ```
+
+H2542 fixture correction: SOURCE37d4e69 initial EDT wrappers46127070786/46127070791 and governance failed YAML parse (unquoted expression in upload artifact flow mapping), zero measurement jobs. Native core46127070836 both architecture timing executables compiled and uploaded: x86 artifact15255808454, ARM15256585348; product qualification still independent. Harness fca1618 corrects YAML and pins exact already-built SOURCE and artifact IDs; no runtime/test binary change, no duplicated native build or splice pairs. Splice retries46127070904/46127070901 remain on37d4e69 harness; exact frozen A/B products unchanged. Keep initial failures; corrected timing results pending.
