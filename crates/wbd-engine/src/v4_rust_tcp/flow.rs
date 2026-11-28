@@ -45,7 +45,7 @@ impl Endpoint {
             send_buf_max: max_buf,
             recv_buf_max: max_buf,
             // Temporary causal experiment: both variants use the same instrumented build.
-            middle_ack_three: !parity && middle && std::env::var_os("WBD_M0_ACK_PROBE").as_deref() != Some(std::ffi::OsStr::new("2")),
+            middle_ack_three: middle && (if parity {std::env::var_os("WBD_M0_ACK_PROBE").as_deref()==Some(std::ffi::OsStr::new("3"))} else {std::env::var_os("WBD_M0_ACK_PROBE").as_deref()!=Some(std::ffi::OsStr::new("2"))}),
             middle_sack_compress: parity || middle && std::env::var_os("WBD_M0_SACK_COMPRESS").as_deref() == Some(std::ffi::OsStr::new("1")),
             native_owner_turn: parity,
             rack_keep_reo_window:middle&&parity&&std::env::var_os("WBD_M0_RACK_KEEP_WINDOW").as_deref()==Some(std::ffi::OsStr::new("1")),
@@ -53,7 +53,6 @@ impl Endpoint {
             native_feedback_mode:if middle&&parity&&matches!(cc,CongestionKind::Bbr1){
                 match std::env::var_os("WBD_M0_NATIVE_FEEDBACK").as_deref().and_then(|s|s.to_str()){
                     Some("service")=>2,
-                    Some("service-deadline")=>3,
                     _=>0,
                 }
             }else{0},

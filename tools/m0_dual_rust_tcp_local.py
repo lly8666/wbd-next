@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Actual dual Rust TCP Normal product over four native Linux namespaces; scoped functional and controlled recovery."""
 import hashlib,json,os,pathlib,re,signal,subprocess,sys,time
-O=pathlib.Path(os.environ.get("DUAL_TCP_OUT","dual-tcp-out")).resolve(); O.mkdir(exist_ok=True)
+O=pathlib.Path(os.environ.get("DUAL_TCP_OUT","dual-tcp-out")).resolve(); O.mkdir(parents=True,exist_ok=True)
 ROOT=pathlib.Path("linux-plan029-public-bundle").resolve()
 C,R,S,T="h21client","h21router","h21server","h21origin"
 N=(C,R,S,T)
@@ -127,11 +127,13 @@ def functional():
                 assert samples and all(l==pending_limit and (not l or p<=l) for l,p in samples),role
                 credit.append({"role":role,"samples":len(samples),"max_pending":max(p for l,p in samples)})
             row["relay_credit_receipts"]=credit
-        if os.environ.get("WBD_M0_NATIVE_FEEDBACK") in ("service","service-deadline"):
-            expected_mode={"service":2,"service-deadline":3}[os.environ["WBD_M0_NATIVE_FEEDBACK"]]
+        if os.environ.get("WBD_M0_NATIVE_FEEDBACK")=="service":
+            expected_mode=2
             for role,log in (("server",sl),("client",cl)):
                 middle=[x for x in log.splitlines() if "WBD_M0_TCP_INFO " in x and f"leg={role}-middle " in x]
                 assert middle and all(f" native_feedback_mode={expected_mode} " in x for x in middle),role
+                ack3="true" if os.environ.get("WBD_M0_ACK_PROBE")=="3" else "false"
+                assert all(f" ack3={ack3} " in x for x in middle),role
             row["native_feedback_mode"]=expected_mode
         drain_expected=os.environ.get("WBD_M0_CLIENT_RX_DRAIN")=="1"
         for log,enabled in ((sl,False),(cl,drain_expected)):
@@ -195,7 +197,7 @@ def controlled_recovery():
         bundles={"B":current}
         candidate=os.environ["WBD_M0_FEEDBACK_ARM"]
         for i,arm in enumerate(("A",candidate,candidate,"A")):
-            profile={"WBD_M0_NATIVE_FEEDBACK":{"A":"baseline","C":"service","D":"service-deadline"}[arm]}
+            profile={"WBD_M0_NATIVE_FEEDBACK":"service" if candidate=="E" or arm=="C" else "baseline","WBD_M0_ACK_PROBE":"3" if arm=="E" else "2"}
             cases.append((f"loss-{i}-{arm}",True,120_000_000,profile,0,0.5,96,"B"))
     else:
         bundles={"B":current}
@@ -212,12 +214,12 @@ def controlled_recovery():
             LOSS=0
             shape(True)
             if paired:
-                server=spawn(S,d/"server.log","env",*[k+"="+v for k,v in profile.items()],"LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-server",
+                server=spawn(S,d/"server.log","env",*[k+"="+v for k,v in profile.items() if k!="WBD_M0_ACK_PROBE"],"LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-server",
                     "--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443",
                     "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--users-file",O/"users.json",
                     "--lease-pool","10.66.0.128/25","--tls-cert",O/"cert.pem","--tls-key",O/"key.pem",*common)
                 until(server,lambda:"V4_PUBLIC_MULTI_SERVER_READY role=server port=443" in (d/"server.log").read_text())
-                client=spawn(C,d/"client.log","env",*[k+"="+v for k,v in profile.items() if k in ("WBD_M0_MIDDLE_CC","WBD_M0_RELAY_PENDING_CREDIT","WBD_M0_CLIENT_INGRESS_FIRST","WBD_M0_CLIENT_RX_DRAIN")],"LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-client",
+                client=spawn(C,d/"client.log","env",*[k+"="+v for k,v in profile.items() if k in ("WBD_M0_MIDDLE_CC","WBD_M0_RELAY_PENDING_CREDIT","WBD_M0_CLIENT_INGRESS_FIRST","WBD_M0_CLIENT_RX_DRAIN","WBD_M0_ACK_PROBE")],"LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-client",
                     "--raw-interface","wan0","--local-ip","10.248.81.2","--local-port","44100",
                     "--peer-ip","10.248.82.2","--peer-port","443","--tun-name","wbdc0",
                     "--username","bench","--password","DUAL-TCP-FIXTURE","--auto-ip","--installation-id-file",d/"install",*common)
@@ -363,12 +365,15 @@ def controlled_recovery():
                 if drain_expected and label=="normal-C":drain_ok=drain_ok and row["client_rx_drain"]["packets"]>0
                 row["profile_valid"]=drain_ok and first_ok and credit_ok and gain_ok and bool(info and origin_info and rates) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x and " native_pace_ceiling_bytes_s="+str(ceiling)+" " in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true")) and (not ceiling or row["actual_pacing_max_bytes_s"]<=ceiling)
                 if os.environ.get("WBD_M0_FEEDBACK_ARM"):
-                    feedback={"baseline":0,"service":2,"service-deadline":3}[profile.get("WBD_M0_NATIVE_FEEDBACK","baseline")]
+                    feedback={"baseline":0,"service":2}[profile.get("WBD_M0_NATIVE_FEEDBACK","baseline")]
+                    ack3="true" if profile.get("WBD_M0_ACK_PROBE")=="3" else "false"
+                    row["comparison_leg"]=label.rsplit("-",1)[-1] if label.startswith("loss-") else "control"
+                    row["receiver_ack3"]=ack3=="true"
                     row["native_feedback_mode"]=feedback
                     reserved=[int(m.group(1)) for x in info if (m:=re.search(r"\bnative_reserved_bytes=(\d+)",x))]
                     row["native_reserved_max_sample"]=max(reserved,default=None)
                     client_middle=[x for x in cl.splitlines() if "WBD_M0_TCP_INFO " in x and "leg=client-middle " in x]
-                    row["profile_valid"]=row["profile_valid"] and bool(info and client_middle and reserved) and all(f" native_feedback_mode={feedback} " in x for x in info) and all(" native_feedback_mode=0 " in x for x in client_middle)
+                    row["profile_valid"]=row["profile_valid"] and bool(info and client_middle and reserved) and all(f" native_feedback_mode={feedback} " in x for x in info) and all(" native_feedback_mode=0 " in x and f" ack3={ack3} " in x for x in client_middle) and all(" ack3=false " in x for x in info)
                 row["receipt_present"]=all(any("WBD_M0_RAW_RX_PACKET_STATS " in line and " drops=" in line for line in log.splitlines()) and
                     "WBD_M0_TCP_INGRESS " in log for log in (cl,sl)) and "WBD_M0_TCP_M4_CLOCK " in sl and "WBD_M0_LOCAL_TUN_GSO " in cl and bool(latest)
             row["qdisc_after_stop"]=path_counts()

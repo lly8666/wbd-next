@@ -13,18 +13,18 @@ N=h.NODE;ORIGIN=fixture.ORIGIN
 ARM=os.environ["WBD_M0_FEEDBACK_ARM"]
 ORDER=("A",ARM,ARM,"A")
 CASES=(-1,*range(len(ORDER)),-2)
-PROFILES={"A":"selected-baseline",ARM:{"C":"native-service-pacing-epoch","D":"native-service-pacing-epoch-and-deadline"}[ARM]}
+PROFILES={"A":"selected-baseline" if ARM=="C" else "service-epoch-reference",ARM:{"C":"native-service-pacing-epoch","E":"service-epoch-with-receiver-ack3"}[ARM]}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
 def rust_cc(i):return "bbr1"
-def ack_for(k):return "2"
+def ack_for(k):return "3" if k=="E" else "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
 def offer(i):return 600_000_000
 def target_bytes(i):return 1024*1024*1024
 def profile_env(k,server):
-    return ["WBD_M0_NATIVE_FEEDBACK="+{"A":"baseline","C":"service","D":"service-deadline"}[k]] if server else []
+    return ["WBD_M0_NATIVE_FEEDBACK="+("service" if ARM=="E" or k=="C" else "baseline")] if server else []
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
@@ -146,7 +146,7 @@ def server_start(i):
     else:
         k=ORDER[i];b=bundle(k)
         flags=["--dual-rust-tcp"]
-        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_ACK_PROBE="+ack_for(k),"WBD_M0_RX_PACKET_STATS=1",*profile_env(k,True),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
+        p=spawn("server",N,FOLDER/"server.log","env","WBD_M0_ACK_PROBE=2","WBD_M0_RX_PACKET_STATS=1",*profile_env(k,True),"LD_LIBRARY_PATH="+str(b),b/"wbd-v4-server",
                 "--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443",
                 "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--users-file",fixture.TMP/"users.json",
                 "--lease-pool","10.66.0.128/25","--tls-cert",OUT/"cert.pem","--tls-key",fixture.TMP/"key.pem",
@@ -300,12 +300,13 @@ def probe_receipt(log,leg,k,i):
         vals=dict(w.split("=",1) for w in receipt.split() if "=" in w)
         gso_ok=int(vals.get("groups",0))>0
     expected='congestion: "'+rust_cc(i)+'"'
-    feedback_mode={"A":0,"C":2,"D":3}[k] if leg=="server-middle" else 0
+    feedback_mode=(2 if ARM=="E" or k=="C" else 0) if leg=="server-middle" else 0
+    ack3_expected="true" if leg=="client-middle" and k=="E" else "false"
     feedback_ok=bool(rows) and all(f" native_feedback_mode={feedback_mode} " in s for s in rows)
     reserved=[int(m.group(1)) for s in rows if (m:=re.search(r"\bnative_reserved_bytes=(\d+)",s))]
-    return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows),
+    return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and f"ack3={ack3_expected}" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows),
             "ingress_first_expected":expected_first,"ingress_first_service_turns":actual_first_turns,"rx_drain":dv,"mode_ok":mode_ok,"gso_ok":gso_ok,"ack_grant_deferred_max_sample":actual_grant_max,"pacing_ceiling_bytes_s":ceiling,"actual_pacing_max_bytes_s":max(rates,default=0),"startup_pacing_gain":gain,"startup_gain_verified":gain_ok,"rate_epoch_preserved_max":max(epochs,default=None),"delivery_rate_app_limited_samples":app_limited_samples,"native_source_dry_samples":sum(x=="true" for x in dry) if dry else None,"native_source_observed_samples":len(dry),"bbr_phases":bbr_phases,"relay_pending_limit":limit,"relay_credit_samples":len(credit),"relay_pending_max_sample":max((p for _,p,_ in credit),default=None),"relay_credit_full_samples":sum(p==limit and a==0 for _,p,a in credit) if limit else 0,
-            "native_feedback_mode":feedback_mode,"native_reserved_max_sample":max(reserved,default=None),"valid":feedback_ok and mode_ok and gso_ok and len(rows)>=10 and all(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and "ack3=false" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows)}
+            "native_feedback_mode":feedback_mode,"ack3_expected":ack3_expected,"native_reserved_max_sample":max(reserved,default=None),"valid":feedback_ok and mode_ok and gso_ok and len(rows)>=10 and all(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and f"ack3={ack3_expected}" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows)}
 def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()

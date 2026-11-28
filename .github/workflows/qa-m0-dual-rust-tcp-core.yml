@@ -1,4 +1,4 @@
-name: M0 dual Rust TCP Normal native service feedback qualification
+name: M0 dual Rust TCP Normal native service and ACK qualification
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -14,7 +14,7 @@ on:
       - '.github/workflows/qa-m0-dual-rust-tcp-core.yml'
       - '.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml'
       - '.github/workflows/qa-m0-dual-tcp-arm-acca.yml'
-      - '.github/workflows/qa-m0-dual-tcp-arm-adda.yml'
+      - '.github/workflows/qa-m0-dual-tcp-arm-aeea.yml'
       - 'tools/m0_dual_tcp_arm_linux_parity.py'
 permissions:
   contents: read
@@ -76,8 +76,8 @@ jobs:
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/credit-off WBD_M0_RELAY_PENDING_CREDIT=0 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
       - name: Independent feedback native functional profiles
         run: |
-          for profile in service service-deadline;do
-            sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT="dual-tcp-out/feedback-$profile" WBD_M0_NATIVE_FEEDBACK="$profile" WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+          for ack in 2 3;do
+            sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT="dual-tcp-out/service-ack$ack" WBD_M0_NATIVE_FEEDBACK=service WBD_M0_ACK_PROBE="$ack" WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
           done
       - name: Selected baseline local clean pause weak regression
         if: matrix.arch == 'aarch64'

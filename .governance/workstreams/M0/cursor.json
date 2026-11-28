@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2529,
-  "checkpoint_sha": "16ff5c8d30d21e489a656cfc5225def4fce0adea",
+  "sequence": 2531,
+  "checkpoint_sha": "12b17ccfd4dc3354fa7dddecd0450bd1552cc540",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "沿原背压完整闭环审查成熟Linux TCP/旧splice与现有native grant、M4、rate/RACK、pacing的语义和实际时间序列；优先复用H2528原始产物，查admitted与reserved accounting及实际突发/反馈关系。只对有证据的独立机制合批实现、共用精确A基线分别对比，再反序复验胜出项及弱网/多流，避免重跑否决参数。无新在途实验。",
+  "next_action": "验收12b17cc精确SOURCE原生双ISA、独立ACCA/ADDA Actions。C保留实际native提交末尾pacing epoch，D额外对齐已有pace deadline；A为原反馈语义，B未选已移除。每组独立三ARM同机四轮与裸TCP brackets、同构件同机0.5%弱网四轮；按各自A算吞吐、CPU、首到、退役重传与八点产品tuple采样缺口，不跨组绝对速率比较。结果未验收，L2不晋级。",
   "unverified": true,
-  "last_tested_source": "2735fc1d8232c7710659c4c94693912329ea8a1d",
+  "last_tested_source": "efa37de566c67595c998f8290e37bff8147951db",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-L2-FROZEN-CARRIER-LOAD-RESULT.json"
+    "docs/evidence/M0/20261128-L2-NATIVE-FEEDBACK-BATCH-RESULT.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261128-L2-LINUX-RECEIVE-RTT-RESULT.json",
-    "docs/devlog/M0/20261128-M0-L2-FRESH-ARRIVAL-DRS-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-FRESH-ARRIVAL-DRS-RESULT.json",
     "docs/devlog/M0/20261128-M0-L2-DRS-WEAK-LOCAL-HANDOFF.md",
     "docs/devlog/M0/20261128-M0-L2-THREE-RUNNER-BASELINE-RECEIPT.md",
     "docs/devlog/M0/20261128-M0-L2-HIGH-RTT-MEASURED-GROWTH-CANDIDATE.md",
     "docs/devlog/M0/20261128-M0-L2-HIGH-RTT-GROWTH-REJECTION-AND-CARRIER-LOAD.md",
-    "docs/devlog/M0/20261128-M0-L2-FROZEN-LOAD-ACCEPTANCE.md"
+    "docs/devlog/M0/20261128-M0-L2-FROZEN-LOAD-ACCEPTANCE.md",
+    "docs/devlog/M0/20261128-M0-L2-NATIVE-FEEDBACK-CANDIDATE-BATCH.md",
+    "docs/devlog/M0/20261128-M0-L2-SERVICE-EPOCH-ACCEPTANCE-AND-PARALLEL-PAIRS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2528回退原生双ISA八组功能通过，固定db76055三机120/600M供给ABBA：实际107.72/301.57M，retired重传0.00208%/3.32145%，低负载八点缺口0（其中A1窗口64MiB），高负载缺口跨runner；L2未过。H2529归档并保留整体背压研究和成熟机制对照，当前未发起新实验。"
+  "partial_summary": "H2530原生12组功能通过；三机A/C 290.63/306.86Mbps、retired重传3.7313%/1.5469%、CPU29.95/33.37，弱网接近；B2业务完成但post-app控制采样失败，不是已证实业务TCP重置，B未选。H2531提交12b17cc移除B、保留C、D既有deadline同步，ACCA/ADDA独立并行工作流共用双ISA资格。"
 }

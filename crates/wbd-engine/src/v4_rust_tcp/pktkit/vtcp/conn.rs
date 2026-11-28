@@ -439,7 +439,7 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Native paired Middle TCP experiment: existing quantum cap in MSS.
     pub(crate) native_pace_quantum_mss: u32,
-    /// Lab-only feedback comparison: 0 baseline, 2 service epoch, 3 epoch and existing deadline.
+    /// Lab-only comparison: 0 baseline, 2 actual native service epoch.
     pub(crate) native_feedback_mode: u8,
     /// Lab-only ceiling on the existing TCP pacing rate (payload bytes/s).
     pub(crate) native_pace_ceiling: Option<u64>,
@@ -4568,13 +4568,7 @@ impl Conn {
             // A local pending interval is not an independent pacing grant.
             // Keep unspent credit/debt, but anchor its next accrual at the
             // actual end of this native submission, not at generation.
-            if self.cfg.native_feedback_mode!=0 {
-                self.pace_stamp=self.pace_stamp.max(now);
-                // The old deadline may refer to credit that can no longer
-                // accrue during the native pending interval. Reuse the
-                // existing pacing wait calculation, not a second timer.
-                if self.cfg.native_feedback_mode==3 && self.pace_deadline.is_some(){self.pace_wait();}
-            }
+            if self.cfg.native_feedback_mode==2 {self.pace_stamp=self.pace_stamp.max(now);}
             if self.native_source_dry { self.check_app_limited(); }
             self.schedule_loss_probe();
         }
@@ -10748,34 +10742,6 @@ mod tests {
         assert_eq!(c.pace_stamp,now);
         assert_eq!(c.pace_credit,credit);
         assert_eq!(c.pace_rate(),rate);
-    }
-
-    #[test]
-    fn native_service_epoch_reschedules_existing_pace_deadline() {
-        let mut cfg=big(40690,80);
-        cfg.congestion=CongestionKind::Bbr1;
-        let mut c=Conn::new(cfg);
-        let mut r=Conn::new(big(80,40690));
-        drive_handshake(&mut c,&mut r);
-        c.cfg.native_owner_turn=true;
-        c.cfg.native_feedback_mode=3;
-        c.begin_native_turn();
-        let (_, packets)=c.write(&[7;500]);
-        let p=parse(&packets[0]);
-        assert_eq!(c.score.native_pending(),500);
-        c.pace_wait();
-        let old=c.pace_deadline.unwrap();
-        let credit=c.pace_credit;
-        let rate=c.pace_rate().unwrap();
-        advance(Duration::from_millis(2));
-        let now=test_now();
-        assert!(c.native_admit(p.seq,p.payload.len() as u32,now));
-        assert_eq!(c.pace_stamp,now);
-        assert_eq!(c.pace_credit,credit);
-        assert_eq!(c.pace_rate(),Some(rate));
-        let expected=c.now+Duration::from_secs_f64((c.pace_quantum(rate)-credit).max(0.0)/rate as f64);
-        assert_eq!(c.pace_deadline,Some(expected));
-        assert!(expected>old);
     }
 
     #[test]
