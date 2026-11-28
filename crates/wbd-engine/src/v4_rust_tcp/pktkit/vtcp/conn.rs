@@ -439,7 +439,7 @@ pub struct ConnConfig {
     pub(crate) native_bounded_pacing: bool,
     /// Native paired Middle TCP experiment: existing quantum cap in MSS.
     pub(crate) native_pace_quantum_mss: u32,
-    /// Lab-only comparison: 0 baseline, 2 actual native service epoch.
+    /// Lab-only comparison: 0 baseline, 2 service epoch, 4 service epoch and receiver-limited Startup.
     pub(crate) native_feedback_mode: u8,
     /// Lab-only ceiling on the existing TCP pacing rate (payload bytes/s).
     pub(crate) native_pace_ceiling: Option<u64>,
@@ -4568,7 +4568,7 @@ impl Conn {
             // A local pending interval is not an independent pacing grant.
             // Keep unspent credit/debt, but anchor its next accrual at the
             // actual end of this native submission, not at generation.
-            if self.cfg.native_feedback_mode==2 {self.pace_stamp=self.pace_stamp.max(now);}
+            if self.cfg.native_feedback_mode!=0 {self.pace_stamp=self.pace_stamp.max(now);}
             if self.native_source_dry { self.check_app_limited(); }
             self.schedule_loss_probe();
         }
@@ -4726,6 +4726,9 @@ impl Conn {
         } else {
             Chrono::Busy
         };
+        if self.cfg.native_feedback_mode==4 && matches!(c,Chrono::RwndLimited) {
+            self.cc.note_rwnd_limited();
+        }
         self.chrono.set(c, self.now);
     }
 

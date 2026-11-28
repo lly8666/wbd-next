@@ -13,18 +13,18 @@ N=h.NODE;ORIGIN=fixture.ORIGIN
 ARM=os.environ["WBD_M0_FEEDBACK_ARM"]
 ORDER=("A",ARM,ARM,"A")
 CASES=(-1,*range(len(ORDER)),-2)
-PROFILES={"A":"selected-baseline" if ARM=="C" else "service-epoch-reference",ARM:{"C":"native-service-pacing-epoch","E":"service-epoch-with-receiver-ack3"}[ARM]}
+PROFILES={"A":"service-epoch-reference",ARM:{"F":"service-epoch-with-receiver-limited-startup"}[ARM]}
 SOURCES={k:os.environ["GITHUB_SHA"] for k in PROFILES}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
 def rust_cc(i):return "bbr1"
-def ack_for(k):return "3" if k=="E" else "2"
+def ack_for(k):return "2"
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
 def offer(i):return 600_000_000
 def target_bytes(i):return 1024*1024*1024
 def profile_env(k,server):
-    return ["WBD_M0_NATIVE_FEEDBACK="+("service" if ARM=="E" or k=="C" else "baseline")] if server else []
+    return ["WBD_M0_NATIVE_FEEDBACK="+("service-rwnd" if k=="F" else "service")] if server else []
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_rust_tcp_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",
@@ -300,8 +300,8 @@ def probe_receipt(log,leg,k,i):
         vals=dict(w.split("=",1) for w in receipt.split() if "=" in w)
         gso_ok=int(vals.get("groups",0))>0
     expected='congestion: "'+rust_cc(i)+'"'
-    feedback_mode=(2 if ARM=="E" or k=="C" else 0) if leg=="server-middle" else 0
-    ack3_expected="true" if leg=="client-middle" and k=="E" else "false"
+    feedback_mode=(4 if k=="F" else 2) if leg=="server-middle" else 0
+    ack3_expected="false"
     feedback_ok=bool(rows) and all(f" native_feedback_mode={feedback_mode} " in s for s in rows)
     reserved=[int(m.group(1)) for s in rows if (m:=re.search(r"\bnative_reserved_bytes=(\d+)",s))]
     return {"samples":len(rows),"matching":sum(expected in s and "sack_compress=true" in s and "linux_parity=true" in s and f"ack3={ack3_expected}" in s and "nodelay=false" in s and "send_max=67108864 recv_max=67108864" in s for s in rows),

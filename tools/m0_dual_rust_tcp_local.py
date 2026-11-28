@@ -127,8 +127,8 @@ def functional():
                 assert samples and all(l==pending_limit and (not l or p<=l) for l,p in samples),role
                 credit.append({"role":role,"samples":len(samples),"max_pending":max(p for l,p in samples)})
             row["relay_credit_receipts"]=credit
-        if os.environ.get("WBD_M0_NATIVE_FEEDBACK")=="service":
-            expected_mode=2
+        if os.environ.get("WBD_M0_NATIVE_FEEDBACK") in ("service","service-rwnd"):
+            expected_mode={"service":2,"service-rwnd":4}[os.environ["WBD_M0_NATIVE_FEEDBACK"]]
             for role,log in (("server",sl),("client",cl)):
                 middle=[x for x in log.splitlines() if "WBD_M0_TCP_INFO " in x and f"leg={role}-middle " in x]
                 assert middle and all(f" native_feedback_mode={expected_mode} " in x for x in middle),role
@@ -197,7 +197,7 @@ def controlled_recovery():
         bundles={"B":current}
         candidate=os.environ["WBD_M0_FEEDBACK_ARM"]
         for i,arm in enumerate(("A",candidate,candidate,"A")):
-            profile={"WBD_M0_NATIVE_FEEDBACK":"service" if candidate=="E" or arm=="C" else "baseline","WBD_M0_ACK_PROBE":"3" if arm=="E" else "2"}
+            profile={"WBD_M0_NATIVE_FEEDBACK":"service-rwnd" if arm=="F" else "service","WBD_M0_ACK_PROBE":"2"}
             cases.append((f"loss-{i}-{arm}",True,120_000_000,profile,0,0.5,96,"B"))
     else:
         bundles={"B":current}
@@ -365,7 +365,7 @@ def controlled_recovery():
                 if drain_expected and label=="normal-C":drain_ok=drain_ok and row["client_rx_drain"]["packets"]>0
                 row["profile_valid"]=drain_ok and first_ok and credit_ok and gain_ok and bool(info and origin_info and rates) and all(" rack_keep_reo_window="+expected_rack+" " in x and 'congestion: "'+expected_cc+'"' in x and " native_pace_ceiling_bytes_s="+str(ceiling)+" " in x for x in info) and all(" ack_drain="+expected_ack in x for x in origin_info) and bool(actual_grants) and ((row["ack_grant_deferred_max_sample"]>0)==(expected_ack=="true")) and (not ceiling or row["actual_pacing_max_bytes_s"]<=ceiling)
                 if os.environ.get("WBD_M0_FEEDBACK_ARM"):
-                    feedback={"baseline":0,"service":2}[profile.get("WBD_M0_NATIVE_FEEDBACK","baseline")]
+                    feedback={"baseline":0,"service":2,"service-rwnd":4}[profile.get("WBD_M0_NATIVE_FEEDBACK","baseline")]
                     ack3="true" if profile.get("WBD_M0_ACK_PROBE")=="3" else "false"
                     row["comparison_leg"]=label.rsplit("-",1)[-1] if label.startswith("loss-") else "control"
                     row["receiver_ack3"]=ack3=="true"

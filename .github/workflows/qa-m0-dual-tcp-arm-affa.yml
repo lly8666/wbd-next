@@ -1,4 +1,4 @@
-name: M0 ARM AEEA feedback comparison
+name: M0 ARM AFFA feedback comparison
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
@@ -7,13 +7,15 @@ on:
       - 'tools/m0_dual_tcp_arm_linux_parity.py'
       - 'tools/m0_dual_tcp_path_sample.py'
       - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/conn.rs'
+      - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/bbr1.rs'
+      - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/congestion.rs'
       - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/autotune.rs'
       - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/rate.rs'
       - 'crates/wbd-engine/src/v4_rust_tcp/pktkit/vtcp/scoreboard.rs'
       - 'crates/wbd-engine/src/v4_rust_tcp/flow.rs'
       - 'crates/wbd-engine/src/v4_rust_tcp/mod.rs'
       - 'crates/wbd-engine/src/v4_embedded_go.rs'
-      - '.github/workflows/qa-m0-dual-tcp-arm-aeea.yml'
+      - '.github/workflows/qa-m0-dual-tcp-arm-affa.yml'
       - 'tools/m0_dual_rust_tcp_local.py'
       - '.github/workflows/qa-m0-dual-rust-tcp-core.yml'
 permissions:
@@ -24,5 +26,5 @@ jobs:
   compare:
     uses: ./.github/workflows/qa-m0-dual-tcp-arm-linux-parity.yml
     with:
-      arm: 'E'
+      arm: 'F'
     secrets: inherit

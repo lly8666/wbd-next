@@ -19,6 +19,7 @@ pub struct Bbr1 {
     mode:Mode, cycle:usize, cycle_at:Instant,
     round:u64, next_round:u64, bw_samples:VecDeque<(u64,u64)>, bw:u64,
     full_bw:u64, full_rounds:u8, full:bool,
+    rwnd_limited_round:bool, rwnd_plateau_skips:u64,
     min_rtt:Option<Duration>, min_stamp:Instant, seen_rtt:bool,
     probe_until:Option<Instant>, probe_round:u64, probe_saved:u32,
     recovery:bool, conserve_until:Option<u64>, enter_recovery:bool, prior_cwnd:u32,
@@ -33,6 +34,7 @@ impl Bbr1 {
         Self{mss,init,cwnd:init,rate:(HIGH*f64::from(init)*1000.) as u64,startup_pacing_gain:HIGH,
             mode:Mode::Startup,cycle:0,cycle_at:now,round:0,next_round:0,
             bw_samples:VecDeque::with_capacity(10),bw:0,full_bw:0,full_rounds:0,full:false,
+            rwnd_limited_round:false,rwnd_plateau_skips:0,
             min_rtt:None,min_stamp:now,seen_rtt:false,probe_until:None,probe_round:0,probe_saved:0,
             recovery:false,conserve_until:None,enter_recovery:false,prior_cwnd:0,
             idle_restart:false,mark_app:false,ack_epoch:now,ack_bytes:0,
@@ -80,6 +82,7 @@ impl Bbr1 {
     fn update_bw(&mut self,a:&Ack)->bool{
         let Some(s)=a.rs.filter(|s|s.delivery_rate>0&&!s.interval.is_zero()) else{return false};
         let start=s.prior_delivered>=self.next_round;
+        let receiver_limited=start&&std::mem::take(&mut self.rwnd_limited_round);
         if start{self.round+=1;self.next_round=a.delivered;}
         if s.delivery_rate>0&&(!s.is_app_limited||s.delivery_rate>=self.bw){
             while self.bw_samples.front().is_some_and(|&(r,_)|self.round.saturating_sub(r)>=10){self.bw_samples.pop_front();}
@@ -93,6 +96,11 @@ impl Bbr1 {
         if start&&!self.full&&!s.is_app_limited&&self.bw>0 {
             if self.bw as f64>=1.25*self.full_bw as f64{
                 self.full_bw=self.bw;self.full_rounds=0;
+            }else if receiver_limited {
+                // The send path actually ran out of peer sequence-space credit.
+                // A plateau in this round is not evidence of a full network pipe.
+                self.full_rounds=0;
+                self.rwnd_plateau_skips+=1;
             }else{
                 self.full_rounds+=1;
                 if self.full_rounds>=3{self.full=true;}
@@ -179,14 +187,15 @@ impl Bbr1 {
     }
     pub(crate) fn probe(&self,leg:&str,id:u64,wall_ns:u128){
         let (pg,cg)=self.gains();
-        eprintln!("WBD_M0_BBR1 wall_ns={} leg={} id={} phase={:?} cycle={} bw={} min_rtt={:?} round={} full_bw={} full_bw_reached={} pacing_gain={} cwnd_gain={} startup_pacing_gain={} cwnd={} pacing_rate={} recovery={} conservation={} extra_acked={} lt_bw={} lt_previous={} tso_goal={}",
-            wall_ns,leg,id,self.mode,self.cycle,self.bw,self.min_rtt,self.round,self.full_bw,self.full,pg,cg,self.startup_pacing_gain,self.cwnd,self.rate,self.recovery,self.conserve_until.is_some(),self.extra[0].max(self.extra[1]),self.lt_bw,self.lt_previous,self.tso_goal());
+        eprintln!("WBD_M0_BBR1 wall_ns={} leg={} id={} phase={:?} cycle={} bw={} min_rtt={:?} round={} full_bw={} full_bw_reached={} pacing_gain={} cwnd_gain={} startup_pacing_gain={} cwnd={} pacing_rate={} recovery={} conservation={} extra_acked={} lt_bw={} lt_previous={} tso_goal={} rwnd_plateau_skips={}",
+            wall_ns,leg,id,self.mode,self.cycle,self.bw,self.min_rtt,self.round,self.full_bw,self.full,pg,cg,self.startup_pacing_gain,self.cwnd,self.rate,self.recovery,self.conserve_until.is_some(),self.extra[0].max(self.extra[1]),self.lt_bw,self.lt_previous,self.tso_goal(),self.rwnd_plateau_skips);
     }
 }
 impl CongestionController for Bbr1{
     fn name(&self)->&'static str{"bbr1"}
     fn model_based(&self)->bool{true}
     fn as_bbr1(&self)->Option<&Bbr1>{Some(self)}
+    fn note_rwnd_limited(&mut self){if !self.full{self.rwnd_limited_round=true;}}
     fn on_ack(&mut self,a:&Ack){
         let round_start=self.update_bw(a);self.sample_lt(a,round_start);self.ack_aggregation(a);self.update_mode(a);
         let (pg,cg)=self.gains();
@@ -265,6 +274,27 @@ mod tests{
         assert_eq!(candidate.gains(),(1.25,2.));
         candidate.mode=Mode::ProbeRtt;
         assert_eq!(candidate.gains(),(1.,1.));
+    }
+    #[test]
+    fn v1_receiver_credit_plateau_does_not_claim_full_pipe(){
+        let now=Instant::now();
+        let mut b=Bbr1::new(1000,now);
+        let rate=1_000_000;let mut prior=0;
+        for i in 1..=8{
+            if i>1{b.note_rwnd_limited();}
+            feed(&mut b,now+Duration::from_millis(i*100),prior,rate,0,false);
+            prior+=rate/10;
+        }
+        assert_eq!(b.mode,Mode::Startup);
+        assert!(!b.full);
+        assert_eq!(b.bw,rate);
+        assert_eq!(b.rwnd_plateau_skips,7);
+        // Real unconstrained plateau still uses the original three rounds.
+        for i in 9..=11{
+            feed(&mut b,now+Duration::from_millis(i*100),prior,rate,0,false);
+            prior+=rate/10;
+        }
+        assert!(b.full);
     }
     #[test]
     fn v1_plateau_enters_probe_and_does_not_bound_bw_by_random_loss(){
