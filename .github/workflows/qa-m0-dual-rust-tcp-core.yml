@@ -109,6 +109,11 @@ jobs:
       - name: Current ready-turn client TUN grouping actual product
         run: |
           sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT=dual-tcp-out/local-ready WBD_M0_MIDDLE_CC=bbr3 WBD_M0_BBR3_INITIAL_600M=1 WBD_M0_NATIVE_FEEDBACK=service WBD_M0_LOCAL_READY_GROUP=1 WBD_M0_ACK_PROBE=2 WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+      - name: User requested EDT with Middle ACK4 and ACK8 actual paired product
+        run: |
+          for ratio in 4 8; do
+            sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" DUAL_TCP_OUT="dual-tcp-out/edt-ack$ratio" WBD_M0_MIDDLE_CC=bbr3 WBD_M0_BBR3_INITIAL_600M=1 WBD_M0_NATIVE_FEEDBACK=service WBD_M0_NATIVE_EDT=1 WBD_M0_ACK_PROBE="$ratio" WBD_M0_RX_PACKET_STATS=1 python3 -u tools/m0_dual_rust_tcp_local.py
+          done
       - name: Selected baseline local clean pause weak regression
         if: matrix.arch == 'aarch64'
         env:

@@ -434,6 +434,8 @@ pub struct ConnConfig {
     /// Paired WBD middle endpoint: cumulative ACK after three full segments
     /// in steady in-order traffic. OS-facing endpoints retain two.
     pub(crate) middle_ack_three: bool,
+    /// Explicit paired Middle steady in-order ACK ratio (0 preserves original).
+    pub(crate) middle_ack_ratio: u32,
     /// Experimental SACK compression on paired middle TCP only.
     pub(crate) middle_sack_compress: bool,
     /// Native owner diagnostic: bounded packet pacing burst, no accumulated late catch-up.
@@ -552,6 +554,7 @@ impl Default for ConnConfig {
             time_wait: TIME_WAIT_DURATION,
             nodelay: false,
             middle_ack_three: false,
+            middle_ack_ratio: 0,
             middle_sack_compress: false,
             native_bounded_pacing: false,
             native_pace_quantum_mss: 32,
@@ -731,6 +734,8 @@ pub struct Conn {
     /// held back by pacing alone.
     pace_deadline: std::option::Option<Instant>,
     native_resume: Option<Instant>,
+    // Latest accepted planned departure, not the connection event clock.
+    native_edt_tail: Option<Instant>,
     native_credit: usize,
     native_waiting: bool,
     // Latest actual upstream empty observation, not an inference from SendBuf.
@@ -1001,6 +1006,7 @@ impl Conn {
             pace_stamp: now,
             pace_deadline: None,
             native_resume: None,
+            native_edt_tail: None,
             native_credit: usize::MAX,
             native_waiting:false,
             native_source_dry:true,
@@ -1291,8 +1297,8 @@ impl Conn {
     pub(crate) fn m0_probe(&self,leg:&str,id:u64,wall_ns:u128) {
         let now=wall_clock();
         let delay=|d:Option<Instant>|d.map(|t|if t>=now{t.duration_since(now).as_micros() as i64}else{-(now.duration_since(t).as_micros() as i64)});
-        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} relay_pending_limit={} relay_pending_bytes={} relay_available={} native_feedback_mode={} native_reserved_bytes={} info={:?}",
-            wall_ns,leg,id,self.cfg.middle_ack_three,self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.cfg.relay_pending_limit.unwrap_or(0),self.send_buf.as_ref().map_or(0,|s|s.pending()),self.relay_send_available(),self.cfg.native_feedback_mode,self.score.native_pending(),self.info());
+        eprintln!("WBD_M0_TCP_INFO wall_ns={} leg={} id={} ack3={} ack_ratio={} sack_compress={} sack_deferred={} bounded_pacing={} linux_parity={} nodelay={} send_max={} recv_max={} pace_quantum_mss={} rack_keep_reo_window={} native_ack_grant_deferred={} native_pace_ceiling_bytes_s={} relay_pending_limit={} relay_pending_bytes={} relay_available={} native_feedback_mode={} native_reserved_bytes={} info={:?}",
+            wall_ns,leg,id,self.cfg.middle_ack_three,self.middle_ack_ratio(),self.cfg.middle_sack_compress,self.sack_ack_deferred,self.cfg.native_bounded_pacing,self.cfg.linux_parity,self.cfg.nodelay,self.cfg.send_max(),self.cfg.recv_max(),self.cfg.native_pace_quantum_mss,self.cfg.rack_keep_reo_window,self.native_ack_grant_deferred,self.cfg.native_pace_ceiling.unwrap_or(0),self.cfg.relay_pending_limit.unwrap_or(0),self.send_buf.as_ref().map_or(0,|s|s.pending()),self.relay_send_available(),self.cfg.native_feedback_mode,self.score.native_pending(),self.info());
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?} rate_epoch_preserved={} native_source_dry={}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline),self.score.rate().epoch_preserved(),self.native_source_dry);
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
@@ -3053,13 +3059,17 @@ impl Conn {
     /// at most [`DELAYED_ACK`], unless data we send carries it first.
     /// Halving the ACKs halves what the sender spends on them, and lets a
     /// request's ACK ride on its answer.
+    fn middle_ack_ratio(&self)->u32{
+        if self.cfg.middle_ack_ratio!=0{self.cfg.middle_ack_ratio}else if self.cfg.middle_ack_three{3}else{2}
+    }
+
     fn ack_data(&mut self, now: bool) {
         let rb = self.recv_buf.as_ref().unwrap();
         let unacked = self
             .last_ack_sent
             .map_or(u32::MAX, |last| rb.nxt().wrapping_sub(last));
         let quick = self.quick_acks > 0 && !self.pingpong;
-        let threshold = self.rcv_mss * if self.cfg.middle_ack_three { 2 } else { 1 };
+        let threshold = self.rcv_mss * (self.middle_ack_ratio()-1);
         if now || quick || unacked > threshold {
             self.m0_ack_causes[if now {0} else if quick {1} else {2}] += 1;
             if quick {
@@ -3068,7 +3078,9 @@ impl Conn {
             self.queue_ack();
         } else if self.delack_deadline.is_none() {
             let delay = if self.cfg.linux_parity {
-                self.ack_timeout.min(Duration::from_millis(200))
+                // Larger negotiated-in-lab receive ratio must not extend
+                // sparse/tail delivery feedback beyond the original 40ms.
+                self.ack_timeout.min(if self.cfg.middle_ack_ratio!=0{DELAYED_ACK}else{Duration::from_millis(200)})
             } else { DELAYED_ACK };
             self.delack_deadline = Some(self.now + delay);
         }
@@ -4320,7 +4332,7 @@ impl Conn {
         } else {
             srtt * 2 + TLP_MIN_SLACK
         };
-        let mut at = self.now + pto;
+        let mut at = self.native_edt_tail.map_or(self.now,|t|t.max(self.now)) + pto;
         if let Some(rto) = self.rto_deadline.filter(|&rto| rto < at)
         {
             at = rto;
@@ -4557,16 +4569,29 @@ impl Conn {
         }
     }
 
+    pub(crate) fn native_edt_rate(&self,seq:u32,len:u32)->Option<(u64,Option<Instant>)>{
+        if !self.cfg.native_owner_turn||!self.score.is_native_pending(seq,len){return None}
+        self.pace_rate().map(|rate|(rate,self.native_edt_tail))
+    }
+
     pub(crate) fn native_admit(&mut self,seq:u32,len:u32,now:Instant)->bool{
-        if !self.cfg.native_owner_turn||!self.score.admit_native(seq,len,now){return false}
+        self.native_admit_at(seq,len,now,None)
+    }
+    pub(crate) fn native_admit_at(&mut self,seq:u32,len:u32,now:Instant,edt:Option<Instant>)->bool{
+        let send_at=edt.map_or(now,|t|t.max(now));
+        if !self.cfg.native_owner_turn||!self.score.admit_native(seq,len,send_at){return false}
         self.now=self.now.max(now);
-        self.last_data_sent=Some(self.now);
-        self.rto.start_timing(seq,self.now);
+        if let Some(t)=edt.filter(|&t|t>now){
+            self.native_edt_tail=Some(self.native_edt_tail.map_or(t,|old|old.max(t)));
+        }
+        let timer_at=edt.map_or(self.now,|t|t.max(self.now));
+        self.last_data_sent=Some(self.native_edt_tail.map_or(timer_at,|t|t.max(timer_at)));
+        self.rto.start_timing(seq,timer_at);
         let first=self.rto_deadline.is_none();
         if first{self.start_rto();}
         let resume=(self.native_waiting&&self.score.native_pending_count()<32)||
             (self.fin_queued&&self.score.native_pending()==0&&self.send_buf.as_ref().is_some_and(|s|s.pending()==0));
-        if resume{self.native_waiting=false;self.native_resume=Some(self.now);}
+        if resume{self.native_waiting=false;self.native_resume=Some(self.native_edt_tail.map_or(self.now,|t|t.max(self.now)));}
         let last=self.score.native_pending()==0;
         if last{
             // A local pending interval is not an independent pacing grant.
@@ -4687,7 +4712,9 @@ impl Conn {
             // like data does. Past the right edge, every later segment from
             // us would carry an out-of-window SEQ and have its ACK ignored.
             let unacked = self.send_buf.as_ref().unwrap().unacked() as u32;
-            if self.snd_wnd > unacked {
+            if let Some(t)=self.native_edt_tail.filter(|&t|t>self.now){
+                self.pace_deadline=Some(t);
+            }else if self.snd_wnd > unacked {
                 self.queue_fin();
                 sent_new = true;
             } else if unacked == 0 && self.persist_deadline.is_none() {
@@ -4814,6 +4841,9 @@ impl Conn {
     /// few milliseconds would otherwise pace a slow flow at a fraction of
     /// its rate. A sender idle for a while may burst two quanta, no more.
     fn pace_ready(&mut self) -> bool {
+        // Only this flow waits for its previously accepted short train.
+        // Credit accrues at the original rate; no second rate decision.
+        if self.native_edt_tail.is_some_and(|t|t>self.now){return false}
         if self.cfg.native_owner_turn && self.native_credit==0 {
             if self.score.native_pending_count()!=0{self.native_waiting=true;}else{self.native_resume=Some(self.now);}
             return false;
@@ -4833,6 +4863,7 @@ impl Conn {
 
     /// Pacing holds data back: send again once a quantum has built up.
     fn pace_wait(&mut self) {
+        if let Some(t)=self.native_edt_tail.filter(|&t|t>self.now){self.pace_deadline=Some(t);return}
         if self.cfg.native_owner_turn && self.native_credit==0{return;}
         let Some(rate) = self.pace_rate() else {
             return;
@@ -4844,7 +4875,10 @@ impl Conn {
     // --- Timers (synchronous, deadline-based) -----------------------------
 
     fn start_rto(&mut self) {
-        self.rto_deadline = Some(self.now + self.rto.rto());
+        let at=if self.native_edt_tail.is_some_and(|t|t>self.now){
+            self.score.head_send_at().map_or(self.now,|t|t.max(self.now))
+        }else{self.now};
+        self.rto_deadline = Some(at + self.rto.rto());
     }
 
     fn stop_rto(&mut self) {
@@ -10534,6 +10568,32 @@ mod tests {
     }
 
     #[test]
+    fn middle_four_eight_full_segments_keep_tail_and_gap_ack() {
+        for (port,ratio) in [(40710,4usize),(40711,8usize)]{
+            let (_client,mut server,segs)=delack_pair(port,ratio+1);
+            server.cfg.middle_ack_ratio=ratio as u32;
+            for i in 0..ratio{
+                let out=deliver(&mut server,&segs[i..i+1]);
+                assert_eq!(out.len(),usize::from(i==ratio-1));
+                if i==ratio-1{
+                    let p=parse(&segs[i]);assert_eq!(parse(&out[0]).ack,p.seq.wrapping_add(p.payload.len() as u32));
+                }
+            }
+            assert!(deliver(&mut server,&segs[ratio..]).is_empty());
+            assert!(server.delack_deadline.unwrap()<=test_now()+DELAYED_ACK);
+            assert_eq!(delack_expired(&mut server).len(),1);
+            let (_client,mut server,segs)=delack_pair(port+2,3);
+            server.cfg.middle_ack_ratio=ratio as u32;
+            let gap=deliver(&mut server,&segs[1..2]);
+            assert_eq!(gap.len(),1);
+            assert_eq!(parse(&gap[0]).ack,parse(&segs[0]).seq);
+            let fill=deliver(&mut server,&segs[..1]);
+            assert_eq!(fill.len(),1);
+            assert_eq!(parse(&fill[0]).ack,parse(&segs[2]).seq);
+        }
+    }
+
+    #[test]
     fn middle_three_full_segments_keeps_timer_and_gap_ack() {
         let (_client, mut server, segs) = delack_pair(40690, 5);
         server.cfg.middle_ack_three = true;
@@ -10747,6 +10807,34 @@ mod tests {
         assert_eq!(c.pace_stamp,now);
         assert_eq!(c.pace_credit,credit);
         assert_eq!(c.pace_rate(),rate);
+    }
+
+    #[test]
+    fn native_edt_admission_keeps_real_clock_and_pacing_credit() {
+        let mut cfg=big(40692,80);
+        cfg.congestion=CongestionKind::Bbr1;
+        let mut c=Conn::new(cfg);
+        let mut peer=Conn::new(big(80,40692));
+        drive_handshake(&mut c,&mut peer);
+        c.cfg.native_owner_turn=true;
+        c.cfg.native_feedback_mode=2;
+        c.begin_native_turn();
+        let (_,packets)=c.write(&[7;500]);
+        let p=parse(&packets[0]);
+        let now=test_now();
+        let edt=now+Duration::from_micros(700);
+        let credit=c.pace_credit;
+        assert!(c.native_edt_rate(p.seq,p.payload.len() as u32).is_some());
+        assert!(c.native_admit_at(p.seq,p.payload.len() as u32,now,Some(edt)));
+        assert_eq!(c.now,now);
+        assert_eq!(c.score.head_send_at(),Some(edt));
+        assert_eq!(c.pace_stamp,now);
+        assert_eq!(c.pace_credit,credit);
+        assert_eq!(c.rto_deadline,Some(edt+c.rto.rto()));
+        assert!(!c.pace_ready());
+        c.pace_wait();
+        assert_eq!(c.pace_deadline,Some(edt));
+        assert!(c.native_edt_rate(p.seq,p.payload.len() as u32).is_none());
     }
 
     #[test]

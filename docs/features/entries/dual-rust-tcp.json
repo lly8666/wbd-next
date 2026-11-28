@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "dual-rust-tcp",
   "name": "Dual native Rust TCP",
-  "summary": "Paired Linux native TCP; per-record EDT rejected on ABBA CPU/throughput; ready-only client TUN grouping candidate; L2 open.",
+  "summary": "Paired Linux native TCP; EDT ACK2 rejected; user-requested EDT ACK4/8 diagnostic and independent ready grouping pending; L2 open.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-dual-rust-tcp",
@@ -84,7 +84,8 @@
     "docs/devlog/M0/20261128-M0-L2-RAW-FQ-OWNER-ELIGIBILITY.md",
     "docs/devlog/M0/20261128-M0-L2-EDT-EARNED-TRAIN-INTEGRATION.md",
     "docs/devlog/M0/20261128-M0-L2-EDT-EARNED-TRAIN-ACCEPTANCE.md",
-    "docs/devlog/M0/20261128-M0-L2-REJECT-EDT-READY-TUN-GROUP.md"
+    "docs/devlog/M0/20261128-M0-L2-REJECT-EDT-READY-TUN-GROUP.md",
+    "docs/devlog/M0/20261128-M0-L2-EDT-ACK4-ACK8-USER-DIAGNOSTIC.md"
   ],
   "verification": [
     {
@@ -151,7 +152,8 @@
     "H2548 exact native RAW FQ dual ISA46138025986 passed, 64/64 immediate marker before future, 32/32 close accepted future received after close. H2549 actual paired Normal earned-train EDT opt-in candidate, not production default or performance qualification; see docs/evidence/M0/20261128-L2-RAW-FQ-OWNER-ELIGIBILITY-RESULT.json",
     "EDT initial source 1fb5480 old unit call signature corrected at 9677716; exact candidate native 46140274112 pending; first source and feature gate failure retained.",
     "H2549 9677716 native46140274112 exact both ISA363 core/8 function PASS, actual 21923 timed copies, FQ/RAW RX drops0 and joined Stop backlog0. No active Stop or sustained performance qualification. H2550 same exact binary matched BBRv3 A/E/E/A each180s pending; see docs/evidence/M0/20261128-L2-EDT-EARNED-TRAIN-NATIVE-RESULT.json",
-    "H2550 A/E302.26/276.26M, CPU34.79/43.55, retrans0.5211/0.1290%; live EDT rejected/removed, synthetic evidence retained. H2551 current ready-turn GSO candidate not qualified; docs/evidence/M0/20261128-L2-EDT-EARNED-TRAIN-ABBA-RESULT.json"
+    "H2550 A/E302.26/276.26M, CPU34.79/43.55, retrans0.5211/0.1290%; live EDT rejected/removed, synthetic evidence retained. H2551 current ready-turn GSO candidate not qualified; docs/evidence/M0/20261128-L2-EDT-EARNED-TRAIN-ABBA-RESULT.json",
+    "H2552 explicit user trial restores EDT opt-in only, new Middle ACK4/8 with 40ms existing timer ceiling, 2/4/8/8/4/2 exact three ARM diagnostic pending; H2550 rejection preserved. H2551 exact ready-group independent."
   ],
   "promotion": null
 }

@@ -9,25 +9,25 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# Same exact accepted product artifact, two occurrences per arm.
-ORDER=("A","E","E","A")
+# New explicit user comparison. Two symmetric occurrences per ACK ratio.
+ORDER=("2","4","8","8","4","2")
 CASES=tuple(range(len(ORDER)))
-PROFILES={"A":"dual-rust-bbr3-immediate","E":"dual-rust-bbr3-earned-edt"}
-PRODUCT_SOURCE="9677716be3e3f46e7918e3225ad46cbb54e37563"
+PROFILES={k:"dual-rust-bbr3-edt-ack"+k for k in ORDER}
+PRODUCT_SOURCE=os.environ["GITHUB_SHA"]
 SOURCES={k:PRODUCT_SOURCE for k in ORDER}
 def dual(i):return i>=0 and ORDER[i]!="S"
 def splice(i):return i>=0 and ORDER[i]=="S"
 def loss_for(i):return 0.0
 def cc_for(i):return "cubic" if i<0 or ORDER[i]=="R" else "bbr"
 def rust_cc(i):return "bbr" if dual(i) else None
-def ack_for(k):return "2"
+def ack_for(k):return k
 def profile(i,k):return PROFILES[k]
 def compress(k):return "1"
 def offer(i):return None
 def target_bytes(i):return None
 def profile_env(k,server):
     return ["WBD_M0_MIDDLE_CC=bbr3","WBD_M0_BBR3_INITIAL_600M=1",
-            "WBD_M0_NATIVE_EDT="+("1" if k=="E" else "0")]+(["WBD_M0_NATIVE_FEEDBACK=service"] if server else [])
+            "WBD_M0_NATIVE_EDT=1","WBD_M0_LOCAL_READY_GROUP=0"]+(["WBD_M0_NATIVE_FEEDBACK=service"] if server else [])
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools/m0_dual_tcp_long_app.py"),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2","180"]
@@ -141,7 +141,6 @@ def fq_state():
     return next(x for x in rows if x["kind"]=="fq" and x.get("root"))
 def edt_receipt(log,k,role):
     rows=[x for x in log.splitlines() if "WBD_M0_TCP_EDT " in x]
-    if k=="A":return {"valid":not rows,"enabled":False}
     values=[dict(re.findall(r"(\w+)=(\d+)",x)) for x in rows]
     if not values:return {"valid":False,"enabled":True}
     timed=sum(int(x["timed_copied"]) for x in values)
@@ -289,9 +288,10 @@ def probe_receipt(log,leg,k,i):
     bbr=[x for x in log.splitlines() if marker in x and "leg="+leg+" " in x]
     mode=2 if leg=="server-middle" else 0
     cc=rust_cc(i)
-    valid=bool(rows) and all(('congestion: "'+cc+'"') in x and (" native_feedback_mode="+str(mode)+" ") in x and " ack3=false " in x and " native_pace_ceiling_bytes_s=0 " in x for x in rows)
+    ratio="2" if leg=="server-middle" else ack_for(k)
+    valid=bool(rows) and all(('congestion: "'+cc+'"') in x and (" native_feedback_mode="+str(mode)+" ") in x and " ack3=false " in x and (" ack_ratio="+ratio+" ") in x and " native_pace_ceiling_bytes_s=0 " in x for x in rows)
     valid=valid and bool(bbr) and all(" initial_pacing_rate=75000000" in x for x in bbr)
-    return {"valid":valid,"cc":cc,"native_feedback_mode":mode,"initial_pacing_rate":75000000,"tcp_info_rows":len(rows),"bbr_rows":len(bbr)}
+    return {"valid":valid,"cc":cc,"native_feedback_mode":mode,"ack_ratio":int(ratio),"initial_pacing_rate":75000000,"tcp_info_rows":len(rows),"bbr_rows":len(bbr)}
 def client_case(i):
     k=ORDER[i] if i>=0 else "bare"
     d=OUT/("case-"+str(i));d.mkdir()
@@ -422,8 +422,8 @@ def client():
             "real_three_runner_l3_relay":True,"all_three_distinct_native_machines":distinct,"architecture":"aarch64","added_rtt_ms":400,
             "planned_source_seconds":180,"application_offer":"saturated","outer_mtu":1160,"product_tun_fq_maxrate_mbps":0,
             "initial_rust_bbr_pacing_bytes_s":75000000,"kernel_cc":"bbr","server_native_feedback_mode":2,"client_native_feedback_mode":0,
-            "edt_product_enabled_by_arm":{"A":False,"E":True},"endpoint_wan_qdisc":"fq both arms","order":list(ORDER),"profiles":PROFILES,
-            "status":"MEASURED_ABBA_EDT_DIAGNOSTIC" if complete else "INCOMPLETE","rows":rows}
+            "edt_product_enabled_by_arm":{k:True for k in ORDER},"endpoint_wan_qdisc":"fq all arms","server_middle_ack_ratio":2,"client_middle_ack_ratio_by_arm":{k:int(k) for k in ORDER},"order":list(ORDER),"profiles":PROFILES,
+            "status":"MEASURED_EDT_ACK_RATIO_DIAGNOSTIC" if complete else "INCOMPLETE","rows":rows}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

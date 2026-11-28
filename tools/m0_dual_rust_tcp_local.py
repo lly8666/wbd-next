@@ -56,6 +56,9 @@ def make():
         ns(n,"iptables","-A","OUTPUT","-o","wan0","-p","tcp",flag,"443","--tcp-flags","RST","RST","-j","DROP")
     ns(S,"iptables","-t","nat","-A","POSTROUTING","-o","exit0","-s","10.66.0.0/24","-j","MASQUERADE")
     ns(T,"tc","qdisc","replace","dev","app0","root","fq","maxrate","600mbit")
+    if os.environ.get("WBD_M0_NATIVE_EDT")=="1":
+        for endpoint in (C,S):
+            ns(endpoint,"tc","qdisc","replace","dev","wan0","root","fq")
     save(O/"topology.json",{n:{"routes":ns(n,"ip","route"),"links":json.loads(ns(n,"ip","-j","link")),"cc":ns(n,"sysctl","-n","net.ipv4.tcp_congestion_control")} for n in N})
 def shape(active):
     for dev in ("rc0","rs0"):
@@ -158,6 +161,23 @@ def functional():
             row["local_ready_group"]={k:int(values[k]) for k in ("joins","flushes","segments")}
             assert row["local_ready_group"]["joins"]>0 and row["local_ready_group"]["segments"]>0,row["local_ready_group"]
             assert "WBD_M0_LOCAL_READY_GROUP " not in sl
+        if os.environ.get("WBD_M0_NATIVE_EDT")=="1":
+            row["edt"]={}
+            for role,log in (("server",sl),("client",cl)):
+                receipt=next(x for x in log.splitlines() if "WBD_M0_TCP_EDT " in x)
+                values=dict(w.split("=",1) for w in receipt.split() if "=" in w)
+                row["edt"][role]={k:int(values[k]) for k in ("timed_copied","max_delay_ns")}
+            assert row["edt"]["server"]["timed_copied"]>0,row["edt"]
+            assert all(v["max_delay_ns"]<=1_000_000 for v in row["edt"].values()),row["edt"]
+            row["edt_qdisc"]={n:json.loads(ns(n,"tc","-s","-j","qdisc","show","dev","wan0")) for n in (C,S)}
+        if os.environ.get("WBD_M0_ACK_PROBE") in ("4","8"):
+            ratio=os.environ["WBD_M0_ACK_PROBE"]
+            for role,log in (("server",sl),("client",cl)):
+                rows=[x for x in log.splitlines() if "WBD_M0_TCP_INFO " in x and f"leg={role}-middle " in x]
+                assert rows and all(f" ack_ratio={ratio} " in x for x in rows),role
+            local=[x for x in cl.splitlines() if "WBD_M0_TCP_INFO " in x and "leg=client-local " in x]
+            assert local and all(" ack_ratio=2 " in x for x in local)
+            row["middle_ack_ratio"]=int(ratio)
         assert "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in sl
         assert "WBD_TCP_SPLICE_READY" not in sl
         assert server.returncode==0 and client.returncode==0

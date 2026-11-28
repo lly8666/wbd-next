@@ -46,6 +46,11 @@ impl Endpoint {
             recv_buf_max: max_buf,
             // Temporary causal experiment: both variants use the same instrumented build.
             middle_ack_three: !parity && middle && std::env::var_os("WBD_M0_ACK_PROBE").as_deref() != Some(std::ffi::OsStr::new("2")),
+            middle_ack_ratio:if parity&&middle{
+                match std::env::var_os("WBD_M0_ACK_PROBE").as_deref().and_then(|v|v.to_str()){
+                    Some("4")=>4,Some("8")=>8,_=>0,
+                }
+            }else{0},
             middle_sack_compress: parity || middle && std::env::var_os("WBD_M0_SACK_COMPRESS").as_deref() == Some(std::ffi::OsStr::new("1")),
             native_owner_turn: parity,
             rack_keep_reo_window:middle&&parity&&std::env::var_os("WBD_M0_RACK_KEEP_WINDOW").as_deref()==Some(std::ffi::OsStr::new("1")),
@@ -157,8 +162,14 @@ impl ClientFlow {
     }
     pub(crate) fn tuple(&self) -> Tuple { self.middle.tuple }
     fn begin_turn(&mut self){self.local.conn.begin_native_turn();self.middle.conn.begin_native_turn();}
+    pub(crate) fn middle_edt_rate(&self,seq:u32,len:u32)->Option<(u64,Option<Instant>)>{
+        self.middle.conn.native_edt_rate(seq,len)
+    }
     pub(crate) fn admit(&mut self,local:bool,seq:u32,len:u32,now:Instant)->bool{
-        if local{self.local.conn.native_admit(seq,len,now)}else{self.middle.conn.native_admit(seq,len,now)}
+        self.admit_at(local,seq,len,now,None)
+    }
+    pub(crate) fn admit_at(&mut self,local:bool,seq:u32,len:u32,now:Instant,edt:Option<Instant>)->bool{
+        if local{self.local.conn.native_admit(seq,len,now)}else{self.middle.conn.native_admit_at(seq,len,now,edt)}
     }
     pub(crate) fn on_local(&mut self, p: &Packet) -> io::Result<ClientOutput> {
         self.begin_turn();let mut out = ClientOutput::default();
@@ -276,7 +287,11 @@ impl ServerFlow {
             write: !self.origin_write_closed && self.middle.conn.readable() != 0,
         }
     }
-    pub(crate) fn admit(&mut self,seq:u32,len:u32,now:Instant)->bool{self.middle.conn.native_admit(seq,len,now)}
+    pub(crate) fn middle_edt_rate(&self,seq:u32,len:u32)->Option<(u64,Option<Instant>)>{
+        self.middle.conn.native_edt_rate(seq,len)
+    }
+    pub(crate) fn admit(&mut self,seq:u32,len:u32,now:Instant)->bool{self.admit_at(seq,len,now,None)}
+    pub(crate) fn admit_at(&mut self,seq:u32,len:u32,now:Instant,edt:Option<Instant>)->bool{self.middle.conn.native_admit_at(seq,len,now,edt)}
     pub(crate) fn on_packet(&mut self, p: &Packet) -> io::Result<Packets> {
         if self.ack_drain{self.middle.conn.begin_native_ack_turn(&p.segment);}else{self.middle.conn.begin_native_turn();}
         let mut out = Vec::new();
