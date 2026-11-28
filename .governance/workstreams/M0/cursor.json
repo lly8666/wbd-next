@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2536,
-  "checkpoint_sha": "2967efccb20549eab72d53f2d898a3bef34231ef",
+  "sequence": 2537,
+  "checkpoint_sha": "172fca30ceb2ed9b0840465d5d24ab7b009bc13d",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收2967efc恢复C源码双ISA原生；独立AJJA/JAAJ均使用历史C精确12b17cc/46111963879/15250710622，A应用600M、J应用360M，非产品限速。核各组同机真实吞吐/CPU/首到/退役重传、八点采样与裸TCP括号，区分近容量负载和路径波动。历史0.710%保留标杆；G/H已移除，L2未晋级。",
+  "next_action": "验收172fca3精确SOURCE原生双ISA和独立AKKA/KAAK（A=C，K=C+累计信用上限1 quantum，quantum32/MSS及动态rate、wait保持），同组三机600M及同机0.5%弱网。核真实交付/首到/CPU/retired重传、现有batch peak、实际超一quantum事件、八点路径。历史C构件冻结保留；不降吞吐换重传数字，L2仍OPEN。",
   "unverified": true,
-  "last_tested_source": "349aee9bf1d382142f9f7a454f66b39a110c4990",
+  "last_tested_source": "2967efccb20549eab72d53f2d898a3bef34231ef",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-L2-STALLED-RECEIVE-MEASUREMENT-RESULT.json"
+    "docs/evidence/M0/20261128-L2-FROZEN-C-CAPACITY-RESULT.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261128-M0-L2-FROZEN-LOAD-ACCEPTANCE.md",
     "docs/devlog/M0/20261128-M0-L2-NATIVE-FEEDBACK-CANDIDATE-BATCH.md",
     "docs/devlog/M0/20261128-M0-L2-SERVICE-EPOCH-ACCEPTANCE-AND-PARALLEL-PAIRS.md",
     "docs/devlog/M0/20261128-M0-L2-SERVICE-EPOCH-PAIRS-AND-ACK-COST.md",
     "docs/devlog/M0/20261128-M0-L2-RECEIVER-CREDIT-STARTUP.md",
     "docs/devlog/M0/20261128-M0-L2-PAIRED-RECEIVE-MEASUREMENT.md",
     "docs/devlog/M0/20261128-M0-L2-STALLED-RECEIVE-MEASUREMENT.md",
-    "docs/devlog/M0/20261128-M0-L2-FROZEN-C-CAPACITY-DIAGNOSTIC.md"
+    "docs/devlog/M0/20261128-M0-L2-FROZEN-C-CAPACITY-DIAGNOSTIC.md",
+    "docs/devlog/M0/20261128-M0-L2-ACCUMULATED-CREDIT-COMPARISON.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2535七功能/ISA通过，12ZIP CRC；H所有新增stall_epochs=0、清洁pair_grows=0，正反序吞吐+2.74/-6.19%，不归因重传改善。撤G/H、恢复C及原DRS。H2536固定历史C构件，两独立近容量应用负载诊断，待验收。"
+  "partial_summary": "H2536固定历史C 600/360M正反序重传1.966→0.016%及1.421→0.046%，路径缺口603→4、416→14；吞吐混合、CPU升，J仅诊断。A batch peak64/J32，相关不等因果。H2537提交K独立累计信用上限，正反序待验，默认未改。"
 }
