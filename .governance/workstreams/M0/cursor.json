@@ -4,20 +4,20 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2549,
-  "checkpoint_sha": "1cb397786a6cca04e330f6ee88e4895fa6547ecf",
+  "sequence": 2550,
+  "checkpoint_sha": "e384b62d2601efdcb5aadf977e3ed34ab6eda55a",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "先验收9677716原生双ISA46140274112，真实paired EDT seed600 mixed功能及原回归；原1fb5480保留错误收据、旧冻结queue workflow非EDT意图。若实际候选PASS，验证active Stop、partial/多流独立首到及同机BBR3 immediate vs earned EDT，后续研究ACK/IO/CPU。L2 OPEN，不晋级默认、不改外层、不重复旧长流。",
+  "next_action": "验收H2550同三ARM BBRv3 A/E/E/A各180s，复用9677716 native46140274112 artifact15261776810，400ms/零注入/seed600/同双端FQ，仅EDT开关，真实业务/retired重传/CPU/path/FQ；随后active Stop与弱网混合首到独立验证，再决定是否保留EDT；不改默认或重复历史实验。",
   "unverified": true,
-  "last_tested_source": "911743fa3951d1ae723eab7d93037b80b1958759",
+  "last_tested_source": "9677716be3e3f46e7918e3225ad46cbb54e37563",
   "evidence_refs": [],
   "context_refs": [
     "docs/devlog/M0/20261128-M0-L2-RAW-EDT-FQ-FUSION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2548 双ISA FQ原生PASS：64/64即时包先于未来包，32/32 fd close后未来包仍收到；main治理46138037149 PASS。H2549实际Normal候选：已授权短批次按原流pacing rate转EDT<=1ms，单RAW，logical clock与planned分离，实际accepted prefix及SIOCOUTQ冷Stop。9677716 exact native在途；功能卡补录失败；非性能资格。分支doc与证据未合入main。"
+  "partial_summary": "H2549 9677716双ISA363 core/8 native function PASS；实际定时21923，max972574ns，RAW RX/FQ drops0，joined Stop FQ backlog0，双向hash/8 TCP/延迟reader/UDP通过，未测active Stop。H2550同源ARM ABBA夹具已推。治理46140346118/46140355060 PASS；前E0061失败保留。L2 OPEN。"
 }
