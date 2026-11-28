@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Exact finite TCP duplex and UDP echo, no private WBD wire or protocol."""
-import socket,sys,hashlib,json,threading,time
+import socket,sys,hashlib,json,threading,time,os,struct
 role,port=sys.argv[1],int(sys.argv[2])
 # Fixed-byte recovery fixture, independent of iperf3's timed control stream.
 # Only the application offer is paced; the product owns all TCP behavior.
@@ -10,6 +10,15 @@ if role in ("recovery-origin","recovery-client"):
     request=b"fixed-byte-recovery-v1"
     pattern=hashlib.shake_256(b"fixed-byte-recovery-v1").digest(65536)
     digest=hashlib.sha256()
+    # Linux UAPI struct tcp_info through bytes_retrans, native endian.
+    def kernel_info(sock):
+        raw=sock.getsockopt(socket.IPPROTO_TCP,socket.TCP_INFO,256)
+        assert len(raw)>=216
+        u32=lambda at:struct.unpack_from("=I",raw,at)[0]
+        u64=lambda at:struct.unpack_from("=Q",raw,at)[0]
+        return dict(state=raw[0],snd_mss=u32(16),pmtu=u32(60),unacked=u32(24),
+                    total_retrans=u32(100),bytes_acked=u64(120),
+                    bytes_sent=u64(200),bytes_retrans=u64(208),raw_hex=raw.hex())
     if role=="recovery-origin":
         with socket.socket() as listener:
             listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -36,7 +45,18 @@ if role in ("recovery-origin","recovery-client"):
                     # Never make up late app offer with an unbounded burst.
                     due=max(due+size*8/offer,time.monotonic())
                 c.shutdown(socket.SHUT_WR)
-                print(json.dumps({"sent_bytes":n,"sha256":digest.hexdigest(),"offer_bps":offer,"seconds":time.monotonic()-start,"max_sendall_seconds":max_sendall,"sendall_over_250ms_seconds":blocked_s}),flush=True)
+                elapsed=time.monotonic()-start
+                final={}
+                if os.environ.get("DUAL_TCP_KERNEL_FINAL")=="1":
+                    # Fixture only: keep FD until all payload and FIN are ACKed.
+                    # Does not delay client EOF or change measured app duration.
+                    deadline=time.monotonic()+15
+                    info=kernel_info(c)
+                    while not (info["state"]==7 and info["unacked"]==0 and info["bytes_acked"]>=target) and time.monotonic()<deadline:
+                        time.sleep(.02)
+                        info=kernel_info(c)
+                    final={"kernel_tcp_final":info,"kernel_final_valid":info["state"]==7 and info["unacked"]==0 and info["bytes_acked"]>=target and info["bytes_sent"]>=target}
+                print(json.dumps({"sent_bytes":n,"sha256":digest.hexdigest(),"offer_bps":offer,"seconds":elapsed,"max_sendall_seconds":max_sendall,"sendall_over_250ms_seconds":blocked_s,**final}),flush=True)
     else:
         connect_started=time.monotonic()
         with socket.create_connection((host,port),timeout=30) as c:

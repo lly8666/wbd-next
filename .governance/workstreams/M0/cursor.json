@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2537,
-  "checkpoint_sha": "172fca30ceb2ed9b0840465d5d24ab7b009bc13d",
+  "sequence": 2538,
+  "checkpoint_sha": "fcb92bf2eb0afe16b57a7d9a12367595e37d3f33",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "验收172fca3精确SOURCE原生双ISA和独立AKKA/KAAK（A=C，K=C+累计信用上限1 quantum，quantum32/MSS及动态rate、wait保持），同组三机600M及同机0.5%弱网。核真实交付/首到/CPU/retired重传、现有batch peak、实际超一quantum事件、八点路径。历史C构件冻结保留；不降吞吐换重传数字，L2仍OPEN。",
+  "next_action": "验收fcb92bf恢复C双ISA及四独立x86 clean/jitter ABBA/BAAB。A裸kernel BBR，B历史精确C x86构件12b17cc，400ms/1GiB/600M，jitter双向5ms正态且0随机丢包；核CPU/softirq/实际netem/ss/内层反馈/吞吐/Stop。先判断容量及可复现堵点，再施工；三机作为独立复核，不声称物理等价。L2 OPEN。",
   "unverified": true,
-  "last_tested_source": "2967efccb20549eab72d53f2d898a3bef34231ef",
+  "last_tested_source": "172fca30ceb2ed9b0840465d5d24ab7b009bc13d",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-L2-FROZEN-C-CAPACITY-RESULT.json"
+    "docs/evidence/M0/20261128-L2-ACCUMULATED-CREDIT-RESULT.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261128-M0-L2-NATIVE-FEEDBACK-CANDIDATE-BATCH.md",
     "docs/devlog/M0/20261128-M0-L2-SERVICE-EPOCH-ACCEPTANCE-AND-PARALLEL-PAIRS.md",
     "docs/devlog/M0/20261128-M0-L2-SERVICE-EPOCH-PAIRS-AND-ACK-COST.md",
     "docs/devlog/M0/20261128-M0-L2-RECEIVER-CREDIT-STARTUP.md",
     "docs/devlog/M0/20261128-M0-L2-PAIRED-RECEIVE-MEASUREMENT.md",
     "docs/devlog/M0/20261128-M0-L2-STALLED-RECEIVE-MEASUREMENT.md",
     "docs/devlog/M0/20261128-M0-L2-FROZEN-C-CAPACITY-DIAGNOSTIC.md",
-    "docs/devlog/M0/20261128-M0-L2-ACCUMULATED-CREDIT-COMPARISON.md"
+    "docs/devlog/M0/20261128-M0-L2-ACCUMULATED-CREDIT-COMPARISON.md",
+    "docs/devlog/M0/20261128-M0-L2-X86-CONTROLLED-PATH.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2536固定历史C 600/360M正反序重传1.966→0.016%及1.421→0.046%，路径缺口603→4、416→14；吞吐混合、CPU升，J仅诊断。A batch peak64/J32，相关不等因果。H2537提交K独立累计信用上限，正反序待验，默认未改。"
+  "partial_summary": "H2537 K实际触发但正反序吞吐/重传方向混合，CPU成本上升，拒绝恢复C。WinXDP只读七有效9V45/WSL裸400ms/650M参考637.5–650.85M，整体Action失败保留。H2538四独立x86受控路径诊断，冻结历史x86 C，不筛选好结果，待验。"
 }

@@ -29,6 +29,20 @@ jobs:
           python3 -m py_compile tools/m0_dual_rust_tcp_local.py tools/m0_dual_rust_tcp_app.py
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables ethtool iputils-ping openssl
+          # Verify the Linux UAPI layout used by the fixture's TCP_INFO decoder.
+          cat >/tmp/m0-tcp-info-layout.c <<'EOF'
+          #include <stddef.h>
+          #include <linux/tcp.h>
+          _Static_assert(offsetof(struct tcp_info, tcpi_snd_mss)==16, "snd_mss");
+          _Static_assert(offsetof(struct tcp_info, tcpi_pmtu)==60, "pmtu");
+          _Static_assert(offsetof(struct tcp_info, tcpi_unacked)==24, "unacked");
+          _Static_assert(offsetof(struct tcp_info, tcpi_total_retrans)==100, "total_retrans");
+          _Static_assert(offsetof(struct tcp_info, tcpi_bytes_acked)==120, "bytes_acked");
+          _Static_assert(offsetof(struct tcp_info, tcpi_bytes_sent)==200, "bytes_sent");
+          _Static_assert(offsetof(struct tcp_info, tcpi_bytes_retrans)==208, "bytes_retrans");
+          int main(void){return 0;}
+          EOF
+          cc -fsyntax-only /tmp/m0-tcp-info-layout.c
       - name: Fetch previously qualified frozen C x86 artifact
         run: |
           set -euo pipefail

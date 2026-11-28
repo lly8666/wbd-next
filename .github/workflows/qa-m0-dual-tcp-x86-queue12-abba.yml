@@ -1,15 +1,16 @@
-name: M0 x86 clean ABBA bare versus C
+name: M0 x86 queue12 ABBA kernel versus C threshold
 on:
   push:
     branches: [experiment/m0-dual-rust-tcp]
     paths:
-      - '.github/workflows/qa-m0-dual-tcp-x86-clean-abba.yml'
+      - '.github/workflows/qa-m0-dual-tcp-x86-queue12-abba.yml'
       - '.github/workflows/qa-m0-dual-tcp-x86-path.yml'
       - 'tools/m0_dual_rust_tcp_local.py'
+      - 'tools/m0_dual_rust_tcp_app.py'
 permissions: {contents: read, actions: read}
 jobs:
   compare:
     uses: ./.github/workflows/qa-m0-dual-tcp-x86-path.yml
     with:
-      profile: 'clean'
+      profile: 'queue12'
       order: 'ABBA'

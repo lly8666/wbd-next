@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "source_sha": "fcb92bf2eb0afe16b57a7d9a12367595e37d3f33",
+  "result": "MEASURED_NO_HIGH_RETRANS_REPRODUCTION",
+  "artifact_verified": true,
+  "native": {
+    "run": 46122113314,
+    "artifacts": {
+      "arm": 15254500367,
+      "x86": 15254341986
+    },
+    "manifest_sha256": {
+      "arm": "24f80f9b7a5ee51f2ebabe4b543ca400afee1e84046f483b5d21c1a926fed696",
+      "x86": "bbfa92700d2c997d3990540f7f9f77f5a9db736275528d5472b317dce4c0617a"
+    },
+    "functional_profiles_per_isa": 5
+  },
+  "frozen": {
+    "source": "12b17ccfd4dc3354fa7dddecd0450bd1552cc540",
+    "run": 46111963879,
+    "artifact": 15250585479,
+    "manifest_sha256": "03801dfeffc36d8a7615b2b63b02920a1c12c73c0b1384a446c2d6497bd45241"
+  },
+  "path": {
+    "clean_ABBA": {
+      "run": 46122113371,
+      "artifact": 15253984170,
+      "summary_sha256": "9e9f2dbdeeeefa86b3db5306c01c2b8a63ab61b732e8296efc60a69d3bbee751",
+      "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+      "order": "ABBA",
+      "mbps": [
+        444.3294089087809,
+        409.4008484780805,
+        424.54467714224825,
+        444.3625237185074
+      ],
+      "rust_sent": [
+        1073741824,
+        1073741824
+      ],
+      "rust_retrans": [
+        0,
+        0
+      ],
+      "bare_max_periodic_retrans": [
+        0,
+        0
+      ],
+      "rust_endpoint_cpu": [
+        23.98,
+        23.92
+      ]
+    },
+    "clean_BAAB": {
+      "run": 46122113348,
+      "artifact": 15253463774,
+      "summary_sha256": "89ba1a49d92851be0e30d694f7e906d20f202c7f13bfaf87400e3953b967d045",
+      "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+      "order": "BAAB",
+      "mbps": [
+        408.610837682365,
+        444.3035574549381,
+        458.8907801926444,
+        409.819750293696
+      ],
+      "rust_sent": [
+        1073741824,
+        1073741824
+      ],
+      "rust_retrans": [
+        0,
+        0
+      ],
+      "bare_max_periodic_retrans": [
+        0,
+        0
+      ],
+      "rust_endpoint_cpu": [
+        23.76,
+        23.87
+      ]
+    },
+    "jitter_ABBA": {
+      "run": 46122113359,
+      "artifact": 15253304133,
+      "summary_sha256": "dddab7fd42969f1d799acb7221e96d00c6ea0fb7c6ff79060b29107934adfdc8",
+      "cpu_model": "AMD EPYC 7763 64-Core Processor",
+      "order": "ABBA",
+      "mbps": [
+        453.45278829948893,
+        225.17906842810453,
+        241.82732330872477,
+        457.9100963912833
+      ],
+      "rust_sent": [
+        1073745757,
+        1073742861
+      ],
+      "rust_retrans": [
+        3933,
+        1037
+      ],
+      "bare_max_periodic_retrans": [
+        1448,
+        0
+      ],
+      "rust_endpoint_cpu": [
+        58.55,
+        58.07
+      ]
+    },
+    "jitter_BAAB": {
+      "run": 46122113316,
+      "artifact": 15254415347,
+      "summary_sha256": "3c398ad3bdfe6012025faf210121847a6f87e3053a84a2db5277a6dd5f42d7ca",
+      "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "order": "BAAB",
+      "mbps": [
+        301.35244638495465,
+        444.071059669618,
+        456.0049637988743,
+        315.36321782679084
+      ],
+      "rust_sent": [
+        1073744720,
+        1073744720
+      ],
+      "rust_retrans": [
+        2896,
+        2896
+      ],
+      "bare_max_periodic_retrans": [
+        0,
+        2896
+      ],
+      "rust_endpoint_cpu": [
+        40.18,
+        39.99
+      ]
+    },
+    "common": {
+      "added_rtt_ms": 400,
+      "offered_bps": 600000000,
+      "target_bytes": 1073741824,
+      "product_outer_mtu": 1160,
+      "bare_mtu": 1500,
+      "all_app_hash_eof_measured": true,
+      "all_product_owned_stop": true,
+      "all_netem_drops_zero": true,
+      "all_rust_stop_timeouts_zero": true,
+      "rust_bulk_retired": false,
+      "bare_final_socket_receipt": false,
+      "random_seed_supported": false,
+      "jitter_scope": "5ms normal distribution both directions; seed option unavailable, all results retained; clean and jitter CPU models differ, not controlled across profile comparison"
+    }
+  },
+  "decision": "No high retrans discrepancy reproduction. Both clean groups Rust Stop sampled zero; both jitter groups Rust sample only 1037-3933 retrans bytes/GiB. Bare periodic ss not final. Do not claim full zero retrans or causal cross-profile CPU comparison. Jitter groups have material within-host throughput gap. No runtime changes. User requests kernel low retrans versus Rust materially high before tuning. Next controlled forward bottleneck 800M, finite netem packet limits18500/21000, reverse pure 200ms, no random loss/jitter, bare route MTU1160 to approximate product outer L3 budget (not identical inner MSS/wire bytes). Two independent ABBA/BAAB per setting. Capture real final kernel TCP_INFO on fully ACKed closed socket, check UAPI offsets in Actions, Rust natural bulk retirement after EOF; retain actual qdisc before/after, host, application and sampled feedback. Threshold screen each bare leg <=0.05% and >=400Mbps, each Rust leg >=0.5%; diagnostic target chosen in absence of user numbers, not product gate; all negative results retained. Distinguish actual queue drops from excess retrans in no-drop paths. No product pacing cap or default change. L2 OPEN."
+}

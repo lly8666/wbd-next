@@ -184,7 +184,8 @@ def controlled_recovery():
     ]
     path_profile=os.environ.get("DUAL_TCP_PATH_PROFILE")
     if path_profile:
-        assert path_profile in ("clean","jitter")
+        assert path_profile in ("clean","jitter","queue12","queue40")
+        queue_limit={"queue12":18500,"queue40":21000}.get(path_profile)
         order=os.environ["DUAL_TCP_PATH_ORDER"]
         assert order in ("ABBA","BAAB")
         manifest=(current/"manifest.json").read_bytes()
@@ -192,7 +193,7 @@ def controlled_recovery():
         assert json.loads(manifest)["source_sha"]=="12b17ccfd4dc3354fa7dddecd0450bd1552cc540"
         bundles={"A":current,"B":current}
         cases=[(f"path-{i}-{arm}",arm=="B",600_000_000,{"WBD_M0_NATIVE_FEEDBACK":"service","WBD_M0_ACK_PROBE":"2"} if arm=="B" else {},5 if path_profile=="jitter" else 0,0,1024,arm) for i,arm in enumerate(order)]
-        save(O/"path-config.json",{"profile":path_profile,"order":order,"manifest":json.loads(manifest),"manifest_sha256":hashlib.sha256(manifest).hexdigest(),"cpu":run("lscpu"),"kernel":run("uname","-a"),"nproc":run("nproc"),"memory":pathlib.Path("/proc/meminfo").read_text(),"cgroup_cpu_max":pathlib.Path("/sys/fs/cgroup/cpu.max").read_text() if pathlib.Path("/sys/fs/cgroup/cpu.max").exists() else None,"scope":"single native x86 host; A bare kernel BBR, B frozen C; jitter not calibrated to cross-runner path"})
+        save(O/"path-config.json",{"profile":path_profile,"order":order,"manifest":json.loads(manifest),"manifest_sha256":hashlib.sha256(manifest).hexdigest(),"cpu":run("lscpu"),"kernel":run("uname","-a"),"nproc":run("nproc"),"memory":pathlib.Path("/proc/meminfo").read_text(),"cgroup_cpu_max":pathlib.Path("/sys/fs/cgroup/cpu.max").read_text() if pathlib.Path("/sys/fs/cgroup/cpu.max").exists() else None,"scope":"single native x86 host; A bare kernel BBR, B frozen C; no physical equivalence","forward_rate_mbps":800 if queue_limit else None,"forward_netem_limit_packets":queue_limit,"bare_path_mtu":1160 if queue_limit else 1500,"retransmission_receipt":"bare fully ACKed kernel socket and retired Rust bulk flow required for threshold qualification"})
     elif baseline:
         previous=pathlib.Path(baseline).resolve()
         sources={"A":"db760553eaf5b20e01d1c9c6452ab45281cc3812","B":os.environ["GITHUB_SHA"]}
@@ -214,12 +215,18 @@ def controlled_recovery():
         server=client=origin=app=None
         row={"case":label,"leg":leg,"product_source_sha":json.loads((ROOT/"manifest.json").read_text())["source_sha"],"paired":paired,"offered_bps":offered,"target_bytes":target_bytes,"added_rtt_ms":400,"injected_loss_pct":loss,"forward_jitter_ms":jitter,"profile":profile,"status":"INCOMPLETE"}
         if path_profile:
-            row.update(path_profile=path_profile,reverse_jitter_ms=jitter,product_source_sha=row["product_source_sha"] if paired else None)
+            row.update(path_profile=path_profile,reverse_jitter_ms=jitter,product_source_sha=row["product_source_sha"] if paired else None,forward_rate_mbps=800 if queue_limit else None,forward_netem_limit_packets=queue_limit,bare_path_mtu=1160 if queue_limit else 1500)
         try:
             # Establish the product/control connection on the clean
             # 400ms path, then apply the requested data-phase impairment.
             LOSS=0
             shape(True)
+            if path_profile:
+                # Match full L3 packet budget for the bare capacity reference
+                # in the new finite-queue scenes; keep the product WAN unchanged.
+                mtu=1160 if queue_limit and not paired else 1500
+                ns(C,"ip","route","replace","10.248.82.0/24","via","10.248.81.1","mtu",str(mtu))
+                ns(S,"ip","route","replace","10.248.81.0/24","via","10.248.82.1","mtu",str(mtu))
             if paired:
                 server=spawn(S,d/"server.log","env",*[k+"="+v for k,v in profile.items() if k!="WBD_M0_ACK_PROBE"],"LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-server",
                     "--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443",
@@ -244,7 +251,7 @@ def controlled_recovery():
             args=[host,str(target_bytes),str(offered),str(pause)]
             origin_argv=[sys.executable,str(app_path),"recovery-origin",str(port),*args]
             argv=[sys.executable,str(app_path),"recovery-client",str(port),*args]
-            origin=spawn(where,d/"origin.json",*origin_argv)
+            origin=spawn(where,d/"origin.json",*(["env","DUAL_TCP_KERNEL_FINAL=1"] if path_profile and not paired else []),*origin_argv)
             until(origin,lambda:f":{port} " in ns(where,"ss","-ltn"))
             save(d/"argv.json",{"origin":origin_argv,"client":argv})
             def path_counts():
@@ -254,6 +261,9 @@ def controlled_recovery():
                 terms=["delay","200ms"]
                 if jitter and (dev=="rc0" or path_profile):terms+= [str(jitter)+"ms","distribution","normal"]
                 args=["ip","netns","exec",R,"tc","qdisc","replace","dev",dev,"root","netem",*terms,"loss","random",str(loss)+"%","limit","65536"]
+                if path_profile and queue_limit and dev=="rc0":
+                    args[args.index("limit")+1]=str(queue_limit)
+                    args+=["rate","800mbit"]
                 if loss or jitter:
                     seed=20261126+index
                     trial=subprocess.run([*args,"seed",str(seed)],capture_output=True,text=True)
@@ -287,7 +297,7 @@ def controlled_recovery():
                     samples.append({"wall_ns":time.time_ns(),"sender_ss":ns(where,"ss","-tinm"),"receiver_ss":ns(C,"ss","-tinm")})
                     save(d/"kernel-samples.json",samples)
                     if time.monotonic()>deadline:raise RuntimeError("controlled transfer timeout")
-            origin.wait(20)
+            origin.wait(25)
             assert app.returncode==0 and origin.returncode==0
             received=json.loads((d/"app-client.json").read_text())
             sent=json.loads((d/"origin.json").read_text())
@@ -299,6 +309,12 @@ def controlled_recovery():
                 hash_match=sent["sha256"]==received["sha256"],eof=received["eof"],
                 paused_seconds=received["paused_seconds"],origin_max_sendall_seconds=sent["max_sendall_seconds"],origin_sendall_over_250ms_seconds=sent["sendall_over_250ms_seconds"])
             assert received["paused_seconds"]>=pause
+            if path_profile and not paired:
+                row["kernel_tcp_final"]=sent.get("kernel_tcp_final")
+                row["kernel_final_valid"]=sent.get("kernel_final_valid",False)
+                if row["kernel_final_valid"]:
+                    k=sent["kernel_tcp_final"]
+                    row["kernel_final_retrans_ratio"]=k["bytes_retrans"]/k["bytes_sent"]
             # CPU snapshots bracket actual app completion, not process teardown.
             cpu_after=endpoint_cpu()
             if path_profile:
@@ -320,6 +336,16 @@ def controlled_recovery():
                 assert all(v["emitted"]>0 and (not loss or v["drops"]>0) for v in observed.values()),observed
             save(d/"links-after-app.json",{n:json.loads(ns(n,"ip","-s","-j","link")) for n in N})
             if paired:
+                if path_profile:
+                    # Application EOF precedes the final ACK over the delayed
+                    # path. Wait for the existing natural flow-final receipt;
+                    # never relabel a Stop snapshot as retired.
+                    deadline=time.monotonic()+15
+                    while time.monotonic()<deadline:
+                        log=(d/"server.log").read_text()
+                        if any("WBD_M0_TCP_FLOW_FINAL " in line and "leg=server-middle" in line for line in log.splitlines()):break
+                        if server.poll() is not None or client.poll() is not None:break
+                        time.sleep(.1)
                 stop(client);stop(server)
                 sl=(d/"server.log").read_text();cl=(d/"client.log").read_text()
                 row["joined_stop"]=client.returncode==server.returncode==0 and all("WBD_DUAL_RUST_TCP_OWNER_STOP" in x and "reader_joined=1" in x for x in (sl,cl))
@@ -382,6 +408,7 @@ def controlled_recovery():
                     "WBD_M0_TCP_INGRESS " in log for log in (cl,sl)) and "WBD_M0_TCP_M4_CLOCK " in sl and "WBD_M0_LOCAL_TUN_GSO " in cl and bool(latest)
             row["qdisc_after_stop"]=path_counts()
             row["status"]="MEASURED" if row["byte_match"] and row["hash_match"] and row["eof"] and (not paired or (row.get("joined_stop") and row.get("receipt_present") and row.get("profile_valid"))) else "INCOMPLETE"
+            if path_profile and row["status"]=="MEASURED" and not (row.get("bulk_retired") if paired else row.get("kernel_final_valid")):row["status"]="INCOMPLETE_FINAL_RETRANS"
         except Exception as e:
             row["error"]=repr(e)
         finally:
@@ -394,6 +421,16 @@ def controlled_recovery():
     ROOT=current
     summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":("Frozen C versus bare kernel TCP, one native x86 host, matched path profile/order, actual qdisc/host/app evidence; not physical internet equivalence" if path_profile else "One native host, selected clean/pause and weak controls; live/Stop sample not necessarily retired"),"rows":rows,
         "status":"MEASURED_REQUIRES_RECOVERY_REVIEW" if all(x["status"]=="MEASURED" for x in rows) else "INCOMPLETE"}
+    if path_profile:
+        summary["path_profile"]=path_profile
+        summary["order"]=order
+        # Predeclared diagnostic screen, not product acceptance. Every
+        # measured leg remains in the receipt, including negative results.
+        bare=[r for r in rows if not r["paired"]]
+        product=[r for r in rows if r["paired"]]
+        qualified=all(r["status"]=="MEASURED" for r in rows)
+        summary["threshold_screen"]={"kernel_max_ratio":0.0005,"rust_min_ratio":0.005,"minimum_bare_mbps":400,
+            "matched_positive":qualified and all(r["kernel_final_retrans_ratio"]<=0.0005 and r["mbps"]>=400 for r in bare) and all(r["bulk_snapshot_retrans_ratio"]>=0.005 for r in product)}
     save(O/"summary.json",summary)
     if summary["status"]=="INCOMPLETE":raise SystemExit(2)
 
