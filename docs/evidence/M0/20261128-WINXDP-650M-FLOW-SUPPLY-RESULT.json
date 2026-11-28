@@ -1,0 +1,556 @@
+{
+  "schema": "winxdp-650m-flow-supply-v1",
+  "scope": "same frozen product, 400ms RTT, MTU1460, NAT CUBIC, 650M aggregate, A=1 flow B=4, per-socket options unchanged; hosted WSL only",
+  "run": 46104542954,
+  "product_source": "569b51abe62c499e1ea7e2f4e232f205756a891f",
+  "fixture_source": "9b7394c2255dfb9460b6c9d6c782cf28c54dab36",
+  "result": "PASS_COMPLETE_BELOW_TARGET",
+  "coverage_job": 140856002981,
+  "eligible": 3,
+  "skipped": 17,
+  "case_count": 12,
+  "source_ss_samples": 48,
+  "artifact": {
+    "id": 15247266684,
+    "zip_sha256": "ac2bc880b6b579115b0f21dada2e92d80240fc99badb84541fe4f34e3f9ff51d",
+    "verified": true
+  },
+  "rows": [
+    {
+      "runner": "B07",
+      "job": 140854236427,
+      "pair": {
+        "group": "flow-supply650",
+        "sequence": "BAAB",
+        "valid": true,
+        "A_rx_mbps": 459.57892952,
+        "B_rx_mbps": 461.68758768,
+        "rx_mbps_delta_pct": 0.4588239417769646,
+        "A_server_rx_mbps": 0,
+        "B_server_rx_mbps": 0,
+        "server_rx_mbps_delta_pct": null,
+        "A_cpu_s_per_gib": 5.107232815326058,
+        "B_cpu_s_per_gib": 6.3561505300173895,
+        "cpu_s_per_gib_delta_pct": 24.453902139403393,
+        "target_mbps": 650,
+        "A_outer_netem_mbps": {
+          "linux_to_windows": 465.57191494447636,
+          "windows_to_linux": 21.85535385168777
+        },
+        "A_outer_netem_pps": {
+          "linux_to_windows": 39566.52215037521,
+          "windows_to_linux": 22083.380126259246
+        },
+        "B_outer_netem_mbps": {
+          "linux_to_windows": 465.813598769015,
+          "windows_to_linux": 22.921410233004394
+        },
+        "B_outer_netem_pps": {
+          "linux_to_windows": 39588.98221354454,
+          "windows_to_linux": 23047.581058020187
+        },
+        "all_arms_at_target": false,
+        "scope": "COMPLETE_BELOW_TARGET"
+      },
+      "cases": [
+        {
+          "arm": "B",
+          "case": 0,
+          "streams": 4,
+          "rx_mbps": 473.47180416000003,
+          "cpu_s_per_gib": 6.283235049087535,
+          "steady_process_cpu_cores": 0.346327972907203,
+          "tx": {
+            "published": 1661858,
+            "completed_before_close": 1661858,
+            "pokes": 341264,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2853671,
+            "batches": 252073,
+            "waits": 187759,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 4197216634
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.7349999999999568,
+            0.7030000000000314,
+            0.7030000000000314,
+            0.7030000000000314
+          ],
+          "steady_peak_working_set_bytes": 101728256
+        },
+        {
+          "arm": "A",
+          "case": 1,
+          "streams": 1,
+          "rx_mbps": 468.4775408,
+          "cpu_s_per_gib": 4.917989435988653,
+          "steady_process_cpu_cores": 0.26821712924311203,
+          "tx": {
+            "published": 1498404,
+            "completed_before_close": 1498404,
+            "pokes": 248336,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2708024,
+            "batches": 197179,
+            "waits": 137568,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3983238287
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.5
+          ],
+          "steady_peak_working_set_bytes": 99061760
+        },
+        {
+          "arm": "A",
+          "case": 2,
+          "streams": 1,
+          "rx_mbps": 450.68031824,
+          "cpu_s_per_gib": 5.296476194663463,
+          "steady_process_cpu_cores": 0.2778854194285248,
+          "tx": {
+            "published": 1445456,
+            "completed_before_close": 1445456,
+            "pokes": 247743,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2561365,
+            "batches": 193198,
+            "waits": 137206,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3767122311
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.5469999999999686
+          ],
+          "steady_peak_working_set_bytes": 101031936
+        },
+        {
+          "arm": "B",
+          "case": 3,
+          "streams": 4,
+          "rx_mbps": 449.9033712,
+          "cpu_s_per_gib": 6.429066010947244,
+          "steady_process_cpu_cores": 0.33672648388805115,
+          "tx": {
+            "published": 1574691,
+            "completed_before_close": 1574691,
+            "pokes": 325720,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2703879,
+            "batches": 246182,
+            "waits": 185713,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3976559862
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.5940000000000509,
+            0.5940000000000509,
+            0.5940000000000509,
+            0.5940000000000509
+          ],
+          "steady_peak_working_set_bytes": 100724736
+        }
+      ]
+    },
+    {
+      "runner": "A07",
+      "job": 140854236472,
+      "pair": {
+        "group": "flow-supply650",
+        "sequence": "ABBA",
+        "valid": true,
+        "A_rx_mbps": 464.11288168,
+        "B_rx_mbps": 453.61538752,
+        "rx_mbps_delta_pct": -2.2618407233173654,
+        "A_server_rx_mbps": 0,
+        "B_server_rx_mbps": 0,
+        "server_rx_mbps_delta_pct": null,
+        "A_cpu_s_per_gib": 5.125218847127476,
+        "B_cpu_s_per_gib": 6.216703857588988,
+        "cpu_s_per_gib_delta_pct": 21.296359102270436,
+        "target_mbps": 650,
+        "A_outer_netem_mbps": {
+          "linux_to_windows": 447.1027054506377,
+          "windows_to_linux": 20.703057507393392
+        },
+        "A_outer_netem_pps": {
+          "linux_to_windows": 37995.732694121936,
+          "windows_to_linux": 21048.65233400478
+        },
+        "B_outer_netem_mbps": {
+          "linux_to_windows": 455.57595114465016,
+          "windows_to_linux": 21.879184459940646
+        },
+        "B_outer_netem_pps": {
+          "linux_to_windows": 38720.24940072355,
+          "windows_to_linux": 22190.062446363987
+        },
+        "all_arms_at_target": false,
+        "scope": "COMPLETE_BELOW_TARGET"
+      },
+      "cases": [
+        {
+          "arm": "A",
+          "case": 0,
+          "streams": 1,
+          "rx_mbps": 456.39741216000004,
+          "cpu_s_per_gib": 5.093552795465245,
+          "steady_process_cpu_cores": 0.27062887262444385,
+          "tx": {
+            "published": 1351775,
+            "completed_before_close": 1351775,
+            "pokes": 234858,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2428087,
+            "batches": 183841,
+            "waits": 131505,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3571355285
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.75
+          ],
+          "steady_peak_working_set_bytes": 99508224
+        },
+        {
+          "arm": "B",
+          "case": 1,
+          "streams": 4,
+          "rx_mbps": 447.88051872000005,
+          "cpu_s_per_gib": 6.480339443497826,
+          "steady_process_cpu_cores": 0.3378859012661831,
+          "tx": {
+            "published": 1554252,
+            "completed_before_close": 1554252,
+            "pokes": 318583,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2716662,
+            "batches": 240120,
+            "waits": 180438,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3995321633
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.6410000000000764,
+            0.4070000000000391,
+            0.6410000000000764,
+            0.6410000000000764
+          ],
+          "steady_peak_working_set_bytes": 100503552
+        },
+        {
+          "arm": "B",
+          "case": 2,
+          "streams": 4,
+          "rx_mbps": 459.35025631999997,
+          "cpu_s_per_gib": 5.95306827168015,
+          "steady_process_cpu_cores": 0.31834275420833574,
+          "tx": {
+            "published": 1557002,
+            "completed_before_close": 1557002,
+            "pokes": 312637,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2710607,
+            "batches": 233506,
+            "waits": 174105,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3986543089
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.6870000000000118,
+            0.6099999999999,
+            0.6559999999999491,
+            0.625
+          ],
+          "steady_peak_working_set_bytes": 99368960
+        },
+        {
+          "arm": "A",
+          "case": 3,
+          "streams": 1,
+          "rx_mbps": 471.8283512,
+          "cpu_s_per_gib": 5.156884898789708,
+          "steady_process_cpu_cores": 0.2832576282234079,
+          "tx": {
+            "published": 1507212,
+            "completed_before_close": 1507212,
+            "pokes": 256129,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2723146,
+            "batches": 200239,
+            "waits": 140896,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 4005411639
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.5779999999999745
+          ],
+          "steady_peak_working_set_bytes": 101539840
+        }
+      ]
+    },
+    {
+      "runner": "B03",
+      "job": 140854236497,
+      "pair": {
+        "group": "flow-supply650",
+        "sequence": "BAAB",
+        "valid": true,
+        "A_rx_mbps": 460.79958816,
+        "B_rx_mbps": 427.7441576,
+        "rx_mbps_delta_pct": -7.173493946032439,
+        "A_server_rx_mbps": 0,
+        "B_server_rx_mbps": 0,
+        "server_rx_mbps_delta_pct": null,
+        "A_cpu_s_per_gib": 5.333910718870479,
+        "B_cpu_s_per_gib": 6.493209390380146,
+        "cpu_s_per_gib_delta_pct": 21.734497118751218,
+        "target_mbps": 650,
+        "A_outer_netem_mbps": {
+          "linux_to_windows": 461.68957106768505,
+          "windows_to_linux": 21.069025167814637
+        },
+        "A_outer_netem_pps": {
+          "linux_to_windows": 39238.64286427381,
+          "windows_to_linux": 21442.17472092251
+        },
+        "B_outer_netem_mbps": {
+          "linux_to_windows": 430.00036226238836,
+          "windows_to_linux": 20.587891863109355
+        },
+        "B_outer_netem_pps": {
+          "linux_to_windows": 36552.10139959802,
+          "windows_to_linux": 20885.28964331829
+        },
+        "all_arms_at_target": false,
+        "scope": "COMPLETE_BELOW_TARGET"
+      },
+      "cases": [
+        {
+          "arm": "B",
+          "case": 0,
+          "streams": 4,
+          "rx_mbps": 407.32267184,
+          "cpu_s_per_gib": 6.8299702030991725,
+          "steady_process_cpu_cores": 0.32386762459226215,
+          "tx": {
+            "published": 1474501,
+            "completed_before_close": 1474501,
+            "pokes": 314916,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2547663,
+            "batches": 243654,
+            "waits": 186305,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3746198271
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            1.3429999999999893,
+            0.75,
+            1.2650000000000432,
+            0.7340000000000373
+          ],
+          "steady_peak_working_set_bytes": 99299328
+        },
+        {
+          "arm": "A",
+          "case": 1,
+          "streams": 1,
+          "rx_mbps": 446.4645408,
+          "cpu_s_per_gib": 5.43174272014911,
+          "steady_process_cpu_cores": 0.28231652910997107,
+          "tx": {
+            "published": 1416442,
+            "completed_before_close": 1416442,
+            "pokes": 237412,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2574765,
+            "batches": 192968,
+            "waits": 135823,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3786726240
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.48500000000001364
+          ],
+          "steady_peak_working_set_bytes": 98230272
+        },
+        {
+          "arm": "A",
+          "case": 2,
+          "streams": 1,
+          "rx_mbps": 475.13463551999996,
+          "cpu_s_per_gib": 5.236078717591847,
+          "steady_process_cpu_cores": 0.28962296818348476,
+          "tx": {
+            "published": 1430943,
+            "completed_before_close": 1430943,
+            "pokes": 240357,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2628491,
+            "batches": 193867,
+            "waits": 136152,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3865903210
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.03100000000000591
+          ],
+          "steady_peak_working_set_bytes": 96301056
+        },
+        {
+          "arm": "B",
+          "case": 3,
+          "streams": 4,
+          "rx_mbps": 448.16564336,
+          "cpu_s_per_gib": 6.156448577661121,
+          "steady_process_cpu_cores": 0.3212025316455696,
+          "tx": {
+            "published": 1467725,
+            "completed_before_close": 1467725,
+            "pokes": 301476,
+            "invalid": 0,
+            "stats_hr": 0,
+            "credit_limited": 0,
+            "completion_waits": 0
+          },
+          "rx": {
+            "received": 2600060,
+            "batches": 231582,
+            "waits": 172013,
+            "dropped": 0,
+            "truncated": 0,
+            "stats_hr": 0,
+            "queues": 1,
+            "received_bytes": 3823388806
+          },
+          "exact_hash": true,
+          "pressure_valid": true,
+          "flow_gaps_s": [
+            0.5,
+            0.5470000000000255,
+            0.5470000000000255,
+            0.6090000000000373
+          ],
+          "steady_peak_working_set_bytes": 97804288
+        }
+      ]
+    }
+  ],
+  "snapshot_interpretation": "All 48 snapshots have expected socket count, CUBIC MSS1349; single-flow aggregate cwnd 18.10–28.33 MB, four-flow aggregate 17.07–29.57 MB, below ideal 32.5 MB BDP at 650M/400ms. Single notsent 8.88–25.84 MB, four 71.83–146.02 MB. Some four-flow snapshots show closely correlated RTT 575.7–576.0ms and 648.2–651.4ms; correlation not proof of loss location or scheduler mechanism. All exact Stop/bytes, zero WinXDP RX drops/truncation and TX credit/completion waits. Multi-flow not a fix: CPU/GiB increased all groups 21.30–24.45%, throughput -7.17 to +0.46%. Shared limiting mechanism remains candidate; do not attribute all loss to carrier or change TCP policy.",
+  "next": {
+    "fixture_source": "008818b68c95448ae1bbca34e838074bdc231230",
+    "comparison": "same one-flow release at 400 vs 40ms RTT, 650M offer; both orders and original socket/cwnd sampling; not physical or matched naked TCP qualification"
+  }
+}
