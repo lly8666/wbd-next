@@ -146,7 +146,8 @@
     "H2545 four-arm Action 46128657043 client measured four hash/EOF-complete arms; server/relay final waiter failed missing all_three_distinct_native_machines summary field. 180s receive window Mbps bare166.25/Rust CUBIC291.69/splice BBR215.99/Rust BBR1 311.30; Rust retired retrans ratios 0.01050% and 0.80398%. User requests one BBR1/BBRv3 180s comparison on same three ARM, both seed600M, same server service epoch; not performance qualification.",
     "H2546 exact cdd60c2 both ISA362/7 native PASS and two 180s ARM arms measured. B/V399.21/385.34M, retired retrans0.4107/0.2740%, RTO2/0, endpoint CPU29.95/31.50, client full1950/0; forward path gaps551/349; single order, not L2 performance qualification. See docs/evidence/M0/20261128-L2-BBR1-BBR3-180S-SEED-RESULT.json",
     "Native RAW FQ earlier eligibility/close lifetime diagnostic pending; production EDT still disabled. No shared-socket HOL or queued Stop qualification yet.",
-    "H2548 exact native RAW FQ dual ISA46138025986 passed, 64/64 immediate marker before future, 32/32 close accepted future received after close. H2549 actual paired Normal earned-train EDT opt-in candidate, not production default or performance qualification; see docs/evidence/M0/20261128-L2-RAW-FQ-OWNER-ELIGIBILITY-RESULT.json"
+    "H2548 exact native RAW FQ dual ISA46138025986 passed, 64/64 immediate marker before future, 32/32 close accepted future received after close. H2549 actual paired Normal earned-train EDT opt-in candidate, not production default or performance qualification; see docs/evidence/M0/20261128-L2-RAW-FQ-OWNER-ELIGIBILITY-RESULT.json",
+    "EDT initial source 1fb5480 old unit call signature corrected at 9677716; exact candidate native 46140274112 pending; first source and feature gate failure retained."
   ],
   "promotion": null
 }

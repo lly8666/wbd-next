@@ -11,3 +11,9 @@ Exact dual ISA native regression plus additional real paired BBRv3 seed600 Norma
 ```feature-impact
 {"kind":"updated","ids":["dual-rust-tcp"],"reason":"Accept real native FQ earlier eligibility and close results; wire explicit scoped actual product earned-burst EDT with separated logical clock, accepted prefix and kernel resource retirement."}
 ```
+
+H2549 source correction: initial 1fb5480 changed Flow::admit signature while existing core tests still invoke old immediate signature. 9677716 restores unchanged immediate API with separate admit_at and preserves original immediate logical RTT timing; first build46140237332 retained, corrected exact native46140274112 pending. Correction source feature-catalog46140274082 failed because this correction commit omitted changed devlog declaration; this documentation/feature update records it, never misstates previous gate. Existing path filters also launched four historical frozen x86 queue threshold workflows (46140237313/46140237362/46140237298/46140237295) when shared local fixture changed; not new EDT performance intent, not used as EDT qualification. No redundant intentional dispatch. Current product candidate has no sustained performance result, no default promotion, and no proof of active mid-train Stop. Main checkpoint retains branch-local references in partial summary, not invalid main file paths.
+
+```feature-impact
+{"kind":"updated","ids":["dual-rust-tcp"],"reason":"Record corrected native immediate admission call interface and preserved logical timing; actual candidate verification pending."}
+```
