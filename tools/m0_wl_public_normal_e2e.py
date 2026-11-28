@@ -579,8 +579,8 @@ try:
    from m0_winxdp_game_download import route_for
    game_tcp_physical=route_for("192.0.2.2")
    report["game_tcp_physical_before_apply"]=game_tcp_physical
- if timed_rotation and mode not in ("normal","fixed","auto","game4-fec"):
-  raise RuntimeError("focused timer fixture supports Normal Off/Fixed/Auto and Game4 Maximum")
+ if timed_rotation and mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec"):
+  raise RuntimeError("focused timer fixture supports the seven original product modes")
  if p030_managed:
   managed_cfg={"listen":peer+":443","server-name":"wbd-v4.example.test","raw-interface":"eth0",
       "tun-name":"wbdwl4","tun-ipv4":"10.66.0.1/24","lease-pool":"10.66.0.128/25",

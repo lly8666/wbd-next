@@ -33,7 +33,7 @@ def main():
         rc=run(["tools/m0_winxdp_game_download.py"],env,E/(task+"-driver.log"),300)
         print("WINXDP_BBR_PRECONNECT_RETEST_RC "+str(rc),flush=True)
         return rc
-    assert task in ("normal","fixed","auto","game4-fec")
+    assert task in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec")
     codes=[]
     for mode in (task,):
         case=E/mode;case.mkdir()
@@ -43,7 +43,7 @@ def main():
         env=dict(os.environ,WBD_WL_PUBLIC_MODE=mode,WBD_WL_PUBLIC_MODES=mode,
                  WBD_XDP_WINDOWS_ROTATION="1",WBD_XDP_GAME_DOWNLOAD_BBR="0",WBD_XDP_GAME_DOWNLOAD_DIAG="0")
         for k in ("WBD_WL_V2_SCENARIO","WBD_WL_RUN_N0","WBD_WL_RUN_P200","WBD_XDP_GAME_DOWNLOAD_TRANSPORT"):env.pop(k,None)
-        rc=run(["tools/m0_wl_public_modes_e2e.py"],env,case/"fixture.log",260)
+        rc=run(["tools/m0_wl_public_modes_e2e.py"],env,case/"fixture.log",360 if mode.startswith("game") else 260)
         report=read(OUT/"report.json");report["fixture_rc"]=rc
         (case/"timer-measurement.json").write_text(json.dumps(report,indent=2))
         for pat in ("client.log","server.log","windows-app.log","linux-app.log","windows-timer-*","wl-n0-netem-before.json","wl-n0-netem-after.json","gamefec-*.txt","mode-batch.json","windows-original-go-rust-process-1hz.jsonl"):
