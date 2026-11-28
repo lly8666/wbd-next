@@ -292,6 +292,7 @@ impl GameKernelOwner{
                 let mut health=HealthClock::new(HealthPolicy::default_connected(),
                     health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
                 let mut cold_receipt_armed=false;
+                let mut hot_health_slot=0usize;
                 // One full IPv4 TUN read buffer PER Game TX owner, never
                 // 64KiB per arena slab. A 2048B read irreversibly truncated
                 // actual oversized DF0 datagrams into false small packets.
@@ -356,6 +357,11 @@ impl GameKernelOwner{
                                             if cosmetic.rekey_one_lane(slot,
                                                 lanes[slot].key,change.seq,
                                                 feedback_epoch).is_ok(){
+                                                // Original same Health burst on the exact replaced slot.
+                                                // An idle sibling cannot prove the successor tuple.
+                                                hot_health_slot=slot;
+                                                let at=health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
+                                                if server{health.arm_server_cold_commit(at)}else{health.arm_client_cold_ready(at)}
                                                 Ok(opener)
                                             }else{Err(())}
                                         },
@@ -743,7 +749,8 @@ impl GameKernelOwner{
                             break
                         },
                         ControlDue::Health=>{
-                            let copied=if let Some(lane)=lanes.first_mut(){
+                            let health_slot=if health.cold_receipts_pending(){hot_health_slot}else{0};
+                            let copied=if let Some(lane)=lanes.get_mut(health_slot){
                                 let mut wire=[0u8;512];
                                 match game.seal_native_health(lane.key.slot,
                                     health.local_idle_ns(health_now),&mut wire){
@@ -766,7 +773,7 @@ impl GameKernelOwner{
                                                     src_port:sp,dst_port:dp,
                                                 };
                                                 let presentation=Presentation{
-                                                    ack32:tx_ack[0].load(Ordering::Acquire),advertised_window:65_535,
+                                                    ack32:tx_ack[health_slot].load(Ordering::Acquire),advertised_window:65_535,
                                                     ip_id:(pn as u16).wrapping_add(75),
                                                     persona:peer_persona,
                                                 };
@@ -774,8 +781,8 @@ impl GameKernelOwner{
                                                     tuple,presentation).is_ok();
                                                 if accepted{
                                                     if outer_repair_enabled &&
-                                                        cosmetic.on_health_copy(0,lane.seq,n).is_err(){
-                                                        eprintln!("WBD_GAME_NORMAL_OUTER_HINT_DROP lane=1 reason=health_seq");
+                                                        cosmetic.on_health_copy(health_slot,lane.seq,n).is_err(){
+                                                        eprintln!("WBD_GAME_NORMAL_OUTER_HINT_DROP lane={} reason=health_seq",health_slot+1);
                                                     }
                                                     lane.seq=lane.seq.saturating_add(n as u64);
                                                     tx_copy.fetch_add(1,Ordering::Relaxed);

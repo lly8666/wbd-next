@@ -115,7 +115,9 @@ func runM0NativeV4WindowsGame(
   if err!=nil{return err}
   flows=append(flows,flow);cfgs=append(cfgs,cfg)
  }
- xdp,available,err:=faketcp.OpenXdpGameEndpoint(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),physicalIfIndex,cfgs)
+ openGame:=faketcp.OpenXdpGameEndpoint
+ if o.RotateMin>0{openGame=faketcp.OpenXdpRotatableGameEndpoint}
+ xdp,available,err:=openGame(filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),physicalIfIndex,cfgs)
  if err!=nil{return err}
  if !available{return fmt.Errorf("WinXDP Game entry missing from wbd_engine.dll")}
  shared=xdp
@@ -380,15 +382,38 @@ func runM0NativeV4WindowsGame(
  if diagnostic{interval=time.Second}
  ticker:=time.NewTicker(interval);defer ticker.Stop()
  rotation,stopRotation:=m0WindowsArmRotation(o)
- defer stopRotation()
+ defer func(){stopRotation()}()
+ var retireTimer *time.Timer
+ var retireCh <-chan time.Time
+ defer func(){if retireTimer!=nil{retireTimer.Stop()}}()
+ var retireUntil time.Time
+ slot,cycle:=0,0
+ var retiredLane,retiredPort int
  var runtimeErr error
 outer:
  for{
   select{
   case <-ctx.Done():break outer
   case <-rotation:
-   if ctx.Err()==nil{runtimeErr=m0WindowsTimedRotationDue()}
-   break outer
+   if ctx.Err()!=nil{break outer}
+   fmt.Printf("WBD_WINDOWS_TIMER_ROTATION_DUE scope=game_slot unix_ms=%d\n",time.Now().UnixMilli())
+   if retireCh!=nil{rotation=nil;continue}
+   oldPort:=packet.flows[slot].LocalPort
+   grace,turnErr:=packet.rotateGameLane(ctx,o,cfg,slot)
+   if turnErr!=nil{runtimeErr=turnErr;break outer}
+   cycle++;retiredLane=slot+1;retiredPort=int(oldPort)
+   fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_READY lane=%d cycle=%d old_port=%d new_port=%d unchanged_siblings=%d grace_ms=%d same_game_adapter=1 unix_ms=%d\n",slot+1,cycle,oldPort,packet.flows[slot].LocalPort,count-1,grace.Milliseconds(),time.Now().UnixMilli())
+   slot=(slot+1)%count
+   retireTimer=time.NewTimer(grace);retireCh=retireTimer.C;retireUntil=time.Now().Add(grace+5*time.Second)
+   stopRotation();rotation,stopRotation=m0WindowsArmRotation(o)
+  case <-retireCh:
+   if ctx.Err()!=nil{break outer}
+   done,e:=group.RetireNativeGameLane(ctx)
+   if e!=nil||(!done&&time.Now().After(retireUntil)){runtimeErr=errors.Join(e,fmt.Errorf("Game old RX retirement incomplete"));break outer}
+   if !done{retireTimer.Reset(100*time.Millisecond);continue}
+   fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_OLD_STOP lane=%d old_port=%d unix_ms=%d\n",retiredLane,retiredPort,time.Now().UnixMilli())
+   retireCh=nil
+   if rotation==nil{rotation,stopRotation=m0WindowsArmRotation(o)}
   case <-pathChanged:
    runtimeErr=errM0WindowsPhysicalPathChanged
    break outer
@@ -417,4 +442,71 @@ outer:
  if stopErr!=nil{return fmt.Errorf("Game native owned Stop failed after %v: %w",runtimeErr,stopErr)}
  fmt.Printf("WBD_WINDOWS_GAME_NATIVE_DISCONNECTED lanes=%d wal_restored=1 rust_stopped=1\n",count)
  return runtimeErr
+}
+
+func(p *m0WinRustGamePeer) rotateGameLane(ctx context.Context,o m0NativeV4Options,base realityfront.ClientAdmissionConfig,slot int)(grace time.Duration,err error){
+ turn,cancel:=context.WithTimeout(ctx,30*time.Second);defer cancel()
+ ordinal,e:=m0WindowsReserveColdTupleOrdinal(o.StatePath);if e!=nil{return 0,e}
+ port,e:=m0WindowsOriginalColdClientPort(o.SourcePort,ordinal);if e!=nil{return 0,e}
+ cfg:=p.cfgs[slot];cfg.Flow.LocalPort=port
+ transport,e:=p.group.BeginNativeGameLaneCandidate(turn,cfg);if e!=nil{return 0,e}
+ handed:=false
+ var readers sync.WaitGroup
+ defer func(){if !handed{err=errors.Join(err,transport.Close())};readers.Wait()}()
+ var seed [4]byte
+ if _,e=rand.Read(seed[:]);e!=nil{return 0,e}
+ flow:=p.flows[slot];flow.LocalPort=port
+ assoc,e:=faketcp.NewClientAssociation(flow,binary.BigEndian.Uint32(seed[:]),time.Second,transport.WriteSegment)
+ if e!=nil{return 0,e};defer assoc.Close()
+ failed:=make(chan error,1);early:=make(chan faketcp.Segment,64)
+ handoff:=make(chan struct{});closeHandoff:=sync.OnceFunc(func(){close(handoff)});defer closeHandoff()
+ readers.Add(1)
+ go func(){
+  defer readers.Done()
+  fail:=func(e error){select{case failed<-e:default:};assoc.Close()}
+  for{
+   if assoc.State()==faketcp.ClientAssociationDetached{return}
+   seg,e:=transport.ReadSegment()
+   if e!=nil{select{case <-handoff:return;default:};fail(e);return}
+   if assoc.State()!=faketcp.ClientAssociationDetached{
+    e=assoc.HandleSegment(seg,time.Now())
+    if !errors.Is(e,faketcp.ErrClientDetached){
+     if e==nil||errors.Is(e,faketcp.ErrClientHandshake)&&assoc.State()==faketcp.ClientAssociationSYNSent{continue}
+     fail(e);return
+    }
+   }
+   if handled,_:=assoc.RepeatGameColdFinalACK(&seg);handled{return}
+   if len(seg.Payload)>0{early<-seg};return
+  }
+ }()
+ if e=assoc.Start(time.Now());e!=nil{return 0,e}
+ tick:=time.NewTicker(100*time.Millisecond);defer tick.Stop()
+ established:=make(chan error,1);go func(){established<-assoc.WaitEstablished(turn)}()
+ waitSyn:
+ for{select{
+ case <-turn.Done():return 0,turn.Err()
+ case e:=<-failed:return 0,e
+ case e:=<-established:if e!=nil{return 0,e};break waitSyn
+ case <-tick.C:if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{return 0,e}
+ }}
+ candidate,e:=p.group.PrepareOriginalGameLaneCandidate(turn,assoc,base,uint8(slot+1))
+ if e!=nil{return 0,e}
+ closeHandoff()
+ // Stage takes the cold reader/writer and transfers exact native owner.
+ // From authenticated TLS onward Linux may already have replaced this slot;
+ // a failed commit is not silently reported as an untouched old generation.
+ if e=p.group.StageNativeLaneCandidate(turn,candidate,transport,flow.PeerPort);e!=nil{return 0,e}
+ readers.Wait()
+ for len(early)>0{seg:=<-early;if e=p.group.OfferNativeGameCandidateEarly(candidate,port,seg.Seq,seg.Payload);e!=nil{return 0,e}}
+ proof,stopProof:=context.WithTimeout(turn,6*time.Second);defer stopProof()
+ check:=time.NewTicker(25*time.Millisecond);defer check.Stop()
+ for{
+  ready,e:=p.group.NativeLaneCandidateReady(proof,candidate,transport);if e!=nil{return 0,e};if ready{break}
+  select{case <-proof.Done():return 0,proof.Err();case <-check.C:}
+ }
+ grace=m0WindowsRotationDelay(10*time.Second,20*time.Second)
+ handed=true
+ if e=p.group.PromoteNativeGameLane(turn,candidate,port,grace);e!=nil{return 0,e}
+ p.flows[slot]=flow;p.cfgs[slot]=cfg
+ return grace,nil
 }

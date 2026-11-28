@@ -33,6 +33,8 @@ type V4WindowsAuthenticatedGameGroup struct{
  mu sync.Mutex
  members []*V4WindowsAuthenticatedClientOwner
  sessions []*V4ClientSession
+ anchor *V4WindowsAuthenticatedClientOwner
+ staged,retiring *V4WindowsGameLaneCandidate
  epoch [16]byte
  authenticatedLease string
  authenticatedCipher uint8
@@ -186,6 +188,7 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
  runtime.KeepAlive(handles)
  if group==0{return errV4WindowsOwner}
  g.joined=group
+ g.anchor=g.members[0]
  // Linux authority: each lane's protected GameFec TLS extension matches
  // g.gameFec before Detach. Enable ONE Rust GameFec owner, never Go FEC.
  if g.gameFec!=0{
@@ -357,7 +360,14 @@ func(g *V4WindowsAuthenticatedGameGroup) StopCryptoAfterDriverDrain(
  if g.closed{return nil}
  if err:=ctx.Err();err!=nil{return err}
  if g.joined==0{return errV4WindowsOwner}
- for _,s:=range g.members{
+ owners:=append([]*V4WindowsAuthenticatedClientOwner(nil),g.members...)
+ if g.anchor!=nil{owners=append(owners,g.anchor)}
+ if g.staged!=nil{owners=append(owners,g.staged.owner)}
+ if g.retiring!=nil{owners=append(owners,g.retiring.old)}
+ seen:=map[*V4WindowsAuthenticatedClientOwner]bool{}
+ unique:=owners[:0]
+ for _,s:=range owners{if !seen[s]{seen[s]=true;unique=append(unique,s)}}
+ for _,s:=range unique{
   if s==nil||s.device==nil||s.bridge==nil{return errV4WindowsOwner}
   lease:=s.device;b:=s.bridge
   if err:=lease.device.VerifyCurrentNative(ctx,lease.identity);err!=nil{return err}
@@ -369,7 +379,7 @@ func(g *V4WindowsAuthenticatedGameGroup) StopCryptoAfterDriverDrain(
   runtime.KeepAlive(b.epoch)
  }
  if err:=winOwnerCall(g.stopProc,uintptr(g.joined));err!=nil{return err}
- for _,s:=range g.members{
+ for _,s:=range unique{
   if err:=s.StopScopedOwner(ctx);err!=nil{return err}
  }
  g.closed=true;g.joined=0
@@ -382,6 +392,7 @@ func(g *V4WindowsAuthenticatedGameGroup) FirstOriginalOwner()*V4WindowsAuthentic
  if g==nil{return nil}
  g.mu.Lock();defer g.mu.Unlock()
  if g.closed||len(g.members)<2{return nil}
+ if g.anchor!=nil{return g.anchor}
  return g.members[0]
 }
 func(g *V4WindowsAuthenticatedGameGroup) OriginalGameTCPBoundaries()([][2]uint32,error){
@@ -449,7 +460,9 @@ func(g *V4WindowsAuthenticatedGameGroup) StageNativeLaneCandidate(ctx context.Co
  if err:=ctx.Err();err!=nil{return err}
  tx,rx,err:=c.TCPBoundaries();if err!=nil{return err}
  g.mu.Lock();defer g.mu.Unlock()
- if g.closed||g.joined==0||len(g.members)!=4||c.lane<1||c.lane>4||g.members[c.lane-1]!=c.old{return errV4WindowsOwner}
+ if g.closed||g.joined==0||c.lane<1||int(c.lane)>len(g.members)||g.members[c.lane-1]!=c.old{return errV4WindowsOwner}
+ if g.staged!=nil||g.retiring!=nil{return errV4WindowsOwner}
+ g.staged=c
  proc,err:=c.old.bridge.fixedProc("wbd_m0_win_game_candidate_stage");if err!=nil{return err}
  if err=transport.TakeNative();err!=nil{return err}
  return winOwnerCall(proc,uintptr(g.joined),uintptr(c.lane),uintptr(c.old.bridge.handle),uintptr(c.owner.bridge.handle),uintptr(transport.CandidatePort()),uintptr(peerPort),uintptr(tx),uintptr(rx))
@@ -458,7 +471,7 @@ func(g *V4WindowsAuthenticatedGameGroup) NativeLaneCandidateReady(ctx context.Co
  if g==nil||ctx==nil||c==nil||transport==nil{return false,errV4WindowsOwner}
  if err:=ctx.Err();err!=nil{return false,err}
  g.mu.Lock();defer g.mu.Unlock()
- if g.closed||g.joined==0||len(g.members)!=4||c.lane<1||c.lane>4||g.members[c.lane-1]!=c.old{return false,errV4WindowsOwner}
+ if g.closed||g.joined==0||c.lane<1||int(c.lane)>len(g.members)||g.members[c.lane-1]!=c.old{return false,errV4WindowsOwner}
  proc,err:=c.old.bridge.fixedProc("wbd_m0_win_game_candidate_ready");if err!=nil{return false,err}
  rc,_,_:=proc.Call(uintptr(g.joined),uintptr(transport.CandidatePort()))
  if int32(rc)!=0&&int32(rc)!=1{return false,errV4WindowsOwner}
@@ -483,14 +496,14 @@ func(g *V4WindowsAuthenticatedGameGroup) PrepareOriginalGameLaneCandidate(
  ctx context.Context,assoc *faketcp.ClientAssociation,base ClientAdmissionConfig,lane uint8,
 )(*V4WindowsGameLaneCandidate,error){
  if g==nil||ctx==nil||assoc==nil||assoc.BootstrapConn()==nil||
-    lane<1||lane>4||base.Policy.Transport!=TransportGame||
-    base.Policy.DesiredLanes!=4||base.DesiredLanes!=4||base.Policy.SupportedNow()!=nil{
+    lane<1||lane>base.DesiredLanes||base.Policy.Transport!=TransportGame||
+    (base.DesiredLanes!=2&&base.DesiredLanes!=4)||base.Policy.DesiredLanes!=base.DesiredLanes||base.Policy.SupportedNow()!=nil{
   return nil,ErrAdmissionParams
  }
  if err:=ctx.Err();err!=nil{return nil,err}
  i:=int(lane)-1
  g.mu.Lock()
- if g.closed||g.joined==0||len(g.members)!=4||len(g.sessions)!=4{
+ if g.closed||g.joined==0||len(g.members)!=int(base.DesiredLanes)||len(g.sessions)!=len(g.members)||g.staged!=nil||g.retiring!=nil{
   g.mu.Unlock();return nil,ErrAdmissionUnsupported
  }
  old:=g.members[i];previous:=g.sessions[i]
@@ -549,4 +562,38 @@ func(g *V4WindowsAuthenticatedGameGroup) PrepareOriginalGameLaneCandidate(
  g.mu.Unlock()
  if !unchanged{return fail(ErrAdmissionUnsupported)}
  return &V4WindowsGameLaneCandidate{lane:lane,old:old,owner:owner,session:session},nil
+}
+
+func(g *V4WindowsAuthenticatedGameGroup) OfferNativeGameCandidateEarly(c *V4WindowsGameLaneCandidate,port uint16,seq uint32,wire []byte)error{
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.staged!=c||len(wire)==0{return errV4WindowsOwner}
+ proc,err:=c.owner.bridge.fixedProc("wbd_m0_win_game_candidate_early");if err!=nil{return err}
+ err=winOwnerCall(proc,uintptr(g.joined),uintptr(port),uintptr(seq),uintptr(unsafe.Pointer(&wire[0])),uintptr(len(wire)))
+ runtime.KeepAlive(wire);return err
+}
+func(g *V4WindowsAuthenticatedGameGroup) PromoteNativeGameLane(ctx context.Context,c *V4WindowsGameLaneCandidate,port uint16,grace time.Duration)error{
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.staged!=c||g.retiring!=nil{return errV4WindowsOwner}
+ proc,err:=c.owner.bridge.fixedProc("wbd_m0_win_game_candidate_promote");if err!=nil{return err}
+ if err=winOwnerCall(proc,uintptr(g.joined),uintptr(port),uintptr(grace.Milliseconds()));err!=nil{return err}
+ status,err:=c.owner.bridge.fixedProc("wbd_m0_win_game_candidate_status");if err!=nil{return err}
+ tick:=time.NewTicker(25*time.Millisecond);defer tick.Stop()
+ for{
+  rc,_,_:=status.Call(uintptr(g.joined),uintptr(c.old.bridge.handle),uintptr(c.owner.bridge.handle))
+  if int32(rc)<0{return errV4WindowsOwner}
+  if rc>=1{break}
+  select{case <-ctx.Done():return ctx.Err();case <-tick.C:}
+ }
+ g.members[c.lane-1]=c.owner;g.sessions[c.lane-1]=c.session
+ g.retiring=c;g.staged=nil
+ return nil
+}
+func(g *V4WindowsAuthenticatedGameGroup) RetireNativeGameLane(ctx context.Context)(bool,error){
+ g.mu.Lock();defer g.mu.Unlock()
+ c:=g.retiring;if c==nil{return true,nil}
+ status,err:=c.owner.bridge.fixedProc("wbd_m0_win_game_candidate_status");if err!=nil{return false,err}
+ rc,_,_:=status.Call(uintptr(g.joined),uintptr(c.old.bridge.handle),uintptr(c.owner.bridge.handle))
+ if int32(rc)<0{return false,errV4WindowsOwner};if rc!=2{return false,nil}
+ if c.old!=g.anchor{if err=c.old.StopScopedOwner(ctx);err!=nil{return false,err}}
+ g.retiring=nil;return true,nil
 }

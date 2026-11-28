@@ -138,7 +138,7 @@ func m0WindowsArmRotation(o m0NativeV4Options)(<-chan time.Time,func()){
  if o.RotateMin==0{return nil,func(){}}
  delay:=m0WindowsRotationDelay(o.RotateMin,o.RotateMax)
  scope:="full_generation"
- if o.Mode==m0WinModeNormal||o.Mode==m0WinModeFixed||o.Mode==m0WinModeAuto{scope="normal_mbb"}
+ if o.Mode==m0WinModeNormal||o.Mode==m0WinModeFixed||o.Mode==m0WinModeAuto{scope="normal_mbb"}else if o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4{scope="game_slot"}
  fmt.Printf("WBD_WINDOWS_TIMER_ROTATION_ARMED min_ms=%d max_ms=%d actual_delay_ms=%d scope=%s unix_ms=%d\n",
   o.RotateMin.Milliseconds(),o.RotateMax.Milliseconds(),delay.Milliseconds(),scope,time.Now().UnixMilli())
  timer:=time.NewTimer(delay)

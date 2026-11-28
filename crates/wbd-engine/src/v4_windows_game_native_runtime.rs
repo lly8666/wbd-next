@@ -157,6 +157,11 @@ struct GameColdCandidate {
     proof:Mutex<Option<NativeCandidateProof>>,
     staged:AtomicBool,
     probe_needed:AtomicBool,
+    promotion:AtomicU32, // 0 idle, 1 requested, 2 RX parked, 3 TX switched, 4 grace
+    grace_ms:AtomicU32,
+    switched:Mutex<Option<GameLaneHandoff>>,
+    last_promoted:AtomicU64,last_retired:AtomicU64,
+    early:Mutex<VecDeque<(u32,Vec<u8>)>>,
 }
 #[cfg(feature="winxdp_native_trial")]
 struct NativeCandidateProof{
@@ -166,16 +171,28 @@ struct NativeCandidateProof{
     probe_sent:bool,
 }
 #[cfg(feature="winxdp_native_trial")]
+struct GameLaneHandoff{
+    slot:usize,next:LaneConfig,ack:AckLedger,old:LaneConfig,
+    retired:game::RetiredWinGameLane,deadline:Instant,
+}
+#[cfg(feature="winxdp_native_trial")]
 impl GameColdCandidate {
     fn new(raw_rx:usize,lanes:&[LaneConfig])->Self{
         Self{transport:super::cold_port::NativeColdPort::new(raw_rx,
                 std::array::from_fn(|i|lanes.get(i).map_or(0,|l|l.local_port))),
-            proof:Mutex::new(None),staged:AtomicBool::new(false),probe_needed:AtomicBool::new(false)}
+            proof:Mutex::new(None),staged:AtomicBool::new(false),probe_needed:AtomicBool::new(false),
+            promotion:AtomicU32::new(0),grace_ms:AtomicU32::new(0),switched:Mutex::new(None),
+            last_promoted:AtomicU64::new(0),last_retired:AtomicU64::new(0),early:Mutex::new(VecDeque::new())}
+    }
+    fn begin(&self,port:u16)->Result<(),i32>{
+        if self.promotion.load(Ordering::Acquire)!=0{return Err(BAD_STAGE)}
+        self.transport.begin(port)
     }
     fn close(&self,port:u16)->Result<(),i32>{
         let mut proof=self.proof.lock().map_err(|_|BAD_STAGE)?;
         self.transport.close(port)?;
         *proof=None;
+        self.early.lock().map_err(|_|BAD_STAGE)?.clear();
         self.staged.store(false,Ordering::Release);
         self.probe_needed.store(false,Ordering::Release);
         Ok(())
@@ -202,7 +219,36 @@ impl GameColdCandidate {
         if outcome.error.is_some_and(|e|e!=wbd_platform::TxError::WouldBlock){return Err(BAD_STAGE)}
         Ok(())
     }
-
+    // Called only by the original TX owner after its last staged driver batch.
+    fn promote_tx(&self,cfg:&WbdWinGameNativeAttachV3,lanes:&mut [LaneConfig],
+        group:&Arc<Mutex<game::WinGameGroup>>,outer:&Arc<Mutex<outer::GameOuter>>,
+        c:&GameCounters,active:&mut [bool],ack_last:&mut [u64;4],
+        future_sent:&mut [u32;4],rx_wake:&WakeEvent)->Result<(),i32>{
+        if self.promotion.load(Ordering::Acquire)!=2{return Ok(())}
+        let p=self.proof.lock().map_err(|_|BAD_STAGE)?.take().ok_or(BAD_STAGE)?;
+        let slot=p.prepared.slot();
+        let next=p.lane;let old=lanes[slot];
+        let retired={
+            let mut g=group.lock().map_err(|_|BAD_STAGE)?;
+            game::commit_native_lane_candidate(&mut g,cfg.group,p.prepared)?
+        };
+        outer.lock().map_err(|_|BAD_STAGE)?.replace_lane(slot,
+            (next.owner>>32) as u32,cfg.first.path_mtu,next.tx_seq)?;
+        lanes[slot]=next;active[slot]=true;
+        c.tx_seq[slot].store(next.tx_seq,Ordering::Release);
+        c.ack[slot].store(p.ack.ack(),Ordering::Release);
+        c.ack_sent[slot].store(next.rx_seq,Ordering::Release);
+        c.authenticated_future[slot].store(0,Ordering::Release);
+        for (field,sack) in c.sack[slot].iter().zip(p.ack.sacks4()){
+            field.store(sack.map_or(0,|s|(u64::from(s.start)<<32)|u64::from(s.end)),Ordering::Release);
+        }
+        ack_last[slot]=0;future_sent[slot]=0;
+        let grace=self.grace_ms.load(Ordering::Acquire);
+        *self.switched.lock().map_err(|_|BAD_STAGE)?=Some(GameLaneHandoff{
+            slot,next,ack:p.ack,old,retired,deadline:Instant::now()+Duration::from_millis(u64::from(grace))});
+        self.promotion.store(3,Ordering::Release);
+        rx_wake.wake().map_err(|_|BAD_STAGE)
+    }
 }
 #[cfg(feature="winxdp_native_trial")]
 impl std::ops::Deref for GameColdCandidate{
@@ -526,7 +572,7 @@ fn game_client_health_clock(at:u64)->HealthClock{
     clock.arm_client_cold_ready(at);
     clock
 }
-fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
+fn tx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
     group:Arc<Mutex<game::WinGameGroup>>,
     outer:Arc<Mutex<outer::GameOuter>>,
     mut tun:WintunRx,mut npf:GameTx,stop:Arc<WakeEvent>,
@@ -561,6 +607,8 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         if let Some(candidate)=cold_candidate.as_ref(){
             if let Err(e)=candidate.send_one(&mut npf){return e}
             if let Err(e)=candidate.send_probe(&cfg.first,&mut npf,&mut id){return e}
+            if let Err(e)=candidate.promote_tx(&cfg,&mut lanes,&group,&outer,&c,&mut active,
+                &mut ack_last_ns,&mut ack_future_sent,&direct_wake){return e}
         }
         // PLAN029: ONE original Game TX classifies already-copied Wintun
         // frames before GameAdapter staging. Direct sockets and DNS use
@@ -1154,7 +1202,33 @@ fn receive_game_carrier_frame(cfg:&WbdWinGameNativeAttachV3,lanes:&[LaneConfig],
                 }
     Ok(false)
 }
-fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
+#[cfg(feature="winxdp_native_trial")]
+fn deliver_opened_game(cfg:&WbdWinGameNativeAttachV3,group:&Arc<Mutex<game::WinGameGroup>>,
+    tun:&mut WintunTx,c:&GameCounters,deferred:&mut [Option<DeferredFec>],
+    slot:usize,logical:wbd_types::LogicalPacketId,payload:&[u8],
+    dns:Option<&Arc<Mutex<TunnelDnsMap>>>,now_ms:u64)->Result<(),i32>{
+    let result={let mut g=group.lock().map_err(|_|BAD_STAGE)?;
+        game::prepare_opened_native_lane(&mut g,cfg.group,slot,logical,payload)};
+    match result{
+        Ok((frames,pending))=>deliver_game_frames(group,tun,c,deferred,slot,frames,pending,dns,now_ms),
+        Err(INVALID)=>Ok(()),Err(e)=>Err(e),
+    }
+}
+#[cfg(feature="winxdp_native_trial")]
+fn receive_retiring_game(cfg:&WbdWinGameNativeAttachV3,h:&mut GameLaneHandoff,ipv4:&[u8],
+    group:&Arc<Mutex<game::WinGameGroup>>,tun:&mut WintunTx,c:&GameCounters,
+    deferred:&mut [Option<DeferredFec>],dns:Option<&Arc<Mutex<TunnelDnsMap>>>,now_ms:u64)->Result<(),i32>{
+    let trusted=trusted_windows_game_rx(&cfg.first.peer_ip,&cfg.first.local_ip,
+        h.old.peer_port,h.old.local_port,cfg.first.path_mtu as usize);
+    let Ok(data)=parse_data_packet_fast(ipv4,trusted)else{return Ok(())};
+    let mut wire=[0u8;FRAME_CAP];let n=data.ciphertext.len();
+    wire[..n].copy_from_slice(data.ciphertext);
+    if let Ok(Some((id,payload)))=h.retired.opener.open(&mut wire[..n]){
+        deliver_opened_game(cfg,group,tun,c,deferred,h.slot,id,payload,dns,now_ms)?;
+    }
+    Ok(())
+}
+fn rx_loop(cfg:WbdWinGameNativeAttachV3,mut lanes:Vec<LaneConfig>,
     group:Arc<Mutex<game::WinGameGroup>>,
     outer:Arc<Mutex<outer::GameOuter>>,mut tun:WintunTx,
     mut npf:GameRx,stop:Arc<WakeEvent>,wake:Arc<WakeEvent>,
@@ -1190,6 +1264,8 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     #[cfg(not(feature="winxdp_native_trial"))]
     let mut frame=[0u8;NPF_CAP];
     let mut deferred_direct_tcp:Option<Vec<u8>>=None;
+    #[cfg(feature="winxdp_native_trial")]
+    let (mut parked,mut retiring,mut old_frames,mut next_frames)=(None::<usize>,None::<GameLaneHandoff>,VecDeque::<Vec<u8>>::new(),VecDeque::<Vec<u8>>::new());
     loop{
         if c.stop.load(Ordering::Acquire){
             return abort_deferred_fec(&group,&mut deferred)
@@ -1228,45 +1304,84 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         }
         #[cfg(feature="winxdp_native_trial")]
         if let Some(candidate)=cold_candidate.as_ref(){
-            if candidate.staged.load(Ordering::Acquire){
-                // No candidate mutex spans shared decoder or Wintun writes.
-                // Healthy TX never waits on candidate crypto/readback.
+            if candidate.promotion.load(Ordering::Acquire)==3{
+                let Some(mut h)=candidate.switched.lock().ok().and_then(|mut h|h.take())else{return BAD_STAGE};
+                let slot=h.slot;
+                lanes[slot]=h.next;
+                // The old ledger is no longer a TX authority. The candidate
+                // replay state and its verified ACK ledger move intact.
+                std::mem::swap(&mut ledgers[slot],&mut h.ack);
+                next_frames=match candidate.rx.lock(){Ok(mut q)=>std::mem::take(&mut *q),Err(_)=>return BAD_STAGE};
+                if let Err(e)=candidate.transport.detach(h.next.local_port){return e}
+                candidate.staged.store(false,Ordering::Release);
+                parked=None;
+                candidate.last_promoted.store(h.next.owner,Ordering::Release);
+                candidate.promotion.store(4,Ordering::Release);
+                eprintln!("WBD_WINDOWS_GAME_SLOT_PROMOTED lane={} old_owner={} new_owner={} old_port={} new_port={} same_game_adapter=1 same_wintun=1",
+                    slot+1,h.old.owner,h.next.owner,h.old.local_port,h.next.local_port);
+                retiring=Some(h);
+            }
+            if let Some(h)=retiring.as_mut(){
+                let slot=h.slot;
                 for _ in 0..32{
-                    let mut frame=Vec::new();
-                    let mut wire=Vec::new();
+                    if deferred[slot].is_some(){break}
+                    let Some(frame)=next_frames.pop_front()else{break};
+                    if let Some(ipv4)=io::ethernet_ipv4(&frame){
+                        match receive_game_carrier_frame(&cfg,&lanes,slot,ipv4,&group,&outer,&mut tun,&c,
+                            &mut ledgers,&mut deferred,&early,&tx_wake,tunnel_dns.as_ref(),
+                            split_clock.elapsed().as_millis() as u64){
+                            Ok(_)=>{},Err(e)=>return e,
+                        }
+                    }
+                }
+                for _ in 0..32{
+                    if deferred[slot].is_some(){break}
+                    let Some(frame)=old_frames.pop_front()else{break};
+                    if let Some(ipv4)=io::ethernet_ipv4(&frame){
+                        if let Err(e)=receive_retiring_game(&cfg,h,ipv4,&group,&mut tun,&c,&mut deferred,
+                            tunnel_dns.as_ref(),split_clock.elapsed().as_millis() as u64){return e}
+                    }
+                }
+                if Instant::now()>=h.deadline{
+                    if unsafe{wbd_platform::windows_xdp_rx::cold_change_port(candidate.raw_rx,h.old.local_port,false)}.is_err(){return BAD_STAGE}
+                    eprintln!("WBD_WINDOWS_GAME_SLOT_OLD_RX_RETIRED lane={} owner={} old_port={} native_rx_joined=1",
+                        slot+1,h.retired.handle,h.old.local_port);
+                    candidate.last_retired.store(h.retired.handle,Ordering::Release);
+                    retiring=None;old_frames.clear();
+                    candidate.promotion.store(0,Ordering::Release);
+                }
+            }
+            if candidate.staged.load(Ordering::Acquire)&&parked.is_none(){
+                // One bounded cold mailbox, only this candidate. Never hold
+                // the candidate mutex across shared decoder/Wintun writes.
+                for _ in 0..32{
+                    let mut wire=[0u8;FRAME_CAP];
                     let (slot,opened)={
                         let mut proof=match candidate.proof.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
                         let Some(p)=proof.as_mut()else{break};
                         let slot=p.prepared.slot();
                         if deferred[slot].is_some(){break}
-                        let Some(next)=candidate.rx.lock().map_err(|_|BAD_STAGE).ok().and_then(|mut q|q.pop_front())else{break};
-                        frame=next;
-                        let Some(ipv4)=io::ethernet_ipv4(&frame)else{continue};
-                        let trusted=trusted_windows_game_rx(&cfg.first.peer_ip,&cfg.first.local_ip,
-                            p.lane.peer_port,p.lane.local_port,cfg.first.path_mtu as usize);
-                        let Ok(data)=parse_data_packet_fast(ipv4,trusted)else{continue};
-                        wire.extend_from_slice(data.ciphertext);
-                        let opened=match p.prepared.crypto.open_peer(&mut wire){
+                        let early=match candidate.early.lock(){Ok(mut q)=>q.pop_front(),Err(_)=>return BAD_STAGE};
+                        let (seq,n)=if let Some((seq,bytes))=early{
+                            let n=bytes.len();wire[..n].copy_from_slice(&bytes);(seq,n)
+                        }else{
+                            let Some(frame)=candidate.rx.lock().ok().and_then(|mut q|q.pop_front())else{break};
+                            let Some(ipv4)=io::ethernet_ipv4(&frame)else{continue};
+                            let trusted=trusted_windows_game_rx(&cfg.first.peer_ip,&cfg.first.local_ip,
+                                p.lane.peer_port,p.lane.local_port,cfg.first.path_mtu as usize);
+                            let Ok(data)=parse_data_packet_fast(ipv4,trusted)else{continue};
+                            let n=data.ciphertext.len();wire[..n].copy_from_slice(data.ciphertext);(data.seq32,n)
+                        };
+                        let opened=match p.prepared.crypto.open_peer(&mut wire[..n]){
                             Ok(v)=>v,Err(_)=>continue,
                         };
-                        let _=p.ack.verified(data.seq32,data.ciphertext.len());
+                        let _=p.ack.verified(seq,n);
                         (slot,opened)
                     };
                     if candidate.probe_needed.load(Ordering::Acquire){let _=tx_wake.wake();}
                     if let Some((logical,payload))=opened{
-                        let result={
-                            let mut g=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
-                            game::prepare_opened_native_lane(&mut g,cfg.group,slot,logical,payload)
-                        };
-                        match result{
-                            Ok((frames,pending))=>{
-                                if let Err(e)=deliver_game_frames(&group,&mut tun,&c,&mut deferred,
-                                    slot,frames,pending,tunnel_dns.as_ref(),split_clock.elapsed().as_millis() as u64){
-                                    return e
-                                }
-                            },
-                            Err(INVALID)=>{},Err(e)=>return e,
-                        }
+                        if let Err(e)=deliver_opened_game(&cfg,&group,&mut tun,&c,&mut deferred,
+                            slot,logical,payload,tunnel_dns.as_ref(),split_clock.elapsed().as_millis() as u64){return e}
                     }
                 }
             }
@@ -1290,6 +1405,17 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 Err(e)=>return e,
             }
         }
+        #[cfg(feature="winxdp_native_trial")]
+        if let Some(candidate)=cold_candidate.as_ref(){
+            if candidate.promotion.load(Ordering::Acquire)==1{
+                let slot=match candidate.proof.lock(){Ok(p)=>p.as_ref().map(|p|p.prepared.slot()),Err(_)=>return BAD_STAGE};
+                if let Some(slot)=slot{
+                    if deferred[slot].is_none()&&early.lock().is_ok_and(|q|!q.iter().any(|x|x.0==slot)){
+                        parked=Some(slot);candidate.promotion.store(2,Ordering::Release);let _=tx_wake.wake();
+                    }
+                }
+            }
+        }
         // A successfully retried FEC batch can reopen an NPF RX lane in
         // THIS turn. Rebuild the event set BEFORE an infinite wait; keeping
         // last turn's handles would strand a now-healthy lane forever.
@@ -1308,6 +1434,11 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             candidate.port.load(Ordering::Acquire)!=0&&candidate.proof.lock().is_ok_and(|p|
                 p.as_ref().is_some_and(|p|deferred[p.prepared.slot()].is_none()))&&
             candidate.rx.lock().is_ok_and(|q|!q.is_empty())){1}else{timeout};
+        #[cfg(feature="winxdp_native_trial")]
+        let timeout=if let Some(h)=retiring.as_ref(){
+            let due=h.deadline.saturating_duration_since(Instant::now()).as_millis().max(1) as u32;
+            timeout.min(if !old_frames.is_empty()||!next_frames.is_empty(){due.min(5)}else{due})
+        }else{timeout};
         let mut verified=false;
         #[cfg(not(feature="winxdp_native_trial"))]
         {
@@ -1371,11 +1502,15 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                         let off=usize::from(ipv4[0]&15)*4;
                         let Some(p)=ipv4.get(off+2..off+4)else{continue};
                         let port=u16::from_be_bytes([p[0],p[1]]);
-                        let i=usize::from(port.wrapping_sub(lanes[0].local_port));
-                        if i>=lanes.len()||lanes[i].local_port!=port{
-                            if let Some(candidate)=cold_candidate.as_ref(){candidate.offer_rx(port,batch.frame(j));}
+                        let Some(i)=lanes.iter().position(|l|l.local_port==port)else{
+                            if let Some(h)=retiring.as_mut().filter(|h|h.old.local_port==port){
+                                if deferred[h.slot].is_some(){if old_frames.len()<EARLY_CAP{old_frames.push_back(batch.frame(j).to_vec());}}
+                                else if let Err(e)=receive_retiring_game(&cfg,h,ipv4,&group,&mut tun,&c,&mut deferred,
+                                    tunnel_dns.as_ref(),split_clock.elapsed().as_millis() as u64){return e}
+                            }else if let Some(candidate)=cold_candidate.as_ref(){candidate.offer_rx(port,batch.frame(j));}
                             continue
-                        }
+                        };
+                        if parked==Some(i){if old_frames.len()<EARLY_CAP{old_frames.push_back(batch.frame(j).to_vec());}continue}
                         match receive_game_carrier_frame(&cfg,&lanes,i,ipv4,&group,&outer,&mut tun,&c,
                     &mut ledgers,&mut deferred,&early,&tx_wake,tunnel_dns.as_ref(),
                     split_clock.elapsed().as_millis() as u64){
@@ -1516,7 +1651,7 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
         Ok(v)=>v.repair_enabled,Err(_)=>return BAD_STAGE,
     };
     #[cfg(feature="winxdp_native_trial")]
-    let cold_candidate=if lanes.len()==4&&unsafe{wbd_platform::windows_xdp_rx::is_rotatable(lanes[0].rx_capture)}{
+    let cold_candidate=if unsafe{wbd_platform::windows_xdp_rx::is_rotatable(lanes[0].rx_capture)}{
         Some(Arc::new(GameColdCandidate::new(lanes[0].rx_capture,&lanes)))
     }else{None};
     #[cfg(feature="winxdp_native_trial")]
@@ -1677,6 +1812,41 @@ pub extern "C" fn wbd_m0_win_game_candidate_ready(h:u64,port:u16)->i32{
         candidate.port.load(Ordering::Acquire)!=u32::from(port){return -1}
     let Ok(p)=candidate.proof.lock()else{return -1};
     i32::from(p.as_ref().is_some_and(|p|p.prepared.crypto.ready()))
+}
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_game_candidate_early(h:u64,port:u16,seq:u32,wire:*const u8,len:usize)->i32{
+    if wire.is_null()||len<32||len>1536{return INVALID}
+    let Ok(map)=sessions().lock()else{return BAD_STAGE};
+    let Some(s)=map.get(&h)else{return UNKNOWN};
+    let Some(c)=s.cold_candidate.as_ref()else{return INVALID};
+    if c.port.load(Ordering::Acquire)!=u32::from(port)||!c.staged.load(Ordering::Acquire){return BAD_STAGE}
+    let Ok(mut q)=c.early.lock()else{return BAD_STAGE};
+    if q.len()>=EARLY_CAP{return FULL}
+    q.push_back((seq,unsafe{std::slice::from_raw_parts(wire,len)}.to_vec()));
+    drop(q);let _=s.rx_wake.wake();OK
+}
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_win_game_candidate_promote(h:u64,port:u16,grace_ms:u32)->i32{
+    if !(10000..=20000).contains(&grace_ms){return INVALID}
+    let Ok(map)=sessions().lock()else{return BAD_STAGE};
+    let Some(s)=map.get(&h)else{return UNKNOWN};
+    let Some(c)=s.cold_candidate.as_ref()else{return INVALID};
+    if c.port.load(Ordering::Acquire)!=u32::from(port)||c.promotion.load(Ordering::Acquire)!=0{return BAD_STAGE}
+    if !c.proof.lock().is_ok_and(|p|p.as_ref().is_some_and(|p|p.prepared.crypto.ready())){return BAD_STAGE}
+    c.grace_ms.store(grace_ms,Ordering::Release);c.promotion.store(1,Ordering::Release);
+    let _=s.rx_wake.wake();OK
+}
+#[cfg(feature="winxdp_native_trial")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_win_game_candidate_status(h:u64,old:u64,new:u64)->i32{
+    let Ok(map)=sessions().lock()else{return -1};
+    let Some(s)=map.get(&h)else{return -1};
+    let Some(c)=s.cold_candidate.as_ref()else{return -1};
+    if s.counters.err.load(Ordering::Acquire)!=0{return -1}
+    if c.last_promoted.load(Ordering::Acquire)!=new{return 0}
+    if c.last_retired.load(Ordering::Acquire)==old{2}else{1}
 }
 #[cfg(feature="winxdp_native_trial")]
 #[no_mangle]

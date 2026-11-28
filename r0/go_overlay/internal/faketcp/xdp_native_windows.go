@@ -132,7 +132,7 @@ func openXdpPorts(path string,index uint32,ports []uint16,udp bool)(*XdpEndpoint
 // The opt-in carrier uses the same initial cold handoff, but allows a
 // later candidate port on the existing XSK. Never silently fall back.
 func OpenXdpRotatableGameEndpoint(path string,index uint32,cfgs []NpcapConfig)(*XdpEndpoint,bool,error){
- if len(cfgs)!=4{return nil,true,fmt.Errorf("rotatable Game requires four lanes")}
+ if len(cfgs)!=2&&len(cfgs)!=4{return nil,true,fmt.Errorf("rotatable Game requires two or four lanes")}
  var ports [4]uint16
  local:=cfgs[0].Flow.LocalIP
  for i,cfg:=range cfgs{
@@ -140,7 +140,7 @@ func OpenXdpRotatableGameEndpoint(path string,index uint32,cfgs []NpcapConfig)(*
   if cfg.Flow.LocalIP!=local{return nil,true,fmt.Errorf("rotatable Game local IPv4 mismatch")}
   ports[i]=cfg.Flow.LocalPort
  }
- e,ok,err:=openXdpPortSet(path,index,ports[:],false,&local)
+ e,ok,err:=openXdpPortSet(path,index,ports[:len(cfgs)],false,&local)
  if err!=nil||!ok{return e,ok,err}
  e.cfg=cfgs[0];e.gameCfgs=cfgs
  for i:=range cfgs{e.gameIDs[i]=1}

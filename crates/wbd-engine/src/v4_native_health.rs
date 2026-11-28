@@ -166,6 +166,7 @@ impl HealthClock {
     /// within 3.5s. A 30% lossy underlay must not turn one dropped kind0
     /// into a silent 5s server B proof timeout after client B promotes.
     /// This never extends or changes the steady 15s Health period.
+    pub(crate) fn cold_receipts_pending(&self)->bool{self.cold_group_receipts_left!=0}
     pub(crate) fn arm_client_cold_ready(&mut self,at:u64){
         if self.cold_group_receipts_left==0{
             self.cold_group_receipts_left=4+cold_group_random(4,at) as u8;

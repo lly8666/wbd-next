@@ -287,7 +287,7 @@ pub(super) fn prepare_native_lane_candidate(
 )->Result<PreparedWinGameLane,i32>{
     let g=r.game_groups.get(&h).ok_or(UNKNOWN)?.clone();
     let game=g.lock().map_err(|_|BAD_STAGE)?;
-    if game.handles.len()!=4||game.role_server||lane==0||lane>4||
+    if !matches!(game.handles.len(),2|4)||game.role_server||lane==0||lane as usize>game.handles.len()||
         game.handles.contains(&new_handle)||new_handle==game.os_anchor_handle{
         return Err(INVALID)
     }
@@ -998,7 +998,8 @@ mod tests{
     #[test]
     fn winxdp_rotation_owner_slot1_retains_os_anchor_and_other_members(){
         let mut r=Registry{generation:980,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
-        let hs=setup(&mut r,4,false);
+        for n in [2,4]{
+        let hs=setup(&mut r,n,false);
         let h=join(&mut r,&hs,false).unwrap();
         let old_device=r.entries[&hs[0]].lock().unwrap().device.unwrap();
         let mut fresh=cold(false,1);
@@ -1013,7 +1014,7 @@ mod tests{
         assert_eq!(c.index(),0);assert_eq!(c.new_handle(),next);
         // Only synthetic test counterpart. Real runtime must obtain the
         // accepted driver receipt and peer wire from the candidate tuple.
-        let mut peer_colds=(1..=4).map(|i|UntrustedColdV4::parse(&cold(true,i)).unwrap()).collect::<Vec<_>>();
+        let mut peer_colds=(1..=n as u8).map(|i|UntrustedColdV4::parse(&cold(true,i)).unwrap()).collect::<Vec<_>>();
         let peer=GameAdapter::from_private_original_go_tls(std::mem::take(&mut peer_colds),
             true,TunnelKey{slot:14,generation:71},71).unwrap();
         fresh[8]=1;
@@ -1028,7 +1029,7 @@ mod tests{
             let retired=commit_native_lane_candidate(&mut g,h,c).unwrap();
             assert!(retired.keep_os_anchor);assert_eq!(retired.handle,hs[0]);
             drop(retired.opener);
-            assert_eq!(g.handles,[next,hs[1],hs[2],hs[3]]);
+            assert_eq!(g.handles[0],next);assert_eq!(g.handles[1..],hs[1..]);
             assert!(g.os_anchor.is_some());
             assert!(game_m4_members_active(&g,h));
         }
@@ -1042,6 +1043,7 @@ mod tests{
         }
         assert_eq!(stopped_group(&mut r,h),OK);
         for id in hs.iter().chain(std::iter::once(&next)){assert_eq!(stop(&mut r,*id),OK);}
+    }
     }
     #[test]
     fn m0_windows_game_tun_partial_prefix_never_claims_full_kernel_copy(){

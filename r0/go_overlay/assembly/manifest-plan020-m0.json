@@ -1448,7 +1448,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "f7332fe97217727817225e831386a39385348fed"
+      "result_blob": "a07b26224b4dc545ac349289f20b7dd551ff1bae"
     },
     {
       "kind": "create",
@@ -1526,7 +1526,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "8a6799d2d9f457b762d0cc39a26f6ddf6aae43ca"
+      "result_blob": "a040ec4cf32d1ee0a619f05b7e10a4b735424bba"
     },
     {
       "kind": "create",
@@ -1634,7 +1634,7 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_game_native_io.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go",
-      "result_blob": "774785e20ee78faa685c78441e2ccb51638184d0"
+      "result_blob": "aae7942dc65415e7a545ed92337e732cadc6372c"
     },
     {
       "kind": "create",
@@ -2141,7 +2141,7 @@
       "kind": "create",
       "path": "internal/faketcp/xdp_native_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/xdp_native_windows.go",
-      "result_blob": "a54100cfb89b4ff9565091e3877eccf0f2a652b5"
+      "result_blob": "f74c0f340707d02aa0e2dfe312f3b5b0dd9e34c3"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

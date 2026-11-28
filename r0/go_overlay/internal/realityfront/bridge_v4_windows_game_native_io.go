@@ -234,7 +234,7 @@ func(g *V4WindowsAuthenticatedGameGroup) BeginNativeGameLaneCandidate(
  if g==nil||ctx==nil{return nil,errV4WindowsOwner}
  if err:=ctx.Err();err!=nil{return nil,err}
  g.mu.Lock();defer g.mu.Unlock()
- if g.closed||g.joined==0||len(g.members)!=4{return nil,ErrAdmissionUnsupported}
+ if g.closed||g.joined==0||(len(g.members)!=2&&len(g.members)!=4)||g.staged!=nil||g.retiring!=nil{return nil,ErrAdmissionUnsupported}
  b:=g.members[0].bridge
  port,err:=b.fixedProc("wbd_m0_win_game_candidate_port");if err!=nil{return nil,err}
  read,err:=b.fixedProc("wbd_m0_win_game_candidate_read");if err!=nil{return nil,err}
