@@ -12,17 +12,21 @@ N=h.NODE;ORIGIN=fixture.ORIGIN
 # One same-three-VM AB, independent loss/profile.
 ARM=os.environ["WBD_M0_WEAK_ARM"]
 LOSS=float(os.environ["WBD_M0_WEAK_LOSS"])
-assert ARM in ("B","C","D","ABC") and LOSS in (1.,3.,5.)
+assert ARM in ("B","C","D","ABC","E","F") and LOSS in (1.,3.,5.)
 ORDER=("A","B","C") if ARM=="ABC" else ("A",ARM)
-DURATION=180 if ARM=="ABC" else 60
+DURATION=180 if ARM in ("ABC","E","F") else 60
 CASES=tuple(range(len(ORDER)))
 PROFILES={"A":"frozen-linux-kernel-bbr-splice",
     "B":"H2537-service-epoch-reference-bbr1-unseeded",
     "C":"H2545-service-epoch-bbr1-seed600M",
-    "D":"H2546-service-epoch-bbr3-seed600M"}
+    "D":"H2546-service-epoch-bbr3-seed600M",
+    "E":"H2524-fresh-arrival-drs-before-service-epoch",
+    "F":"H2523-receive-rtt-before-fresh-arrival-drs"}
 PRODUCT_SOURCE={"B":"172fca30ceb2ed9b0840465d5d24ab7b009bc13d",
     "C":"a8a8358f65f90d40e7f7e61593e7333a21f1fb92",
-    "D":"cdd60c2d554a469db1dcb19351e88ebe4d65239b"}
+    "D":"cdd60c2d554a469db1dcb19351e88ebe4d65239b",
+    "E":"db760553eaf5b20e01d1c9c6452ab45281cc3812",
+    "F":"a99be828cc4011eb6c9a9d6088503346ce83227d"}
 BASELINE_SOURCE="26b11e2da236e909b73f461964c52d5a86d42dca"
 SOURCES={"A":BASELINE_SOURCE,**{k:PRODUCT_SOURCE[k] for k in ORDER[1:]}}
 def dual(i):return i>=0 and ORDER[i]!="A"
@@ -39,7 +43,7 @@ def profile_env(k,server):
     if k=="A":return []
     cc="bbr3" if k=="D" else "bbr1"
     seed=["WBD_M0_BBR3_INITIAL_600M=1"] if k=="D" else (["WBD_M0_BBR1_INITIAL_600M=1"] if k=="C" else [])
-    return ["WBD_M0_MIDDLE_CC="+cc]+seed+(["WBD_M0_NATIVE_FEEDBACK=service"] if server else [])
+    return ["WBD_M0_MIDDLE_CC="+cc]+seed+(["WBD_M0_NATIVE_FEEDBACK=service"] if server and k not in ("E","F") else [])
 def app_args(i,role):
     return [sys.executable,str(ROOT/"tools"/("m0_dual_tcp_long_app.py" if DURATION==180 else "m0_dual_tcp_weak_history_60_app.py")),role,
             str(PORT if i>=0 else 5202),TARGET if i>=0 else "10.248.82.2",str(DURATION)]
@@ -301,8 +305,8 @@ def probe_receipt(log,leg,k,i):
     rows=[x for x in log.splitlines() if "WBD_M0_TCP_INFO " in x and "leg="+leg+" " in x]
     marker="WBD_M0_BBR " if k=="D" else "WBD_M0_BBR1 "
     bbr=[x for x in log.splitlines() if marker in x and "leg="+leg+" " in x]
-    mode=2 if leg=="server-middle" else 0
-    valid=bool(rows) and all(('congestion: "'+rust_cc(i)+'"') in x and (" native_feedback_mode="+str(mode)+" ") in x and " ack3=false " in x and " sack_compress=true " in x and " native_pace_ceiling_bytes_s=0 " in x for x in rows)
+    mode=2 if leg=="server-middle" and k not in ("E","F") else 0
+    valid=bool(rows) and all(('congestion: "'+rust_cc(i)+'"') in x and ((" native_feedback_mode=" not in x) if k in ("E","F") else (" native_feedback_mode="+str(mode)+" ") in x) and " ack3=false " in x and " sack_compress=true " in x and " native_pace_ceiling_bytes_s=0 " in x for x in rows)
     seed=75000000 if k in ("C","D") else None
     valid=valid and bool(bbr) and all((" initial_pacing_rate=75000000" in x) if seed else (" initial_pacing_rate=" not in x) for x in bbr)
     return {"valid":valid,"cc":rust_cc(i),"native_feedback_mode":mode,"ack_ratio":2,"initial_pacing_rate":seed,"tcp_info_rows":len(rows),"bbr_rows":len(bbr)}
@@ -441,7 +445,7 @@ def client():
         summary={"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"run_id":os.environ["GITHUB_RUN_ID"],
             "real_three_runner_l3_relay":True,"all_three_distinct_native_machines":distinct,"architecture":"aarch64","added_rtt_ms":400,
             "planned_source_seconds":DURATION,"application_offer":"saturated","outer_mtu":1160,"product_tun_fq_maxrate_mbps":0,
-            "initial_rust_bbr_pacing_bytes_s":({k:75000000 if k=="C" else None for k in ORDER[1:]} if ARM=="ABC" else (75000000 if ARM in ("C","D") else None)),"kernel_cc":"bbr","server_native_feedback_mode":2,"client_native_feedback_mode":0,
+            "initial_rust_bbr_pacing_bytes_s":({k:75000000 if k=="C" else None for k in ORDER[1:]} if ARM=="ABC" else (75000000 if ARM in ("C","D") else None)),"kernel_cc":"bbr","server_native_feedback_mode":0 if ARM in ("E","F") else 2,"client_native_feedback_mode":0,
             "loss_target_pct_per_direction":LOSS,"loss_model":"Gilbert-Elliott","jitter_model":"paretonormal 50% correlation; FIFO; 15ms forward/10ms reverse",
             "edt_product_enabled_by_arm":{k:False for k in ORDER},"endpoint_wan_qdisc":"fq all arms","server_middle_ack_ratio":2,"client_middle_ack_ratio_by_arm":{k:int(ack_for(k)) for k in ORDER[1:]},"client_ready_group_by_arm":{k:False for k in ORDER},"order":list(ORDER),"profiles":{k:PROFILES[k] for k in SOURCES},
             "status":("MEASURED_WEAK_HISTORY_ABC" if ARM=="ABC" else "MEASURED_WEAK_HISTORY_AB") if complete else "INCOMPLETE","rows":rows}

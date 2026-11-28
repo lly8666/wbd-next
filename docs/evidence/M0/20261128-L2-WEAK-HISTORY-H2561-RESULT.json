@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "harness_sha": "6f8a0b58fc07dc91a0c6084c868e0d1379da21ea",
+  "run": 46156005543,
+  "result": "PERFORMANCE_REJECTED_BOTH_BBR1",
+  "scope": "Same three ARM64 VMs, A B C sequential each 180s saturated app; GE 1% per direction,400ms added RTT,jitter/FIFO,Normal repair ON MTU1160 no cap ACK2 no EDT/ready grouping. B/C server service epoch client0.",
+  "artifacts": {
+    "summary": 15268210630,
+    "client": 15267219848,
+    "server": 15268250561,
+    "relay": 15267584054
+  },
+  "sources": {
+    "A": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "B": "172fca30ceb2ed9b0840465d5d24ab7b009bc13d",
+    "C": "a8a8358f65f90d40e7f7e61593e7333a21f1fb92"
+  },
+  "manifest_sha256": {
+    "A": "a15c4ecebe8afff2302c845f355efef1af71a7392cc904822feceb3cb6f4459f",
+    "B": "806561108b7633c18bc8f83577b6553fcb6cf7ab4bdfe5302b9a709a8f3da47f",
+    "C": "6b5c3da533320cb6c6f734cb43247837a685d44f9a39f9092a382a6055635fcd"
+  },
+  "review": "4 ZIP CRC clean, standalone summary equals client summary byte-for-byte, client/server builds equal; 3 measured hash EOF joined Stop, 2 Rust natural retirements; 8 capture taps valid zero kernel drops; sparse forward capture; local ingress and Shared-TUN queue-full zero. Actual first180s recomputed receiver_second_bytes. 15–175s server/client probe samples relative first probe, 160 each, no continuous-time claim.",
+  "first180_mbps": [
+    64.52803213333334,
+    19.025667244444445,
+    20.9618988
+  ],
+  "relative_pct": [
+    100,
+    29.483,
+    32.485
+  ],
+  "receiver_30s_mbps": [
+    [
+      23.457,
+      69.327,
+      67.903,
+      82.807,
+      75.738,
+      67.936
+    ],
+    [
+      11.005,
+      15.278,
+      14.866,
+      21.568,
+      24.657,
+      26.779
+    ],
+    [
+      19.018,
+      21.566,
+      23.17,
+      21.146,
+      21.661,
+      19.209
+    ]
+  ],
+  "product_cpu_s_per_gib": [
+    96.09661589958158,
+    143.77189172841372,
+    150.64302465753428
+  ],
+  "app_bytes": [
+    1566310400,
+    433389568,
+    478412800
+  ],
+  "data_seconds": [
+    193.135850564,
+    181.984910171,
+    182.075377141
+  ],
+  "first_data_from_connect_s": [
+    0.896526096,
+    0.837059379,
+    0.849860714
+  ],
+  "mean_rtt_ms": [
+    413.962,
+    416.455,
+    415.888
+  ],
+  "relay_loss_client_server": [
+    [
+      0.010085104,
+      0.010058802
+    ],
+    [
+      0.010899348,
+      0.008830216
+    ],
+    [
+      0.009914616,
+      0.010072266
+    ]
+  ],
+  "rust_retired": {
+    "sent": [
+      491624703,
+      547940324
+    ],
+    "retrans": [
+      58235135,
+      69527524
+    ],
+    "rto": [
+      3,
+      2
+    ],
+    "dsack": [
+      10015,
+      11875
+    ],
+    "recoveries": [
+      109,
+      116
+    ],
+    "rwnd_limited_seconds": [
+      9.03347413,
+      0.356979936
+    ]
+  },
+  "rust_server_samples": {
+    "count_each": 160,
+    "cwnd_median": [
+      1919614.5,
+      2455150
+    ],
+    "inflight_median": [
+      1268251,
+      1488613.5
+    ],
+    "peer_window_median": [
+      5337088,
+      10237952
+    ],
+    "pending_median": [
+      127961,
+      131072
+    ],
+    "pending_full_count": [
+      77,
+      89
+    ],
+    "source_dry_count": [
+      0,
+      0
+    ],
+    "delivery_rate_app_limited_count": [
+      6,
+      7
+    ]
+  },
+  "rust_client_recv_buffer_median": [
+    5335215,
+    10236793
+  ],
+  "decision": "Both historical BBR1 versions below splice by ~68–71%; unlike pre-EDT BBRv3, no sustained collapse. User requests earlier two versions. Skip rejected/removed opt-in candidates and code-equivalent service reference; E exact db76055 fresh-arrival before service epoch, F exact a99be82 before fresh-arrival. Two independent 180s A/E A/F at1% same per-pair fixture, no product rollback/default change. Next inspect actual credit and receiver feedback; no causal claim yet."
+}
