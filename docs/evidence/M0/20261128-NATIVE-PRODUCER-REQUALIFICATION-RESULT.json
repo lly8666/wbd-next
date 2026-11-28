@@ -1,0 +1,470 @@
+{
+  "schema_version": 1,
+  "source_sha": "9d89d38bb57d10a35239f629a0d165c56b7c12c9",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact dual ISA native qualification and same-host three ARM reverse clean and independent real loss blocks. Producer feedback selected in research branch; not product parity or physical qualification.",
+  "native_run": 46089759268,
+  "native_artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140807664099,
+      "artifact_id": 15240682998,
+      "core_pass": 355,
+      "functional_profiles": 4
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140807663640,
+      "artifact_id": 15240009763,
+      "core_pass": 355,
+      "functional_profiles": 4
+    }
+  ],
+  "native_recovery": {
+    "order": [
+      "normal-selected",
+      "pause-selected",
+      "loss-selected"
+    ],
+    "mbps": [
+      339.9624003613871,
+      159.26680869697086,
+      62.54546494318599
+    ],
+    "bytes_sent": [
+      536870912,
+      536870912,
+      101183870
+    ],
+    "bytes_retrans": [
+      0,
+      0,
+      520574
+    ],
+    "all_exact_hash_stop": true
+  },
+  "comparison": {
+    "run_id": 46089759275,
+    "artifacts": [
+      {
+        "role": "server",
+        "job_id": 140809491683,
+        "artifact_id": 15241226614
+      },
+      {
+        "role": "relay",
+        "job_id": 140809491677,
+        "artifact_id": 15240759121
+      },
+      {
+        "role": "client",
+        "job_id": 140809491718,
+        "artifact_id": 15240844217
+      }
+    ],
+    "baseline": "e0c01aab726e4cb96ff60b5a8e7a2e1d285474c1",
+    "manifest_sha256": {
+      "A": "bc04a9bd64aeaafbefaa8f4dd1ed38b3cdccdd27512f84bb2c376bf3308121da",
+      "B": "00291f84859f54a16a5cb911add9a64959a9e0b9c7376d8bc7a7f0bf8236e7ee"
+    },
+    "order": [
+      "B",
+      "A",
+      "A",
+      "B",
+      "A",
+      "B",
+      "B",
+      "A"
+    ],
+    "loss_pct": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1
+    ],
+    "bare_mbps": [
+      258.0907829594836,
+      234.40901831479246
+    ],
+    "mbps": [
+      300.0144753930399,
+      263.3924880456083,
+      252.0284339563395,
+      300.546778193157,
+      73.41990561877928,
+      82.72076093220018,
+      76.76314809260309,
+      86.18397863087486
+    ],
+    "product_cpu_s_per_gib": [
+      28.28,
+      29.13,
+      28.76,
+      28.52,
+      45.28,
+      42.56,
+      41.92,
+      42
+    ],
+    "first_data_seconds": [
+      0.8268642250000084,
+      0.8290332130000024,
+      0.8263465880000354,
+      0.8300077080000392,
+      0.8276229670000248,
+      0.8275152200000093,
+      0.8293552449999879,
+      0.8284231630000249
+    ],
+    "bytes_sent": [
+      1101554164,
+      1141247435,
+      1135420847,
+      1109679059,
+      271297576,
+      271433423,
+      271690599,
+      271754893
+    ],
+    "bytes_retrans": [
+      27812340,
+      67505611,
+      61679023,
+      35937235,
+      2862120,
+      2997967,
+      3255143,
+      3319437
+    ],
+    "dsack": [
+      2449,
+      4099,
+      4121,
+      1654,
+      664,
+      774,
+      829,
+      1182
+    ],
+    "timeouts": [
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      2,
+      0
+    ],
+    "server_app_limited_snapshot_counts": [
+      10,
+      27,
+      29,
+      7,
+      11,
+      8,
+      10,
+      18
+    ],
+    "server_snapshot_counts": [
+      30,
+      34,
+      35,
+      29,
+      30,
+      27,
+      29,
+      26
+    ],
+    "server_source_dry_counts": [
+      2,
+      null,
+      null,
+      2,
+      null,
+      4,
+      3,
+      null
+    ],
+    "server_ingress_full": [
+      0,
+      925,
+      287,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "server_pacing_max_bytes_s": [
+      227167459,
+      236767031,
+      233735442,
+      224495708,
+      37249045,
+      45781678,
+      61134837,
+      42610806
+    ],
+    "relay_netem": {
+      "direction_order": [
+        "server_to_client",
+        "client_to_server"
+      ],
+      "emitted": [
+        [
+          1065538,
+          106939
+        ],
+        [
+          1100842,
+          120723
+        ],
+        [
+          1099675,
+          113364
+        ],
+        [
+          1076716,
+          112580
+        ],
+        [
+          263932,
+          24842
+        ],
+        [
+          264023,
+          23611
+        ],
+        [
+          264962,
+          20187
+        ],
+        [
+          264756,
+          27864
+        ]
+      ],
+      "drops": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          2643,
+          241
+        ],
+        [
+          2620,
+          221
+        ],
+        [
+          2734,
+          214
+        ],
+        [
+          2775,
+          267
+        ]
+      ],
+      "seed_supported": false
+    },
+    "all_exact_source_hash_eof_profile_retired_stop": true,
+    "path_sample": {
+      "points": [
+        "server_tx",
+        "relay_rx",
+        "relay_tx",
+        "client_rx"
+      ],
+      "counts": [
+        [
+          16669,
+          16620,
+          16620,
+          16289
+        ],
+        [
+          17332,
+          17164,
+          17164,
+          16422
+        ],
+        [
+          17267,
+          17159,
+          17159,
+          16439
+        ],
+        [
+          16813,
+          16787,
+          16787,
+          16339
+        ],
+        [
+          4131,
+          4131,
+          4085,
+          4085
+        ],
+        [
+          4130,
+          4130,
+          4100,
+          4100
+        ],
+        [
+          4156,
+          4156,
+          4112,
+          4111
+        ],
+        [
+          4149,
+          4149,
+          4105,
+          4105
+        ]
+      ],
+      "adjacent_missing_multiset": [
+        [
+          49,
+          0,
+          331
+        ],
+        [
+          168,
+          0,
+          742
+        ],
+        [
+          108,
+          0,
+          720
+        ],
+        [
+          26,
+          0,
+          448
+        ],
+        [
+          0,
+          46,
+          0
+        ],
+        [
+          0,
+          30,
+          0
+        ],
+        [
+          0,
+          44,
+          1
+        ],
+        [
+          0,
+          44,
+          0
+        ]
+      ],
+      "adjacent_extra_multiset": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "capture_kernel_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scope": "Per paired port 44100+2*i, deterministic sampled virtual interface identity counts, not physical loss or exact inner retrans mapping. All-port aggregate includes bare ports and not used."
+    },
+    "means": {
+      "clean": {
+        "A": {
+          "mbps": 257.7104610009739,
+          "cpu": 28.945,
+          "retrans": 0.05674284436664366
+        },
+        "B": {
+          "mbps": 300.28062679309846,
+          "cpu": 28.4,
+          "retrans": 0.028829873907877696
+        }
+      },
+      "loss1": {
+        "A": {
+          "mbps": 79.80194212482706,
+          "cpu": 43.64,
+          "retrans": 0.01138298295813475
+        },
+        "B": {
+          "mbps": 79.74195451240163,
+          "cpu": 42.24,
+          "retrans": 0.01151322671564691
+        }
+      }
+    }
+  },
+  "interpretation": "Reverse clean replicates positive throughput and retrans improvement; server source-dry/app-limited mechanism consistent. Actual 1% IID has similar throughput and retrans, lower unit CPU, seed unavailable. Select actual producer feedback; no claim all retrans solved, no physical or old splice parity yet.",
+  "physical": "NOT_RUN",
+  "next_source": "e4d15c359e8531ea2a4dad01325c6eb88915c158"
+}
