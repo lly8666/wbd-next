@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "source_sha": "45a68b5a515c7699b9d2ecced0b03e54c8e62421",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Exact native qualification, diagnostic only CPU samples and full connection clocks. No overall L2 performance promotion.",
+  "native_run": 46093666791,
+  "native_artifacts": [
+    {
+      "arch": "x86_64",
+      "job_id": 140820071213,
+      "artifact_id": 15242114749,
+      "core_pass": 355,
+      "functional_profiles": 4
+    },
+    {
+      "arch": "aarch64",
+      "job_id": 140820071489,
+      "artifact_id": 15242273234,
+      "core_pass": 355,
+      "functional_profiles": 4
+    }
+  ],
+  "native_recovery": {
+    "order": [
+      "normal-selected",
+      "pause-selected",
+      "loss-selected"
+    ],
+    "mbps": [
+      340.03665750386483,
+      159.3321442491993,
+      62.17368050926058
+    ],
+    "bytes_sent": [
+      536870912,
+      536870912,
+      101219128
+    ],
+    "bytes_retrans": [
+      0,
+      0,
+      555832
+    ],
+    "all_exact_hash_stop": true
+  },
+  "diagnostic": {
+    "run_id": 46093666801,
+    "artifacts": [
+      {
+        "role": "server",
+        "job_id": 140821607973,
+        "artifact_id": 15243205732
+      },
+      {
+        "role": "relay",
+        "job_id": 140821607939,
+        "artifact_id": 15242491217
+      },
+      {
+        "role": "client",
+        "job_id": 140821607987,
+        "artifact_id": 15242601692
+      }
+    ],
+    "baseline": "26b11e2da236e909b73f461964c52d5a86d42dca",
+    "manifest_sha256": {
+      "A": "d63d1dabacde9f05b27835f68d55c45640032fa8c815ced62860dc96b3ed2ae6",
+      "B": "f5892e0b80a081172868e764d18091bca77eec94c559a432aff779193c694ec7"
+    },
+    "order": [
+      "A",
+      "B"
+    ],
+    "bare_mbps": [
+      296.6486544881587,
+      277.8978698986363
+    ],
+    "mbps": [
+      61.84456431334573,
+      76.42759896547268
+    ],
+    "product_cpu_s_per_gib": [
+      31.92,
+      40.88
+    ],
+    "endpoint_user_cpu_s_per_gib": [
+      10.56,
+      18.08
+    ],
+    "endpoint_system_cpu_s_per_gib": [
+      21.36,
+      22.8
+    ],
+    "connect_seconds": [
+      0.438306147999981,
+      0.0012879580000060287
+    ],
+    "request_sent_from_connect_seconds": [
+      0.43835310499997604,
+      0.0013319480000006934
+    ],
+    "post_request_first_data_seconds": [
+      0.43743612500000495,
+      0.8745961099999988
+    ],
+    "first_data_from_connect_seconds": [
+      0.875789229999981,
+      0.8759280579999995
+    ],
+    "cpu_clock_sample_hz": 99,
+    "samples": {
+      "A": {
+        "client": 309,
+        "server": 80
+      },
+      "B": {
+        "client": 453,
+        "server": 510
+      }
+    },
+    "sample_limit": "Flat samples, old server under-sampled relative to process CPU; no exact comparative function cost or performance qualification.",
+    "candidate_named_samples": {
+      "client": {
+        "aead_open": 29,
+        "recvbuf_insert": 6,
+        "btree_find_leaf_edges": 5
+      },
+      "server": {
+        "aead_seal": 33,
+        "scoreboard_detect_loss": 11
+      }
+    },
+    "client_middle_ooo": {
+      "nonempty_snapshots": 25,
+      "total_snapshots": 29,
+      "peak_charged_bytes": 25585520,
+      "client_local_ooo": 0
+    },
+    "rust_bulk": {
+      "sent": 271230171,
+      "retrans": 2794715,
+      "dsack": 361,
+      "timeouts": 2,
+      "retired": true
+    },
+    "relay_netem": {
+      "direction_order": [
+        "server_to_client",
+        "client_to_server"
+      ],
+      "emitted": [
+        [
+          266650,
+          26826
+        ],
+        [
+          264447,
+          19937
+        ]
+      ],
+      "drops": [
+        [
+          2676,
+          262
+        ],
+        [
+          2738,
+          196
+        ]
+      ],
+      "seed_supported": false
+    },
+    "all_exact_app_hash_eof_profile_stop": true,
+    "path_sample": {
+      "points": [
+        "server_tx",
+        "relay_rx",
+        "relay_tx",
+        "client_rx"
+      ],
+      "counts": [
+        [
+          4180,
+          4180,
+          4141,
+          4128
+        ],
+        [
+          4141,
+          4141,
+          4106,
+          4106
+        ]
+      ],
+      "adjacent_missing_multiset": [
+        [
+          0,
+          39,
+          13
+        ],
+        [
+          0,
+          35,
+          0
+        ]
+      ],
+      "adjacent_extra_multiset": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "capture_kernel_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scope": "per paired port, not physical loss"
+    }
+  },
+  "interpretation": "Full connection clocks explain post-request RTT difference; single pair not full latency distribution. Weak userspace excess remains. Observed large receive reassembly and actual source unconditional suffix copy support targeted ownership candidate; no claim that this accounts for all CPU gap.",
+  "physical": "NOT_RUN",
+  "next_source": "295cfc230cdd4877e58e7d92188372a39bc17c79"
+}
