@@ -95,7 +95,8 @@ jobs:
           name: winxdp-complete-package-receipts
           path: package-receipts/
           if-no-files-found: warn
-          retention-days: 30  server_arm64:
+          retention-days: 30
+  server_arm64:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 45
     env:
