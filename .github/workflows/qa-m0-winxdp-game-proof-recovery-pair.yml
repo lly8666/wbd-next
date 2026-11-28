@@ -50,7 +50,13 @@ jobs:
           }finally{$env:GITHUB_SHA=$eventSource}
           Push-Location legacy
           try{
-            go test -tags wbd_v4_embedded_go -run '^TestM0WindowsNative(GameScheduledProofTimeoutRenewsOnlyAfterExactStop|RotationBounds|CanceledTickNeverMasqueradesAsMTUDrift)
+            go test -tags wbd_v4_embedded_go -run '^TestM0WindowsNative(GameScheduledProofTimeoutRenewsOnlyAfterExactStop|RotationBounds|CanceledTickNeverMasqueradesAsMTUDrift)$' -count=1 ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'targeted cold proof regression failed'}
+            go build -trimpath -tags wbd_v4_embedded_go -o ../xdp-build/wbd-client-embedded.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'corrected original Go build failed'}
+          }finally{Pop-Location}
+          $exe=(Get-FileHash xdp-build/wbd-client-embedded.exe).Hash.ToLowerInvariant()
+          [ordered]@{source_sha=$source;go_source_sha=$source;dll_source_sha=$b.source_sha;features=$b.features;native_fec_acceleration=$true;lab=$false;dll=$b.dll;exe=$exe;native_binary_run=46097895116} | ConvertTo-Json | Set-Content xdp-build/manifest.json
           & ./tools/m0_winxdp_release_package.ps1 -SourceSHA $source
           if($LASTEXITCODE -ne 0){throw 'portable assembly failed'}
       - name: Verify complete ZIP contents and exact hashes (assembly only)
@@ -89,53 +95,7 @@ jobs:
           name: winxdp-complete-package-receipts
           path: package-receipts/
           if-no-files-found: warn
-          retention-days: 30
- -count=1 ./cmd/wbd-client
-            if($LASTEXITCODE -ne 0){throw 'targeted cold proof regression failed'}
-            go build -trimpath -tags wbd_v4_embedded_go -o ../xdp-build/wbd-client-embedded.exe ./cmd/wbd-client
-            if($LASTEXITCODE -ne 0){throw 'corrected original Go build failed'}
-          }finally{Pop-Location}
-          $exe=(Get-FileHash xdp-build/wbd-client-embedded.exe).Hash.ToLowerInvariant()
-          [ordered]@{source_sha=$source;go_source_sha=$source;dll_source_sha=$b.source_sha;features=$b.features;native_fec_acceleration=$true;lab=$false;dll=$b.dll;exe=$exe;native_binary_run=46097895116} | ConvertTo-Json | Set-Content xdp-build/manifest.json
-          & ./tools/m0_winxdp_release_package.ps1 -SourceSHA $source
-          if($LASTEXITCODE -ne 0){throw 'portable assembly failed'}
-      - name: Verify complete ZIP contents and exact hashes (assembly only)
-        shell: pwsh
-        timeout-minutes: 12
-        run: |
-          $ErrorActionPreference='Stop'
-          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'runner has Npcap, no clean dependency proof'}
-          $dir=Join-Path $PWD 'package-test'
-          Expand-Archive xdp-build/WBD-Windows-amd64-WinXDP.zip $dir -Force
-          $m=Get-Content "$dir/package-manifest.json" -Raw | ConvertFrom-Json -AsHashtable
-          if($m.source_sha -ne '569b51abe62c499e1ea7e2f4e232f205756a891f'){throw 'package source mismatch'}
-          foreach($key in $m.files.Keys){
-            if((Get-FileHash (Join-Path $dir $key)).Hash.ToLowerInvariant() -ne $m.files[$key]){throw "package bytes mismatch: $key"}
-          }
-          foreach($key in @('WBD.exe','wbd-client.exe','wbd_engine.dll','wintun.dll','drivers/winxdp/xdp.inf','drivers/winxdp/xdp.cat','drivers/winxdp/xdp.sys','drivers/winxdp/xdpapi.dll','licenses/WinXDP-MIT.txt','licenses/Wintun.txt')){
-            if(-not (Test-Path (Join-Path $dir $key))){throw "package missing $key"}
-          }
-          if($m.files['wbd-client.exe'] -ne 'ad3580ba0297f54e9ae9cf8ad404ee3cfcbf60811e14623f9bf69de451a7655f' -or $m.files['wbd_engine.dll'] -ne '2282d5a41538a519a7c6af4c7693359fa7ce0ab0cc2141991dd31b9f054a419d'){throw 'packaged executable is not the measured release'}
-          if(Get-ChildItem $dir -Recurse -File | Where-Object {$_.Name -match '^(npcap|wpcap|packet)\.(dll|sys|exe)$'}){throw 'unexpected Npcap dependency'}
-          New-Item -ItemType Directory -Force package-receipts | Out-Null
-          Copy-Item "$dir/package-manifest.json" package-receipts/
-          [ordered]@{source_sha=$m.source_sha;binary_run=46097895116;accepted_qa_run=46107717010;package_run=[long]$env:GITHUB_RUN_ID;zip_sha256=(Get-FileHash xdp-build/WBD-Windows-amd64-WinXDP.zip).Hash.ToLowerInvariant();scope='assembly and exact hash verification only; no new runtime or performance testing; experimental Windows amd64 portable'} | ConvertTo-Json | Set-Content package-receipts/delivery.json
-          Get-Content package-receipts/delivery.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: WBD-Windows-amd64-WinXDP-complete
-          path: xdp-build/WBD-Windows-amd64-WinXDP.zip
-          if-no-files-found: error
-          retention-days: 30
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: winxdp-complete-package-receipts
-          path: package-receipts/
-          if-no-files-found: warn
-          retention-days: 30
-
-  server_arm64:
+          retention-days: 30  server_arm64:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 45
     env:
