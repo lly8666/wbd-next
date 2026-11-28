@@ -9,11 +9,11 @@ import m0_h2442_server as fixture
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 N=h.NODE;ORIGIN=fixture.ORIGIN
-# Exact runtime clean ABBA: Linux receive RTT sample semantics only.
+# Exact runtime clean ABBA: receive growth measurement on fresh arrivals and elapsed RTT.
 ORDER=("A","B","B","A")
 CASES=(-1,0,1,2,3,-2)
-PROFILES={"A":"selected-rust-before-rcv-rtt","B":"selected-rust-linux-rcv-rtt"}
-SOURCES={"A":"63f4c101debfd1501780076d67199816625f2ff0","B":os.environ["GITHUB_SHA"]}
+PROFILES={"A":"selected-rust-before-relay-drs","B":"selected-rust-fresh-arrival-drs"}
+SOURCES={"A":"a99be828cc4011eb6c9a9d6088503346ce83227d","B":os.environ["GITHUB_SHA"]}
 def loss_for(i):return 0.0
 def cc_for(i):return "bbr"
 def rust_cc(i):return "bbr1"
@@ -428,7 +428,7 @@ def client():
                     sent=sum(s["bytes_sent"] for s in samples);retrans=sum(s["bytes_retrans"] for s in samples)
                     recovery[key]={"bulk_snapshot_sent_bytes":sent,"bulk_snapshot_retrans_bytes":retrans,"weighted_retrans_byte_ratio":retrans/sent,"samples":samples}
         complete=len(rows)==len(CASES) and all(x["status"]=="MEASURED" for x in rows) and len(recovery)==len(PROFILES)
-        summary={"recovery_snapshot_scope":"retired server-middle bulk flow on both exact Rust variants","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"exact selected Rust A vs Linux receive RTT sample semantics B, clean ABBA 1GiB/600M,400ms, uncapped, bare brackets, same outer MTU1160/Normal/repair and eight taps; no profiler","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
+        summary={"recovery_snapshot_scope":"retired server-middle bulk flow on both exact Rust variants","recovery":recovery,"source_sha":os.environ["GITHUB_SHA"],"product_sources":SOURCES,"intervention":"exact selected Rust A vs retained fresh arrival and elapsed-normalized receive growth B, clean ABBA 1GiB/600M,400ms, uncapped, bare brackets, same outer MTU1160/Normal/repair and eight taps; no profiler","run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"architecture":"aarch64","added_rtt_ms":400,"streams":1,"order":ORDER,"profiles":PROFILES,"status":"MEASURED_REQUIRES_PATH_AND_CAPACITY_REVIEW" if complete else "PATH_NOT_QUALIFIED" if len(rows)==1 else "INCOMPLETE","rows":rows,"means":means}
         save(OUT/"summary.json",summary)
     finally:
         control("/finish")

@@ -132,6 +132,14 @@ impl RecvBuf {
     /// Snapshot of disjoint out-of-order range count and allocated cost.
     pub(crate) fn m0_ooo(&self)->(usize,usize){(self.ooo.len(),self.ooo_mem)}
 
+    /// Distinct sequence progress retained so far, including consumed bytes
+    /// and the payload (not map overhead) of current OFO ranges. Moving a
+    /// range into the contiguous ring or reading it does not count it again.
+    /// Pruning can reduce this value; reneged bytes are not retained supply.
+    pub(crate) fn retained_progress(&self) -> u64 {
+        self.nxt_off + (self.ooo_mem - self.ooo.len() * RANGE_OVERHEAD) as u64
+    }
+
     /// Span through the furthest queued byte, including holes (Linux's
     /// ooo_last_skb.end_seq - rcv_nxt), not allocated memory or byte count.
     pub(crate) fn ooo_span(&self) -> usize {
@@ -634,6 +642,24 @@ mod tests {
         assert_eq!(&out[..32], &[7; 32]);
         assert_eq!(&out[32..64], &[9; 32]);
         assert_eq!(&out[64..], &suffix[..]);
+    }
+
+    #[test]
+    fn retained_progress_counts_each_range_once_across_gap_and_wrap() {
+        let base = u32::MAX - 3;
+        let mut r = RecvBuf::new(base, 4096);
+        r.insert(base.wrapping_add(4), b"efgh");
+        assert_eq!(r.retained_progress(), 4);
+        r.insert(base.wrapping_add(4), b"efgh");
+        assert_eq!(r.retained_progress(), 4);
+        r.insert(base, b"abcd");
+        assert_eq!(r.retained_progress(), 8);
+        let mut out = [0; 8];
+        assert_eq!(r.read(&mut out), 8);
+        assert_eq!(&out, b"abcdefgh");
+        assert_eq!(r.retained_progress(), 8);
+        r.insert(base.wrapping_add(2), b"cdefghij");
+        assert_eq!(r.retained_progress(), 10);
     }
 
     #[test]

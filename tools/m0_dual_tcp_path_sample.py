@@ -19,7 +19,10 @@ DEV={"server":[("h228node","wan0","server_tx"),(None,"h228vs","server_vx_tx")],
      "relay":[(None,"h228vs","relay_server_vx_rx"),("h228rt","rsrv0","relay_rx"),
               ("h228rt","rcli0","relay_tx"),(None,"h228vc","relay_client_vx_tx")]}
 def save(p,v):
-    p.write_text(json.dumps(v,indent=2,sort_keys=True)+"\n")
+    # The stop process waits for RESULT to exist; publish only complete JSON.
+    tmp=p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(v,indent=2,sort_keys=True)+"\n")
+    tmp.replace(p)
 def decode(p):
     counts=collections.Counter();timestamps=collections.defaultdict(list);records=0;ignored=0
     with p.open("rb") as f:

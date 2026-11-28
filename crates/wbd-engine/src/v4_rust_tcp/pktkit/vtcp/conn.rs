@@ -3202,7 +3202,7 @@ impl Conn {
         let mss = self.cfg.mss.max(1) as usize;
         let want = if self.cfg.linux_parity {
             let rb = self.recv_buf.as_ref().unwrap();
-            self.rcv_space.adjust_linux(self.now, rb.readable(), rb.ooo_span())
+            self.rcv_space.adjust_linux(self.now, rb.readable(), rb.ooo_span(), rb.retained_progress())
         } else { self.rcv_space.adjust(self.now, srtt, mss) };
         if let Some(want) = want { self.grow_recv(want); }
     }
@@ -3325,8 +3325,9 @@ impl Conn {
         self.release_budget(grown);
         self.rcv_grown = 0;
         self.settle_recv_limit();
+        let arrived = self.recv_buf.as_ref().map_or(0, |rb| rb.retained_progress());
         self.rcv_space
-            .restart(10 * self.cfg.mss.max(1) as usize, self.now);
+            .restart(10 * self.cfg.mss.max(1) as usize, self.now, arrived);
     }
 
     /// Send-buffer auto-tuning after an ACK (Linux's `tcp_sndbuf_expand`):

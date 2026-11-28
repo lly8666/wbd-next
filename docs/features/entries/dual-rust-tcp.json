@@ -57,7 +57,8 @@
     "docs/devlog/M0/20261128-L2-OOO-RING-WRAPPED-READ.md",
     "docs/devlog/M0/20261128-L2-CLEAN-INNER-DELIVERY-ATTRIBUTION.md",
     "docs/devlog/M0/20261128-L2-CLEAN-CARRIER-EIGHT-TAP.md",
-    "docs/devlog/M0/20261128-L2-LINUX-RECEIVE-RTT-FEEDBACK.md"
+    "docs/devlog/M0/20261128-L2-LINUX-RECEIVE-RTT-FEEDBACK.md",
+    "docs/devlog/M0/20261128-L2-FRESH-ARRIVAL-DRS-FEEDBACK.md"
   ],
   "verification": [
     {
@@ -125,7 +126,8 @@
     "295cfc2 both ISA354 passed/2 failed: reused OOO ring exposed wrapped read; VecDeque Read returned first slice (3/8 and64/8256) despite correct allocation identity and stream state. Three ARM46094656243 prepare blocked, no measured rows. Correct existing read contract across both slices using existing consume; same failing tests unchanged. Exact new source native and weak ABBA pending.",
     "8d7e8af exact native356/ISA, 8 profiles/3 local, weak ABBA6/6; A60.91/B77.34M, CPU52.58/46.16, weighted retrans1.039/1.056%; A2 low and B1 first data +1s; retain OFO ownership as research baseline, no causal L2 promotion. All paired outer sample deficits at netem. Next clean sampled inner DATA actual M4 attempt/PN/outer seq vs authenticated RX queue result; diagnostic only.",
     "c16c381 exact native356/ISA, clean diagnostic4/4. Inner sample TX16718 all copied; RX16260 (14 refused); 535 same-seq/len repeated ranges, first absent455, accepted66, refused14. No identity collisions/extras. 248 unique intersection with outer stratum:238 all taps+RX,6 gap before relay,4 after relay; no capture kernel drops. Not proof of physical loss or timing of accepted original. Remove product trace; clean frozen splice vs selected Rust BAAB with eight owned WAN/VXLAN taps to locate local vs carrier gaps; no throughput promotion based on diagnostic.",
-    "63f4c10 exact native356/ISA and clean eight-tap BAAB6/6: old303.52M/Rust292.56M, CPU26.31/26.76; full first ~884ms. All gaps inter-VXLAN, A58/B925, second link12/853. Rust retired retrans2.55/3.15%, local zero. Old middle receiver ~441ms rcv_rtt and rcv_ssthresh ~30MB at 15s, Rust client-middle ~632–1020ms and 64MiB advertised; exact Linux distinct full timestamp echo, downward immediate/upward only empty receive queue correction pending. No proof causal, no rate cap."
+    "63f4c10 exact native356/ISA and clean eight-tap BAAB6/6: old303.52M/Rust292.56M, CPU26.31/26.76; full first ~884ms. All gaps inter-VXLAN, A58/B925, second link12/853. Rust retired retrans2.55/3.15%, local zero. Old middle receiver ~441ms rcv_rtt and rcv_ssthresh ~30MB at 15s, Rust client-middle ~632–1020ms and 64MiB advertised; exact Linux distinct full timestamp echo, downward immediate/upward only empty receive queue correction pending. No proof causal, no rate cap.",
+    "a99be82 native357/ISA and 8 functional/3 local. Clean ABBA application6/6, relay workflow FAIL due partial JSON read during final publication; final raw ZIP 8/8 capture valid, no drops, not overall PASS. A299.74/B289.01M CPU27.685/27.165 retrans3.5045/2.9750%; RTT final ~450–463 vs445–445.23ms, all grow to64MiB. Actual rcv_space jumps near whole window by9–13s; old kernel rb64MiB/rcv_ssthresh30.15MB different skb accounting. Candidate fresh retained sequence progress and elapsed-normalized consumption as DRS input, same growth equation; not exact Linux formula, no rate/window cap; test actual gap-release/elapsed and ownership. Fixture publication atomic. Clean ABBA pending."
   ],
   "promotion": null
 }
