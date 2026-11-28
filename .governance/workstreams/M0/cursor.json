@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2525,
-  "checkpoint_sha": "5107a125ddc269d321e9bca8e8f0baf645299733",
+  "sequence": 2526,
+  "checkpoint_sha": "f93cc5bb6558d821289044fef860497078acf4af",
   "progress": "verifying",
   "task_id": "M0-DUAL-RUST-TCP",
   "current_task": "用户2026-11-26授权：docs/decisions/M0-DUAL-RUST-TCP-CONSTRUCTION-20261126.md；M0唯一工作分支 experiment/m0-dual-rust-tcp，精确起点 experiment/m0-linux-tcp-splice@26b11e2da236e909b73f461964c52d5a86d42dca。先Linux x86_64/ARM64双端原生pktkit TCP与既有Rust数据面无缝集成，性能与旧内核TCP splice相当后退役旧业务代理；再Windows共用TCP、删除FakeIP、真实IP CN直连/非CN隧道、解决下载反向ACK成本。不改TLS建链、TCP-like/TLS-like/FEC外层契约。",
   "why_now": "用户授权新工作包：双端Rust TCP、Linux双ISA性能确认后旧代理退役、Windows真实IP分流删除FakeIP及ACK问题；原splice HEAD H2480作为明确基线。",
   "done_when": "Linux两原生ISA双端完整业务、受影响模式和Stop、同机性能对照达相当水平后删除旧Linux业务splice；Windows共用Rust端点、真实IP分流及旧FakeIP/中转退役，下载ACK/TX CPU与交付同机对照；配置/GUI/功能卡/证据一致，未测不晋级。按计划阶段集成，旧失败与物理资格独立。",
-  "next_action": "在PR80原分支隔离高RTT接收窗口增长的外推项，保留实测消费/到达与原OFO余量；以db76055精确构件为A做三ARM零注入损ABBA与同机弱网回归，验吞吐、CPU、首到、内层重传、实际窗口与路径缺失。无新控制器/固定限速/外层变更。",
+  "next_action": "以db76055精确构件（Actions 46102235913）为A，提交高RTT接收窗口增长候选B：仅去掉增长外推项，保留2倍实测fresh消费量、OFO span及原低RTT行为；同步修正本地和三机ABBA脚本的A source/manifest绑定；先双ISA原生和定向单测，再同机0.5%弱网ABBA与三机0%注入损1GiB/600Mbps/400ms ABBA，核吞吐、CPU、Stop、retired重传和八点路径字节归因。",
   "unverified": true,
-  "last_tested_source": "db760553eaf5b20e01d1c9c6452ab45281cc3812",
+  "last_tested_source": "7cc67428ed47e57347c36104d72047bff985b699",
   "evidence_refs": [
-    "docs/evidence/M0/20261128-L2-DRS-WEAK-LOCAL-RESULT.json"
+    "docs/evidence/M0/20261128-L2-THREE-RUNNER-BASELINE-RESULT.json"
   ],
   "context_refs": [
     "docs/evidence/M0/20261128-L2-CARRIER-EIGHT-TAP-RESULT.json",
@@ -24,8 +24,9 @@
     "docs/devlog/M0/20261128-M0-L2-FRESH-ARRIVAL-DRS-HANDOFF.md",
     "docs/evidence/M0/20261128-L2-FRESH-ARRIVAL-DRS-RESULT.json",
     "docs/devlog/M0/20261128-M0-L2-DRS-WEAK-LOCAL-HANDOFF.md",
-    "docs/devlog/M0/20261128-M0-L2-DRS-WEAK-ACCEPTANCE.md"
+    "docs/devlog/M0/20261128-M0-L2-DRS-WEAK-ACCEPTANCE.md",
+    "docs/devlog/M0/20261128-M0-L2-THREE-RUNNER-BASELINE-RECEIPT.md"
   ],
   "open_requests": [],
-  "partial_summary": "db76055双ISA八功能与ARM六本地通过，弱ABBA吞吐-2.6% CPU-1.0%，严重退化未复现；三机原始日志四次约5s窗口达64MiB、6s出现重传。保留fresh-arrival候选，L2未过。"
+  "partial_summary": "7cc运行时代码与db76055相同；双ISA原生功能通过。三机0注入损ABBA完成但需路径/容量复核：A=a99be828，B=7cc，吞吐325.18→301.23Mbps，retired内层重传2.572→2.455%，bare bracket偏低且跨tap identity差异未归因。此结果不是db76055→新候选对照，L2未过。"
 }

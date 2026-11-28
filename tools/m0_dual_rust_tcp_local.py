@@ -176,7 +176,7 @@ def controlled_recovery():
     ]
     if baseline:
         previous=pathlib.Path(baseline).resolve()
-        sources={"A":"a99be828cc4011eb6c9a9d6088503346ce83227d","B":os.environ["GITHUB_SHA"]}
+        sources={"A":"db760553eaf5b20e01d1c9c6452ab45281cc3812","B":os.environ["GITHUB_SHA"]}
         bundles={"A":previous,"B":current}
         builds={}
         for leg,bundle in bundles.items():
