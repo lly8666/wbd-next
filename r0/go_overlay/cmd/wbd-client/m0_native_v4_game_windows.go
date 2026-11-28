@@ -401,7 +401,16 @@ outer:
    oldPort:=packet.flows[slot].LocalPort
    grace,fatal,turnErr:=packet.rotateGameLane(ctx,o,cfg,slot)
    if turnErr!=nil{
-    if fatal{runtimeErr=turnErr;break outer}
+    if fatal{
+     // A scheduled, authenticated candidate whose native reverse proof
+     // times out cannot prove the remote slot is unchanged. Join the
+     // existing group/WAL Stop and use the already-owned full generation
+     // renewal path instead of terminating the client process.
+     if turnErr==errM0WindowsTimedRotation{
+      fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_PROOF_TIMEOUT lane=%d scope=full_generation previous_owner_stop_required=1\n",slot+1)
+     }
+     runtimeErr=turnErr;break outer
+    }
     fmt.Printf("WBD_WINDOWS_GAME_SINGLE_LANE_RETRY lane=%d error=%v\n",slot+1,turnErr)
     stopRotation();rotation,stopRotation=m0WindowsArmRotation(o);continue
    }
@@ -506,12 +515,25 @@ func(p *m0WinRustGamePeer) rotateGameLane(ctx context.Context,o m0NativeV4Option
  proof,stopProof:=context.WithTimeout(turn,6*time.Second);defer stopProof()
  check:=time.NewTicker(25*time.Millisecond);defer check.Stop()
  for{
-  ready,e:=p.group.NativeLaneCandidateReady(proof,candidate,transport);if e!=nil{return 0,fatal,e};if ready{break}
-  select{case <-proof.Done():return 0,fatal,proof.Err();case <-check.C:}
+  ready,e:=p.group.NativeLaneCandidateReady(proof,candidate,transport)
+  if e!=nil{return 0,fatal,m0WindowsGameScheduledProofResult(ctx,proof,e)}
+  if ready{break}
+  select{case <-proof.Done():return 0,fatal,m0WindowsGameScheduledProofResult(ctx,proof,proof.Err());case <-check.C:}
  }
  grace=m0WindowsRotationDelay(10*time.Second,20*time.Second)
  handed=true
  if e=p.group.PromoteNativeGameLane(turn,candidate,port,grace);e!=nil{return 0,fatal,e}
  p.flows[slot]=flow;p.cfgs[slot]=cfg
  return grace,false,nil
+}
+
+ // Only the actual candidate-proof deadline can request scheduled renewal.
+ // User Stop, physical path cancellation, and native/driver/cleanup errors
+ // keep their existing meanings. The caller's exact Stop must succeed;
+ // deferred candidate Close errors join this sentinel and prevent renewal.
+func m0WindowsGameScheduledProofResult(parent,proof context.Context,err error)error{
+ if parent.Err()==nil&&proof.Err()==context.DeadlineExceeded&&err==context.DeadlineExceeded{
+  return errM0WindowsTimedRotation
+ }
+ return err
 }
