@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "source_sha": "172fca30ceb2ed9b0840465d5d24ab7b009bc13d",
+  "result": "K_NOT_SELECTED",
+  "artifact_verified": true,
+  "native": {
+    "run": 46120199788,
+    "artifacts": {
+      "arm": 15253791485,
+      "x86": 15253216878
+    },
+    "manifest_sha256": {
+      "arm": "806561108b7633c18bc8f83577b6553fcb6cf7ab4bdfe5302b9a709a8f3da47f",
+      "x86": "8bbd230bf4777eea653197c54500dd8fb4c5a3cce7e2a1f57266240e3fa3c20e"
+    },
+    "functional_profiles_per_isa": 6
+  },
+  "three": {
+    "AKKA": {
+      "run": 46120199836,
+      "artifacts": {
+        "summary": 15253702623,
+        "client": 15254121278,
+        "server": 15253237662,
+        "relay": 15253661748,
+        "weak": 15254041349
+      },
+      "summary_sha256": "57bbeb3ecda1b41dfb2f933c6e8e32d94b655191c3637d0ed6be08796b1fc0e3",
+      "order": "AKKA",
+      "mbps": [
+        322.6399084802354,
+        308.45413904469854,
+        317.5386148959423,
+        293.6587593804327
+      ],
+      "retired_sent": {
+        "A": 2177851566,
+        "K": 2170829038
+      },
+      "retired_retrans": {
+        "A": 30367918,
+        "K": 23345390
+      },
+      "cpu": {
+        "A": 31.24,
+        "K": 31.585
+      },
+      "bare_mbps": [
+        218.87441264470314,
+        200.18287177366696
+      ],
+      "first_hop_missing": [
+        21,
+        65,
+        25,
+        18
+      ],
+      "second_hop_missing": [
+        151,
+        130,
+        105,
+        235
+      ],
+      "above_quantum_max": [
+        158046,
+        13691,
+        14817,
+        299716
+      ],
+      "publish_batch_max": [
+        32,
+        55,
+        40,
+        64
+      ]
+    },
+    "KAAK": {
+      "run": 46120199829,
+      "artifacts": {
+        "summary": 15253427046,
+        "client": 15253222422,
+        "server": 15253552936,
+        "relay": 15253656716,
+        "weak": 15253122887
+      },
+      "summary_sha256": "4ea606e6426f04c63866df43047873c837276b5a96a7a3146769d1d489ac779a",
+      "order": "KAAK",
+      "mbps": [
+        294.3637077714511,
+        301.9606434608228,
+        300.42268994484976,
+        288.1289265793598
+      ],
+      "retired_sent": {
+        "A": 2178392470,
+        "K": 2182633800
+      },
+      "retired_retrans": {
+        "A": 30908822,
+        "K": 35150152
+      },
+      "cpu": {
+        "A": 31.285,
+        "K": 31.805
+      },
+      "bare_mbps": [
+        292.93385328526085,
+        274.327806549491
+      ],
+      "first_hop_missing": [
+        1,
+        0,
+        6,
+        6
+      ],
+      "second_hop_missing": [
+        210,
+        191,
+        220,
+        210
+      ],
+      "above_quantum_max": [
+        14205,
+        129825,
+        121800,
+        12118
+      ],
+      "publish_batch_max": [
+        40,
+        64,
+        64,
+        36
+      ]
+    },
+    "common": {
+      "all_hash_retired_joined_stop": true,
+      "all_retired_timeouts_zero": true,
+      "all_other_adjacent_missing_extra_zero": true,
+      "manifest_match": true,
+      "scope": "sampled product identities, not physical loss"
+    }
+  },
+  "weak": {
+    "AKKA": {
+      "artifact": 15254041349,
+      "summary_sha256": "6148c56f3a9efdb7972938ee39ffe7f3ef69422347aef7b3c9d6890a70a60ffb",
+      "order": "AKKA",
+      "mbps": [
+        63.36297547568928,
+        64.74311579787808,
+        58.62764387499683,
+        62.953313390844905
+      ],
+      "cpu": {
+        "A": 25.493333333333332,
+        "K": 26.93333333333333
+      },
+      "above_quantum": [
+        54086,
+        4473,
+        4207,
+        57258
+      ],
+      "timeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "KAAK": {
+      "artifact": 15253122887,
+      "summary_sha256": "e2442d8555c16b71f8b70702d92d7303814195a011a46b089e81877f4ac51fc4",
+      "order": "KAAK",
+      "mbps": [
+        58.05074383331084,
+        58.881743869795116,
+        62.747521455549176,
+        66.50055127125512
+      ],
+      "cpu": {
+        "A": 25.76,
+        "K": 28.213333333333335
+      },
+      "above_quantum": [
+        4229,
+        56815,
+        55369,
+        4635
+      ],
+      "timeouts": [
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    "scope": "all measured and profile/bytes/hash/Stop valid; live/Stop sample"
+  },
+  "external_branch_reference": {
+    "source": "0682dbb5b92692e4c4fdd61feecdbfac7d30b7e1",
+    "run": 46107717010,
+    "summary_artifact": 15248069753,
+    "summary_sha256": "1d0ca72ce71f0a95989d841148527ae9d55fc89d04b50ae8c501b9f77046f66b",
+    "scope": "read-only WinXDP branch reference; overall action failure; seven valid matched Windows 9V45/WSL root bare CUBIC reference pairs, 650M offered steady data, not Linux native or same product",
+    "bare_400ms_mbps": [
+      650.85213792,
+      650.7727088,
+      637.49811712,
+      649.95856032,
+      650.00820352,
+      649.953596,
+      649.92381008
+    ]
+  },
+  "decision": "Reject K: real above-quantum events but clean and weak throughput/retrans directions mixed, CPU increases; aggregate publish batch can exceed one quantum, so credit cap alone not the whole owner service path. Restore exact pre-K runtime. User asks isolate controlled 400ms path from uncontrolled cross-host effects. New independent x86 clean and jitter ABBA/BAAB, A bare kernel BBR B frozen C, 600M/1GiB, original 1160 product fixture, both directions 200ms with optional normal 5ms jitter and zero random loss. Record actual CPU identity, kernel, host CPU/softirq, qdisc drops and kernel/inner TCP samples. Bare has different MSS/path/algorithm implementation: capacity reference only. No CPU cherry picking, no claim real Internet equivalence. Historical exact x86 C source12b17cc, run46111963879 artifact15250585479 manifest03801dfeffc36d8a7615b2b63b02920a1c12c73c0b1384a446c2d6497bd45241. No product limit, default change, physical deployment, or L2 promotion."
+}
